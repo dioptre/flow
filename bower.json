@@ -2,6 +2,7 @@
   "name": "tag",
   "dependencies": {
     "jquery": "*",
+    "jquery-ui": "*",
     "bootstrap": "*",
     "bootbox": "*"
   }
