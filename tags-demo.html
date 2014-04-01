@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<script src="bower_components/jquery/dist/jquery.js"></script>
 <meta charset=utf-8 />
 <title>Search bar with Tags Demo</title>
+
+
+<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+
 <link rel="stylesheet" href="style.css">
 
 </head>
@@ -16,13 +21,26 @@
     <span class="tag">Berlin</span>
     <input type="text" value="" placeholder="Add keywords" />
   </div>
-
+  <div class="add-location">
+    <span class="glyphicon glyphicon-globe"></span>
+  </div>
+   <div class="add-time">
+    <span class="glyphicon glyphicon-calendar"></span>
+  </div>
   <div class="search">
-    Search
+    <span class="glyphicon glyphicon-search"></span>
   </div>
 
 
 
+
+
+
+
+
+
+  <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="bower_components/bootbox/bootbox.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

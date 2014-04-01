@@ -1,0 +1,8 @@
+{
+  "name": "tag",
+  "dependencies": {
+    "jquery": "*",
+    "bootstrap": "*",
+    "bootbox": "*"
+  }
+}
