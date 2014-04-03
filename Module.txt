@@ -1,0 +1,14 @@
+﻿Name: EXPEDIT Flow
+AntiForgery: disabled
+Author: The EXPEDIT Team
+Website: http://expedit.com.au
+Version: 1.0
+OrchardVersion: 1.0
+Description: Flow spatial information management web module by EXPEDIT.
+Category: Business
+Features:
+    EXPEDIT.Flow: 
+        Description: Flow spatial information management web module by EXPEDIT.
+		Dependencies: Orchard.Email,NKD,Orchard.Media,XmlRpc,Orchard.Search,EXPEDIT.Share
+		Category: Business
+		Priority: 10
