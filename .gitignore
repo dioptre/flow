@@ -1,0 +1,12 @@
+publish
+*.licx
+backup
+Thumbs.db
+UnusableNodes*.xml
+*Andrew*
+*.user
+*.swp
+*~
+bin/
+obj/
+*.suo
