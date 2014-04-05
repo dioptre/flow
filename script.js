@@ -55,7 +55,7 @@ $(function($){
           defaultDate: "+1w",
           changeMonth: true,
           onClose: function( selectedDate ) {
-            datepicker2.datepicker( "option", "minDate", selectedDate );
+            $('.datepicker2').datepicker( "option", "minDate", selectedDate );
           }
       });
     var datepicker2 = $('.datepicker2').datepicker({
@@ -63,7 +63,7 @@ $(function($){
         defaultDate: "+1w",
         changeMonth: true,
         onClose: function( selectedDate ) {
-          datepicker1.datepicker( "option", "maxDate", selectedDate );
+          $('.datepicker1').datepicker( "option", "maxDate", selectedDate );
         }
       });
   })
