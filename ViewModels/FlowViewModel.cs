@@ -8,9 +8,18 @@ using Newtonsoft.Json;
 
 namespace EXPEDIT.Flow.ViewModels
 {
+
+    public enum SearchType
+    {
+        Model,
+        File,
+        Flow
+    }
+
     [JsonObject]
     public class FlowViewModel 
     {
+
 
 
       

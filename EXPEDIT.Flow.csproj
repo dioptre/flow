@@ -158,6 +158,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Scripts\alertify.js" />
+    <Content Include="Scripts\alertify.min.js" />
+    <Content Include="Scripts\canvas-to-blob.min.js" />
+    <None Include="Scripts\jquery-1.6.4-vsdoc.js" />
+    <Content Include="Scripts\jquery-1.6.4.js" />
+    <Content Include="Scripts\jquery-1.6.4.min.js" />
     <Content Include="Scripts\jquery-fn\.gitignore" />
     <Content Include="Scripts\jquery-fn\cross-domain-ajax\jquery.xdomainajax.js" />
     <Content Include="Scripts\jquery-fn\cross-domain-ajax\test\1.3.2\index.html" />
@@ -174,12 +180,47 @@
     <Content Include="Scripts\jquery-fn\pulse\jquery.pulse.js" />
     <Content Include="Scripts\jquery-fn\sortElements\demo.html" />
     <Content Include="Scripts\jquery-fn\sortElements\jquery.sortElements.js" />
+    <Content Include="Scripts\jquery-ui-1.10.3.js" />
+    <Content Include="Scripts\jquery-ui-1.10.3.min.js" />
+    <Content Include="Scripts\jquery.blueimp-gallery.min.js" />
+    <Content Include="Scripts\jquery.fileupload-audio.js" />
+    <Content Include="Scripts\jquery.fileupload-image.js" />
+    <Content Include="Scripts\jquery.fileupload-process.js" />
+    <Content Include="Scripts\jquery.fileupload-ui.js" />
+    <Content Include="Scripts\jquery.fileupload-validate.js" />
+    <Content Include="Scripts\jquery.fileupload-video.js" />
+    <Content Include="Scripts\jquery.fileupload.js" />
+    <Content Include="Scripts\jquery.iframe-transport.js" />
+    <None Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery.validate.additional-methods.js" />
+    <Content Include="Scripts\jquery.validate.js" />
+    <Content Include="Scripts\jquery.validate.min.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="Scripts\load-image.min.js" />
+    <Content Include="Scripts\tmpl.min.js" />
+    <Content Include="Styles\alertify.bootstrap.css" />
+    <Content Include="Styles\alertify.core.css" />
+    <Content Include="Styles\alertify.default.css" />
+    <Content Include="Styles\blueimp-gallery.min.css" />
+    <Content Include="Styles\bootstrap.min.css" />
+    <Content Include="Styles\expedit-transactions.css" />
+    <Content Include="Styles\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="Styles\images\checked.gif" />
+    <Content Include="Styles\images\unchecked.gif" />
+    <Content Include="Styles\jquery.fileupload-noscript.css" />
+    <Content Include="Styles\jquery.fileupload-ui-noscript.css" />
+    <Content Include="Styles\jquery.fileupload-ui.css" />
+    <Content Include="Styles\jquery.fileupload.css" />
     <Content Include="Web.config" />
     <Content Include="Views\Web.config" />
     <Content Include="Scripts\Web.config" />
     <Content Include="Styles\Web.config" />
     <Content Include="Properties\AssemblyInfo.cs" />
     <Content Include="Module.txt" />
+    <Content Include="Styles\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="Styles\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="Styles\fonts\glyphicons-halflings-regular.woff" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\NKD.Extensions\NKD.Extensions.csproj">
@@ -206,6 +247,10 @@
       <Project>{1b5a2a6b-28e0-4a54-9ca4-147c925f3bbb}</Project>
       <Name>NKD</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Orchard.MediaLibrary\Orchard.MediaLibrary.csproj">
+      <Project>{73a7688a-5bd3-4f7e-adfa-ce36c5a10e3b}</Project>
+      <Name>Orchard.MediaLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Orchard.Media\Orchard.Media.csproj">
       <Project>{d9a7b330-cd22-4da1-a95a-8de1982ad8eb}</Project>
       <Name>Orchard.Media</Name>
@@ -225,6 +270,7 @@
     <Compile Include="Services\IFlowService.cs" />
     <Compile Include="Services\FlowService.cs" />
     <Compile Include="Services\XmlRpcHandler.cs" />
+    <Compile Include="ViewModels\WikiViewModel.cs" />
     <Compile Include="ViewModels\FlowViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -235,9 +281,6 @@
     <Content Include="Views\User\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Views\User\Search.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="Scripts\jquery-fn\cross-domain-ajax\README.md" />
     <Content Include="Scripts\jquery-fn\LICENSE" />
     <Content Include="Scripts\jquery-fn\macro\README.md" />
@@ -245,6 +288,12 @@
     <Content Include="Scripts\jquery-fn\pulse\README.md" />
     <Content Include="Scripts\jquery-fn\README.md" />
     <Content Include="Scripts\jquery-fn\sortElements\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\User\Wiki.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\User\Header.cshtml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
