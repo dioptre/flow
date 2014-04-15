@@ -13,7 +13,7 @@ namespace EXPEDIT.Flow.Services
     public interface IFlowService : IDependency 
     {
          [OperationContract]
-         string Search(string query = "");
+         dynamic Search(string query, SearchType st, int start, int pageSize);
 
     }
 }

@@ -89,13 +89,28 @@ namespace EXPEDIT.Flow
                         new MvcRouteHandler())
                 },
                 new RouteDescriptor {
-                        Priority = 5,
+                        Priority = 50,
                         Route = new Route(
-                            "Flow/search",
+                            "Flow/search/{*q}",
                             new RouteValueDictionary {
                                 {"area", "EXPEDIT.Flow"},
                                 {"controller", "User"},
                                 {"action", "search"}
+                            },
+                            null,
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"}
+                            },
+                            new MvcRouteHandler())
+                },
+                new RouteDescriptor {
+                        Priority = 50,
+                        Route = new Route(
+                            "Flow/wiki/{*q}",
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"},
+                                {"controller", "User"},
+                                {"action", "wiki"}
                             },
                             null,
                             new RouteValueDictionary {

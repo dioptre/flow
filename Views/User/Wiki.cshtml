@@ -1,0 +1,107 @@
+﻿@model EXPEDIT.Flow.ViewModels.WikiViewModel
+@Html.Partial("Header")
+@{
+    //Style.Require("");
+    HtmlHelper.ClientValidationEnabled = true;
+    HtmlHelper.UnobtrusiveJavaScriptEnabled = true;
+    Layout.Title = T("Wiki").ToString();
+    Script.Require("jQueryColorbox").AtFoot();    
+    Style.Require("jQueryColorbox").AtFoot();
+    //Script.Require("jQueryUI_Droppable").AtFoot();
+    //Style.Include("orchard-medialibrary-admin.css");
+    //Style.Include("orchard-mediaproviders-admin.css");
+    //Style.Include("orchard-clientstorage-admin.css");
+    //Style.Require("MediaManagerAdmin");
+    //Style.Require("FontAwesome");
+}
+@using (Html.BeginForm("Wiki", "User", new { area = "EXPEDIT.Flow" }, FormMethod.Post, new { id = "form1", @class = "form" }))
+{
+<article class="content-item page">
+    <header><h1>@Layout.Title</h1></header>
+     <fieldset>
+     @Html.AntiForgeryToken()
+     <div class="editor-label">
+       <strong>Page Name</strong>
+    </div>
+    <div class="editor-field">
+       @Html.TextBoxFor(m => m.GraphName)
+    </div>       
+    <div class="editor-label">
+        <p>Description:</p>
+    </div>
+    <div class="editor-field">
+    @Html.TextAreaFor(m => m.GraphData, 12, 80,
+	 new Dictionary<string,object> {
+		{"class", "html tinymce"},	
+        {"style", "width:100%"}
+	 })<br />
+    </div>   
+   </fieldset>
+    <input type="submit" value="Submit" />
+    @Html.HiddenFor(m => m.GraphDataID)
+    </article>
+}
+
+<script src="@Url.Content("~/Modules/TinyMce/Scripts/tiny_mce_src.js")"></script>
+<script src="@Url.Content("~/Modules/Orchard.MediaLibrary/Scripts/history.js")"></script>
+<script src="@Url.Content("~/Modules/Orchard.MediaLibrary/Scripts/knockout-2.3.0.js")"></script>
+<script src="@Url.Content("~/Modules/Orchard.MediaLibrary/Scripts/modal-window.js")"></script>
+<script src="@Url.Content("~/Modules/Orchard.MediaLibrary/Scripts/media-library.js")"></script>
+
+
+<script type="text/javascript">
+    tinyMCE.init({
+        theme: "advanced",
+        schema: "html5",
+        mode: "specific_textareas",
+        editor_selector: "tinymce",
+        plugins: "fullscreen,autoresize,searchreplace,filepicker,inlinepopups",
+        theme_advanced_toolbar_location: "top",
+        theme_advanced_toolbar_align: "left",
+        theme_advanced_buttons1: "search,replace,|,cut,copy,paste,|,undo,redo,|,link,unlink,charmap,emoticon,codeblock,|,filepicker,|,bold,italic,|,numlist,bullist,formatselect,|,code,fullscreen",
+        theme_advanced_buttons2: "",
+        theme_advanced_buttons3: "",
+        convert_urls: false,
+        valid_elements: "*[*]",
+        // shouldn't be needed due to the valid_elements setting, but TinyMCE would strip script.src without it.
+        extended_valid_elements: "script[type|defer|src|language]"
+    });
+ 
+
+     $(document).ready(function () {
+
+
+         $("#form1").submit(function (e) {
+             // prevent default posting of form
+             e.preventDefault();
+             e.returnValue = false;
+         }).validate({
+             rules: {
+                    
+                    GraphName : { required: true, positiveNumber: true },
+                }                  
+            
+        });
+
+
+
+     });
+
+     var mediaLibrarySettings = {
+         mediaItemActionUrl: '@HttpUtility.JavaScriptStringEncode(Url.Action("MediaItem", "Admin", new { area = "Orchard.MediaLibrary" }))',
+         mediaItemsActionUrl: '@HttpUtility.JavaScriptStringEncode(Url.Action("MediaItems", "Admin", new { area = "Orchard.MediaLibrary" }))',
+         recentMediaItemsActionUrl: '@HttpUtility.JavaScriptStringEncode(Url.Action("RecentMediaItems", "Admin", new { area = "Orchard.MediaLibrary" }))',
+         childFolderListingActionUrl: '@HttpUtility.JavaScriptStringEncode(Url.Action("ChildFolders", "Admin", new { area = "Orchard.MediaLibrary" }))',
+         importActionUrl: '@HttpUtility.JavaScriptStringEncode(Url.Action("Import", "Admin", new { area = "Orchard.MediaLibrary" }))',
+         moveActionUrl: '@Url.Action("Move", "Folder", new {area = "Orchard.MediaLibrary"})',
+         deleteActionUrl: '@Url.Action("Delete", "Admin", new {area = "Orchard.MediaLibrary"})',
+         folderPath: '@HttpUtility.JavaScriptStringEncode("Web")',
+         deleteConfirmationMessage: '@HttpUtility.JavaScriptStringEncode(T("Are you sure you want to delete these media items ?").Text)',
+         errorMessage: '@HttpUtility.JavaScriptStringEncode(T("An unexpected error occured, please refresh the page and try again.").Text)',
+         antiForgeryToken: '@Html.AntiForgeryTokenValueOrchard()',
+         childFolders: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Media.Children))
+     
+    };
+    
+</script>
+

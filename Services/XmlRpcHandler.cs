@@ -67,7 +67,7 @@ namespace EXPEDIT.Flow.Services {
                 IUser user = validateUser(parameters.Username, parameters.Password);
                 foreach (var driver in context._drivers)
                     driver.Process(parameters.Username);
-                var result = _Flow.Search(parameters.Query);
+                var result = _Flow.Search(parameters.Query, (SearchType)parameters.SearchType, (int)parameters.Start, (int)parameters.PageSize);
                 context.Response = new XRpcMethodResponse().Add(result);
             }
 
