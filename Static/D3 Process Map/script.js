@@ -160,6 +160,10 @@ $(function() {
     $(window).on('resize', resize);
 });
 
+function redrawGraph(){
+    console.log('Done')
+}
+
 function drawGraph() {
     $('#graph').empty();
 
