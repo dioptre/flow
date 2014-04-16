@@ -4,15 +4,8 @@
     //Style.Require("");
     HtmlHelper.ClientValidationEnabled = true;
     HtmlHelper.UnobtrusiveJavaScriptEnabled = true;
-    Layout.Title = T("Wiki").ToString();
-    Script.Require("jQueryColorbox").AtFoot();    
+    Layout.Title = T("Wiki").ToString();    
     Style.Require("jQueryColorbox").AtFoot();
-    //Script.Require("jQueryUI_Droppable").AtFoot();
-    //Style.Include("orchard-medialibrary-admin.css");
-    //Style.Include("orchard-mediaproviders-admin.css");
-    //Style.Include("orchard-clientstorage-admin.css");
-    //Style.Require("MediaManagerAdmin");
-    //Style.Require("FontAwesome");
 }
 @using (Html.BeginForm("Wiki", "User", new { area = "EXPEDIT.Flow" }, FormMethod.Post, new { id = "form1", @class = "form" }))
 {
@@ -43,10 +36,7 @@
 }
 
 <script src="@Url.Content("~/Modules/TinyMce/Scripts/tiny_mce_src.js")"></script>
-<script src="@Url.Content("~/Modules/Orchard.MediaLibrary/Scripts/history.js")"></script>
-<script src="@Url.Content("~/Modules/Orchard.MediaLibrary/Scripts/knockout-2.3.0.js")"></script>
-<script src="@Url.Content("~/Modules/Orchard.MediaLibrary/Scripts/modal-window.js")"></script>
-<script src="@Url.Content("~/Modules/Orchard.MediaLibrary/Scripts/media-library.js")"></script>
+<script src="@Url.Content("~/Modules/Orchard.jQuery/Scripts/jquery.colorbox.js")"></script>
 
 
 <script type="text/javascript">
@@ -87,21 +77,6 @@
 
      });
 
-     var mediaLibrarySettings = {
-         mediaItemActionUrl: '@HttpUtility.JavaScriptStringEncode(Url.Action("MediaItem", "Admin", new { area = "Orchard.MediaLibrary" }))',
-         mediaItemsActionUrl: '@HttpUtility.JavaScriptStringEncode(Url.Action("MediaItems", "Admin", new { area = "Orchard.MediaLibrary" }))',
-         recentMediaItemsActionUrl: '@HttpUtility.JavaScriptStringEncode(Url.Action("RecentMediaItems", "Admin", new { area = "Orchard.MediaLibrary" }))',
-         childFolderListingActionUrl: '@HttpUtility.JavaScriptStringEncode(Url.Action("ChildFolders", "Admin", new { area = "Orchard.MediaLibrary" }))',
-         importActionUrl: '@HttpUtility.JavaScriptStringEncode(Url.Action("Import", "Admin", new { area = "Orchard.MediaLibrary" }))',
-         moveActionUrl: '@Url.Action("Move", "Folder", new {area = "Orchard.MediaLibrary"})',
-         deleteActionUrl: '@Url.Action("Delete", "Admin", new {area = "Orchard.MediaLibrary"})',
-         folderPath: '@HttpUtility.JavaScriptStringEncode("Web")',
-         deleteConfirmationMessage: '@HttpUtility.JavaScriptStringEncode(T("Are you sure you want to delete these media items ?").Text)',
-         errorMessage: '@HttpUtility.JavaScriptStringEncode(T("An unexpected error occured, please refresh the page and try again.").Text)',
-         antiForgeryToken: '@Html.AntiForgeryTokenValueOrchard()',
-         childFolders: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Media.Children))
-     
-    };
     
 </script>
 
