@@ -63,30 +63,67 @@ namespace EXPEDIT.Flow.Controllers {
         [Themed(false)]
         public ActionResult Search(string q)
         {
-            if (string.IsNullOrWhiteSpace(q))
-                return new EmptyResult();
-            var results = _Flow.Search(q, ViewModels.SearchType.File, 1, 20);
-            return new JsonHelper.JsonNetResult(results, JsonRequestBehavior.AllowGet);     
+            int page;
+            int pageSize;
+            string query = Request.Params["keywords"];
+            if (string.IsNullOrWhiteSpace(query) || query == "undefined")
+                query = null;
+            if (string.IsNullOrWhiteSpace(query))
+                query = null;
+            string type = Request.Params["type"];
+            SearchType st = SearchType.Flow;
+            if (string.IsNullOrWhiteSpace(type) || type == "undefined")
+                st = SearchType.Flow;
+            else if (type == "file")
+                st = SearchType.File;
+            else if (type == "model")
+                st = SearchType.Model;
+
+            bool pFound = int.TryParse(Request.Params["page"], out page);
+            bool psFound = int.TryParse(Request.Params["pageSize"], out pageSize);
+            var results = _Flow.Search(
+                query,
+                (pFound && psFound) ? (page * pageSize) + 1 : default(int?),
+                psFound ? pageSize : default(int?),
+                st
+            );
+            return new JsonHelper.JsonNetResult(new { search = results} , JsonRequestBehavior.AllowGet);
         }
 
 
+        [Authorize]
         [Themed(true)]
+        [HttpGet]
         public ActionResult Wiki(string q)
         {
-            dynamic media = new NullableExpandoObject();
-            media.Children = _mediaLibrary.GetMediaFolders(null).Select(f=> new {folderPath = f.MediaPath, name = f.Name, lastUpdated = f.LastUpdated}).ToArray();        
-            var m = new WikiViewModel { Media = media };
-
-            //var viewModel = new MediaManagerIndexViewModel
-            //{
-            //    DialogMode = dialog,
-            //    FolderPath = folderPath,
-            //    ChildFoldersViewModel = new MediaManagerChildFoldersViewModel { Children =  },
-            //    MediaTypes = _mediaLibraryService.GetMediaTypes(),
-            //    CustomActionsShapes = explorerShape.Actions,
-            //    CustomNavigationShapes = explorerShape.Navigation,
-            //};
+            WikiViewModel m;
+            m = _Flow.GetWiki(q);
+            if (m == null)
+                return new HttpUnauthorizedResult("Unauthorized access to protected article.");
             return View(m);
         }
+     
+        [Authorize]
+        [ValidateInput(false)]
+        [Themed(true)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Wiki(WikiViewModel m)
+        {
+            var ok = _Flow.SubmitWiki(ref m);
+            if (!ok)
+                return View(m);
+            else
+                return new RedirectResult(System.Web.VirtualPathUtility.ToAbsolute(string.Format("~/flow/search#/article/{0}", m.GraphDataID)));
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpGet]
+        public ActionResult WikiDuplicate(string id)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.GetDuplicateWiki(id), JsonRequestBehavior.AllowGet);
+        }
+
     }
 }

@@ -158,6 +158,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Images\loading.gif" />
     <Content Include="Scripts\alertify.js" />
     <Content Include="Scripts\alertify.min.js" />
     <Content Include="Scripts\canvas-to-blob.min.js" />
@@ -209,7 +210,7 @@
     <Content Include="Styles\alertify.default.css" />
     <Content Include="Styles\blueimp-gallery.min.css" />
     <Content Include="Styles\bootstrap.min.css" />
-    <Content Include="Styles\expedit-transactions.css" />
+    <Content Include="Styles\expedit-flow.css" />
     <Content Include="Styles\fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Styles\images\checked.gif" />
     <Content Include="Styles\images\unchecked.gif" />
@@ -271,6 +272,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\UserController.cs" />
+    <Compile Include="ResourceManifest.cs" />
     <Compile Include="Route.cs" />
     <Compile Include="Services\IFlowService.cs" />
     <Compile Include="Services\FlowService.cs" />
