@@ -104,13 +104,43 @@ namespace EXPEDIT.Flow
                             new MvcRouteHandler())
                 },
                 new RouteDescriptor {
-                        Priority = 50,
+                        Priority = 5,
                         Route = new Route(
-                            "Flow/wiki/{*q}",
+                            "Flow/nodes",
                             new RouteValueDictionary {
                                 {"area", "EXPEDIT.Flow"},
                                 {"controller", "User"},
-                                {"action", "wiki"}
+                                {"action", "nodes"}
+                            },
+                            null,
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"}
+                            },
+                            new MvcRouteHandler())
+                },
+                new RouteDescriptor {
+                        Priority = 5,
+                        Route = new Route(
+                            "Flow/node",
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"},
+                                {"controller", "User"},
+                                {"action", "nodes"}
+                            },
+                            null,
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"}
+                            },
+                            new MvcRouteHandler())
+                },
+                new RouteDescriptor {
+                        Priority = 5,
+                        Route = new Route(
+                            "Flow",
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"},
+                                {"controller", "User"},
+                                {"action", "index"}
                             },
                             null,
                             new RouteValueDictionary {

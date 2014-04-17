@@ -15,6 +15,7 @@
     @*<legend></legend>*@
      @Html.AntiForgeryToken()
      <div class="editor-label">
+       @(Model.IsNew && !string.IsNullOrWhiteSpace(Model.GraphName) ? Html.Raw("<h4>There is no content for this page. Please add some.</h4>") : Html.Raw(""))
        @Html.LabelFor(m => m.GraphName, new { style = "font-weight:bold;"})
     </div>
     <div class="editor-field">
@@ -47,7 +48,7 @@
             $.ajax({
                 async: true,
                 type: 'GET',
-                url: '@Url.Content("~/Flow/WikiDuplicate")/' + encodeURIComponent($("#GraphName").val()),
+                url: '@Url.Content("~/Flow/NodeDuplicate")/' + encodeURIComponent($("#GraphName").val()),
                 success: function (data) {
                     duplicate = data;
                 },

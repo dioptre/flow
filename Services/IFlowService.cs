@@ -19,10 +19,31 @@ namespace EXPEDIT.Flow.Services
          WikiViewModel GetWiki(string wikiName);
 
          [OperationContract]
-         bool GetDuplicateWiki(string wikiName);
+         bool GetDuplicateNode(string wikiName);
 
          [OperationContract]
          bool SubmitWiki(ref WikiViewModel wiki);
+
+         [OperationContract]
+         FlowGroupViewModel GetNodeGroup(string name, Guid? nid, Guid? gid, bool includeContent = false);
+
+         [OperationContract]
+         FlowViewModelDetailed GetNode(string name, Guid? nid, bool includeContent = false);
+
+         [OperationContract]
+         bool CreateNode(FlowViewModel flow);
+
+         [OperationContract]
+         bool UpdateNode(FlowViewModel flow);
+
+         [OperationContract]
+         bool DeleteNode(FlowViewModel flow);
+
+         [OperationContract]
+         bool CreateEdge(FlowEdgeViewModel flow);
+
+         [OperationContract]
+         bool DeleteEdge(FlowEdgeViewModel flow);
 
     }
 }

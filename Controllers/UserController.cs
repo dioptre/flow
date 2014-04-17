@@ -94,10 +94,10 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(true)]
         [HttpGet]
-        public ActionResult Wiki(string q)
+        public ActionResult Wiki(string id)
         {
             WikiViewModel m;
-            m = _Flow.GetWiki(q);
+            m = _Flow.GetWiki(id);
             if (m == null)
                 return new HttpUnauthorizedResult("Unauthorized access to protected article.");
             return View(m);
@@ -120,10 +120,83 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpGet]
-        public ActionResult WikiDuplicate(string id)
+        public ActionResult NodeDuplicate(string id)
         {
-            return new JsonHelper.JsonNetResult(_Flow.GetDuplicateWiki(id), JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(_Flow.GetDuplicateNode(id), JsonRequestBehavior.AllowGet);
         }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpGet]
+        public ActionResult Nodes(string id)
+        {
+            Guid? temp = null;
+            Guid temp2;
+            if (Guid.TryParse(id, out temp2))
+                temp = temp2; 
+            return new JsonHelper.JsonNetResult(_Flow.GetNodeGroup(null, temp, null), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("Node")]
+        public ActionResult GetNode(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return new JsonHelper.JsonNetResult(_Flow.GetNodeGroup(null, null, null), JsonRequestBehavior.AllowGet);
+            Guid temp;
+            if (!Guid.TryParse(id, out temp))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+            return new JsonHelper.JsonNetResult(_Flow.GetNode(null,temp,true), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Node")]
+        public ActionResult CreateNode(FlowViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.CreateNode(m), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("Node")]
+        public ActionResult UpdateNode(FlowViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.UpdateNode(m), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("Node")]
+        public ActionResult DeleteNode(FlowViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.DeleteNode(m), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Edge")]
+        public ActionResult CreateEdge(FlowEdgeViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.CreateEdge(m), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("Edge")]
+        public ActionResult DeleteEdge(FlowEdgeViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.DeleteEdge(m), JsonRequestBehavior.AllowGet);
+        }
+
+
 
     }
 }

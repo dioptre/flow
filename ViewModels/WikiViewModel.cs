@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 namespace EXPEDIT.Flow.ViewModels
 {
     [JsonObject]
-    public class WikiViewModel 
+    public class WikiViewModel : IFlow
     {
         public Guid? GraphDataID { get; set; }
         public Guid? GraphGroupID {get;set;}
