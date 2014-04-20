@@ -63,30 +63,140 @@ namespace EXPEDIT.Flow.Controllers {
         [Themed(false)]
         public ActionResult Search(string q)
         {
-            if (string.IsNullOrWhiteSpace(q))
-                return new EmptyResult();
-            var results = _Flow.Search(q, ViewModels.SearchType.File, 1, 20);
-            return new JsonHelper.JsonNetResult(results, JsonRequestBehavior.AllowGet);     
+            int page;
+            int pageSize;
+            string query = Request.Params["keywords"];
+            if (string.IsNullOrWhiteSpace(query) || query == "undefined")
+                query = null;
+            if (string.IsNullOrWhiteSpace(query))
+                query = null;
+            string type = Request.Params["type"];
+            SearchType st = SearchType.Flow;
+            if (string.IsNullOrWhiteSpace(type) || type == "undefined")
+                st = SearchType.Flow;
+            else if (type == "file")
+                st = SearchType.File;
+            else if (type == "model")
+                st = SearchType.Model;
+
+            bool pFound = int.TryParse(Request.Params["page"], out page);
+            bool psFound = int.TryParse(Request.Params["pageSize"], out pageSize);
+            var results = _Flow.Search(
+                query,
+                (pFound && psFound) ? (page * pageSize) + 1 : default(int?),
+                psFound ? pageSize : default(int?),
+                st
+            );
+            return new JsonHelper.JsonNetResult(new { search = results} , JsonRequestBehavior.AllowGet);
         }
 
 
+        [Authorize]
         [Themed(true)]
-        public ActionResult Wiki(string q)
+        [HttpGet]
+        public ActionResult Wiki(string id)
         {
-            dynamic media = new NullableExpandoObject();
-            media.Children = _mediaLibrary.GetMediaFolders(null).Select(f=> new {folderPath = f.MediaPath, name = f.Name, lastUpdated = f.LastUpdated}).ToArray();        
-            var m = new WikiViewModel { Media = media };
-
-            //var viewModel = new MediaManagerIndexViewModel
-            //{
-            //    DialogMode = dialog,
-            //    FolderPath = folderPath,
-            //    ChildFoldersViewModel = new MediaManagerChildFoldersViewModel { Children =  },
-            //    MediaTypes = _mediaLibraryService.GetMediaTypes(),
-            //    CustomActionsShapes = explorerShape.Actions,
-            //    CustomNavigationShapes = explorerShape.Navigation,
-            //};
+            WikiViewModel m;
+            m = _Flow.GetWiki(id);
+            if (m == null)
+                return new HttpUnauthorizedResult("Unauthorized access to protected article.");
             return View(m);
         }
+     
+        [Authorize]
+        [ValidateInput(false)]
+        [Themed(true)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Wiki(WikiViewModel m)
+        {
+            var ok = _Flow.SubmitWiki(ref m);
+            if (!ok)
+                return View(m);
+            else
+                return new RedirectResult(System.Web.VirtualPathUtility.ToAbsolute(string.Format("~/flow/search#/article/{0}", m.GraphDataID)));
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpGet]
+        public ActionResult NodeDuplicate(string id)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.GetDuplicateNode(id), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpGet]
+        public ActionResult Nodes(string id)
+        {
+            Guid? temp = null;
+            Guid temp2;
+            if (Guid.TryParse(id, out temp2))
+                temp = temp2; 
+            return new JsonHelper.JsonNetResult(_Flow.GetNodeGroup(null, temp, null), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("Node")]
+        public ActionResult GetNode(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return new JsonHelper.JsonNetResult(_Flow.GetNodeGroup(null, null, null), JsonRequestBehavior.AllowGet);
+            Guid temp;
+            if (!Guid.TryParse(id, out temp))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+            return new JsonHelper.JsonNetResult(_Flow.GetNode(null,temp,true), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Node")]
+        public ActionResult CreateNode(FlowViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.CreateNode(m), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("Node")]
+        public ActionResult UpdateNode(FlowViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.UpdateNode(m), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("Node")]
+        public ActionResult DeleteNode(FlowViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.DeleteNode(m), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Edge")]
+        public ActionResult CreateEdge(FlowEdgeViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.CreateEdge(m), JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("Edge")]
+        public ActionResult DeleteEdge(FlowEdgeViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.DeleteEdge(m), JsonRequestBehavior.AllowGet);
+        }
+
+
+
     }
 }

@@ -9,16 +9,16 @@ using Newtonsoft.Json;
 namespace EXPEDIT.Flow.ViewModels
 {
     [JsonObject]
-    public class WikiViewModel 
+    public class WikiViewModel : IFlow
     {
         public Guid? GraphDataID { get; set; }
         public Guid? GraphGroupID {get;set;}
-        [Required, DisplayName("Page Name")]
+        [DisplayName("Page Name")]
         public string GraphName { get; set; }
-        [Required, DisplayName("Wiki")]
+        [DisplayName("Wiki")]
         public string GraphData { get; set; }
-
-        public dynamic Media {get;set;}
+        public bool IsDuplicate { get; set; }
+        public bool IsNew { get; set; }
       
     }
 }
