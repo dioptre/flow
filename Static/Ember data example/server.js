@@ -60,7 +60,6 @@ var coffee = [
  // Look at the ember: http://jsbin.com/izijal/9/edit
 var express = require('express');
 
-var livereload = require('express-livereload');
 
 
 
@@ -68,11 +67,9 @@ var livereload = require('express-livereload');
 var app = express();
 
 
-livereload(app, config={})
 
 // configure Express
 app.configure(function() {
-  // app.use(express.logger());
   app.use(express.cookieParser('some secret'));
   app.use(express.bodyParser());
   app.use(express.methodOverride());

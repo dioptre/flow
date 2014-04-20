@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Flow Pro</title>
+  <link rel="stylesheet" href="js/libs/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="js/libs/bootstrap/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <script type="text/x-handlebars" id="">
+    {{outlet}}
+  </script>
+
+  <script type="text/x-handlebars" id="graph">
+
+    GRAPH
+    <div id="graph-popUp">
+    <span id="operation">node</span> <br>
+    <table style="margin:auto;"><tr>
+      <td>id</td><td><input id="node-id" value="new value"></td>
+    </tr>
+      <tr>
+        <td>label</td><td><input id="node-label" value="new value"> </td>
+      </tr></table>
+    <input type="button" value="save" id="saveButton"></button>
+    <input type="button" value="cancel" id="cancelButton"></button>
+  </div>
+  <br />
+  <div id="mygraph"></div>
+
+  </script>
+
+
+
+  <script src="js/libs/jquery-1.10.2.js"></script>
+  <script src="js/libs/vis/vis.js"></script>
+  <link type="text/css" rel="stylesheet" href="js/libs/vis/vis.css">
+  <script src="js/libs/lodash.js"></script>
+  <script src="js/libs/handlebars-1.1.2.js"></script>
+  <script src="js/libs/ember-1.5.0.js"></script>
+  <script src="js/libs/ember-data.prod.js"></script>
+  <script src="js/libs/moment.js"></script>
+  <!--<script src="js/libs/bootstrap/js/bootstrap.min.js"></script> -->
+  <script src="js/libs/ember-bootstrap/js/bs-core.max.js"></script>  <!--Core of Bootstrap for Ember -->
+  <script src="js/libs/ember-bootstrap/js/bs-alert.max.js"></script>   <!--Alert component -->
+  <script src="js/libs/ember-bootstrap/js/bs-modal.max.js"></script>   <!--Modal component -->
+  <script src="js/libs/ember-bootstrap/js/bs-button.max.js"></script>   <!--Button component -->
+  <script src="js/libs/ember-bootstrap/js/bs-notifications.max.js"></script>   <!--Notifications component -->
+  <script src="js/libs/bootstrap-datepicker.js"></script>
+  <script src="js/libs/bootbox.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
