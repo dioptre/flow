@@ -121,11 +121,11 @@ namespace EXPEDIT.Flow
                 new RouteDescriptor {
                         Priority = 5,
                         Route = new Route(
-                            "Flow/node",
+                            "Flow/nodegroups",
                             new RouteValueDictionary {
                                 {"area", "EXPEDIT.Flow"},
                                 {"controller", "User"},
-                                {"action", "nodes"}
+                                {"action", "nodegroups"}
                             },
                             null,
                             new RouteValueDictionary {
@@ -141,6 +141,21 @@ namespace EXPEDIT.Flow
                                 {"area", "EXPEDIT.Flow"},
                                 {"controller", "User"},
                                 {"action", "index"}
+                            },
+                            null,
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"}
+                            },
+                            new MvcRouteHandler())
+                },
+                new RouteDescriptor {
+                        Priority = 5,
+                        Route = new Route(
+                            "Flow/edges",
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"},
+                                {"controller", "User"},
+                                {"action", "edges"}
                             },
                             null,
                             new RouteValueDictionary {

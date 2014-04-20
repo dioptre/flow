@@ -349,7 +349,7 @@ namespace EXPEDIT.Flow.Services {
                                   select o.GraphDataRelated.GraphDataID).FirstOrDefault();
                 if ((!nid.HasValue || nid == default(Guid)))
                     return null;
-                bool isNew;
+                bool isNew; 
                 //We check permission and use identical settings for rest
                 var id = CheckNodePrivileges(d, null, nid, company, ActionPermission.Read, out isNew);
                 if (!id.HasValue || isNew || nid != id)
@@ -364,7 +364,7 @@ namespace EXPEDIT.Flow.Services {
                                        select o.GraphDataGroupID).Any())
                 {
                     if (includeContent)
-                        return new FlowGroupViewModel { Nodes = disconnected.Select(g => new FlowViewModel
+                        return new FlowGroupViewModel { nodes = disconnected.Select(g => new FlowViewModel
                              {
                                  GraphDataID = g.GraphDataID,
                                  GraphName = g.GraphName,
@@ -373,7 +373,7 @@ namespace EXPEDIT.Flow.Services {
                     else
                         return new FlowGroupViewModel
                         {
-                            Nodes = disconnected.Select(g => new FlowViewModel
+                            nodes = disconnected.Select(g => new FlowViewModel
                             {
                                 GraphDataID = g.GraphDataID,
                                 GraphName = g.GraphName
@@ -402,7 +402,7 @@ namespace EXPEDIT.Flow.Services {
                 FlowGroupViewModel m = new FlowGroupViewModel();
                  if (includeContent)
                  {
-                     m.Nodes = nodes.Select(g => new FlowViewModel
+                     m.nodes = nodes.Select(g => new FlowViewModel
                      {
                          GraphDataID = g.GraphDataID,
                          GraphName = g.GraphName,
@@ -411,13 +411,13 @@ namespace EXPEDIT.Flow.Services {
                  }
                  else
                  {
-                     m.Nodes = nodes.Select(g => new FlowViewModel
+                     m.nodes = nodes.Select(g => new FlowViewModel
                      {
                          GraphDataID = g.GraphDataID,
                          GraphName = g.GraphName
                      }).ToArray();
                  }
-                 m.Edges = (from o in d.GraphDataRelation
+                 m.edges = (from o in d.GraphDataRelation
                             where o.GraphDataGroupID == gid && o.VersionOwnerCompanyID == company && o.VersionDeletedBy == null && o.Version == 0
                             select new FlowEdgeViewModel
                             {

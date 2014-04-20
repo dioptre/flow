@@ -12,13 +12,15 @@ App.IndexRoute = Ember.Route.extend({
     }
 });
 
+//App.Node.store.getById('node', '1e61b5cf-d2f0-4f49-aa36-00d8ec63acca').get('label')
 var c;
 var graph, nodes, edges, data;
 App.GraphRoute = Ember.Route.extend({
     model: function () {
+        this.store.find('Node');
         return Ember.RSVP.hash({
-            nodes: this.store.find('Node'),
-            edges: this.store.find('Edge')
+            nodes: this.store.all('Node'),
+            edges: this.store.all('Edge')
         })
     },
 
@@ -31,6 +33,7 @@ App.GraphRoute = Ember.Route.extend({
 
 
         model.nodes.forEach(function (item) {
+            console.log(item)
             nodes.add(item.serialize({ includeId: true }))
         })
 
@@ -175,36 +178,117 @@ function saveData(data, callback) {
 
 
 
-App.ApplicationAdapter = DS.FixtureAdapter;
+//App.ApplicationAdapter = DS.FixtureAdapter;
+
+DS.RESTAdapter.reopen({
+    namespace: 'flow'
+});
+
+
+App.EdgeSerializer = DS.RESTSerializer.extend({
+    // First, restructure the top-level so it's organized by type
+    // and the comments are listed under a post's `comments` key.
+    extractArray: function (store, type, payload, id, requestType) {
+
+        return [];
+
+        return this._super(store, type, payload, id, requestType);
+    }
+})
+
+
+
+App.NodeSerializer = DS.RESTSerializer.extend({
+    // First, restructure the top-level so it's organized by type
+    // and the comments are listed under a post's `comments` key.
+    extractArray: function (store, type, payload, id, requestType) {
+
+        console.log(store, type, payload, id, requestType)
+        var nodes = payload.nodes;
+        var edges = payload.edges;
+
+        nodes.forEach(function (node) {
+            node.edges = [];
+        });
+
+        edges.forEach(function (edge) {
+            //nodes[edge.from].children.push(edge.id)
+            //App.Edge.store.push('edge', edge);
+            nodes.forEach(function (node) {
+                if (edge.from == node.id) {
+                    node.edges.push(edge.id);
+                    return false;
+                }
+            })
+        });
+        //return [];
+//        var posts = payload._embedded.post;
+//        var comments = [];
+//        var postCache = {};
+
+//        posts.forEach(function(post) {
+//            post.comments = [];
+//            postCache[post.id] = post;
+//        });
+
+//        payload._embedded.comment.forEach(function(comment) {
+//            comments.push(comment);
+//            postCache[comment.post_id].comments.push(comment);
+//            delete comment.post_id;
+//        }
+
+        payload = { "Nodes": nodes, "Edges": edges };
+
+
+       // return [];
+      return this._super(store, type, payload, id, requestType);
+}//,
+
+//    normalizeHash: {
+//        edges: function (hash) {
+//            return hash;
+//        }
+    // Next, normalize individual comments, which (after `extract`)
+    // are now located under `comments`
+    //comments: function(hash) {
+    //    hash.id = hash._id;
+    //    hash.title = hash.comment_title;
+    //    delete hash._id;
+    //    delete hash.comment_title;
+    //    return hash;
+    //}
+//}
+})
 
 
 App.Node = DS.Model.extend({
     label: DS.attr('string'),
     content: DS.attr('string'),
-    children: DS.hasMany('edge')
+    edges: DS.hasMany('edge')
 });
 
 
 App.Edge = DS.Model.extend({
-    // from: DS.belongsTo('node'),
+    //from: DS.belongsTo('node'),
+    //from: DS.belongsTo('App.Node'),
     // to: DS.belongsTo('node')
     from: DS.attr(),
     to: DS.attr()
 });
 
-App.Node.FIXTURES = [
-    { id: '1', label: "Node_1", content: "Sample Content", children: [1, 2] },
-    { id: '2', label: "Node_2", content: "Sample Content 2", children: [] },
-    { id: '3', label: "Node_3", content: "Sample Content 3", children: [] }
-];
+//App.Node.FIXTURES = [
+//    { id: '1', label: "Node_1", content: "Sample Content", children: [1, 2] },
+//    { id: '2', label: "Node_2", content: "Sample Content 2", children: [] },
+//    { id: '3', label: "Node_3", content: "Sample Content 3", children: [] }
+//];
 
 
 
 
-App.Edge.FIXTURES = [
-    { id: '1', from: 1, to: 2 },
-    { id: '2', from: 1, to: 3 }
-];
+//App.Edge.FIXTURES = [
+//    { id: '1', from: 1, to: 2 },
+//    { id: '2', from: 1, to: 3 }
+//];
 
 
 

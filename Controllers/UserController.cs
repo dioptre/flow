@@ -128,7 +128,7 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpGet]
-        public ActionResult Nodes(string id)
+        public ActionResult NodeGroups(string id)
         {
             Guid? temp = null;
             Guid temp2;
@@ -140,7 +140,7 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpGet]
-        [ActionName("Node")]
+        [ActionName("Nodes")]
         public ActionResult GetNode(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -154,7 +154,7 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpPost]
-        [ActionName("Node")]
+        [ActionName("Nodes")]
         public ActionResult CreateNode(FlowViewModel m)
         {
             return new JsonHelper.JsonNetResult(_Flow.CreateNode(m), JsonRequestBehavior.AllowGet);
@@ -163,7 +163,7 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpPut]
-        [ActionName("Node")]
+        [ActionName("Nodes")]
         public ActionResult UpdateNode(FlowViewModel m)
         {
             return new JsonHelper.JsonNetResult(_Flow.UpdateNode(m), JsonRequestBehavior.AllowGet);
@@ -172,7 +172,7 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpDelete]
-        [ActionName("Node")]
+        [ActionName("Nodes")]
         public ActionResult DeleteNode(FlowViewModel m)
         {
             return new JsonHelper.JsonNetResult(_Flow.DeleteNode(m), JsonRequestBehavior.AllowGet);
@@ -180,8 +180,18 @@ namespace EXPEDIT.Flow.Controllers {
 
         [Authorize]
         [Themed(false)]
+        [HttpGet]
+        [ActionName("Edges")]
+        public ActionResult GetEdge(FlowEdgeViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(new {edges = new string[] {}}, JsonRequestBehavior.AllowGet);
+        }
+
+
+        [Authorize]
+        [Themed(false)]
         [HttpPost]
-        [ActionName("Edge")]
+        [ActionName("Edges")]
         public ActionResult CreateEdge(FlowEdgeViewModel m)
         {
             return new JsonHelper.JsonNetResult(_Flow.CreateEdge(m), JsonRequestBehavior.AllowGet);
@@ -190,7 +200,7 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpDelete]
-        [ActionName("Edge")]
+        [ActionName("Edges")]
         public ActionResult DeleteEdge(FlowEdgeViewModel m)
         {
             return new JsonHelper.JsonNetResult(_Flow.DeleteEdge(m), JsonRequestBehavior.AllowGet);
