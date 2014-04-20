@@ -44,6 +44,7 @@ Goto <input type="text" id="location" />
     var x;
 
     $("#location").autocomplete({
+        delay: 100,
         source: function (request, response) {
             $.ajax({
                 url: "/share/getlocations/" + request.term,
@@ -59,19 +60,23 @@ Goto <input type="text" id="location" />
                 }
             })
         },
-        select: function (event, ui) {
-            AddGeographyUnique(smap, JSON.parse(ui.content[0].id).spatial, false, ui.content[0].label, true, NewGUID());
+        focus: function (event, ui) {
+            AddGeographyUnique(smap, JSON.parse(ui.item.id).spatial, false, ui.item.label, true, NewGUID());
             RefocusMap(smap);
+            smap.setZoom(9);
         },
         response: function (event, ui) {
             if (ui.content.length > 0) {
                 AddGeographyUnique(smap, JSON.parse(ui.content[0].id).spatial, false, ui.content[0].label, true, NewGUID());
                 RefocusMap(smap);
+                smap.setZoom(9);
             }
             else {
                 GetAddressLocation($("#location").val(), function (latlng) {
+                    DeleteShapes(smap);
                     AddMarkerSingle(smap, latlng, false, $("#location").val(), NewGUID());
                     RefocusMap(smap);
+                    smap.setZoom(15);
                 });
             }
 
