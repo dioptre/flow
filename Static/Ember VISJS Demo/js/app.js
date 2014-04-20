@@ -80,26 +80,27 @@ App.GraphView = Ember.View.extend({
             div.style.display = 'block';
           },
           onDelete: function(data,callback){
-            console.log('Deleting elements: ', data)
 
             // Delete all nodes
             $.each(data.nodes, function(i,a){
-              var node = App.Node.store.getById('node', parseInt(a));
+              console.log("nodes: ", i,a)
+              var node = App.Node.store.getById('node', a);
               node.deleteRecord();
-              node.save();
+              // node.save(); //not working, but should maybe need to connect to api first
             })
+
 
             // Delete all nodes
             $.each(data.edges, function(i,a){
-              var edge =  App.Edge.store.getById('edge', parseInt(a));
+              console.log("edges: ", i,a)
+              var edge =  App.Edge.store.getById('edge', a);
               edge.deleteRecord();
-              edge.save();
+              // edge.save();
             })
 
-            console.log('Succesfully deleted.')
 
 
-            callback(data)
+            callback(data);
           },
           onEdit: function(data,callback) {
             var span = document.getElementById('operation');
@@ -117,7 +118,7 @@ App.GraphView = Ember.View.extend({
           },
           onConnect: function(data,callback) {
             function saveLink() {
-              console.log(data)
+              data.id = parseInt(Math.random() * 12334243143);
               App.Node.store.createRecord('edge', data)
               callback(data);
             }
@@ -201,16 +202,16 @@ App.Edge = DS.Model.extend({
 });
 
 App.Node.FIXTURES = [
-    {id: 1, label: "Node_1", content: "Sample Content", children: [1,2]},
-    {id: 2, label: "Node_2", content: "Sample Content 2", children: []},
-    {id: 3, label: "Node_3", content: "Sample Content 3", children: []}
+    {id: '1', label: "Node_1", content: "Sample Content", children: [1,2]},
+    {id: '2', label: "Node_2", content: "Sample Content 2", children: []},
+    {id: '3', label: "Node_3", content: "Sample Content 3", children: []}
 ];
 
 
 
 
 App.Edge.FIXTURES = [
-    {id: 1, from: 1, to: 2},
-    {id: 2, from: 1, to: 3}
+    {id: '1', from: 1, to: 2},
+    {id: '2', from: 1, to: 3}
 ];
 
