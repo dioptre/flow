@@ -1,0 +1,17 @@
+
+.vis.timeline .itemset {
+  position: absolute;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.vis.timeline .background {
+}
+
+.vis.timeline .foreground {
+}
+
+.vis.timeline .itemset-axis {
+  position: absolute;
+}

@@ -1,0 +1,14 @@
+
+.vis.timeline.rootpanel {
+  position: relative;
+  overflow: hidden;
+
+  border: 1px solid #bfbfbf;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.vis.timeline .vpanel {
+  position: absolute;
+  overflow: hidden;
+}
