@@ -1,20 +1,30 @@
 ﻿@Html.Partial("Header")
+@{
+    Style.Require("Flow");
+    HtmlHelper.ClientValidationEnabled = true;
+    HtmlHelper.UnobtrusiveJavaScriptEnabled = true;
+    Layout.Title = T("Flow Search").ToString();
+}
+Goto <input type="text" id="location" />
 <div id="map-search" style="width: 100%; height: 70vh"></div>
 <script type="text/javascript">
-    var drawing = true;
+    var drawing = false;
     var smap;
     var cmap;
     function initialize() {
-        smap = SetupDrawingMap('map-search');
+        if (drawing)
+            smap = SetupDrawingMap('map-search');
+        else
+            smap = SetupMap('map-search');
         RedrawMap(smap);
         
     }
    
     $(document).ready(function () {
-        if (drawing)
-            LoadScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=initialize&libraries=drawing');
+        if (!drawing)
+            LoadScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=initialize');
         else
-            LoadScript('http://maps.googleapis.com/maps/api/js?libraries=drawing&sensor=true');
+            LoadScript('http://maps.googleapis.com/maps/api/js?libraries=drawing&sensor=true&callback=initialize');
         LoadScript('@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")');
     });
 
@@ -30,4 +40,42 @@
             }
         }
     }
+
+    var x;
+
+    $("#location").autocomplete({
+        source: function (request, response) {
+            $.ajax({
+                url: "/share/getlocations/" + request.term,
+                type: "GET",
+                dataType: "json",
+                //data: { id: request.term },
+                success: function (data) {
+                    response($.map(data, function (item) {
+                        return {
+                            label: item.Text, value: item.Text, id: item.Value
+                        }
+                    }))
+                }
+            })
+        },
+        select: function (event, ui) {
+            AddGeographyUnique(smap, JSON.parse(ui.content[0].id).spatial, false, ui.content[0].label, true, NewGUID());
+            RefocusMap(smap);
+        },
+        response: function (event, ui) {
+            if (ui.content.length > 0) {
+                AddGeographyUnique(smap, JSON.parse(ui.content[0].id).spatial, false, ui.content[0].label, true, NewGUID());
+                RefocusMap(smap);
+            }
+            else {
+                GetAddressLocation($("#location").val(), function (latlng) {
+                    AddMarkerSingle(smap, latlng, false, $("#location").val(), NewGUID());
+                    RefocusMap(smap);
+                });
+            }
+
+        }
+    });
+
 </script>
