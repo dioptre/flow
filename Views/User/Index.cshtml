@@ -9,17 +9,16 @@
 <script src="~/Modules/EXPEDIT.Flow/Scripts/vis.js"></script>
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/vis.css">
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/flow.css">
-
-
-<script type="text/x-handlebars" id="">
+  Goto <input type="text" id="location" />
+    <div id="map-search" style="width: 100%; height: 70vh;display:none;"></div>
+<script type="text/x-handlebars" id="outlet">
     
-    header
+    
     {{outlet}}
-    footer
+
   </script>
 
   <script type="text/x-handlebars" id="graph">
-
     GRAPH
     <div id="graph-popUp">
     <span id="operation">node</span> <br>
@@ -34,12 +33,8 @@
   </div>
   <br />
   <div id="mygraph"></div>
-
+  
   </script>
-
-    Goto <input type="text" id="location" />
-    <div id="map-search" style="width: 100%; height: 70vh; display:none;"></div>
-
 
 
 <script type="text/javascript">
