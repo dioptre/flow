@@ -69,3 +69,42 @@ label.valid {
     display:block;
     /*display:none;*/
 }
+
+*, *:before, *:after {
+  -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+ }
+
+.input {
+  float:left;
+  border:1px solid #ccc;
+  padding: 5px;
+  font-family:Arial;
+  width: 500px;
+}
+.input span.tag{
+  cursor:pointer;
+  display:block;
+  float:left;
+  color:#fff;
+  background:#689;
+  padding:5px;
+  padding-right:25px;
+  margin:4px;
+}
+.input span.tag:hover{
+  opacity:0.7;
+}
+.input span.tag:after{
+ position:absolute;
+ content:"x";
+ border:1px solid;
+ padding:0 4px;
+ margin:3px 0 10px 5px;
+ font-size:10px;
+}
+.input input{
+  background:#eee;
+  border:0;
+  margin:4px;
+  padding:7px;
+}

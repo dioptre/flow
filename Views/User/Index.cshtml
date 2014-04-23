@@ -4,6 +4,7 @@
     HtmlHelper.ClientValidationEnabled = true;
     HtmlHelper.UnobtrusiveJavaScriptEnabled = true;
     Layout.Title = T("Flow Search").ToString();
+    Script.Require("Flow").AtFoot();
 }
 
 <style>
@@ -12,23 +13,30 @@
     }
 </style>
 <script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
+<script type="text/javascript">
+    var mapHelper = '@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")';
+</script>
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
-<script src="~/Modules/EXPEDIT.Flow/Scripts/flow.js"></script>
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/flow.css">
-  Goto <input type="text" id="location" />
-    <div id="map-search" style="width: 100%; height: 70vh;"></div>
-<div id="flowItem"></div>
+
 <div id="application" name="application"></div>
 
 <script type="text/x-handlebars" id="outlet">
-    
-    
     {{outlet}}
+</script>
 
-  </script>
+
+<script type="text/x-handlebars" id="search">
+
+    <h1>Search</h1>
+    {{render 'search-box' model}}
+
+</script>
+
 
   <script type="text/x-handlebars" id="graph">
     GRAPH
+    <div id="flowItem"></div>
     <div id="graph-popUp">
     <span id="operation">node</span> <br>
     <table style="margin:auto;"><tr>
@@ -46,97 +54,59 @@
   </script>
 
 
-<script type="text/javascript">
-    var drawing = false;
-    var smap;
-    var cmap;
-    function initialize() {
-        if (drawing)
-            smap = SetupDrawingMap('map-search');
-        else
-            smap = SetupMap('map-search');
-        RedrawMap(smap);
-        
-    }
-   
-    $(document).ready(function () {
-        if (!drawing)
-            LoadScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=initialize');
-        else
-            LoadScript('http://maps.googleapis.com/maps/api/js?libraries=drawing&sensor=true&callback=initialize');
-        LoadScript('@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")');
+  <script type="text/x-handlebars" id="search-box">
+    <div class="search-wrapper">
+      <div class="input-wrapper">
+        <div class="input">
+
+          {{! show all the available tags}}
+          {{#each tag in tags}}
+            <span  {{action 'deleteTag' tag}} class="tag">{{tag.name}}</span>
+          {{/each}}
+
+          {{! input box }}
+          {{view Ember.TextField valueBinding="searchText" type='text' placeholder="Add keywords"}}
+
+        {{! location }}
+        {{#flow-modal name="locationModal" fade=true footerButtonsBinding="locationModalBtn" title="Add a location filter!"}}
+                {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}                
+                <div id="map-search" style="width: 100%; height: 30vh"></div>
+        {{/flow-modal}}
+        <span {{action 'showLocationModal'}} class="glyphicon icon-globe"></span>
 
 
-    });
+        {{! calendar }}
+        {{#bs-modal name="dateModal" fade=true footerButtonsBinding="dateModalBtn" title="Add a time filer!"}}
+            <p>Date from</p>
+            {{view App.DatePickerField  valueBinding='sched_date_from'}}
+            <p>to</p>
+            {{view App.DatePickerField  valueBinding='sched_date_to'}}
 
-    //$('html').keyup(function (e) {
-    //    if (e.keyCode == 46) {
-    //        DeleteSelectedShape(cmap);
-    //        RedrawMap(cmap);
-    //    }
-    //});
+            <br><br>
+            Current filter {{sched_date_from}} - {{sched_date_to}}
+        {{/bs-modal}}
+        <span {{action 'showDateModal'}} class="glyphicon icon-calendar"></span>
 
-    //var currentFocus = null;
-    //$(':input').focus(function () {
-    //    currentFocus = this;
-    //    console.log(this);
-    //}).blur(function () {
-    //    currentFocus = null;
-    //});
+        </div>
+
+        {{! search }}
+        &nbsp;
+        <button {{action 'search'}} type="button" class="btn btn-primary">
+          <span class="glyphicon icon-search"></span>Search
+        </button>
 
 
-    function OnMapUpdate(map, event, center, viewport) {
-        cmap = map;
-        if (event.eventType == "EDITED") {
-            if (event.eventSource.type == "marker") {
-                DeleteExceptedShape(map, event.eventSource)
-            }
-            else {
-                DeleteExceptedShapeTypes(map);
-            }
-        }
-    }
+    </div>
 
-    var x;
+    <h2>Search output</h2>
+    {{searchQuery}}
+  </script>
 
-    $("#location").autocomplete({
-        delay: 100,
-        source: function (request, response) {
-            $.ajax({
-                url: "/share/getlocations/" + request.term,
-                type: "GET",
-                dataType: "json",
-                //data: { id: request.term },
-                success: function (data) {
-                    response($.map(data, function (item) {
-                        return {
-                            label: item.Text, value: item.Text, id: item.Value
-                        }
-                    }))
-                }
-            })
-        },
-        focus: function (event, ui) {
-            AddGeographyUnique(smap, JSON.parse(ui.item.id).spatial, false, ui.item.label, true, NewGUID());
-            RefocusMap(smap);
-            smap.setZoom(9);
-        },
-        response: function (event, ui) {
-            if (ui.content.length > 0) {
-                AddGeographyUnique(smap, JSON.parse(ui.content[0].id).spatial, false, ui.content[0].label, true, NewGUID());
-                RefocusMap(smap);
-                smap.setZoom(9);
-            }
-            else {
-                GetAddressLocation($("#location").val(), function (latlng) {
-                    DeleteShapes(smap);
-                    AddMarkerSingle(smap, latlng, false, $("#location").val(), NewGUID());
-                    RefocusMap(smap);
-                    smap.setZoom(15);
-                });
-            }
-
-        }
-    });
-
-</script>
+  <!-- Datepicker widget -->
+  <script type="text/x-handlebars" data-template-name="datepicker" >
+    {{! This article was used http://azrnd.wordpress.com/2013/04/03/bootstrap-datepicker-in-ember-js/ }}
+    <div class="input-append date datepicker" data-date-format="yyyy-mm-dd">
+      {{!log view.date_string}}
+        <input size="16" type="text" readonly><span class="add-on"><i class="icon-th"></i></span>
+    </div>
+  </script>

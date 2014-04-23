@@ -1,7 +1,7 @@
 *, *:before, *:after {
   -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
  }
-
+.ui-autocomplete { position: absolute; cursor: default;z-index:3000 !important;} 
     #mygraph {
       position:relative;
       width: 600px;

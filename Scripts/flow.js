@@ -5,12 +5,13 @@ App = Ember.Application.create({
 
 App.Router.map(function () {
     this.route('graph');
+    this.route('search');
 });
 
 
 App.IndexRoute = Ember.Route.extend({
     redirect: function () {
-        this.transitionTo("graph");
+        this.transitionTo("search");
     }
 });
 
@@ -37,6 +38,193 @@ App.GraphRoute = Ember.Route.extend({
     }
 });
 
+var drawing = false;
+var isMapSetup = false;
+var smap;
+var cmap;
+function MapInitialize() {
+    if (drawing)
+        smap = SetupDrawingMap('map-search');
+    else
+        smap = SetupMap('map-search');
+    RedrawMap(smap);
+
+}
+
+
+function OnMapUpdate(map, event, center, viewport) {
+    cmap = map;
+    if (event.eventType == "EDITED") {
+        if (event.eventSource.type == "marker") {
+            DeleteExceptedShape(map, event.eventSource)
+        }
+        else {
+            DeleteExceptedShapeTypes(map);
+        }
+    }
+}
+
+//$('html').keyup(function (e) {
+//    if (e.keyCode == 46) {
+//        DeleteSelectedShape(cmap);
+//        RedrawMap(cmap);
+//    }
+//});
+
+//var currentFocus = null;
+//$(':input').focus(function () {
+//    currentFocus = this;
+//    console.log(this);
+//}).blur(function () {
+//    currentFocus = null;
+//});
+
+(function () {
+    App.DateModal = Bootstrap.BsModalComponent.extend({
+        didInsertElement: function () {
+            this._super();
+        },
+        becameVisible: function () {
+            this._super();
+            if (!isMapSetup) {
+                isMapSetup = true;
+                if (!drawing)
+                    LoadScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=MapInitialize');
+                else
+                    LoadScript('http://maps.googleapis.com/maps/api/js?libraries=drawing&sensor=true&callback=MapInitialize');
+                LoadScript(mapHelper);
+
+                $("#searchLocation").autocomplete({
+                    delay: 100,
+                    source: function (request, response) {
+                        $.ajax({
+                            url: "/share/getlocations/" + request.term,
+                            type: "GET",
+                            dataType: "json",
+                            //data: { id: request.term },
+                            success: function (data) {
+                                response($.map(data, function (item) {
+                                    return {
+                                        label: item.Text, value: item.Text, id: item.Value
+                                    }
+                                }))
+                            }
+                        })
+                    },
+                    focus: function (event, ui) {
+                        AddGeographyUnique(smap, JSON.parse(ui.item.id).spatial, false, ui.item.label, true, NewGUID());
+                        RefocusMap(smap);
+                        smap.setZoom(9);
+                    },
+                    response: function (event, ui) {
+                        if (ui.content.length > 0) {
+                            AddGeographyUnique(smap, JSON.parse(ui.content[0].id).spatial, false, ui.content[0].label, true, NewGUID());
+                            RefocusMap(smap);
+                            smap.setZoom(9);
+                        }
+                        else {
+                            GetAddressLocation($("#searchLocation").val(), function (latlng) {
+                                DeleteShapes(smap);
+                                AddMarkerSingle(smap, latlng, false, $("#searchLocation").val(), NewGUID());
+                                RefocusMap(smap);
+                                smap.setZoom(15);
+                            });
+                        }
+
+                    }
+                });
+            }
+        }
+    });
+
+    Ember.Handlebars.helper('flow-modal', App.DateModal);
+}).call(this);
+
+App.SearchBoxController = Ember.Controller.extend({
+    tags: [{ name: 'Berlin', type: 'location' }, { name: 'London', type: "location" }, { name: '2014', type: "date" }],
+    dateModalBtn: [
+      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
+      Ember.Object.create({ title: 'Insert Date Filter', type: 'success', clicked: "addDate" })
+    ],
+    locationModalBtn: [
+      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
+      Ember.Object.create({ title: 'Insert Location Filter', type: 'success', clicked: "addLocation" })
+    ],
+    sched_date_from: "",
+    sched_date_to: "",
+    searchLocation: "",
+    searchText: "", // this the text in the search box
+    searchQuery: function () { // this builds the search query
+        var searchText = this.get('searchText');
+
+        var everything = _.clone(this.get('tags'))
+        if (searchText !== '') {
+            everything.addObject({
+                name: searchText,
+                type: 'keywords'
+            })
+        }
+        return everything.map(function (a) {
+            return a.type + ':' + a.name
+        }).join(',')
+
+    }.property('tags.@each', 'searchText'),
+    actions: {
+        deleteTag: function (tag) {
+            this.get('tags').removeObject(tag)
+        },
+        showDateModal: function () {
+            return Bootstrap.ModalManager.show('dateModal');
+        },
+        addDate: function () {
+            var controller = this;
+            var date_data = this.get('sched_date_from') + ' - ' + this.get('sched_date_to');
+            this.get('tags').addObject({
+                name: date_data,
+                type: 'date',
+                data: date_data
+            })
+            console.log(this.get('sched_date_from'))
+            return Bootstrap.ModalManager.hide('dateModal');
+        },
+        showLocationModal: function () {
+            var controller = this;
+            var location = controller.get('searchLocation');
+            console.log(location)
+            this.get('tags').addObject({
+                name: location,
+                type: 'location',
+                data: location
+            })
+            return Bootstrap.ModalManager.show('locationModal');
+        },
+        addLocation: function () {
+            return Bootstrap.ModalManager.hide('locationModal');
+        },
+        search: function () {
+            console.log('Perform the actual search')
+        }
+
+    },
+    fitInput: function () {
+        console.log('fitInput run')
+
+        // Select input elemet
+        var $input = $('.input input');
+
+        // Get size of parent
+        var parentLength = $input.parent().innerWidth();
+
+        // Length of all Tags
+        var tagsLength = $('.input span.tag').reduce(function (pV, cV, i, a) {
+            return pV + $(cV).outerWidth(true);
+        }, 0)
+
+        // Set input.length = parent - tags
+        $input.width(parentLength - tagsLength - 32);
+        return '';
+    }.property('tags.@each')
+})
 
 
 
@@ -308,6 +496,24 @@ App.Edge = DS.Model.extend({
     to: DS.attr(),
     groupid: DS.attr()
 });
+
+
+
+App.DatePickerField = Em.View.extend({
+    templateName: 'datepicker',
+    didInsertElement: function () {
+        var onChangeDate, self;
+        self = this;
+        onChangeDate = function (ev) {
+            return self.set("value", moment.utc(ev.date).format("YYYY-MM-DD"));
+        };
+        return this.$('.datepicker').datepicker({
+            separator: "-"
+        }).on("changeDate", onChangeDate);
+    }
+});
+
+
 
 //App.Node.FIXTURES = [
 //    { id: '1', label: "Node_1", content: "Sample Content", children: [1, 2] },
