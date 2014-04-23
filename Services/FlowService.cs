@@ -364,7 +364,7 @@ namespace EXPEDIT.Flow.Services {
                                        select o.GraphDataGroupID).Any())
                 {
                     if (includeContent)
-                        return new FlowGroupViewModel { nodes = disconnected.Select(g => new FlowViewModel
+                        return new FlowGroupViewModel { Nodes = disconnected.Select(g => new FlowViewModel
                              {
                                  GraphDataID = g.GraphDataID,
                                  GraphName = g.GraphName,
@@ -373,7 +373,7 @@ namespace EXPEDIT.Flow.Services {
                     else
                         return new FlowGroupViewModel
                         {
-                            nodes = disconnected.Select(g => new FlowViewModel
+                            Nodes = disconnected.Select(g => new FlowViewModel
                             {
                                 GraphDataID = g.GraphDataID,
                                 GraphName = g.GraphName
@@ -402,7 +402,7 @@ namespace EXPEDIT.Flow.Services {
                 FlowGroupViewModel m = new FlowGroupViewModel();
                  if (includeContent)
                  {
-                     m.nodes = nodes.Select(g => new FlowViewModel
+                     m.Nodes = nodes.Select(g => new FlowViewModel
                      {
                          GraphDataID = g.GraphDataID,
                          GraphName = g.GraphName,
@@ -411,13 +411,13 @@ namespace EXPEDIT.Flow.Services {
                  }
                  else
                  {
-                     m.nodes = nodes.Select(g => new FlowViewModel
+                     m.Nodes = nodes.Select(g => new FlowViewModel
                      {
                          GraphDataID = g.GraphDataID,
                          GraphName = g.GraphName
                      }).ToArray();
                  }
-                 m.edges = (from o in d.GraphDataRelation
+                 m.Edges = (from o in d.GraphDataRelation
                             where o.GraphDataGroupID == gid && o.VersionOwnerCompanyID == company && o.VersionDeletedBy == null && o.Version == 0
                             select new FlowEdgeViewModel
                             {

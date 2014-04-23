@@ -147,8 +147,8 @@ namespace EXPEDIT.Flow.Controllers {
                 return new JsonHelper.JsonNetResult(_Flow.GetNodeGroup(null, null, null), JsonRequestBehavior.AllowGet);
             Guid temp;
             if (!Guid.TryParse(id, out temp))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
-            return new JsonHelper.JsonNetResult(_Flow.GetNode(null,temp,true), JsonRequestBehavior.AllowGet);
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);    
+            return new JsonHelper.JsonNetResult(new FlowGroupViewModel{ Nodes = new[] { _Flow.GetNode(null, temp, true) }, Edges = new FlowEdgeViewModel[] {} }, JsonRequestBehavior.AllowGet);
         }
 
         [Authorize]
@@ -157,6 +157,8 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Nodes")]
         public ActionResult CreateNode(FlowViewModel m)
         {
+            if (m.node != null && m.node.id != null)
+                m = m.node;
             return new JsonHelper.JsonNetResult(_Flow.CreateNode(m), JsonRequestBehavior.AllowGet);
         }
 
@@ -166,6 +168,8 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Nodes")]
         public ActionResult UpdateNode(FlowViewModel m)
         {
+            if (m.node != null && m.node.id != null)
+                m = m.node;
             return new JsonHelper.JsonNetResult(_Flow.UpdateNode(m), JsonRequestBehavior.AllowGet);
         }
 
@@ -175,25 +179,20 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Nodes")]
         public ActionResult DeleteNode(FlowViewModel m)
         {
+            if (m.node != null && m.node.id != null)
+                m = m.node;
             return new JsonHelper.JsonNetResult(_Flow.DeleteNode(m), JsonRequestBehavior.AllowGet);
         }
 
-        [Authorize]
-        [Themed(false)]
-        [HttpGet]
-        [ActionName("Edges")]
-        public ActionResult GetEdge(FlowEdgeViewModel m)
-        {
-            return new JsonHelper.JsonNetResult(new {edges = new string[] {}}, JsonRequestBehavior.AllowGet);
-        }
-
-
+    
         [Authorize]
         [Themed(false)]
         [HttpPost]
         [ActionName("Edges")]
         public ActionResult CreateEdge(FlowEdgeViewModel m)
         {
+            if (m.edge != null && m.edge.id != null)
+                m = m.edge;
             return new JsonHelper.JsonNetResult(_Flow.CreateEdge(m), JsonRequestBehavior.AllowGet);
         }
 
@@ -203,6 +202,8 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Edges")]
         public ActionResult DeleteEdge(FlowEdgeViewModel m)
         {
+            if (m.edge != null && m.edge.id != null)
+                m = m.edge;
             return new JsonHelper.JsonNetResult(_Flow.DeleteEdge(m), JsonRequestBehavior.AllowGet);
         }
 

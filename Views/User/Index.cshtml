@@ -5,12 +5,21 @@
     HtmlHelper.UnobtrusiveJavaScriptEnabled = true;
     Layout.Title = T("Flow Search").ToString();
 }
+
+<style>
+    .header-main {
+        display: none;
+    }
+</style>
+<script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
+<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
 <script src="~/Modules/EXPEDIT.Flow/Scripts/flow.js"></script>
-<script src="~/Modules/EXPEDIT.Flow/Scripts/vis.js"></script>
-<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/vis.css">
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/flow.css">
   Goto <input type="text" id="location" />
-    <div id="map-search" style="width: 100%; height: 70vh;display:none;"></div>
+    <div id="map-search" style="width: 100%; height: 70vh;"></div>
+<div id="flowItem"></div>
+<div id="application" name="application"></div>
+
 <script type="text/x-handlebars" id="outlet">
     
     
@@ -56,7 +65,25 @@
         else
             LoadScript('http://maps.googleapis.com/maps/api/js?libraries=drawing&sensor=true&callback=initialize');
         LoadScript('@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")');
+
+
     });
+
+    //$('html').keyup(function (e) {
+    //    if (e.keyCode == 46) {
+    //        DeleteSelectedShape(cmap);
+    //        RedrawMap(cmap);
+    //    }
+    //});
+
+    //var currentFocus = null;
+    //$(':input').focus(function () {
+    //    currentFocus = this;
+    //    console.log(this);
+    //}).blur(function () {
+    //    currentFocus = null;
+    //});
+
 
     function OnMapUpdate(map, event, center, viewport) {
         cmap = map;
