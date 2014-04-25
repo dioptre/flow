@@ -1,3 +1,4 @@
+Ember.FEATURES["query-params"] = true;
 
 App = Ember.Application.create({
     rootElement: '#application'
@@ -5,15 +6,214 @@ App = Ember.Application.create({
 
 App.Router.map(function () {
     this.route('graph');
-    this.route('search');
+    this.route('index', {path: '/'});
+    this.route('search', { path: '/:page' });
+    this.route('search', { path: '/:page/:keywords' });
 });
 
 
 App.IndexRoute = Ember.Route.extend({
-    redirect: function () {
-        this.transitionTo("search");
+    beforeModel: function () {
+        this.transitionTo("search", 0, '');
     }
 });
+
+
+
+var timer;
+App.ApplicationController = Ember.Controller.extend({
+    q: '',
+    qm: function () {
+        var controller = this;
+        var temp = this.get('q');
+
+        if (temp.length > 2 || temp == '') {
+            if (timer) {
+                clearTimeout(timer);
+            }
+            timer = setTimeout(function () {
+                controller.transitionToRoute('search', 0, temp)
+            }, 300);
+        }
+    }.observes('q')
+});
+
+var pfPageSize = 20;
+App.SearchRoute = Ember.Route.extend({
+    model: function (params) {
+        return Ember.RSVP.hash({
+            images: [], //this.store.find('myFile', { page: params.page, keywords: params.keywords, pagesize: pfPageSize }),
+            params: [] //params
+        })
+    }
+});
+
+App.SearchController = Ember.Controller.extend({
+    queryParams: ['searchText', 'tags'],
+    next: function () {
+        var first = this.get('model.images').objectAt(0);
+        if (typeof first === 'undefined')
+            return false;
+        return (((this.get('currentPage') + 1) * pfPageSize) < first.get('Total'));
+    }.property('model'),
+    prev: function () {
+        var params = this.get('model.params');
+        return params.page > 0;
+    }.property('model'),
+    currentPage: function () {
+        var params = this.get('model.params');
+        return ((typeof params.page == 'undefined') || params.page == 'undefined' || (parseInt(+params.page) === 'NaN')) ? 0 : parseInt(params.page);
+    }.property('model'),
+    actions: {
+        transition: function (page) {
+            var controller = this;
+            var params = this.get('model.params');
+            var pp = (page == 'Next') ? this.get('currentPage') + 1 : this.get('currentPage') - 1;
+            controller.transitionToRoute('search', pp, params.keywords)
+        },
+        selectToggle: function (item) {
+            item.set('Selected', !item.get('Selected'));
+            pickFile(item.get('ReferenceID'), item.get('Title'));
+        },
+        search: function () {
+            console.log('Search has been pressed!')
+            // This is where we will transition!
+
+            //console.log('Search box: ', this.get('controllers.searchBox.tags'))
+
+            //this.set('searchTags', 'awesome')
+                
+            // this.transitionToRoute('search', 0, temp)
+
+
+        },
+        deleteTag: function (tag) {
+            this.get('tags').removeObject(tag)
+        },
+        showDateModal: function () {
+            return Bootstrap.ModalManager.show('dateModal');
+        },
+        addDate: function () {
+            var controller = this;
+            var date_data = this.get('sched_date_from') + ' - ' + this.get('sched_date_to');
+            this.get('tags').addObject({
+                name: date_data,
+                type: 'date',
+                data: date_data
+            })
+            console.log(this.get('sched_date_from'))
+            return Bootstrap.ModalManager.hide('dateModal');
+        },
+        showLocationModal: function () {
+            var controller = this;
+            var location = controller.get('searchLocation');
+            console.log(location)
+            this.get('tags').addObject({
+                name: location,
+                type: 'location',
+                data: location
+            })
+            return Bootstrap.ModalManager.show('locationModal');
+        },
+        addLocation: function () {
+            return Bootstrap.ModalManager.hide('locationModal');
+        }
+    },
+    //tags: ['{ name: \'Berlin\', type: \'location\', data: \"\" }', '{ name: \'London\', type: \"location\", data: \"\" }', '{ name: \'2014\', type: \"date\", data: \"\" }'],
+    tags: [{ name: 'Berlin', type: 'location', data: "" }, { name: 'London', type: "location", data: "" }, { name: '2014', type: "date", data: "" }],
+    dateModalBtn: [
+      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
+      Ember.Object.create({ title: 'Insert Date Filter', type: 'success', clicked: "addDate" })
+    ],
+    locationModalBtn: [
+      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
+      Ember.Object.create({ title: 'Insert Location Filter', type: 'success', clicked: "addLocation" })
+    ],
+    sched_date_from: "",
+    sched_date_to: "",
+    searchLocation: "",
+    searchText: "", // this the text in the search box
+    searchQuery: function () { // this builds the search query
+        var searchText = this.get('searchText');
+
+        //var everything = _.clone(this.get('tags'))
+        //if (searchText !== '') {
+        //    everything.addObject({
+        //        name: searchText,
+        //        type: 'keywords'
+        //    })
+        //}
+        //return encodeURIComponent(everything.map(function (a) {
+        //    return a.type + ':' + a.name
+        //}).join(','));
+
+    }.property('tags.@each', 'searchText'),
+    fitInput: function () {
+        console.log('fitInput run')
+
+        // Select input elemet
+        var $input = $('.input input');
+
+        // Get size of parent
+        var parentLength = $input.parent().innerWidth();
+
+        // Length of all Tags
+        var tagsLength = $('.input span.tag').reduce(function (pV, cV, i, a) {
+            return pV + $(cV).outerWidth(true);
+        }, 0)
+
+        // Set input.length = parent - tags
+        $input.width(parentLength - tagsLength - 32);
+        return '';
+    }.property('tags.@each')
+})
+
+//App.AboutRoute = Ember.Route.extend({
+//    model: function(params){
+//      return this.store.find('myfiles', params.id);
+//    }
+//})
+
+App.ApplicationAdapter = DS.RESTAdapter.extend({
+    namespace: 'share',
+    headers: {
+        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+    }
+});
+
+
+App.MyFile = DS.Model.extend({
+    Title: DS.attr(),
+    ReferenceID: DS.attr(),
+    Sequence: DS.attr(),
+    Total: DS.attr(),
+    ImageUrl: function () {
+        return '/share/user/preview/' + this.get('ReferenceID');
+    }.property(),
+    Selected: function () {
+        return false;
+    }.property()
+})
+
+
+//"Row": 1,
+//     "TotalRows": 7,
+//     "Score": 0,
+//     "ReferenceID": "1e61b5cf-d2f0-4f49-aa36-00d8ec63acca",
+//     "TableType": "E_GraphData",
+//     "Title": "tttrr56",
+//     "Description": "......",
+//     "SpatialJSON": null,
+//     "InternalURL": null,
+//     "ExternalURL": null,
+//     "Author": "admin",
+//     "Updated": "2014-04-16T23:31:19.387"
+
+
+
+
+
+
 
 //App.Node.store.getById('node', '1e61b5cf-d2f0-4f49-aa36-00d8ec63acca').get('label')
 var c;
@@ -61,6 +261,9 @@ function OnMapUpdate(map, event, center, viewport) {
         else {
             DeleteExceptedShapeTypes(map);
         }
+    }
+    if (event.eventType == "BOUNDS_CHANGED") {
+        //console.log(event);
     }
 }
 
@@ -139,93 +342,6 @@ function OnMapUpdate(map, event, center, viewport) {
 
     Ember.Handlebars.helper('flow-modal', App.DateModal);
 }).call(this);
-
-App.SearchBoxController = Ember.Controller.extend({
-    tags: [{ name: 'Berlin', type: 'location' }, { name: 'London', type: "location" }, { name: '2014', type: "date" }],
-    dateModalBtn: [
-      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
-      Ember.Object.create({ title: 'Insert Date Filter', type: 'success', clicked: "addDate" })
-    ],
-    locationModalBtn: [
-      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
-      Ember.Object.create({ title: 'Insert Location Filter', type: 'success', clicked: "addLocation" })
-    ],
-    sched_date_from: "",
-    sched_date_to: "",
-    searchLocation: "",
-    searchText: "", // this the text in the search box
-    searchQuery: function () { // this builds the search query
-        var searchText = this.get('searchText');
-
-        var everything = _.clone(this.get('tags'))
-        if (searchText !== '') {
-            everything.addObject({
-                name: searchText,
-                type: 'keywords'
-            })
-        }
-        return everything.map(function (a) {
-            return a.type + ':' + a.name
-        }).join(',')
-
-    }.property('tags.@each', 'searchText'),
-    actions: {
-        deleteTag: function (tag) {
-            this.get('tags').removeObject(tag)
-        },
-        showDateModal: function () {
-            return Bootstrap.ModalManager.show('dateModal');
-        },
-        addDate: function () {
-            var controller = this;
-            var date_data = this.get('sched_date_from') + ' - ' + this.get('sched_date_to');
-            this.get('tags').addObject({
-                name: date_data,
-                type: 'date',
-                data: date_data
-            })
-            console.log(this.get('sched_date_from'))
-            return Bootstrap.ModalManager.hide('dateModal');
-        },
-        showLocationModal: function () {
-            var controller = this;
-            var location = controller.get('searchLocation');
-            console.log(location)
-            this.get('tags').addObject({
-                name: location,
-                type: 'location',
-                data: location
-            })
-            return Bootstrap.ModalManager.show('locationModal');
-        },
-        addLocation: function () {
-            return Bootstrap.ModalManager.hide('locationModal');
-        },
-        search: function () {
-            console.log('Perform the actual search')
-        }
-
-    },
-    fitInput: function () {
-        console.log('fitInput run')
-
-        // Select input elemet
-        var $input = $('.input input');
-
-        // Get size of parent
-        var parentLength = $input.parent().innerWidth();
-
-        // Length of all Tags
-        var tagsLength = $('.input span.tag').reduce(function (pV, cV, i, a) {
-            return pV + $(cV).outerWidth(true);
-        }, 0)
-
-        // Set input.length = parent - tags
-        $input.width(parentLength - tagsLength - 32);
-        return '';
-    }.property('tags.@each')
-})
-
 
 
 App.GraphView = Ember.View.extend({

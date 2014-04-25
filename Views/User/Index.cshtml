@@ -17,7 +17,6 @@
     var mapHelper = '@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")';
 </script>
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
-<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/flow.css">
 
 <div id="application" name="application"></div>
 
@@ -26,10 +25,12 @@
 </script>
 
 
-<script type="text/x-handlebars" id="search">
+<script type="text/x-handlebars" id="search-home">
+
+    {{searchText}} - tags
 
     <h1>Search</h1>
-    {{render 'search-box' model}}
+    {{render 'search' model}}
 
 </script>
 
@@ -54,7 +55,7 @@
   </script>
 
 
-  <script type="text/x-handlebars" id="search-box">
+  <script type="text/x-handlebars" id="search">
     <div class="search-wrapper">
       <div class="input-wrapper">
         <div class="input">
@@ -97,7 +98,7 @@
 
 
     </div>
-
+    <br /><br />
     <h2>Search output</h2>
     {{searchQuery}}
   </script>
