@@ -31,6 +31,7 @@ using System.Data.SqlClient;
 using System.Data;
 using EntityFramework.Extensions;
 using EXPEDIT.License.Models;
+using HtmlAgilityPack;
 
 namespace EXPEDIT.Flow.Services {
     
@@ -212,6 +213,44 @@ namespace EXPEDIT.Flow.Services {
                     g = (from o in d.GraphData where o.GraphDataID == id select o).Single();
                 }
                 g.GraphContent = m.GraphData;
+                //Extract Files
+                HtmlDocument doc = new HtmlDocument();
+                doc.LoadHtml(m.GraphData);
+                var hrefList = doc.DocumentNode.SelectNodes("//a")
+                                  .Select(p => p.GetAttributeValue("href", null))
+                                  .Where(f=>f != null)
+                                  .ToList();
+                var files = new List<Guid>();
+                // First we see the input string.
+                foreach (var href in hrefList)
+                {
+                    var match = Regex.Match(href, @"share/file/((\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                    if (match.Success)
+                        files.Add(Guid.Parse(match.Groups[1].Value));
+                }
+                (from o in d.GraphDataContexts where !files.Contains(o.FileDataID.Value) select o).Delete(); //Delete redundant links
+                //TODO: delete redundant locations & experience
+                var x = (from o in d.GraphDataContexts select o).AsEnumerable();
+                foreach (var file in files)
+                {
+                    if (!x.Any(f => f.FileDataID == file))
+                    {
+                        var gdc = new GraphDataContext
+                        {
+                            GraphDataContextID = Guid.NewGuid(),
+                            GraphDataID = g.GraphDataID,
+                            FileDataID = file,
+                            VersionOwnerContactID = contact,
+                            VersionOwnerCompanyID = company,
+                            VersionAntecedentID = m.GraphDataID.Value,
+                            VersionUpdated = now,
+                            VersionUpdatedBy = contact
+                        };
+                        g.GraphDataContext.Add(gdc);
+                    }
+
+                }
+
                 g.VersionUpdated = now;
                 g.VersionUpdatedBy = contact;
                 d.SaveChanges();

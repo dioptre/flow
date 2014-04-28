@@ -114,7 +114,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (!ok)
                 return View(m);
             else
-                return new RedirectResult(System.Web.VirtualPathUtility.ToAbsolute(string.Format("~/flow/search#/article/{0}", m.GraphDataID)));
+                return new RedirectResult(System.Web.VirtualPathUtility.ToAbsolute(string.Format("~/flow/#/graph/{0}", m.GraphDataID)));
         }
 
         [Authorize]

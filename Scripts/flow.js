@@ -6,6 +6,7 @@ App = Ember.Application.create({
 
 App.Router.map(function () {
     this.route('graph');
+    this.route('graph', { path: '/:node' });
     this.route('index', {path: '/'});
     this.route('search', { path: '/:page' });
     this.route('search', { path: '/:page/:keywords' });
@@ -222,13 +223,13 @@ var data = { nodes: new vis.DataSet(), edges: new vis.DataSet() };
 var sessionGroupID = NewGUID();
 App.GraphRoute = Ember.Route.extend({
     model: function () {
-        Ember.RSVP.hash(this.store.find('Node')).then(function (hash) {
+        Ember.RSVP.hash(this.store.find('node')).then(function (hash) {
           
         });
 
         return Ember.RSVP.hash({
-            nodes: this.store.all('Node'),
-            edges: this.store.all('Edge')
+            nodes: this.store.all('node'),
+            edges: this.store.all('edge')
         })
     },
 
