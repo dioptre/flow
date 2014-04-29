@@ -7,15 +7,15 @@ App = Ember.Application.create({
 App.Router.map(function () {
     this.route('graph');
     this.route('graph', { path: '/:node' });
-    this.route('index', {path: '/'});
-    this.route('search', { path: '/:page' });
-    this.route('search', { path: '/:page/:keywords' });
+    // this.route('index', {path: '/'});
+    // this.route('search', { path: '/:page' });
+    this.route('search', { path: '/search' });
 });
 
 
 App.IndexRoute = Ember.Route.extend({
     beforeModel: function () {
-        this.transitionTo("search", 0, '');
+        this.transitionTo("search");
     }
 });
 
@@ -36,57 +36,70 @@ App.ApplicationController = Ember.Controller.extend({
                 controller.transitionToRoute('search', 0, temp)
             }, 300);
         }
+
+        // We should use this instead
+        // Ember.run.debounce(this, this.calledRarely, 1000);
     }.observes('q')
 });
 
 var pfPageSize = 20;
 App.SearchRoute = Ember.Route.extend({
-    model: function (params) {
-        return Ember.RSVP.hash({
-            images: [], //this.store.find('myFile', { page: params.page, keywords: params.keywords, pagesize: pfPageSize }),
-            params: [] //params
-        })
+    queryParams: {
+        keywords: { refreshModel: true },
+        tags: { refreshModel: true },
+        page: { refreshModel: true }
+
+    },
+    model: function(params) {
+        var type = 'mixed';
+        console.log(params.keywords, params.tags, params.page);
+        // return '';
+        return this.store.find('search', { page: params.page, keywords: params.keywords, tags: params.tags, pagesize: pfPageSize });
     }
 });
 
-App.SearchController = Ember.Controller.extend({
-    queryParams: ['searchText', 'tags'],
-    next: function () {
-        var first = this.get('model.images').objectAt(0);
-        if (typeof first === 'undefined')
-            return false;
-        return (((this.get('currentPage') + 1) * pfPageSize) < first.get('Total'));
-    }.property('model'),
-    prev: function () {
-        var params = this.get('model.params');
-        return params.page > 0;
-    }.property('model'),
-    currentPage: function () {
-        var params = this.get('model.params');
-        return ((typeof params.page == 'undefined') || params.page == 'undefined' || (parseInt(+params.page) === 'NaN')) ? 0 : parseInt(params.page);
-    }.property('model'),
-    actions: {
-        transition: function (page) {
-            var controller = this;
-            var params = this.get('model.params');
-            var pp = (page == 'Next') ? this.get('currentPage') + 1 : this.get('currentPage') - 1;
-            controller.transitionToRoute('search', pp, params.keywords)
+App.Search = DS.Model.extend({
+    "TotalRows": DS.attr(''),
+    "Score": DS.attr(''),
+    "ReferenceID": DS.attr(''),
+    "TableType": DS.attr(''),
+    "Title": DS.attr(''),
+    "Description": DS.attr(''),
+    "SpatialJSON": DS.attr(''),
+    "InternalURL": DS.attr(''),
+    "ExternalURL": DS.attr(''),
+    "Author": DS.attr(''),
+    "Updated": DS.attr('')
+});
+
+
+App.SearchController = Ember.ArrayController.extend({
+    queryParams: ['keywords', 'tags', 'page'],
+    page: 0,
+    keywords: '',
+    tags: [{ n:'Berlin',l:''},{ n:'London',l:''}],
+    dateModalBtn: [
+      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
+      Ember.Object.create({ title: 'Insert Date Filter', type: 'success', clicked: "addDate" })
+    ],
+    locationModalBtn: [
+      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
+      Ember.Object.create({ title: 'Insert Location Filter', type: 'success', clicked: "addLocation" })
+    ],
+    sched_date_from: "",
+    sched_date_to: "",
+    searchLocation: "",
+    searchText: "",
+        actions: {
+        next: function(){
+            console.log('next')
         },
-        selectToggle: function (item) {
-            item.set('Selected', !item.get('Selected'));
-            pickFile(item.get('ReferenceID'), item.get('Title'));
+        previous: function() {
+            console.log('previous')
         },
         search: function () {
-            console.log('Search has been pressed!')
-            // This is where we will transition!
-
-            //console.log('Search box: ', this.get('controllers.searchBox.tags'))
-
-            //this.set('searchTags', 'awesome')
-                
+            // On button click. Transition node.
             // this.transitionToRoute('search', 0, temp)
-
-
         },
         deleteTag: function (tag) {
             this.get('tags').removeObject(tag)
@@ -119,54 +132,29 @@ App.SearchController = Ember.Controller.extend({
         addLocation: function () {
             return Bootstrap.ModalManager.hide('locationModal');
         }
-    },
-    //tags: ['{ name: \'Berlin\', type: \'location\', data: \"\" }', '{ name: \'London\', type: \"location\", data: \"\" }', '{ name: \'2014\', type: \"date\", data: \"\" }'],
-    tags: [{ name: 'Berlin', type: 'location', data: "" }, { name: 'London', type: "location", data: "" }, { name: '2014', type: "date", data: "" }],
-    dateModalBtn: [
-      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
-      Ember.Object.create({ title: 'Insert Date Filter', type: 'success', clicked: "addDate" })
-    ],
-    locationModalBtn: [
-      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
-      Ember.Object.create({ title: 'Insert Location Filter', type: 'success', clicked: "addLocation" })
-    ],
-    sched_date_from: "",
-    sched_date_to: "",
-    searchLocation: "",
-    searchText: "", // this the text in the search box
-    searchQuery: function () { // this builds the search query
-        var searchText = this.get('searchText');
+    }
+    // this the text in the search box
+    // searchQuery: function () { // this builds the search query
+    //     var searchText = this.get('searchText');
+    // }.property('tags.@each', 'searchText'),
+    // fitInput: function () {
+    //     console.log('fitInput run')
 
-        //var everything = _.clone(this.get('tags'))
-        //if (searchText !== '') {
-        //    everything.addObject({
-        //        name: searchText,
-        //        type: 'keywords'
-        //    })
-        //}
-        //return encodeURIComponent(everything.map(function (a) {
-        //    return a.type + ':' + a.name
-        //}).join(','));
+    //     // Select input elemet
+    //     var $input = $('.input input');
 
-    }.property('tags.@each', 'searchText'),
-    fitInput: function () {
-        console.log('fitInput run')
+    //     // Get size of parent
+    //     var parentLength = $input.parent().innerWidth();
 
-        // Select input elemet
-        var $input = $('.input input');
+    //     // Length of all Tags
+    //     var tagsLength = $('.input span.tag').reduce(function (pV, cV, i, a) {
+    //         return pV + $(cV).outerWidth(true);
+    //     }, 0)
 
-        // Get size of parent
-        var parentLength = $input.parent().innerWidth();
-
-        // Length of all Tags
-        var tagsLength = $('.input span.tag').reduce(function (pV, cV, i, a) {
-            return pV + $(cV).outerWidth(true);
-        }, 0)
-
-        // Set input.length = parent - tags
-        $input.width(parentLength - tagsLength - 32);
-        return '';
-    }.property('tags.@each')
+    //     // Set input.length = parent - tags
+    //     $input.width(parentLength - tagsLength - 32);
+    //     return '';
+    // }.property('tags.@each')
 })
 
 //App.AboutRoute = Ember.Route.extend({
@@ -176,7 +164,7 @@ App.SearchController = Ember.Controller.extend({
 //})
 
 App.ApplicationAdapter = DS.RESTAdapter.extend({
-    namespace: 'share',
+    namespace: 'flow',
     headers: {
         __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
     }
@@ -224,7 +212,7 @@ var sessionGroupID = NewGUID();
 App.GraphRoute = Ember.Route.extend({
     model: function () {
         Ember.RSVP.hash(this.store.find('node')).then(function (hash) {
-          
+
         });
 
         return Ember.RSVP.hash({
@@ -235,7 +223,7 @@ App.GraphRoute = Ember.Route.extend({
 
     afterModel: function (model) {
 
-       
+
     }
 });
 
@@ -430,7 +418,7 @@ App.GraphView = Ember.View.extend({
         graph.on('click', function (data) {
             //console.log(data, 'click event')
             if (data.nodes.length > 0) {
-                App.Node.store.findQuery('node', { id: data.nodes[0] }).then(function (updated) {                    
+                App.Node.store.findQuery('node', { id: data.nodes[0] }).then(function (updated) {
                     var c = updated.get('content');
                     if (c && c[0]) {
                         var record = App.Node.store.getById('node', data.nodes[0]);
@@ -439,7 +427,7 @@ App.GraphView = Ember.View.extend({
                     }
                 });
 
-                
+
             }
         })
 
@@ -563,12 +551,12 @@ App.NodeSerializer = DS.RESTSerializer.extend({
             //$('#flowItem').html(nodes[0].content); //Really not cool
         } else if (nodes.length === 0 && edges.length === 1) {
             //payload.edge = edges[0];
-        } 
-              
+        }
+
         //console.log(payload);
 
         //var supp = this._super(store, type, payload, id, requestType);
-        //return supp;    
+        //return supp;
       return this._super(store, type, payload, id, requestType);
     }
     //,
@@ -669,7 +657,7 @@ $(document).ready(function () {
     contented.localName = 'contented';
     contented.style = 'width:100%;';
     document.body.appendChild(contented);
-    
+
     function recurseTree(key, val, parent) {
         if (key == '_') {
             updateTree(val, parent);

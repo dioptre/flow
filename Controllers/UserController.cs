@@ -61,7 +61,7 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
         [Themed(false)]
-        public ActionResult Search(string q)
+        public ActionResult Searches(string q)
         {
             int page;
             int pageSize;

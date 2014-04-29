@@ -91,11 +91,11 @@ namespace EXPEDIT.Flow
                 new RouteDescriptor {
                         Priority = 50,
                         Route = new Route(
-                            "Flow/search/{*q}",
+                            "Flow/searches/{*q}",
                             new RouteValueDictionary {
                                 {"area", "EXPEDIT.Flow"},
                                 {"controller", "User"},
-                                {"action", "search"}
+                                {"action", "searches"}
                             },
                             null,
                             new RouteValueDictionary {

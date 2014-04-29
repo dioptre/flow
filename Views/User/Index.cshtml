@@ -51,7 +51,7 @@
   </div>
   <br />
   <div id="mygraph"></div>
-  
+
   </script>
 
 
@@ -62,15 +62,15 @@
 
           {{! show all the available tags}}
           {{#each tag in tags}}
-            <span  {{action 'deleteTag' tag}} class="tag">{{tag.name}}</span>
+            <span  {{action 'deleteTag' tag}} class="tag">{{tag.n}}</span>
           {{/each}}
 
           {{! input box }}
-          {{view Ember.TextField valueBinding="searchText" type='text' placeholder="Add keywords"}}
+          {{view Ember.TextField valueBinding="keywords" type='text' placeholder="Add keywords"}}
 
         {{! location }}
         {{#flow-modal name="locationModal" fade=true footerButtonsBinding="locationModalBtn" title="Add a location filter!"}}
-                {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}                
+                {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}
                 <div id="map-search" style="width: 100%; height: 30vh"></div>
         {{/flow-modal}}
         <span {{action 'showLocationModal'}} class="glyphicon icon-globe"></span>
