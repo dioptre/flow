@@ -1,6 +1,7 @@
 Ember.FEATURES["query-params"] = true;
 
 App = Ember.Application.create({
+    LOG_TRANSITIONS: true,
     rootElement: '#application'
 });
 
@@ -55,10 +56,18 @@ App.SearchRoute = Ember.Route.extend({
         console.log(params.keywords, params.tags, params.page);
         // return '';
         return this.store.find('search', { page: params.page, keywords: params.keywords, tags: params.tags, pagesize: pfPageSize });
+    },
+    setupController: function(controller, model) {
+        console.log('Setting up controller: ', model);
+        controller.set('model', model);
+    },
+    afterModel: function (arr, transition) {
+        //alert('hi');
     }
 });
 
 App.Search = DS.Model.extend({
+    "Row": DS.attr(''),
     "TotalRows": DS.attr(''),
     "Score": DS.attr(''),
     "ReferenceID": DS.attr(''),
@@ -73,11 +82,28 @@ App.Search = DS.Model.extend({
 });
 
 
-App.SearchController = Ember.ArrayController.extend({
+App.SearchSerializer = DS.RESTSerializer.extend({
+    extractArray: function (store, type, payload, id, requestType) {
+
+
+        var results = payload.search;
+
+        results.forEach(function (result) {
+            result.id = NewGUID();
+        });
+        payload = { Searches: results };
+
+        return this._super(store, type, payload, id, requestType);
+    }
+});
+
+
+
+App.SearchController = Ember.Controller.extend({
     queryParams: ['keywords', 'tags', 'page'],
     page: 0,
     keywords: '',
-    tags: [{ n:'Berlin',l:''},{ n:'London',l:''}],
+    tags: [{ n: 'Berlin', l: '' }, { n: 'London', l: '' }],
     dateModalBtn: [
       Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
       Ember.Object.create({ title: 'Insert Date Filter', type: 'success', clicked: "addDate" })
@@ -90,14 +116,15 @@ App.SearchController = Ember.ArrayController.extend({
     sched_date_to: "",
     searchLocation: "",
     searchText: "",
-        actions: {
-        next: function(){
+    actions: {
+        next: function () {
             console.log('next')
         },
-        previous: function() {
+        previous: function () {
             console.log('previous')
         },
         search: function () {
+            console.log(this.get('model'))
             // On button click. Transition node.
             // this.transitionToRoute('search', 0, temp)
         },
@@ -155,7 +182,7 @@ App.SearchController = Ember.ArrayController.extend({
     //     $input.width(parentLength - tagsLength - 32);
     //     return '';
     // }.property('tags.@each')
-})
+});
 
 //App.AboutRoute = Ember.Route.extend({
 //    model: function(params){
@@ -183,23 +210,6 @@ App.MyFile = DS.Model.extend({
         return false;
     }.property()
 })
-
-
-//"Row": 1,
-//     "TotalRows": 7,
-//     "Score": 0,
-//     "ReferenceID": "1e61b5cf-d2f0-4f49-aa36-00d8ec63acca",
-//     "TableType": "E_GraphData",
-//     "Title": "tttrr56",
-//     "Description": "......",
-//     "SpatialJSON": null,
-//     "InternalURL": null,
-//     "ExternalURL": null,
-//     "Author": "admin",
-//     "Updated": "2014-04-16T23:31:19.387"
-
-
-
 
 
 

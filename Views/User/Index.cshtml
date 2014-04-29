@@ -100,7 +100,10 @@
     </div>
     <br /><br />
     <h2>Search output</h2>
-    {{searchQuery}}
+    {{#each test in model}}
+      <li>Hello, {{test.Title}}</li>
+    {{/each}}
+
   </script>
 
   <!-- Datepicker widget -->
