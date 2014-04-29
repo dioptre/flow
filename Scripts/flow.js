@@ -434,6 +434,7 @@ App.GraphView = Ember.View.extend({
                         var record = App.Node.store.getById('node', data.nodes[0]);
                         record.set('content', c[0].get('content'))
                         $('#flowItem').html(record.get('content'));
+                        $('#flowEdit').html('<a href="./wiki/' + record.get('label') + '">' + record.get('label') + '</a>');
                     }
                 });
 
