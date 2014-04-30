@@ -159,7 +159,10 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (m.node != null && m.node.id != null)
                 m = m.node;
-            return new JsonHelper.JsonNetResult(_Flow.CreateNode(m), JsonRequestBehavior.AllowGet);
+            if (_Flow.CreateNode(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);    
         }
 
         [Authorize]
@@ -170,7 +173,10 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (m.node != null && m.node.id != null)
                 m = m.node;
-            return new JsonHelper.JsonNetResult(_Flow.UpdateNode(m), JsonRequestBehavior.AllowGet);
+            if (_Flow.UpdateNode(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);    
         }
 
         [Authorize]
@@ -181,7 +187,10 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (m.node != null && m.node.id != null)
                 m = m.node;
-            return new JsonHelper.JsonNetResult(_Flow.DeleteNode(m), JsonRequestBehavior.AllowGet);
+            if (_Flow.DeleteNode(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
         }
 
     
@@ -193,7 +202,10 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (m.edge != null && m.edge.id != null)
                 m = m.edge;
-            return new JsonHelper.JsonNetResult(_Flow.CreateEdge(m), JsonRequestBehavior.AllowGet);
+            if (_Flow.CreateEdge(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
         }
 
         [Authorize]
@@ -204,7 +216,10 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (m.edge != null && m.edge.id != null)
                 m = m.edge;
-            return new JsonHelper.JsonNetResult(_Flow.DeleteEdge(m), JsonRequestBehavior.AllowGet);
+            if (_Flow.DeleteEdge(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
         }
 
 

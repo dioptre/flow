@@ -39,7 +39,7 @@
 </script>
 
 
-  <script type="text/x-handlebars" id="graph">   
+  <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
   <div class="row-fluid">
     <div class="span6">
@@ -51,7 +51,7 @@
     </div>
   </div>
 
-   
+
     <div id="graph-popUp">
     <span id="operation">node</span> <br>
     <table style="margin:auto;"><tr>
@@ -59,12 +59,12 @@
     </tr>
       <tr>
         <td>label</td><td><input id="node-label" value="new value"> </td>
-      </tr></table> 
+      </tr></table>
     <input type="button" value="save" id="saveButton"></button>
     <input type="button" value="cancel" id="cancelButton"></button>
   </div>
   <br />
-  
+
 
   </script>
 
@@ -114,9 +114,36 @@
     </div>
     <br /><br />
     <h2>Search output</h2>
-    {{#each test in model}}
-      <li>Hello, {{test.Title}}</li>
-    {{/each}}
+    <div class="table-responsive">
+      <table class="table table-condensed table-hover">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Author</th>
+              <th>Updated</th>
+              <th>TableType</th>
+              <th>Score</th>
+              <th>ReferenceID</th>
+              <th>ExternalURL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each result in model}}
+              <tr>
+                <td>{{result.Title}}</td>
+                <td>{{result.Description}}</td>
+                <td>{{result.Author}}</td>
+                <td>{{result.Updated}}</td>
+                <td>{{result.TableType}}</td>
+                <td>{{result.Score}}</td>
+                <td>{{result.ReferenceID}}</td>
+                <td>{{result.ExternalURL}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+      </table>
+    </div>
 
   </script>
 

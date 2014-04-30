@@ -350,6 +350,8 @@ namespace EXPEDIT.Flow.Services {
                 //This should never happen
                 return null;
             }
+            if (root != null && permission == ActionPermission.Create)
+                return null;
             var verified = false;
             Guid? id = null;
             if (root != null)

@@ -433,11 +433,11 @@ App.GraphView = Ember.View.extend({
                     if (c && c[0]) {
                         var record = App.Node.store.getById('node', data.nodes[0]);
                         record.set('content', c[0].get('content'))
-                        $('#flowItem').html(record.get('content'));                        
+                        $('#flowItem').html(record.get('content'));
                         $('#flowEditLink').attr('href', './wiki/' + record.get('label'));
                         $('#flowEditLink').html('Edit ' + record.get('label'));
                         $('#flowEdit').show();
-                        
+
                     }
                 });
 
@@ -522,16 +522,18 @@ App.NodeSerializer = DS.RESTSerializer.extend({
                 node.edges = [];
         });
 
-        edges.forEach(function (edge) {
-            //nodes[edge.from].children.push(edge.id)
-            //App.Edge.store.push('edge', edge);
-            nodes.forEach(function (node) {
-                if (edge.from == node.id) {
-                    node.edges.push(edge.id);
-                    return false;
-                }
-            })
-        });
+        if (edges) {
+            edges.forEach(function (edge) {
+                //nodes[edge.from].children.push(edge.id)
+                //App.Edge.store.push('edge', edge);
+                nodes.forEach(function (node) {
+                    if (edge.from == node.id) {
+                        node.edges.push(edge.id);
+                        return false;
+                    }
+                })
+            });
+        }
 
 
 
@@ -550,10 +552,15 @@ App.NodeSerializer = DS.RESTSerializer.extend({
             if (!data.nodes.get(item.id)) //Only insert new data not twice if reloading from restadapter
                 data.nodes.add(item)
         })
-        edges.forEach(function (item) {
-            if (!data.edges.get(item.id)) //Only insert new data not twice if reloading from restadapter
-                data.edges.add(item)
-        })
+
+        if (edges) {
+            edges.forEach(function (item) {
+                if (!data.edges.get(item.id)) //Only insert new data not twice if reloading from restadapter
+                    data.edges.add(item)
+            })
+        }
+
+
 
 
         payload = { "Nodes": nodes, "Edges": edges };
