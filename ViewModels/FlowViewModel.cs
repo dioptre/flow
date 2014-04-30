@@ -13,7 +13,8 @@ namespace EXPEDIT.Flow.ViewModels
     {
         Model,
         File,
-        Flow
+        Flow,
+        FlowLocation
     }
 
     public interface IFlow

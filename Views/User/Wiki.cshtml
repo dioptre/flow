@@ -19,7 +19,7 @@
        @Html.LabelFor(m => m.GraphName, new { style = "font-weight:bold;"})
     </div>
     <div class="editor-field">
-       @( Model.IsNew ? Html.TextBoxFor(m => m.GraphName) : Html.TextBoxFor(m => m.GraphName, new { @readonly = "readonly" })) <img id="checkDupWiki" src="@Url.Content("~/Modules/EXPEDIT.Flow/Images/loading.gif")" style="margin-top:-10px;display:none;" />
+       @Html.TextBoxFor(m => m.GraphName) <img id="checkDupWiki" src="@Url.Content("~/Modules/EXPEDIT.Flow/Images/loading.gif")" style="margin-top:-10px;display:none;" />
     </div>       
     <div class="editor-label">
         <p>Description:</p>

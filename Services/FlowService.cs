@@ -69,7 +69,6 @@ namespace EXPEDIT.Flow.Services {
         public Localizer T { get; set; }
 
 
-
         public dynamic Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow)
         {
             //if no results show wikipedia
@@ -91,6 +90,9 @@ namespace EXPEDIT.Flow.Services {
                         break;
                     case SearchType.Model:
                         table = d.GetTableName(typeof(SupplierModel));
+                        break;
+                    case SearchType.FlowLocation:
+                        table = d.GetTableName(typeof(GraphDataLocation));
                         break;
                     default:
                         table = d.GetTableName(typeof(GraphData));
@@ -194,14 +196,16 @@ namespace EXPEDIT.Flow.Services {
                 if (isNew && string.IsNullOrWhiteSpace(m.GraphName))
                     return false; //Can't create blank wiki
                 GraphData g;
+                Guid? creatorContact, creatorCompany;
+                _users.GetCreator(contact, company, out creatorContact, out creatorCompany); 
                 if (isNew)
                 {
                     g = new GraphData
                     {
                         GraphDataID = m.GraphDataID.Value,
                         GraphName = m.GraphName,
-                        VersionOwnerContactID = contact,
-                        VersionOwnerCompanyID = company,
+                        VersionOwnerContactID = creatorContact,
+                        VersionOwnerCompanyID = creatorCompany,
                         VersionAntecedentID = m.GraphDataID.Value,
                         Created = now,
                         CreatedBy = contact
@@ -245,8 +249,8 @@ namespace EXPEDIT.Flow.Services {
                                     GraphDataFileDataID = Guid.NewGuid(),
                                     GraphDataID = g.GraphDataID,
                                     FileDataID = file,
-                                    VersionOwnerContactID = contact,
-                                    VersionOwnerCompanyID = company,
+                                    VersionOwnerContactID = creatorContact,
+                                    VersionOwnerCompanyID = creatorCompany,
                                     VersionAntecedentID = m.GraphDataID.Value,
                                     VersionUpdated = now,
                                     VersionUpdatedBy = contact
@@ -275,8 +279,8 @@ namespace EXPEDIT.Flow.Services {
                                     GraphDataLocationID = Guid.NewGuid(),
                                     GraphDataID = g.GraphDataID,
                                     LocationID = location,
-                                    VersionOwnerContactID = contact,
-                                    VersionOwnerCompanyID = company,
+                                    VersionOwnerContactID = creatorContact,
+                                    VersionOwnerCompanyID = creatorCompany,
                                     VersionAntecedentID = m.GraphDataID.Value,
                                     VersionUpdated = now,
                                     VersionUpdatedBy = contact
@@ -629,12 +633,14 @@ namespace EXPEDIT.Flow.Services {
                 var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, company, ActionPermission.Create, out isNew);
                 if (!id.HasValue || !isNew)
                     return false;
+                Guid? creatorContact, creatorCompany;
+                _users.GetCreator(contact, company, out creatorContact, out creatorCompany);
                 GraphData g = new GraphData
                     {
                         GraphDataID = m.GraphDataID.Value,
                         GraphName = m.GraphName,
-                        VersionOwnerContactID = contact,
-                        VersionOwnerCompanyID = company,
+                        VersionOwnerContactID = creatorContact,
+                        VersionOwnerCompanyID = creatorCompany,
                         VersionAntecedentID = m.GraphDataID.Value,
                         Created = now,
                         CreatedBy = contact,
@@ -722,6 +728,8 @@ namespace EXPEDIT.Flow.Services {
                     return false;
                 if ((from o in d.GraphDataRelation where (o.FromGraphDataID == m.FromID && o.ToGraphDataID == m.ToID && o.GraphDataGroupID == m.GroupID) || o.GraphDataRelationID == m.GraphDataRelationID select o).Any())
                     return true;
+                Guid? creatorContact, creatorCompany;
+                _users.GetCreator(contact, company, out creatorContact, out creatorCompany);
                 var g = new GraphDataRelation
                 {
                     GraphDataRelationID = m.GraphDataRelationID.Value,
@@ -734,8 +742,8 @@ namespace EXPEDIT.Flow.Services {
                     Sequence = m.Sequence,
                     VersionUpdated = now,
                     VersionUpdatedBy = contact,
-                    VersionOwnerCompanyID = company,
-                    VersionOwnerContactID = contact
+                    VersionOwnerCompanyID = creatorCompany,
+                    VersionOwnerContactID = creatorContact
                 };
                 d.GraphDataRelation.AddObject(g);
                 d.SaveChanges();

@@ -68,6 +68,10 @@
 
   </script>
 
+<!--  <script type="text/x-handlebars" id="loading">
+    <h1>Loading...</h1>
+  </script>-->
+
 
   <script type="text/x-handlebars" id="search">
     <div class="search-wrapper">
@@ -80,7 +84,7 @@
           {{/each}}
 
           {{! input box }}
-          {{view Ember.TextField valueBinding="keywords" type='text' placeholder="Add keywords"}}
+          {{view Ember.TextField action='search' valueBinding="keywords" type='text' placeholder="Add keywords"}}
 
         {{! location }}
         {{#flow-modal name="locationModal" fade=true footerButtonsBinding="locationModalBtn" title="Add a location filter!"}}
@@ -112,40 +116,61 @@
 
 
     </div>
-    <br /><br />
-    <h2>Search output</h2>
-    <div class="table-responsive">
-      <table class="table table-condensed table-hover">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Author</th>
-              <th>Updated</th>
-              <th>TableType</th>
-              <th>Score</th>
-              <th>ReferenceID</th>
-              <th>ExternalURL</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{#each result in model}}
-              <tr>
-                <td>{{result.Title}}</td>
-                <td>{{result.Description}}</td>
-                <td>{{result.Author}}</td>
-                <td>{{result.Updated}}</td>
-                <td>{{result.TableType}}</td>
-                <td>{{result.Score}}</td>
-                <td>{{result.ReferenceID}}</td>
-                <td>{{result.ExternalURL}}</td>
-              </tr>
-            {{/each}}
-          </tbody>
-      </table>
-    </div>
+    <br/><br/>
+    {{render 'searchResults'}}
+    {{render 'mapResults'}}
 
   </script>
+
+
+<script type="text/x-handlebars" data-template-name="searchResults">
+  <h2>Search output</h2>
+  <div class="table-responsive">
+    <table class="table table-condensed table-hover">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Author</th>
+            <th>Updated</th>
+            <th>TableType</th>
+            <th>Score</th>
+            <th>ReferenceID</th>
+            <th>ExternalURL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each result in results}}
+            <tr>
+              <td>{{result.Title}}</td>
+              <td>{{result.Description}}</td>
+              <td>{{result.Author}}</td>
+              <td>{{result.Updated}}</td>
+              <td>{{result.TableType}}</td>
+              <td>{{result.Score}}</td>
+              <td>{{result.ReferenceID}}</td>
+              <td>{{result.ExternalURL}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+    </table>
+  </div>
+</script>
+
+
+
+
+<script type="text/x-handlebars" data-template-name="mapResults">
+  <h2>Map output</h2>
+     {{#each result in results}}
+        {{result.Title}}
+     {{/each}}
+  <div id="map-results" style="width: 100%; height: 75vh"></div>
+</script>
+
+
+
+
 
   <!-- Datepicker widget -->
   <script type="text/x-handlebars" data-template-name="datepicker" >

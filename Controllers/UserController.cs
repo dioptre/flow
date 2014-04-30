@@ -78,6 +78,8 @@ namespace EXPEDIT.Flow.Controllers {
                 st = SearchType.File;
             else if (type == "model")
                 st = SearchType.Model;
+            else if (type == "flowlocation")
+                st = SearchType.FlowLocation;
 
             bool pFound = int.TryParse(Request.Params["page"], out page);
             bool psFound = int.TryParse(Request.Params["pageSize"], out pageSize);
@@ -94,6 +96,7 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(true)]
         [HttpGet]
+        [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")] 
         public ActionResult Wiki(string id)
         {
             WikiViewModel m;

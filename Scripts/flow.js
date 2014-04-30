@@ -45,24 +45,20 @@ App.ApplicationController = Ember.Controller.extend({
 
 var pfPageSize = 20;
 App.SearchRoute = Ember.Route.extend({
-    queryParams: {
-        keywords: { refreshModel: true },
-        tags: { refreshModel: true },
-        page: { refreshModel: true }
+    // queryParams: {
+    //     keywords: { refreshModel: true },
+    //     tags: { refreshModel: true },
+    //     page: { refreshModel: true }
 
-    },
+    // },
     model: function(params) {
         var type = 'mixed';
-        console.log(params.keywords, params.tags, params.page);
-        // return '';
-        return this.store.find('search', { page: params.page, keywords: params.keywords, tags: params.tags, pagesize: pfPageSize });
-    },
-    setupController: function(controller, model) {
-        console.log('Setting up controller: ', model);
-        controller.set('model', model);
-    },
-    afterModel: function (arr, transition) {
-        //alert('hi');
+        // console.log(params.keywords, params.tags, params.page);
+        return '';
+        // return this.store.find('search', { page: params.page, keywords: params.keywords, tags: params.tags, pagesize: pfPageSize });
+    // }, Redundant code, as this is auto created by specifiny SearchController = Ember.ObjectControoler.extend({})
+    // setupController: function(controller, model) {
+    //     controller.set('model', model);
     }
 });
 
@@ -100,10 +96,12 @@ App.SearchSerializer = DS.RESTSerializer.extend({
 
 
 App.SearchController = Ember.Controller.extend({
-    queryParams: ['keywords', 'tags', 'page'],
+    needs: ['searchResults','mapResults'],
+    queryParams: ['keywords', 'tags', 'page', 'types'],
     page: 0,
     keywords: '',
-    tags: [{ n: 'Berlin', l: '' }, { n: 'London', l: '' }],
+    tags: [],
+    types: ['flow','file','flowlocation'],
     dateModalBtn: [
       Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
       Ember.Object.create({ title: 'Insert Date Filter', type: 'success', clicked: "addDate" })
@@ -124,7 +122,7 @@ App.SearchController = Ember.Controller.extend({
             console.log('previous')
         },
         search: function () {
-            console.log(this.get('model'))
+            this.getData();
             // On button click. Transition node.
             // this.transitionToRoute('search', 0, temp)
         },
@@ -138,32 +136,57 @@ App.SearchController = Ember.Controller.extend({
             var controller = this;
             var date_data = this.get('sched_date_from') + ' - ' + this.get('sched_date_to');
             this.get('tags').addObject({
-                name: date_data,
-                type: 'date',
-                data: date_data
+                n: date_data,
+                d: date_data
             })
             console.log(this.get('sched_date_from'))
             return Bootstrap.ModalManager.hide('dateModal');
         },
         showLocationModal: function () {
+            return Bootstrap.ModalManager.show('locationModal');
+        },
+        addLocation: function () {
             var controller = this;
             var location = controller.get('searchLocation');
             console.log(location)
             this.get('tags').addObject({
-                name: location,
-                type: 'location',
-                data: location
-            })
-            return Bootstrap.ModalManager.show('locationModal');
-        },
-        addLocation: function () {
+                n: location,
+                l: location
+            });
             return Bootstrap.ModalManager.hide('locationModal');
         }
-    }
-    // this the text in the search box
-    // searchQuery: function () { // this builds the search query
-    //     var searchText = this.get('searchText');
-    // }.property('tags.@each', 'searchText'),
+    },
+    getData: function(){
+        var controller = this;
+        if ($.inArray('flow', this.get('types')) > -1) {
+            this.store.find('search', {
+                page: this.get('page'),
+                keywords: this.get('keywords'),
+                tags: this.get('tags'),
+                type: 'flow',
+                pagesize: pfPageSize
+            }).then(function (res) {
+                controller.set('controllers.searchResults.results', res.get('content'))
+            });
+        }
+        if ($.inArray('flowlocation', this.get('types')) > -1) {
+            this.store.find('search', {
+                page: this.get('page'),
+                keywords: this.get('keywords'),
+                tags: this.get('tags'),
+                type: 'flowlocation',
+                pagesize: pfPageSize
+            }).then(function (res) {
+                controller.set('controllers.mapResults.results', res.get('content'))
+            });
+        }
+
+    },
+    searchQuery: function () { // this builds the search query
+        var controller = this;
+        Ember.run.debounce(this, controller.getData, 1000);
+
+    }.observes('tags.@each', 'keywords', 'page')
     // fitInput: function () {
     //     console.log('fitInput run')
 
@@ -183,6 +206,47 @@ App.SearchController = Ember.Controller.extend({
     //     return '';
     // }.property('tags.@each')
 });
+
+
+App.SearchResultsController = Ember.Controller.extend({
+    // keywords: Ember.computed.alias("controllers.search.keywords"),
+    // page: Ember.computed.alias("controllers.search.page"),
+    // tags: Ember.computed.alias("controllers.search.tags"),
+    results: []
+    // results: function(){
+    //     this.get('a');
+    //     return []
+    // }.property('page', 'keywords', 'tags'),
+    // a: function(){
+    //     console.log('getting new results with keywords: ', this.get('keywords'));
+    //     var a =
+
+
+    //        // });
+    // }
+
+})
+
+
+App.MapResultsController = Ember.Controller.extend({
+    // keywords: Ember.computed.alias("controllers.search.keywords"),
+    // page: Ember.computed.alias("controllers.search.page"),
+    // tags: Ember.computed.alias("controllers.search.tags"),
+    results: []
+    // results: function(){
+    //     this.get('a');
+    //     return []
+    // }.property('page', 'keywords', 'tags'),
+    // a: function(){
+    //     console.log('getting new results with keywords: ', this.get('keywords'));
+    //     var a =
+
+
+    //        // });
+    // }
+
+})
+
 
 //App.AboutRoute = Ember.Route.extend({
 //    model: function(params){
