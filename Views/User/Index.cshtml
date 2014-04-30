@@ -114,17 +114,29 @@
           <span class="glyphicon icon-search"></span>Search
         </button>
 
+        {{view Ember.Checkbox}}
+
 
     </div>
     <br/><br/>
-    {{render 'searchResults'}}
+ <div class="row-fluid">
+    <div class="span6">
+        {{render 'graphResults'}}
+    </div>
+    <div class="span6">
+    {{render 'fileResults'}}
+    </div>
+  </div>
+
+
+
     {{render 'mapResults'}}
 
   </script>
 
 
-<script type="text/x-handlebars" data-template-name="searchResults">
-  <h2>Search output</h2>
+<script type="text/x-handlebars" data-template-name="graphResults">
+  <h2>Graph output</h2>
   <div class="table-responsive">
     <table class="table table-condensed table-hover">
         <thead>
@@ -158,6 +170,39 @@
 </script>
 
 
+<script type="text/x-handlebars" data-template-name="fileResults">
+  <h2>File output</h2>
+  <div class="table-responsive">
+    <table class="table table-condensed table-hover">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Author</th>
+            <th>Updated</th>
+            <th>TableType</th>
+            <th>Score</th>
+            <th>ReferenceID</th>
+            <th>ExternalURL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each result in results}}
+            <tr>
+              <td>{{result.Title}}</td>
+              <td>{{result.Description}}</td>
+              <td>{{result.Author}}</td>
+              <td>{{result.Updated}}</td>
+              <td>{{result.TableType}}</td>
+              <td>{{result.Score}}</td>
+              <td>{{result.ReferenceID}}</td>
+              <td>{{result.ExternalURL}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+    </table>
+  </div>
+</script>
 
 
 <script type="text/x-handlebars" data-template-name="mapResults">

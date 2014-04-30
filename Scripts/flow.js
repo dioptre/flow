@@ -96,7 +96,7 @@ App.SearchSerializer = DS.RESTSerializer.extend({
 
 
 App.SearchController = Ember.Controller.extend({
-    needs: ['searchResults','mapResults'],
+    needs: ['graphResults','mapResults','fileResults'],
     queryParams: ['keywords', 'tags', 'page', 'types'],
     page: 0,
     keywords: '',
@@ -148,10 +148,13 @@ App.SearchController = Ember.Controller.extend({
         addLocation: function () {
             var controller = this;
             var location = controller.get('searchLocation');
-            console.log(location)
+            if (location === '') {
+                location = 'Custom Location';
+            }
+
             this.get('tags').addObject({
                 n: location,
-                l: location
+                l: lastMapUpdates
             });
             return Bootstrap.ModalManager.hide('locationModal');
         }
@@ -166,7 +169,7 @@ App.SearchController = Ember.Controller.extend({
                 type: 'flow',
                 pagesize: pfPageSize
             }).then(function (res) {
-                controller.set('controllers.searchResults.results', res.get('content'))
+                controller.set('controllers.graphResults.results', res.get('content'))
             });
         }
         if ($.inArray('flowlocation', this.get('types')) > -1) {
@@ -178,6 +181,17 @@ App.SearchController = Ember.Controller.extend({
                 pagesize: pfPageSize
             }).then(function (res) {
                 controller.set('controllers.mapResults.results', res.get('content'))
+            });
+        }
+        if ($.inArray('file', this.get('types')) > -1) {
+            this.store.find('search', {
+                page: this.get('page'),
+                keywords: this.get('keywords'),
+                tags: this.get('tags'),
+                type: 'file',
+                pagesize: pfPageSize
+            }).then(function (res) {
+                controller.set('controllers.fileResults.results', res.get('content'))
             });
         }
 
@@ -208,7 +222,7 @@ App.SearchController = Ember.Controller.extend({
 });
 
 
-App.SearchResultsController = Ember.Controller.extend({
+App.GraphResultsController = Ember.Controller.extend({
     // keywords: Ember.computed.alias("controllers.search.keywords"),
     // page: Ember.computed.alias("controllers.search.page"),
     // tags: Ember.computed.alias("controllers.search.tags"),
@@ -227,6 +241,25 @@ App.SearchResultsController = Ember.Controller.extend({
 
 })
 
+
+App.FileResultsController = Ember.Controller.extend({
+    // keywords: Ember.computed.alias("controllers.search.keywords"),
+    // page: Ember.computed.alias("controllers.search.page"),
+    // tags: Ember.computed.alias("controllers.search.tags"),
+    results: []
+    // results: function(){
+    //     this.get('a');
+    //     return []
+    // }.property('page', 'keywords', 'tags'),
+    // a: function(){
+    //     console.log('getting new results with keywords: ', this.get('keywords'));
+    //     var a =
+
+
+    //        // });
+    // }
+
+})
 
 App.MapResultsController = Ember.Controller.extend({
     // keywords: Ember.computed.alias("controllers.search.keywords"),
@@ -314,7 +347,7 @@ function MapInitialize() {
 
 }
 
-
+var lastMapUpdates;
 function OnMapUpdate(map, event, center, viewport) {
     cmap = map;
     if (event.eventType == "EDITED") {
@@ -327,6 +360,7 @@ function OnMapUpdate(map, event, center, viewport) {
     }
     if (event.eventType == "BOUNDS_CHANGED") {
         //console.log(event);
+        lastMapUpdates = viewport;
     }
 }
 
@@ -498,7 +532,7 @@ App.GraphView = Ember.View.extend({
                         var record = App.Node.store.getById('node', data.nodes[0]);
                         record.set('content', c[0].get('content'))
                         $('#flowItem').html(record.get('content'));
-                        $('#flowEditLink').attr('href', './wiki/' + record.get('label'));
+                        $('#flowEditLink').attr('href', './flow/wiki/' + record.get('label'));
                         $('#flowEditLink').html('Edit ' + record.get('label'));
                         $('#flowEdit').show();
 
@@ -628,7 +662,7 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 
 
         payload = { "Nodes": nodes, "Edges": edges };
-        if (edges.length === 0 && nodes.length === 1) {
+        if (!edges || (edges.length === 0 && nodes.length === 1)) {
             delete payload.Edges;
             //payload.node = nodes[0];
             //delete payload.Edges;
