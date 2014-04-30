@@ -14,7 +14,11 @@
 </style>
 <script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
 <script type="text/javascript">
+    var oldWidth = $('.container:eq(2)').css('width');
     var mapHelper = '@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")';
+    $('.container:eq(2)').each(function () {
+        this.style.setProperty('width', '100%', 'important');
+    });
 </script>
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
 
@@ -35,10 +39,19 @@
 </script>
 
 
-  <script type="text/x-handlebars" id="graph">
-    GRAPH
-    <div id="flowEdit"></div>
-    <div id="flowItem"></div>
+  <script type="text/x-handlebars" id="graph">   
+      <div class="container-fluid" style="margin-top:12px;">
+  <div class="row-fluid">
+    <div class="span6">
+       <div id="flowItem">&nbsp;</div>
+       <div><ul id="flowEdit" class="nav nav-pills" style="display:none;"><li><a href="#" id="flowEditLink"></a></li></ul>&nbsp;</div>
+    </div>
+    <div class="span6">
+      <div id="mygraph"></div>
+    </div>
+  </div>
+
+   
     <div id="graph-popUp">
     <span id="operation">node</span> <br>
     <table style="margin:auto;"><tr>
@@ -46,12 +59,12 @@
     </tr>
       <tr>
         <td>label</td><td><input id="node-label" value="new value"> </td>
-      </tr></table>
+      </tr></table> 
     <input type="button" value="save" id="saveButton"></button>
     <input type="button" value="cancel" id="cancelButton"></button>
   </div>
   <br />
-  <div id="mygraph"></div>
+  
 
   </script>
 
