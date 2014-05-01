@@ -1,5 +1,6 @@
 Ember.FEATURES["query-params"] = true;
 
+
 App = Ember.Application.create({
     LOG_TRANSITIONS: true,
     rootElement: '#application'
@@ -531,8 +532,8 @@ App.GraphView = Ember.View.extend({
                     if (c && c[0]) {
                         var record = App.Node.store.getById('node', data.nodes[0]);
                         record.set('content', c[0].get('content'))
-                        $('#flowItem').html(record.get('content'));
-                        $('#flowEditLink').attr('href', './flow/wiki/' + record.get('label'));
+                        $('#flowItem').html(filterData(record.get('content')));
+                        $('#flowEditLink').attr('href', '/flow/wiki/' + record.get('label'));
                         $('#flowEditLink').html('Edit ' + record.get('label'));
                         $('#flowEdit').show();
 
@@ -857,7 +858,15 @@ $(document).ready(function () {
 
     }
 
+
+
+
+
+    //updateTree('[[Main Page|Main Page]]');
+});
+
     function filterData(data) {
+        if (typeof data == 'undefined' || !data) return '';
         // filter all the nasties out
         // no body tags
         data = data.replace(/<?\/body[^>]*>/g, '');
@@ -875,5 +884,8 @@ $(document).ready(function () {
         return data;
     }
 
-    //updateTree('[[Main Page|Main Page]]');
-});
+
+    Ember.Handlebars.helper('safehtml', function(item, options) {
+        var escaped = filterData('' + options.contexts[0].get(options.data.properties[0]));
+        return new Handlebars.SafeString(escaped);
+    });

@@ -114,7 +114,17 @@
           <span class="glyphicon icon-search"></span>Search
         </button>
 
-        {{view Ember.Checkbox}}
+        Graph:
+        {{view Ember.Checkbox checked='graph'}}
+
+        File:
+        {{view Ember.Checkbox checked='file'}}
+
+        Map:
+        {{view Ember.Checkbox checked='map'}}
+
+
+
 
 
     </div>
@@ -154,14 +164,15 @@
         <tbody>
           {{#each result in results}}
             <tr>
-              <td>{{result.Title}}</td>
-              <td>{{result.Description}}</td>
-              <td>{{result.Author}}</td>
-              <td>{{result.Updated}}</td>
-              <td>{{result.TableType}}</td>
-              <td>{{result.Score}}</td>
-              <td>{{result.ReferenceID}}</td>
-              <td>{{result.ExternalURL}}</td>
+
+              <td>{{{result.Title}}}</td>
+              <td>{{{result.Description}}}</td>
+              <td>{{{result.Author}}}</td>
+              <td>{{{result.Updated}}}</td>
+              <td>{{{result.TableType}}}</td>
+              <td>{{{result.Score}}}</td>
+              <td>{{{result.ReferenceID}}}</td>
+              <td>{{{result.ExternalURL}}}</td>
             </tr>
           {{/each}}
         </tbody>
@@ -187,16 +198,16 @@
           </tr>
         </thead>
         <tbody>
-          {{#each result in results}}
+          {{#each results}}
             <tr>
-              <td>{{result.Title}}</td>
-              <td>{{result.Description}}</td>
-              <td>{{result.Author}}</td>
-              <td>{{result.Updated}}</td>
-              <td>{{result.TableType}}</td>
-              <td>{{result.Score}}</td>
-              <td>{{result.ReferenceID}}</td>
-              <td>{{result.ExternalURL}}</td>
+              <td>{{safehtml Title}}</td>
+              <td>{{safehtml Description}}</td>
+              <td>{{{safehtml Author}}}</td>
+              <td>{{{safehtml Updated}}}</td>
+              <td>{{{safehtml TableType}}}</td>
+              <td>{{{safehtml Score}}}</td>
+              <td>{{{safehtml ReferenceID}}}</td>
+              <td>{{{safehtml ExternalURL}}}</td>
             </tr>
           {{/each}}
         </tbody>
