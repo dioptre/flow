@@ -6,6 +6,7 @@ using Orchard;
 using System.ServiceModel;
 
 using EXPEDIT.Flow.ViewModels;
+using EXPEDIT.Share.ViewModels;
 
 namespace EXPEDIT.Flow.Services
 {
@@ -13,7 +14,7 @@ namespace EXPEDIT.Flow.Services
     public interface IFlowService : IDependency 
     {
          [OperationContract]
-         dynamic Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow);
+         IEnumerable<SearchViewModel> Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow);
 
          [OperationContract]
          WikiViewModel GetWiki(string wikiName);

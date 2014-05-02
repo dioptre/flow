@@ -86,11 +86,22 @@ App.SearchSerializer = DS.RESTSerializer.extend({
 
 App.SearchController = Ember.Controller.extend({
     needs: ['graphResults','mapResults','fileResults'],
-    queryParams: ['keywords', 'tags', 'page', 'types'],
+    queryParams: ['keywords', 'tags', 'page', 'graph', 'file', 'map'],
+    graph: true,
+    file: true,
+    map: false,
+    activeResultsClass: function(){
+        var i = 0;
+        if (this.get('graph')) i++
+        if (this.get('file')) i++
+        if (this.get('map')) i++
+            console.log(i)
+        if (i===0) return '';
+        return 'span' + (12/i);
+    }.property('graph', 'file', 'map'),
     page: 0,
     keywords: '',
     tags: [],
-    types: ['flow','file','flowlocation'],
     dateModalBtn: [
       Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
       Ember.Object.create({ title: 'Insert Date Filter', type: 'success', clicked: "addDate" })
@@ -150,7 +161,7 @@ App.SearchController = Ember.Controller.extend({
     },
     getData: function(){
         var controller = this;
-        if ($.inArray('flow', this.get('types')) > -1) {
+        if (this.get('graph')) {
             this.store.find('search', {
                 page: this.get('page'),
                 keywords: this.get('keywords'),
@@ -161,7 +172,7 @@ App.SearchController = Ember.Controller.extend({
                 controller.set('controllers.graphResults.results', res.get('content'))
             });
         }
-        if ($.inArray('flowlocation', this.get('types')) > -1) {
+        if (this.get('map')) {
             this.store.find('search', {
                 page: this.get('page'),
                 keywords: this.get('keywords'),
@@ -172,7 +183,7 @@ App.SearchController = Ember.Controller.extend({
                 controller.set('controllers.mapResults.results', res.get('content'))
             });
         }
-        if ($.inArray('file', this.get('types')) > -1) {
+        if (this.get('file')) {
             this.store.find('search', {
                 page: this.get('page'),
                 keywords: this.get('keywords'),
@@ -189,7 +200,7 @@ App.SearchController = Ember.Controller.extend({
         var controller = this;
         Ember.run.debounce(this, controller.getData, 1000);
 
-    }.observes('tags.@each', 'keywords', 'page')
+    }.observes('graph', 'map', 'file', 'keywords', 'page')
 });
 
 
@@ -275,7 +286,7 @@ App.MapResultComponent = Ember.Component.extend({
     }.property(),
     resultsGeo: [], //Expects geo (point data), name, description in array
     mapReady: false,
-    intialize: function () {        
+    intialize: function () {
         //this.set('mapReady', true);
         //debugger;
     }.on('didInsertElement'),
@@ -316,7 +327,7 @@ function LoadMap() {
         isMapLoaded = true;
         // LoadScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=MapInitialize');
         LoadScript('http://maps.googleapis.com/maps/api/js?libraries=drawing&sensor=true&callback=MapInitialize');
-        
+
     }
 }
 Ember.run.scheduleOnce('afterRender', this, LoadMap); //HACK Todo

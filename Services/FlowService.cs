@@ -32,6 +32,7 @@ using System.Data;
 using EntityFramework.Extensions;
 using EXPEDIT.License.Models;
 using HtmlAgilityPack;
+using EXPEDIT.Share.ViewModels;
 
 namespace EXPEDIT.Flow.Services {
     
@@ -69,7 +70,7 @@ namespace EXPEDIT.Flow.Services {
         public Localizer T { get; set; }
 
 
-        public dynamic Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow)
+        public IEnumerable<SearchViewModel> Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow)
         {
             //if no results show wikipedia
             var application = _users.ApplicationID;
@@ -77,7 +78,7 @@ namespace EXPEDIT.Flow.Services {
             var company = _users.ApplicationCompanyID;
             var server = _users.ServerID;
 
-
+            var results = new List<SearchViewModel>();
             var allCompanies = new Dictionary<Guid, string>();
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
@@ -99,11 +100,8 @@ namespace EXPEDIT.Flow.Services {
                         break;
                 }
 
-                using (DataTable dt = new DataTable())
-                {
                     using (var con = new SqlConnection(_users.ApplicationConnectionString))
                     using (var cmd = new SqlCommand("E_SP_GetSecuredSearch", con))
-                    using (var da = new SqlDataAdapter(cmd))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -131,16 +129,39 @@ namespace EXPEDIT.Flow.Services {
                         qT.DbType = DbType.String;
                         qT.Value = table;
                         cmd.Parameters.Add(qT);
-
-                        da.Fill(dt);
-
-                        return dt;
+                        con.Open();
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                     results.Add(new SearchViewModel
+                                     {
+                                         Row = reader[0] as long?,
+                                         TotalRows = reader[1] as long?,
+                                         Score = reader[2] as decimal?,
+                                         id = reader[3] as Guid?,
+                                         ReferenceID = reader[4] as Guid?,
+                                         TableType = reader[5] as string,
+                                         Title = reader[6] as string,
+                                         Description = reader[7] as string,
+                                         SpatialJSON = reader[8] as string,
+                                         InternalUrl = reader[9] as string,
+                                         ExternalUrl = reader[10] as string,
+                                         Author = reader[11] as string,                        
+                                         Updated = reader[12] as DateTime?
+                                     });
+                                   
+                                }
+                            }
+                        }
+                        con.Close();
+                        
                     }
 
-                
-                }
-
             }
+            return results;
       
         }
 

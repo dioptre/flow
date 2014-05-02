@@ -116,13 +116,13 @@
         </button>
 
         Graph:
-        {{view Ember.Checkbox checked='graph'}}
+        {{view Ember.Checkbox checkedBinding='graph'}}
 
         File:
-        {{view Ember.Checkbox checked='file'}}
+        {{view Ember.Checkbox checkedBinding='file'}}
 
         Map:
-        {{view Ember.Checkbox checked='map'}}
+        {{view Ember.Checkbox checkedBinding='map'}}
 
 
 
@@ -130,20 +130,39 @@
 
     </div>
     <br/><br/>
- <div class="row-fluid">
-    <div class="span6">
+
+
+  <div class="row-fluid">
+    {{#if graph}}
+      <div {{bind-attr class='activeResultsClass :overscroll'}}>
         {{render 'graphResults'}}
-    </div>
-    <div class="span6">
-    {{render 'fileResults'}}
-    </div>
+      </div>
+    {{/if}}
+    {{#if file}}
+      <div {{bind-attr class='activeResultsClass :overscroll'}}>
+        {{render 'fileResults'}}
+      </div>
+    {{/if}}
+    {{#if map}}
+      <div {{bind-attr class='activeResultsClass :overscroll'}}>
+        {{render 'mapResults'}}
+      </div>
+    {{/if}}
+
   </div>
 
 
-
-    {{render 'mapResults'}}
-
   </script>
+
+  <style>
+
+  .overscroll {
+  overflow-y: scroll;
+  overflow-x: auto;
+  }
+
+  </style>
+
 
 
 <script type="text/x-handlebars" data-template-name="graphResults">
