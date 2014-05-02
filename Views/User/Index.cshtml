@@ -29,6 +29,7 @@
 </script>
 
 
+
 <script type="text/x-handlebars" id="search-home">
 
     {{searchText}} - tags
@@ -216,12 +217,23 @@
 </script>
 
 
+
+<script type="text/x-handlebars" id="components/map-result">
+        Map Result Component
+
+      <div {{bind-attr id='id'}} style="width: 100%; height: 75vh"></div>
+     {{#each result in resultsGeo}}
+            test
+     {{/each}}
+</script>
+
+
 <script type="text/x-handlebars" data-template-name="mapResults">
   <h2>Map output</h2>
-     {{#each result in results}}
-        {{result.Title}}
-     {{/each}}
-  <div id="map-results" style="width: 100%; height: 75vh"></div>
+     {{map-result resultsGeo=resultsGeo}}
+
+
+
 </script>
 
 

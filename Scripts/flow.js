@@ -46,20 +46,9 @@ App.ApplicationController = Ember.Controller.extend({
 
 var pfPageSize = 20;
 App.SearchRoute = Ember.Route.extend({
-    // queryParams: {
-    //     keywords: { refreshModel: true },
-    //     tags: { refreshModel: true },
-    //     page: { refreshModel: true }
-
-    // },
     model: function(params) {
         var type = 'mixed';
-        // console.log(params.keywords, params.tags, params.page);
         return '';
-        // return this.store.find('search', { page: params.page, keywords: params.keywords, tags: params.tags, pagesize: pfPageSize });
-    // }, Redundant code, as this is auto created by specifiny SearchController = Ember.ObjectControoler.extend({})
-    // setupController: function(controller, model) {
-    //     controller.set('model', model);
     }
 });
 
@@ -81,7 +70,6 @@ App.Search = DS.Model.extend({
 
 App.SearchSerializer = DS.RESTSerializer.extend({
     extractArray: function (store, type, payload, id, requestType) {
-
 
         var results = payload.search;
 
@@ -202,84 +190,9 @@ App.SearchController = Ember.Controller.extend({
         Ember.run.debounce(this, controller.getData, 1000);
 
     }.observes('tags.@each', 'keywords', 'page')
-    // fitInput: function () {
-    //     console.log('fitInput run')
-
-    //     // Select input elemet
-    //     var $input = $('.input input');
-
-    //     // Get size of parent
-    //     var parentLength = $input.parent().innerWidth();
-
-    //     // Length of all Tags
-    //     var tagsLength = $('.input span.tag').reduce(function (pV, cV, i, a) {
-    //         return pV + $(cV).outerWidth(true);
-    //     }, 0)
-
-    //     // Set input.length = parent - tags
-    //     $input.width(parentLength - tagsLength - 32);
-    //     return '';
-    // }.property('tags.@each')
 });
 
 
-App.GraphResultsController = Ember.Controller.extend({
-    // keywords: Ember.computed.alias("controllers.search.keywords"),
-    // page: Ember.computed.alias("controllers.search.page"),
-    // tags: Ember.computed.alias("controllers.search.tags"),
-    results: []
-    // results: function(){
-    //     this.get('a');
-    //     return []
-    // }.property('page', 'keywords', 'tags'),
-    // a: function(){
-    //     console.log('getting new results with keywords: ', this.get('keywords'));
-    //     var a =
-
-
-    //        // });
-    // }
-
-})
-
-
-App.FileResultsController = Ember.Controller.extend({
-    // keywords: Ember.computed.alias("controllers.search.keywords"),
-    // page: Ember.computed.alias("controllers.search.page"),
-    // tags: Ember.computed.alias("controllers.search.tags"),
-    results: []
-    // results: function(){
-    //     this.get('a');
-    //     return []
-    // }.property('page', 'keywords', 'tags'),
-    // a: function(){
-    //     console.log('getting new results with keywords: ', this.get('keywords'));
-    //     var a =
-
-
-    //        // });
-    // }
-
-})
-
-App.MapResultsController = Ember.Controller.extend({
-    // keywords: Ember.computed.alias("controllers.search.keywords"),
-    // page: Ember.computed.alias("controllers.search.page"),
-    // tags: Ember.computed.alias("controllers.search.tags"),
-    results: []
-    // results: function(){
-    //     this.get('a');
-    //     return []
-    // }.property('page', 'keywords', 'tags'),
-    // a: function(){
-    //     console.log('getting new results with keywords: ', this.get('keywords'));
-    //     var a =
-
-
-    //        // });
-    // }
-
-})
 
 
 //App.AboutRoute = Ember.Route.extend({
@@ -335,18 +248,79 @@ App.GraphRoute = Ember.Route.extend({
     }
 });
 
+
+App.GraphResultsController = Ember.Controller.extend({results: [] })
+App.FileResultsController = Ember.Controller.extend({results: [] })
+App.MapResultsController = Ember.Controller.extend({
+    results: [],
+    resultsGeo: function () {
+        var results = this.get('results');
+
+       return results.map(function(i){
+           return { id: i.get('id'), geo: JSON.parse(i.get('SpatialJSON')).data, name: i.get('Title'), description: i.get('Description') } ;
+        })
+
+
+    }.property('results')
+})
+
+var isMapResultsSetup = false;
+App.MapResultComponent = Ember.Component.extend({
+    map: null,
+    _id: null,
+    id: function () {
+        if (this._id === null)
+            this._id = NewGUID();
+        return this._id;
+    }.property(),
+    resultsGeo: [], //Expects geo (point data), name, description in array
+    mapReady: false,
+    intialize: function () {        
+        //this.set('mapReady', true);
+        //debugger;
+    }.on('didInsertElement'),
+    update: function () {
+        var component = this;
+        Ember.RSVP.allSettled([deferredMap.promise]).then(function (array) {
+            if (component.map == null)
+                component.map = SetupMap(component._id);
+            DeleteShapes(component.map);
+            var geos = component.get('resultsGeo');
+            $.each(geos, function (i, a) {
+                var geoData = ParseGeographyData(a.geo);
+                AddMarkerSingle(component.map, GetFirstLocation(geoData), false, a.name + '<br/><br/><small>' + filterData(a.description) + '</small>', a.id);
+            });
+            RefocusMap(component.map);
+        });
+    }.observes('resultsGeo')
+})
+
 var drawing = false;
-var isMapSetup = false;
+var isMapSetup = false, isMapLoaded=false, isMapInitialized = false;
 var smap;
 var cmap;
+var deferredMap = Ember.RSVP.defer();
+//deferredMap.promise.then(function (value) {
+//    isMapInitialized = true;
+//});
 function MapInitialize() {
-    if (drawing)
-        smap = SetupDrawingMap('map-search');
-    else
-        smap = SetupMap('map-search');
-    RedrawMap(smap);
-
+    if (!isMapInitialized) {
+        LoadScript(mapHelper);
+        deferredMap.resolve("Map Loaded");
+    }
 }
+
+
+function LoadMap() {
+    if (!isMapLoaded) {
+        isMapLoaded = true;
+        // LoadScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=MapInitialize');
+        LoadScript('http://maps.googleapis.com/maps/api/js?libraries=drawing&sensor=true&callback=MapInitialize');
+        
+    }
+}
+Ember.run.scheduleOnce('afterRender', this, LoadMap); //HACK Todo
+
 
 var lastMapUpdates;
 function OnMapUpdate(map, event, center, viewport) {
@@ -364,6 +338,8 @@ function OnMapUpdate(map, event, center, viewport) {
         lastMapUpdates = viewport;
     }
 }
+
+
 
 //$('html').keyup(function (e) {
 //    if (e.keyCode == 46) {
@@ -388,13 +364,13 @@ function OnMapUpdate(map, event, center, viewport) {
         becameVisible: function () {
             this._super();
             if (!isMapSetup) {
+                LoadMap();
                 isMapSetup = true;
-                if (!drawing)
-                    LoadScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=MapInitialize');
+                if (drawing)
+                    smap = SetupDrawingMap('map-search');
                 else
-                    LoadScript('http://maps.googleapis.com/maps/api/js?libraries=drawing&sensor=true&callback=MapInitialize');
-                LoadScript(mapHelper);
-
+                    smap = SetupMap('map-search');
+                RedrawMap(smap);
                 $("#searchLocation").autocomplete({
                     delay: 100,
                     source: function (request, response) {
@@ -523,6 +499,10 @@ App.GraphView = Ember.View.extend({
 
         // Data was created in the route
         graph = new vis.Graph(container, data, options);
+
+        $(window).resize(function(){
+            graph.redraw();
+        })
 
         graph.on('click', function (data) {
             //console.log(data, 'click event')
