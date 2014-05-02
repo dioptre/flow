@@ -4,20 +4,21 @@
     HtmlHelper.ClientValidationEnabled = true;
     HtmlHelper.UnobtrusiveJavaScriptEnabled = true;
     Layout.Title = T("Flow Search").ToString();
-    Script.Require("Flow").AtFoot();
+   
 }
 
 <style>
     .header-main {
         display: none;
     }
-    .masContent {
-        width: 100% !important;
-    }
 </style>
 <script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
 <script type="text/javascript">
+    var oldWidth = $('.container:eq(2)').css('width');
     var mapHelper = '@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")';
+    $('.container:eq(2)').each(function () {
+        this.style.setProperty('width', '100%', 'important');
+    });
 </script>
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
 
@@ -258,3 +259,4 @@
         <input size="16" type="text" readonly><span class="add-on"><i class="icon-th"></i></span>
     </div>
   </script>
+<script src="~/Modules/EXPEDIT.Flow/Scripts/wiki.js"></script>

@@ -7,8 +7,7 @@ App = Ember.Application.create({
 });
 
 App.Router.map(function () {
-    this.route('graph', {path: 'graph'});
-    this.route('graph', {path: 'graph/:id'});
+    this.route('graph');
     this.route('wiki');
     this.route('search');
 });
@@ -21,10 +20,35 @@ App.IndexRoute = Ember.Route.extend({
 });
 
 
-// Ember.run.debounce(this, this.calledRarely, 1000);
 
+var timer;
+App.ApplicationController = Ember.Controller.extend({
+    q: '',
+    qm: function () {
+        var controller = this;
+        var temp = this.get('q');
+
+        if (temp.length > 2 || temp == '') {
+            if (timer) {
+                clearTimeout(timer);
+            }
+            timer = setTimeout(function () {
+                controller.transitionToRoute('search', 0, temp)
+            }, 300);
+        }
+
+        // We should use this instead
+        // Ember.run.debounce(this, this.calledRarely, 1000);
+    }.observes('q')
+});
 
 var pfPageSize = 20;
+App.SearchRoute = Ember.Route.extend({
+    model: function(params) {
+        var type = 'mixed';
+        return '';
+    }
+});
 
 App.Search = DS.Model.extend({
     "Row": DS.attr(''),
@@ -44,11 +68,14 @@ App.Search = DS.Model.extend({
 
 App.SearchSerializer = DS.RESTSerializer.extend({
     extractArray: function (store, type, payload, id, requestType) {
+
         var results = payload.search;
+
         results.forEach(function (result) {
             result.id = NewGUID();
         });
         payload = { Searches: results };
+
         return this._super(store, type, payload, id, requestType);
     }
 });
@@ -177,7 +204,11 @@ App.SearchController = Ember.Controller.extend({
 
 
 
-
+//App.AboutRoute = Ember.Route.extend({
+//    model: function(params){
+//      return this.store.find('myfiles', params.id);
+//    }
+//})
 
 App.ApplicationAdapter = DS.RESTAdapter.extend({
     namespace: 'flow',
@@ -187,6 +218,18 @@ App.ApplicationAdapter = DS.RESTAdapter.extend({
 });
 
 
+App.MyFile = DS.Model.extend({
+    Title: DS.attr(),
+    ReferenceID: DS.attr(),
+    Sequence: DS.attr(),
+    Total: DS.attr(),
+    ImageUrl: function () {
+        return '/share/user/preview/' + this.get('ReferenceID');
+    }.property(),
+    Selected: function () {
+        return false;
+    }.property()
+})
 
 
 
@@ -314,7 +357,20 @@ function OnMapUpdate(map, event, center, viewport) {
 
 
 
+//$('html').keyup(function (e) {
+//    if (e.keyCode == 46) {
+//        DeleteSelectedShape(cmap);
+//        RedrawMap(cmap);
+//    }
+//});
 
+//var currentFocus = null;
+//$(':input').focus(function () {
+//    currentFocus = this;
+//    console.log(this);
+//}).blur(function () {
+//    currentFocus = null;
+//});
 
 (function () {
     App.DateModal = Bootstrap.BsModalComponent.extend({
@@ -378,25 +434,7 @@ function OnMapUpdate(map, event, center, viewport) {
 }).call(this);
 
 
-
-
-App.GraphRoute = Ember.Route.extend({
-    model: function(params){
-        var id = params.id;
-        if (id) {
-            this.store.find('node', id);
-        }
-        return '';
-    }
-})
-
-
-App.GraphComponent = Ember.Component.extend({
-
-})
-
-
-App.VizComponent = Ember.View.extend({
+App.GraphView = Ember.View.extend({
     didInsertElement: function () {
 
         var options = {

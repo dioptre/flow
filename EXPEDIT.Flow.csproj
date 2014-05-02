@@ -163,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Images\loading.gif" />
+    <Content Include="Scripts\wiki.js" />
     <Content Include="Scripts\flow.js" />
     <Content Include="Scripts\vis.js" />
     <Content Include="Styles\img\graph\acceptDeleteIcon.png" />
@@ -272,6 +273,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\User\Header.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\User\Test.cshtml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

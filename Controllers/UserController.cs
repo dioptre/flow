@@ -225,7 +225,11 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
         }
 
-
+        [Themed(true)]
+        public ActionResult Test()
+        {
+            return View();
+        }
 
     }
 }
