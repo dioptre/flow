@@ -76,7 +76,7 @@ namespace EXPEDIT.Flow.Services {
             var application = _users.ApplicationID;
             var contact = _users.ContactID;                
             var company = _users.ApplicationCompanyID;
-            var server = _users.ServerID;
+            //var server = _users.ServerID;
 
             var results = new List<SearchViewModel>();
             var allCompanies = new Dictionary<Guid, string>();
