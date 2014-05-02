@@ -266,11 +266,18 @@ App.MapResultsController = Ember.Controller.extend({
     results: [],
     resultsGeo: function () {
         var results = this.get('results');
+        var geos = {};
+        $.each(results, function (i, a) {
+            var geo = JSON.parse(a.get('SpatialJSON'));
+            if (!geos[geo.id]) {
+                geos[geo.id] = { name: '<a href="/flow/#/graph/' + a.get('ReferenceID') + '">' + a.get('Title') + '</a>', id: geo.id, geo: geo.data };
+            }
+            else {
+                geos[geo.id].name += '<br/><a href="/flow/#/graph/' + a.get('ReferenceID') + '">' + a.get('Title') + '</a>';
+            }
+        });
 
-       return results.map(function(i){
-           return { id: i.get('id'), geo: JSON.parse(i.get('SpatialJSON')).data, name: i.get('Title'), description: i.get('Description') } ;
-        })
-
+        return geos;
 
     }.property('results')
 })
@@ -284,7 +291,7 @@ App.MapResultComponent = Ember.Component.extend({
             this._id = NewGUID();
         return this._id;
     }.property(),
-    resultsGeo: [], //Expects geo (point data), name, description in array
+    resultsGeo: [], //Expects geo (point data), name, id in array
     mapReady: false,
     intialize: function () {
         //this.set('mapReady', true);
@@ -299,7 +306,7 @@ App.MapResultComponent = Ember.Component.extend({
             var geos = component.get('resultsGeo');
             $.each(geos, function (i, a) {
                 var geoData = ParseGeographyData(a.geo);
-                AddMarkerSingle(component.map, GetFirstLocation(geoData), false, a.name + '<br/><br/><small>' + filterData(a.description) + '</small>', a.id);
+                AddMarkerSingle(component.map, GetFirstLocation(geoData), false, a.name, a.id);
             });
             RefocusMap(component.map);
         });
