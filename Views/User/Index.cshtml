@@ -11,9 +11,10 @@
     .header-main {
         display: none;
     }
-    .masContent {
+    #masContent {
         width: 100% !important;
     }
+    canvas { border: 1px solid red; }
 </style>
 <script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
 <script type="text/javascript">
@@ -42,22 +43,22 @@
 
 
   <script type="text/x-handlebars" id="components/viz-editor">
-      <h1> Vizz </h1>
-      {{selected}}
   </script>
-
-<style>
-  canvas { border: 1px solid red; }
-</style>
 
 
   <script type="text/x-handlebars" id="wikipedia">
-
-              {{selected}}
-            {{viz-editor data=data selected=selected}}
+      <h1>{{selected}}</h1>
+         <div class="container-fluid" style="margin-top:12px;">
+        <div class="row-fluid">
+          <div class="span6">
+                {{safehtml model.content}}
+          </div>
+          <div class="span6">
+              {{viz-editor data=data selected=selected}}
+          </div>
+         </div>
+      </div>
       
-
-
   </script>
 
 

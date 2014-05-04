@@ -966,7 +966,8 @@ App.WikipediaRoute = Ember.Route.extend({
         console.log(params.id);
         return Ember.RSVP.hash({
             data: this.store.findQuery('wikipedia', params.id ),
-            selected: params.id
+            selected: params.id,
+            content: ''
         })
     },
     afterModel: function (m) {
@@ -978,6 +979,7 @@ App.WikipediaRoute = Ember.Route.extend({
         console.log(data);
         // var model = this.get('model')
         m.data = data;
+        m.content = this.store.getById('wikipedia', sel).get('content');
     }
 });
 
@@ -1220,7 +1222,7 @@ Ember.Handlebars.helper('safehtml', function (item, options) {
                     // no support for images - since it looks up the source from the wiki db :-(
                     return m;
                 } else {
-                    return '<a href="' + link + '">' + (p.length ? p.join('|') : link) + '</a>';
+                    return '<a href="#/wikipedia/' + link + '">' + (p.length ? p.join('|') : link) + '</a>';
                 }
             })
         );
