@@ -439,8 +439,8 @@ App.GraphRoute = Ember.Route.extend({
         var sel = m.selected;
         var array = {nodes: [], edges: []};
         var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
-
-        var data = getDataBitch(sel, array, this, 1, depthMax, 'node');
+        var nodeMax = -1;
+        var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
         console.log(data);
         // var model = this.get('model')
         m.data = data;
@@ -448,37 +448,43 @@ App.GraphRoute = Ember.Route.extend({
 })
 
 
-function getDataBitch(id , array, _this, depth, depthMax, store){
-    var node = _this.store.getById(store, id);
-    //debugger;
+function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
 
-    console.log('this should happen twice')
+    //TODO: nodemax based on sequence (priority) in edges
+    if (!nodeMax || nodeMax < 0 || array.nodes.length < nodeMax) {
+        var node = _this.store.getById(store, id);
+        //debugger;
 
-    array.nodes.push({
-        id: node.get('id'),
-        label: node.get('label'),
-        content: node.get('content')
-    });
+        console.log('this should happen twice')
 
-    var edges = node.get('edges');
+        array.nodes.push({
+            id: node.get('id'),
+            label: node.get('label'),
+            content: node.get('content')
+        });
+
+        
+        var edges = Enumerable.From(node.get('edges').content).OrderBy("$.get('sequence')").ToArray();
 
 
-    if (depth <= depthMax && edges.content.length !== undefined) {
+        if (depth <= depthMax && edges.length !== undefined) {
 
-        console.log('this should happen once')
+            console.log('this should happen once')
 
-        edges.forEach(function(edge){
+            edges.forEach(function (edge) {
 
-            array.edges.push({
-                id: edge.get('id'),
-                from: edge.get('from'),
-                to: edge.get('to')
-            });
+                array.edges.push({
+                    id: edge.get('id'),
+                    from: edge.get('from'),
+                    to: edge.get('to')
+                });
 
-            // Check if id has already been processed
-            array = getDataBitch(edge.get('to'), array, _this, depth + 1, depthMax, store);
 
-        })
+                // Check if id has already been processed
+                array = getDataBitch(edge.get('to'), array, _this, depth + 1, depthMax, nodeMax, store);
+
+            })
+        }
     }
 
     return array;
@@ -524,7 +530,7 @@ App.VizEditorComponent = Ember.View.extend({
 
         var container = $('<div>').appendTo(this.$())[0];
         var data = this.get('vizDataSet');
-        var options = {};
+        var options = {stabilize:false, stabilizationIterations:1};
 
         // // sample data
         // data.nodes.add({
@@ -567,13 +573,7 @@ App.VizEditorComponent = Ember.View.extend({
             }
         })
 
-        model_data.edges.forEach(function(edge){
-            if (data.edges.get(edge.id) === null) {
-                data.edges.add(edge);
-            }
-        })
-
-        // Step 2: remove nodes which aren't in the data set anymore
+               // Step 2: remove nodes which aren't in the data set anymore
         data.nodes.getIds().forEach(function(id){
             var match = false;
 
@@ -588,7 +588,20 @@ App.VizEditorComponent = Ember.View.extend({
             }
         })
 
-        // Step 2: remove edges which aren't in the data set anymore
+
+        // Same but this time for edges
+
+        model_data.edges.forEach(function(edge){
+            if (data.edges.get(edge.id) === null) {
+                //debugger;
+                if (data.nodes.get(edge.from) !== null && data.nodes.get(edge.to) !== null) {  // ensure that only edges are drawn where the to & from nodes exist
+                    data.edges.add(edge);
+                }
+                
+            }
+        })
+
+ 
         data.edges.getIds().forEach(function(id){
             var match = false;
 
@@ -890,7 +903,8 @@ App.Edge = DS.Model.extend({
     //to: DS.belongsTo('node')
     from: DS.attr(),
     to: DS.attr(),
-    groupid: DS.attr()
+    groupid: DS.attr(),
+    sequence: DS.attr()
 });
 
 
@@ -959,8 +973,8 @@ App.WikipediaRoute = Ember.Route.extend({
         var sel = m.selected;
         var array = { nodes: [], edges: [] };
         var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
-
-        var data = getDataBitch(sel, array, this, 1, depthMax, 'wikipedia');
+        var nodeMax = 25;
+        var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'wikipedia');
         console.log(data);
         // var model = this.get('model')
         m.data = data;
@@ -1009,19 +1023,24 @@ App.WikipediaAdapter = DS.Adapter.extend({
                       if (html)
                           return false;
                   });
-                  var leaves = html.match(/\[\[.*?\]\]/igm);
+
                   var edges = [];
-                  $.each(leaves, function (key, val) {
-                      var leaf = '';
-                      if (val.indexOf('|') > -1)
-                          leaf = val.replace(/\[\[(.*)?\|.*/, "$1");
-                      else if (val.indexOf('[' > -1))
-                          leaf = val.replace(/\[\[(.*)?\]\]/, "$1");
-                      else leaf = val;
-                      if (leaf) {
-                          edges.push({ id: id + '-' + leaf, from: id, to: leaf });
-                      }
-                  });
+                  var content = '';
+                  if (html) {
+                      content = filterData(html.wiki2html());
+                      var leaves = html.match(/\[\[.*?\]\]/igm);                      
+                      $.each(leaves, function (key, val) {
+                          var leaf = '';
+                          if (val.indexOf('|') > -1)
+                              leaf = val.replace(/\[\[(.*)?\|.*/, "$1");
+                          else if (val.indexOf('[' > -1))
+                              leaf = val.replace(/\[\[(.*)?\]\]/, "$1");
+                          else leaf = val;
+                          if (leaf) {
+                              edges.push({ id: id + '-' + leaf, from: id, to: leaf });
+                          }
+                      });
+                  }
                   //edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].get('from'), to: e.source[0].get('to')}").ToArray()
                   edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].from, to: e.source[0].to}").ToArray()
                   //oldNodes = Enumerable.From(App.Wikipedia.store.all('wikipedia').content).Select("$.id").ToArray();
@@ -1056,9 +1075,10 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   //}
 
                   
-                  var content = filterData(html.wiki2html());           
+                          
                   var edgeids = Enumerable.From(edges).Select("$.id").ToArray();
-                  Enumerable.From(edges).ForEach(function (f) { App.Wikipedia.store.push('edge', f); });
+                  var sequence = 1;
+                  Enumerable.From(edges).ForEach(function (f) { f.sequence = sequence; sequence++; App.Wikipedia.store.push('edge', f); });
                   Enumerable.From(edges).Where("$.to!='" + id + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to }); });
                   App.Wikipedia.store.push('wikipedia', { id: id, label: id, edges: edgeids, content: content });
                   if (typeof array === 'undefined')
