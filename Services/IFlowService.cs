@@ -26,10 +26,7 @@ namespace EXPEDIT.Flow.Services
          bool SubmitWiki(ref WikiViewModel wiki);
 
          [OperationContract]
-         FlowGroupViewModel GetNodeGroup(string name, Guid? nid, Guid? gid, bool includeContent = false);
-
-         [OperationContract]
-         FlowViewModelDetailed GetNode(string name, Guid? nid, bool includeContent = false);
+         FlowGroupViewModel GetNode(string name, Guid? nid, Guid? gid, bool includeContent = false);
 
          [OperationContract]
          bool CreateNode(FlowViewModel flow);

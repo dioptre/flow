@@ -39,17 +39,36 @@
 </script>
 
 
+
+
+  <script type="text/x-handlebars" id="components/viz-editor">
+      <h1> Vizz </h1>
+      {{selected}}
+  </script>
+
+<style>
+  canvas { border: 1px solid red; }
+</style>
+
+
   <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
-  <div class="row-fluid">
-    <div class="span6">
-       <div id="flowItem">&nbsp;</div>
-       <div><ul id="flowEdit" class="nav nav-pills" style="display:none;"><li><a href="#" id="flowEditLink"></a></li></ul>&nbsp;</div>
-    </div>
-    <div class="span6">
-      <div id="mygraph"></div>
-    </div>
-  </div>
+        <div class="row-fluid">
+          <div class="span6">
+            <div id="flowItem">{{selectedNode.Label}}</div>
+            <div>
+              <ul id="flowEdit" class="nav nav-pills" style="display:none;">
+                <li>
+                  <a href="#" id="flowEditLink"></a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="span6">
+              {{selected}}
+            {{viz-editor data=data selected=selected}}
+          </div>
+         </div>
 
 
     <div id="graph-popUp">
@@ -181,17 +200,17 @@
           </tr>
         </thead>
         <tbody>
-          {{#each result in results}}
+          {{#each results}}
             <tr>
 
-              <td>{{{result.Title}}}</td>
-              <td>{{{result.Description}}}</td>
-              <td>{{{result.Author}}}</td>
-              <td>{{{result.Updated}}}</td>
-              <td>{{{result.TableType}}}</td>
-              <td>{{{result.Score}}}</td>
-              <td>{{{result.ReferenceID}}}</td>
-              <td>{{{result.ExternalURL}}}</td>
+              <td>{{safehtml Title}}</td>
+              <td>{{safehtml Description}}</td>
+              <td>{{safehtml Author}}</td>
+              <td>{{safehtml Updated}}</td>
+              <td>{{safehtml TableType}}</td>
+              <td>{{safehtml Score}}</td>
+              <td>{{safehtml ReferenceID}}</td>
+              <td>{{safehtml ExternalURL}}</td>
             </tr>
           {{/each}}
         </tbody>

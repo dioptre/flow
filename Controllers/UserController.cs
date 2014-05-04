@@ -131,27 +131,15 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpGet]
-        public ActionResult NodeGroups(string id)
-        {
-            Guid? temp = null;
-            Guid temp2;
-            if (Guid.TryParse(id, out temp2))
-                temp = temp2; 
-            return new JsonHelper.JsonNetResult(_Flow.GetNodeGroup(null, temp, null), JsonRequestBehavior.AllowGet);
-        }
-
-        [Authorize]
-        [Themed(false)]
-        [HttpGet]
         [ActionName("Nodes")]
         public ActionResult GetNode(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
-                return new JsonHelper.JsonNetResult(_Flow.GetNodeGroup(null, null, null), JsonRequestBehavior.AllowGet);
+                return new JsonHelper.JsonNetResult(_Flow.GetNode(null, null, null, false), JsonRequestBehavior.AllowGet);
             Guid temp;
             if (!Guid.TryParse(id, out temp))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);    
-            return new JsonHelper.JsonNetResult(new FlowGroupViewModel{ Nodes = new[] { _Flow.GetNode(null, temp, true) }, Edges = new FlowEdgeViewModel[] {} }, JsonRequestBehavior.AllowGet);
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+            return new JsonHelper.JsonNetResult(_Flow.GetNode(null, temp, null, true), JsonRequestBehavior.AllowGet);
         }
 
         [Authorize]

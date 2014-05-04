@@ -9,7 +9,7 @@ App = Ember.Application.create({
 App.Router.map(function () {
     this.route('graph', {path: 'graph'});
     this.route('graph', {path: 'graph/:id'});
-    this.route('wiki');
+    this.route('wikipedia', { path: "/wikipedia/:id" });
     this.route('search');
 });
 
@@ -191,29 +191,6 @@ App.ApplicationAdapter = DS.RESTAdapter.extend({
 
 
 
-//App.Node.store.getById('node', '1e61b5cf-d2f0-4f49-aa36-00d8ec63acca').get('label')
-var c;
-var graph;
-var data = { nodes: new vis.DataSet(), edges: new vis.DataSet() };
-var sessionGroupID = NewGUID();
-App.GraphRoute = Ember.Route.extend({
-    model: function () {
-        Ember.RSVP.hash(this.store.find('node')).then(function (hash) {
-
-        });
-
-        return Ember.RSVP.hash({
-            nodes: this.store.all('node'),
-            edges: this.store.all('edge')
-        })
-    },
-
-    afterModel: function (model) {
-
-
-    }
-});
-
 
 App.GraphResultsController = Ember.Controller.extend({results: [] })
 App.FileResultsController = Ember.Controller.extend({results: [] })
@@ -380,130 +357,365 @@ function OnMapUpdate(map, event, center, viewport) {
 
 
 
+// App.Node.store.getById('node', '1e61b5cf-d2f0-4f49-aa36-00d8ec63acca').get('label')
+var c;
+var graph;
+var data = { nodes: new vis.DataSet(), edges: new vis.DataSet() };
+var sessionGroupID = NewGUID();
+// App.GraphRoute = Ember.Route.extend({
+//     model: function () {
+//         Ember.RSVP.hash(this.store.find('node')).then(function (hash) {
+
+//         });
+
+//         return Ember.RSVP.hash({
+//             nodes: this.store.all('node'),
+//             edges: this.store.all('edge')
+//         })
+//     },
+
+//     afterModel: function (model) {
+
+
+//     }
+// });
+
+
+
+
+
+
 App.GraphRoute = Ember.Route.extend({
+    //
+    // data for current node
+
+
     model: function(params){
-        var id = params.id;
-        if (id) {
-            this.store.find('node', id);
-        }
-        return '';
+        // var id = params.id
+        // Ember.RSVP.hash({
+        //    data: this.store.find('node', {id:id})
+        // }).then(function(data){
+        //     var d = data.data
+        //     // do the recursion business right here!!!
+
+        //     // console.log(this.store.getById('node', id));
+
+        //     d.store.getById('node', d.query.id).get('edges')
+
+
+        //     var test = { Nodes: [], Edges: []}
+        //     // debugger;
+
+        // });
+
+        // console.log(data)
+
+        // return [];
+
+
+
+        // debugger\
+
+        params.id = params.id.toLowerCase();
+
+        return  Ember.RSVP.hash({
+            data: this.store.find('node', {id: params.id}),
+            selected: params.id
+        })
+
+
+        // return this.store.find('node', params.id);
+    //     var id = params.id;
+    //     if (id) {
+    //         // return Ember.RSVP.hash({
+                    // current:  this.store.find('node', {id:params.id}),   // {}
+                    // current: data.node.byId
+    //         //     selected: id
+    //         // })
+    //     }
+    //     return '';
+    },
+    afterModel: function(m){
+        var sel = m.selected;
+        var array = {nodes: [], edges: []};
+        var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
+
+        var data = getDataBitch(sel, array, this, 1, depthMax);
+        console.log(data);
+        // var model = this.get('model')
+        m.data = data;
     }
 })
 
 
-App.GraphComponent = Ember.Component.extend({
+function getDataBitch(id , array, _this, depth, depthMax){
+    var node = _this.store.getById('node', id);
 
+    ;
+
+    console.log('this should happen twice')
+
+    array.nodes.push({
+        id: node.get('id'),
+        label: node.get('label'),
+        content: node.get('content')
+    });
+
+    var edges = node.get('edges');
+
+
+    if (depth <= depthMax && edges.content.length !== undefined) {
+
+        console.log('this should happen once')
+
+        edges.forEach(function(edge){
+
+            array.edges.push({
+                id: edge.get('id'),
+                from: edge.get('from'),
+                to: edge.get('to')
+            });
+
+            // Check if id has already been processed
+            array = getDataBitch(edge.get('from'), array, _this, depth + 1, depthMax);
+
+        })
+    }
+
+    return array;
+}
+
+
+App.GraphController = Ember.ObjectController.extend({
+//     // selectedNode: function(){
+
+//     //     var d = this.get('model.data');
+//     //     var s = this.get('model.selected');
+
+//     //     var a = {}
+
+//     //     d.forEach(function(item){
+//     //         if (item.id.toUpperCase() === s) {
+//     //             console.log('we have a match')
+//     //             a = item;
+//     //         }
+//     //     })
+
+//     //     return a;
+//     // }.property('model.selected', 'model.data'),
+    changeSelected: function(){
+        console.log('Selection changed, should redirect!')
+        this.transitionToRoute('graph', this.get('model.selected'));
+    }.observes('model.selected')
 })
 
 
-App.VizComponent = Ember.View.extend({
-    didInsertElement: function () {
-
-        var options = {
-            dataManipulation: true,
-            keyboard: true,
-            onAdd: function (data, callback) {
-                var span = document.getElementById('operation');
-                var idInput = document.getElementById('node-id');
-                var labelInput = document.getElementById('node-label');
-                var saveButton = document.getElementById('saveButton');
-                var cancelButton = document.getElementById('cancelButton');
-                var div = document.getElementById('graph-popUp');
-                span.innerHTML = "Add Node";
-                idInput.value = data.id;
-                labelInput.value = data.label;
-                saveButton.onclick = saveData.bind(this, data, callback);
-                cancelButton.onclick = clearPopUp.bind();
-                div.style.display = 'block';
-            },
-            onDelete: function (data, callback) {
-
-                // Delete all nodes
-                $.each(data.nodes, function (i, a) {
-                    //console.log("nodes: ", i, a)
-                    var node = App.Node.store.getById('node', a);
-                    node.deleteRecord();
-                    // node.save(); //not working, but should maybe need to connect to api first
-                })
+// App.GraphController = Ember.ObjectController.extend({})
 
 
-                // Delete all nodes
-                $.each(data.edges, function (i, a) {
-                    //console.log("edges: ", i, a)
-                    var edge = App.Edge.store.getById('edge', a);
-                    edge.deleteRecord();
-                    // edge.save();
-                })
+App.VizEditorComponent = Ember.View.extend({
+    data: null,
+    vizDataSet: {nodes: new vis.DataSet(), edges: new vis.DataSet()},
+    selected: '',
+    graph: null,
+    setup: function(){
+        console.log('test')
 
+        var _this = this;
 
+        var container = $('<div>').appendTo(this.$())[0];
+        var data = this.get('vizDataSet');
+        var options = {};
 
-                callback(data);
-            },
-            onEdit: function (data, callback) {
-                var span = document.getElementById('operation');
-                var idInput = document.getElementById('node-id');
-                var labelInput = document.getElementById('node-label');
-                var saveButton = document.getElementById('saveButton');
-                var cancelButton = document.getElementById('cancelButton');
-                var div = document.getElementById('graph-popUp');
-                span.innerHTML = "Edit Node";
-                idInput.value = data.id;
-                labelInput.value = data.label;
-                saveButton.onclick = saveData.bind(this, data, callback);
-                cancelButton.onclick = clearPopUp.bind();
-                div.style.display = 'block';
-            },
-            onConnect: function (data, callback) {
-                function saveLink() {
-                    data.id = NewGUID();
-                    data.groupid = sessionGroupID;
-                    App.Node.store.createRecord('edge', data).save()
-                    callback(data);
-                }
+        // // sample data
+        // data.nodes.add({
+        //     id: 1, label: 'test'
+        // })
 
-                if (data.from == data.to) {
-                    var r = confirm("Do you want to connect the node to itself?");
-                    if (r == true) {
-                        saveLink()
-                    }
-                }
-                else {
-                    saveLink()
-                }
+        // // Data was created in the route
+        this.graph = new vis.Graph(container, data, options);
+
+        // This sets the new selected item on click
+        this.graph.on('click', function (data) {
+            if (data.nodes.length > 0) {
+                _this.set('selected', data.nodes[0])
             }
-        };
-
-        var container = this.$().find('#mygraph')[0];
-
-        // Data was created in the route
-        graph = new vis.Graph(container, data, options);
+        });
 
         $(window).resize(function(){
-            graph.redraw();
+            _this.graph.redraw();
+        })
+    },
+    dataUpdates: function() {
+
+
+
+        if (this.graph === null) {
+            this.setup(); // graph hasn't been initialised yet
+        }
+
+        var model_data = this.get('data'); // has to be synched with data
+        var data = this.get('vizDataSet');
+
+
+        // Step 1: add all the new nodes & edges to the dataset
+
+        model_data.nodes.forEach(function(node){
+            // debugger;
+            if (data.nodes.get(node.id) === null) {
+                console.log('Adding nodes')
+                data.nodes.add(node);
+            }
         })
 
-        graph.on('click', function (data) {
-            //console.log(data, 'click event')
-            if (data.nodes.length > 0) {
-                App.Node.store.findQuery('node', { id: data.nodes[0] }).then(function (updated) {
-                    var c = updated.get('content');
-                    if (c && c[0]) {
-                        var record = App.Node.store.getById('node', data.nodes[0]);
-                        record.set('content', c[0].get('content'))
-                        $('#flowItem').html(filterData(record.get('content')));
-                        $('#flowEditLink').attr('href', '/flow/wiki/' + record.get('label'));
-                        $('#flowEditLink').html('Edit ' + record.get('label'));
-                        $('#flowEdit').show();
+        model_data.edges.forEach(function(edge){
+            if (data.edges.get(edge.id) === null) {
+                data.edges.add(edge);
+            }
+        })
 
-                    }
-                });
+        // Step 2: remove nodes which aren't in the data set anymore
+        data.nodes.getIds().forEach(function(id){
+            var match = false;
 
+            model_data.nodes.forEach(function(item){
+                if(item.id === id){
+                    match = true;
+                }
+            });
 
+            if (!match) {
+                data.nodes.remove(id)
+            }
+        })
+
+        // Step 2: remove edges which aren't in the data set anymore
+        data.edges.getIds().forEach(function(id){
+            var match = false;
+
+            model_data.edges.forEach(function(item){
+                if(item.id === id){
+                    match = true;
+                }
+            });
+
+            if (!match) {
+                data.edges.remove(id)
             }
         })
 
 
-    }
+
+    }.observes('data').on('didInsertElement')
+
+
+    // didInsertElement: function () {
+
+    //     var options = {
+    //         dataManipulation: true,
+    //         keyboard: true,
+    //         onAdd: function (data, callback) {
+    //             var span = document.getElementById('operation');
+    //             var idInput = document.getElementById('node-id');
+    //             var labelInput = document.getElementById('node-label');
+    //             var saveButton = document.getElementById('saveButton');
+    //             var cancelButton = document.getElementById('cancelButton');
+    //             var div = document.getElementById('graph-popUp');
+    //             span.innerHTML = "Add Node";
+    //             idInput.value = data.id;
+    //             labelInput.value = data.label;
+    //             saveButton.onclick = saveData.bind(this, data, callback);
+    //             cancelButton.onclick = clearPopUp.bind();
+    //             div.style.display = 'block';
+    //         },
+    //         onDelete: function (data, callback) {
+
+    //             // Delete all nodes
+    //             $.each(data.nodes, function (i, a) {
+    //                 //console.log("nodes: ", i, a)
+    //                 var node = App.Node.store.getById('node', a);
+    //                 node.deleteRecord();
+    //                 // node.save(); //not working, but should maybe need to connect to api first
+    //             })
+
+
+    //             // Delete all nodes
+    //             $.each(data.edges, function (i, a) {
+    //                 //console.log("edges: ", i, a)
+    //                 var edge = App.Edge.store.getById('edge', a);
+    //                 edge.deleteRecord();
+    //                 // edge.save();
+    //             })
+
+
+
+    //             callback(data);
+    //         },
+    //         onEdit: function (data, callback) {
+    //             var span = document.getElementById('operation');
+    //             var idInput = document.getElementById('node-id');
+    //             var labelInput = document.getElementById('node-label');
+    //             var saveButton = document.getElementById('saveButton');
+    //             var cancelButton = document.getElementById('cancelButton');
+    //             var div = document.getElementById('graph-popUp');
+    //             span.innerHTML = "Edit Node";
+    //             idInput.value = data.id;
+    //             labelInput.value = data.label;
+    //             saveButton.onclick = saveData.bind(this, data, callback);
+    //             cancelButton.onclick = clearPopUp.bind();
+    //             div.style.display = 'block';
+    //         },
+    //         onConnect: function (data, callback) {
+    //             function saveLink() {
+    //                 data.id = NewGUID();
+    //                 data.groupid = sessionGroupID;
+    //                 App.Node.store.createRecord('edge', data).save()
+    //                 callback(data);
+    //             }
+
+    //             if (data.from == data.to) {
+    //                 var r = confirm("Do you want to connect the node to itself?");
+    //                 if (r == true) {
+    //                     saveLink()
+    //                 }
+    //             }
+    //             else {
+    //                 saveLink()
+    //             }
+    //         }
+    //     };
+
+    //     var container = this.$().find('#mygraph')[0];
+
+    //     // Data was created in the route
+    //     graph = new vis.Graph(container, data, options);
+
+    //     $(window).resize(function(){
+    //         graph.redraw();
+    //     })
+
+    //     graph.on('click', function (data) {
+    //         //console.log(data, 'click event')
+    //         if (data.nodes.length > 0) {
+    //             App.Node.store.findQuery('node', { id: data.nodes[0] }).then(function (updated) {
+    //                 var c = updated.get('content');
+    //                 if (c && c[0]) {
+    //                     var record = App.Node.store.getById('node', data.nodes[0]);
+    //                     record.set('content', c[0].get('content'))
+    //                     $('#flowItem').html(filterData(record.get('content')));
+    //                     $('#flowEditLink').attr('href', '/flow/wiki/' + record.get('label'));
+    //                     $('#flowEditLink').html('Edit ' + record.get('label'));
+    //                     $('#flowEdit').show();
+
+    //                 }
+    //             });
+
+
+    //         }
+    //     })
+
+
+    // }
 })
 
 
@@ -559,7 +771,7 @@ App.EdgeSerializer = DS.RESTSerializer.extend({
     // and the comments are listed under a post's `comments` key.
     extractArray: function (store, type, payload, id, requestType) {
 
-        return [];
+        return []; //makes sure it does nothing
 
         return this._super(store, type, payload, id, requestType);
     }
@@ -585,7 +797,8 @@ App.NodeSerializer = DS.RESTSerializer.extend({
                 //App.Edge.store.push('edge', edge);
                 nodes.forEach(function (node) {
                     if (edge.from == node.id) {
-                        node.edges.push(edge.id);
+                        // console.log('EDGES GETTING PUSHED')
+                        //node.edges.push(edge.id);
                         return false;
                     }
                 })
@@ -595,6 +808,7 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 
 
         nodes = nodes.map(function (a) {
+            // console.log(a,'test')
             return {
                 label: a.label,
                 content: a.content,
@@ -605,17 +819,17 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 
         //Update Graph
         // Setup vis Dataset for Visualisation --> { nodes: new vis.DataSet(), edges: new vis.DataSet() };
-        nodes.forEach(function (item) {
-            if (!data.nodes.get(item.id)) //Only insert new data not twice if reloading from restadapter
-                data.nodes.add(item)
-        })
+        // nodes.forEach(function (item) {
+        //     if (!data.nodes.get(item.id)) //Only insert new data not twice if reloading from restadapter
+        //         data.nodes.add(item)
+        // })
 
-        if (edges) {
-            edges.forEach(function (item) {
-                if (!data.edges.get(item.id)) //Only insert new data not twice if reloading from restadapter
-                    data.edges.add(item)
-            })
-        }
+        // if (edges) {
+        //     edges.forEach(function (item) {
+        //         if (!data.edges.get(item.id)) //Only insert new data not twice if reloading from restadapter
+        //             data.edges.add(item)
+        //     })
+        // }
 
 
 
@@ -715,8 +929,6 @@ App.DatePickerField = Em.View.extend({
 
 
 
-
-
 //<script src="~/Modules/EXPEDIT.Share/Scripts/jquery-fn/cross-domain-ajax/jquery.xdomainajax.js"></script>
 //$('#contented').load('http://google.com'); // SERIOUSLY!
 //$.ajax({
@@ -728,122 +940,200 @@ App.DatePickerField = Em.View.extend({
 //    }
 //});
 
-$(document).ready(function () {
 
-    var contented = document.createElement('div');
-    contented.id = 'contented';
-    contented.localName = 'contented';
-    contented.style = 'width:100%;';
-    document.body.appendChild(contented);
+App.Wikipedia = App.Node.extend({});
 
-    function recurseTree(key, val, parent) {
-        if (key == '_') {
-            updateTree(val, parent);
-            return false;
-        }
-        else if (val instanceof Object) {
-            var missing = true;
-            $.each(val, function (key, val) {
-                missing = recurseTree(key, val, parent)
-                return missing;
-            });
-            return missing;
-        }
-        return true;
+App.WikipediaAdapter = DS.Adapter.extend({
+    find: function (store, type, id) {
+        //var url = [type, id].join('/');
+        //var q = '[[' + id + '|' + id + ']]';
+        return new Ember.RSVP.Promise(function (resolve, reject) {
+            var html;
+            var recurse = function (key, val, parent) {
+                if (key == '_') {
+                    html = val;
+                }
+                else if (val instanceof Object) {
+                    $.each(val, function (key, val) {
+                        return recurse(key, val, parent)
+                    });
+                }
+                return null;
+            };
 
-    }
-
-    function appendTree(val, parent) {
-        leafMax = leafCache.length + leafConst;
-        updateTree(val, parent);
-    }
-
-    var leafConst = 40;
-    var leafMax = leafConst;
-    var leafCache = [];
-    function updateTree(val, parent) {
-        var leaves = val.match(/\[\[.*?\]\]/igm);
-        var delay = -1;
-        $.each(leaves, function (key, val) {
-            var id = '';
-            if (val.indexOf('|') > -1)
-                id = val.replace(/\[\[(.*)?\|.*/, "$1");
-            else if (val.indexOf('[' > -1))
-                id = val.replace(/\[\[(.*)?\]\]/, "$1");
-            else id = val;
-            if (leafCache.indexOf(id == -1)) {
-                delay++;
-                setTimeout(function () {
-                    var url = 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=' + encodeURIComponent(id) + '&prop=revisions&rvprop=content';
-                    if (leafCache.length < leafMax) {
-                        leafCache.push(id);
-                        $.getJSON("http://query.yahooapis.com/v1/public/yql?" +
-                            "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
-                            encodeURIComponent(url) +
-                            "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
-                            ,
-                            // "q=select%20content%20from%20data%2Eheaders%20where%20url%3D%22" +
-                            // encodeURIComponent(url) +
-                            // "%22&format=json'&callback=?",
-                            function (data) {
-                                var missing = true;
-                                $.each(data, function (key, val) {
-                                    missing = recurseTree(key, val, id);
-                                    return missing;
-                                });
-                                if (missing) {
-                                    //alert(id);
-                                    //container.
-                                    //  html('Error').
-                                    //    focus().
-                                    //      effect('highlight', { color: '#c00' }, 1000);
-                                }
-                                else {
-                                    var container = $('#contented');
-                                    //val = filterData(val);
-                                    container.
-                                    html(container.html() + leaves); //.
-                                    //  focus().
-                                    //    effect("highlight", {}, 1000);
-                                }
-                            }
-                          );
-                    }
-                }, delay * 2000);
-
-            }
+            var url = 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=' + encodeURIComponent(id) + '&prop=revisions&rvprop=content';
+            jQuery.getJSON("http://query.yahooapis.com/v1/public/yql?" +
+                "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
+                encodeURIComponent(url) +
+                "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
+              ).then(function (data) {
+                  $.each(data, function (key, val) {
+                      recurse(key, val, id);
+                      if (html)
+                          return false;
+                  });
+                  var leaves = html.match(/\[\[.*?\]\]/igm);
+                  var edges = [];
+                  $.each(leaves, function (key, val) {
+                      var leaf = '';
+                      if (val.indexOf('|') > -1)
+                          leaf = val.replace(/\[\[(.*)?\|.*/, "$1");
+                      else if (val.indexOf('[' > -1))
+                          leaf = val.replace(/\[\[(.*)?\]\]/, "$1");
+                      else leaf = val;
+                      if (leaf) {
+                          edges.push({ id: id + '-' + leaf, from: id, to: leaf });
+                      }
+                  });
+                  //edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].get('from'), to: e.source[0].get('to')}").ToArray()
+                  edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].from, to: e.source[0].to}").ToArray()
+                  Enumerable.From(edges).ForEach(function (f) { App.Wikipedia.store.createRecord('edge', f); });
+                  Enumerable.From(edges).Where("$.to!='" + id + "'").ForEach(function (f) { App.Wikipedia.store.createRecord('wikipedia', { id: f.to, label: f.to }); });
+                  var content = filterData(html.wiki2html());
+                  $('#asddsfsdf').html(content);
+                  Ember.run(null, resolve, { id: id, label: id, content: content });
+              }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+                  Ember.run(null, reject, jqXHR);
+              });
         });
-
+    },
+    generateIdForRecord: function (store, record) {
+        var uuid = NewGUID();
+        return uuid;
     }
-
-
-
-
-
-    //updateTree('[[Main Page|Main Page]]');
 });
 
-    function filterData(data) {
-        if (typeof data == 'undefined' || !data) return '';
-        // filter all the nasties out
-        // no body tags
-        data = data.replace(/<?\/body[^>]*>/g, '');
-        // no linebreaks
-        data = data.replace(/[\r|\n]+/g, '');
-        // no comments
-        data = data.replace(/<--[\S\s]*?-->/g, '');
-        // no noscript blocks
-        data = data.replace(/<noscript[^>]*>[\S\s]*?<\/noscript>/g, '');
-        // no script blocks
-        data = data.replace(/<script[^>]*>[\S\s]*?<\/script>/g, '');
-        // no self closing scripts
-        data = data.replace(/<script.*\/>/, '');
-        // [... add as needed ...]
-        return data;
+
+App.WikipediaRoute = Ember.Route.extend({
+    model: function (params) {
+        console.log(params.id);
+        return this.store.find('wikipedia', params.id);
+    }
+});
+
+
+function filterData(data) {
+    if (typeof data == 'undefined' || !data) return '';
+    // filter all the nasties out
+    // no body tags
+    data = data.replace(/<?\/body[^>]*>/g, '');
+    // no linebreaks
+    data = data.replace(/[\r|\n]+/g, '');
+    // no comments
+    data = data.replace(/<--[\S\s]*?-->/g, '');
+    // no noscript blocks
+    data = data.replace(/<noscript[^>]*>[\S\s]*?<\/noscript>/g, '');
+    // no script blocks
+    data = data.replace(/<script[^>]*>[\S\s]*?<\/script>/g, '');
+    // no self closing scripts
+    data = data.replace(/<script.*\/>/, '');
+    // [... add as needed ...]
+    return data;
+}
+
+
+Ember.Handlebars.helper('safehtml', function (item, options) {
+    var escaped = filterData('' + options.contexts[0].get(options.data.properties[0]));
+    return new Handlebars.SafeString(escaped);
+});
+
+
+
+
+
+
+(function () {
+
+    var extendString = true;
+
+    if (extendString) {
+        String.prototype.wiki2html = wiki2html;
+        String.prototype.iswiki = iswiki;
+    } else {
+        window.wiki2html = wiki2html;
+        window.iswiki = iswiki;
     }
 
+    // utility function to check whether it's worth running through the wiki2html
+    function iswiki(s) {
+        if (extendString) {
+            s = this;
+        }
 
-    Ember.Handlebars.helper('safehtml', function(item, options) {
-        var escaped = filterData('' + options.contexts[0].get(options.data.properties[0]));
-        return new Handlebars.SafeString(escaped);
-    });
+        return !!(s.match(/^[\s{2} `#\*='{2}]/m));
+    }
+
+    // the regex beast...
+    function wiki2html(s) {
+        if (extendString) {
+            s = this;
+        }
+
+        // lists need to be done using a function to allow for recusive calls
+        function list(str) {
+            return str.replace(/(?:(?:(?:^|\n)[\*#].*)+)/g, function (m) {  // (?=[\*#])
+                var type = m.match(/(^|\n)#/) ? 'OL' : 'UL';
+                // strip first layer of list
+                m = m.replace(/(^|\n)[\*#][ ]{0,1}/g, "$1");
+                m = list(m);
+                return '<' + type + '><li>' + m.replace(/^\n/, '').split(/\n/).join('</li><li>') + '</li></' + type + '>';
+            });
+        }
+
+        return list(s
+
+            /* BLOCK ELEMENTS */
+            .replace(/(?:^|\n+)([^# =\*<].+)(?:\n+|$)/gm, function (m, l) {
+                if (l.match(/^\^+$/)) return l;
+                return "\n<p>" + l + "</p>\n";
+            })
+
+            .replace(/(?:^|\n)[ ]{2}(.*)+/g, function (m, l) { // blockquotes
+                if (l.match(/^\s+$/)) return m;
+                return '<blockquote>' + l + '</pre>';
+            })
+
+            .replace(/((?:^|\n)[ ]+.*)+/g, function (m) { // code
+                if (m.match(/^\s+$/)) return m;
+                return '<pre>' + m.replace(/(^|\n)[ ]+/g, "$1") + '</pre>';
+            })
+
+            .replace(/(?:^|\n)([=]+)(.*)\1/g, function (m, l, t) { // headings
+                return '<h' + l.length + '>' + t + '</h' + l.length + '>';
+            })
+
+            /* INLINE ELEMENTS */
+            .replace(/'''(.*?)'''/g, function (m, l) { // bold
+                return '<strong>' + l + '</strong>';
+            })
+
+            .replace(/''(.*?)''/g, function (m, l) { // italic
+                return '<em>' + l + '</em>';
+            })
+
+            .replace(/[^\[](http[^\[\s]*)/g, function (m, l) { // normal link
+                return '<a href="' + l + '">' + l + '</a>';
+            })
+
+            .replace(/[\[](http.*)[!\]]/g, function (m, l) { // external link
+                var p = l.replace(/[\[\]]/g, '').split(/ /);
+                var link = p.shift();
+                return '<a href="' + link + '">' + (p.length ? p.join(' ') : link) + '</a>';
+            })
+
+            .replace(/\[\[(.*?)\]\]/g, function (m, l) { // internal link or image
+                var p = l.split(/\|/);
+                var link = p.shift();
+
+                if (link.match(/^Image:(.*)/)) {
+                    // no support for images - since it looks up the source from the wiki db :-(
+                    return m;
+                } else {
+                    return '<a href="' + link + '">' + (p.length ? p.join('|') : link) + '</a>';
+                }
+            })
+        );
+    }
+
+})();

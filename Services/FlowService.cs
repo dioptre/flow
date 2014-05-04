@@ -168,14 +168,14 @@ namespace EXPEDIT.Flow.Services {
         public WikiViewModel GetWiki(string wikiName)
         {
             wikiName = wikiName.ToSlug();
-            var company = _users.DefaultContactCompanyID;
+            var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
                 WikiViewModel m;
-                var id = CheckNodePrivileges(d, wikiName, null, company, ActionPermission.Update, out isNew);
+                var id = CheckNodePrivileges(d, wikiName, null, companies, ActionPermission.Update, out isNew);
                 if (id == null)
                     return null;
                 if (string.IsNullOrWhiteSpace(wikiName) || isNew)
@@ -198,6 +198,7 @@ namespace EXPEDIT.Flow.Services {
         public bool SubmitWiki(ref WikiViewModel m)
         {
             m.GraphName = m.GraphName.ToSlug();
+            var companies = _users.ContactCompanies;
             var company = _users.DefaultContactCompanyID;
             var contact = _users.ContactID;
             var now = DateTime.UtcNow;
@@ -205,7 +206,7 @@ namespace EXPEDIT.Flow.Services {
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
-                var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, company, ActionPermission.Update, out isNew);
+                var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, companies, ActionPermission.Update, out isNew);
                 if (!id.HasValue)
                     return false;
                 if (!isNew && id != m.GraphDataID)
@@ -353,7 +354,7 @@ namespace EXPEDIT.Flow.Services {
         /// <param name="permission"></param>
         /// <param name="isNew"></param>
         /// <returns></returns>
-        internal Guid? CheckNodePrivileges(NKDC d, string nodeName, Guid? nodeID, Guid companyOwner, NKD.Models.ActionPermission permission, out bool isNew)
+        internal Guid? CheckNodePrivileges(NKDC d, string nodeName, Guid? nodeID, Guid?[] companies, NKD.Models.ActionPermission permission, out bool isNew)
         {
             var table = d.GetTableName(typeof(GraphData));
             LinqModels.MinimumGraphData root;
@@ -361,7 +362,7 @@ namespace EXPEDIT.Flow.Services {
             try
             {
                 root = (from o in d.GraphData
-                        where ((o.GraphName == nodeName && o.VersionOwnerCompanyID == companyOwner) || o.GraphDataID == nodeID) && o.Version == 0 && o.VersionDeletedBy == null 
+                        where ((o.GraphName == nodeName && companies.Contains(o.VersionOwnerCompanyID)) || o.GraphDataID == nodeID) && o.Version == 0 && o.VersionDeletedBy == null 
                         select new LinqModels.MinimumGraphData { 
                             GraphDataID = o.GraphDataID, 
                             VersionAntecedentID = o.VersionAntecedentID, 
@@ -438,40 +439,43 @@ namespace EXPEDIT.Flow.Services {
             return id;
         }
 
-        public FlowGroupViewModel GetNodeGroup(string name, Guid? nid, Guid? gid, bool includeContent = false)
+        public FlowGroupViewModel GetNode(string name, Guid? nid, Guid? gid, bool includeContent = false)
         {
             name = name.ToSlug();
             var company = _users.DefaultContactCompanyID;
+            var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
             var now = DateTime.UtcNow;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 if (string.IsNullOrWhiteSpace(name) && !nid.HasValue && !gid.HasValue)
-                    nid = (from o in d.GraphData where (o.VersionOwnerCompanyID == company && o.VersionDeletedBy == null && o.Version == 0) select o.GraphDataID).FirstOrDefault();
+                    nid = (from o in d.GraphData where (companies.Contains(o.VersionOwnerCompanyID) && o.VersionDeletedBy == null && o.Version == 0) select o.GraphDataID).FirstOrDefault();
                 if ((!nid.HasValue || nid == default(Guid)) && !gid.HasValue)
-                    nid = (from o in d.GraphData where (o.GraphName == name && o.VersionOwnerCompanyID == company) select o.GraphDataID).SingleOrDefault();
+                    nid = (from o in d.GraphData where (o.GraphName == name && companies.Contains(o.VersionOwnerCompanyID)) select o.GraphDataID).SingleOrDefault();
                 if ((!nid.HasValue || nid == default(Guid)) && gid.HasValue)
                     nid = (from o in d.GraphDataRelation
                            where o.GraphDataGroupID == gid &&
-                              o.VersionOwnerCompanyID == company && o.VersionDeletedBy == null && o.Version == 0
-                              && o.GraphDataOriginal.VersionOwnerCompanyID == company && o.GraphDataOriginal.VersionDeletedBy == null && o.GraphDataOriginal.Version == 0
+                              companies.Contains(o.VersionOwnerCompanyID) && o.VersionDeletedBy == null && o.Version == 0
+                              && companies.Contains(o.GraphDataOriginal.VersionOwnerCompanyID) && o.GraphDataOriginal.VersionDeletedBy == null && o.GraphDataOriginal.Version == 0
                            select o.GraphDataOriginal.GraphDataID).FirstOrDefault();
                 if ((!nid.HasValue || nid == default(Guid)) && gid.HasValue)
                     nid = (from o in d.GraphDataRelation
                                 where o.GraphDataGroupID == gid &&
-                                  o.VersionOwnerCompanyID == company && o.VersionDeletedBy == null && o.Version == 0
-                                  && o.GraphDataRelated.VersionOwnerCompanyID == company && o.GraphDataRelated.VersionDeletedBy == null && o.GraphDataRelated.Version == 0
+                                  companies.Contains(o.VersionOwnerCompanyID)  && o.VersionDeletedBy == null && o.Version == 0
+                                  && companies.Contains(o.GraphDataOriginal.VersionOwnerCompanyID) && o.GraphDataRelated.VersionDeletedBy == null && o.GraphDataRelated.Version == 0
                                   select o.GraphDataRelated.GraphDataID).FirstOrDefault();
                 if ((!nid.HasValue || nid == default(Guid)))
                     return null;
                 bool isNew; 
                 //We check permission and use identical settings for rest
-                var id = CheckNodePrivileges(d, null, nid, company, ActionPermission.Read, out isNew);
+                var id = CheckNodePrivileges(d, null, nid, companies, ActionPermission.Read, out isNew);
                 if (!id.HasValue || isNew || nid != id)
                     return null;
-                var disconnected = (from o in d.GraphData where                                          
-                                        o.VersionOwnerCompanyID == company && o.VersionDeletedBy == null && o.Version == 0
+                IQueryable<GraphData> disconnected = new GraphData[] {}.AsQueryable();
+                if (!includeContent)
+                    disconnected = (from o in d.GraphData where                                          
+                                        companies.Contains(o.VersionOwnerCompanyID)  && o.VersionDeletedBy == null && o.Version == 0
                                         && !o.GraphDataOrigin.Any() && !o.GraphDataRelation.Any()
                                        select o);
 
@@ -479,17 +483,23 @@ namespace EXPEDIT.Flow.Services {
                                        where o.FromGraphDataID == nid || o.ToGraphDataID == nid && o.VersionDeletedBy == null && o.Version == 0
                                        select o.GraphDataGroupID).Any())
                 {
+                    disconnected = (from o in d.GraphData
+                                    where
+                                        companies.Contains(o.VersionOwnerCompanyID) && o.VersionDeletedBy == null && o.Version == 0
+                                        && !o.GraphDataOrigin.Any() && !o.GraphDataRelation.Any()
+                                    select o);
                     if (includeContent)
-                        return new FlowGroupViewModel { Nodes = disconnected.Select(g => new FlowViewModel
+                        return new FlowGroupViewModel { Nodes = disconnected.Select(g => new FlowViewModelDetailed
                              {
                                  GraphDataID = g.GraphDataID,
                                  GraphName = g.GraphName,
-                                 GraphData = g.GraphContent
+                                 GraphData = g.GraphContent,
+                                 
                              }).ToArray()};
                     else
                         return new FlowGroupViewModel
                         {
-                            Nodes = disconnected.Select(g => new FlowViewModel
+                            Nodes = disconnected.Select(g => new FlowViewModelDetailed
                             {
                                 GraphDataID = g.GraphDataID,
                                 GraphName = g.GraphName
@@ -501,40 +511,97 @@ namespace EXPEDIT.Flow.Services {
                     gid = (from o in d.GraphDataRelation
                            where  o.FromGraphDataID == nid || o.ToGraphDataID == nid && o.VersionDeletedBy == null && o.Version == 0
                            select o.GraphDataGroupID).FirstOrDefault();
+
                  var nodes = (from o in d.GraphDataRelation
                               where
-                              o.GraphDataGroupID == gid &&
-                              o.VersionOwnerCompanyID == company && o.VersionDeletedBy == null && o.Version == 0
-                              && o.GraphDataOriginal.VersionOwnerCompanyID == company && o.GraphDataOriginal.VersionDeletedBy == null && o.GraphDataOriginal.Version == 0
+                              o.GraphDataGroupID == gid &&                              
+                              companies.Contains(o.VersionOwnerCompanyID) &&
+                              o.VersionDeletedBy == null && o.Version == 0 &&
+                              companies.Contains(o.GraphDataOriginal.VersionOwnerCompanyID) &&
+                              o.GraphDataOriginal.VersionDeletedBy == null && o.GraphDataOriginal.Version == 0
                               select o.GraphDataOriginal)
                               .Union(
                                   from o in d.GraphDataRelation
                                   where
                                   o.GraphDataGroupID == gid &&
-                                  o.VersionOwnerCompanyID == company && o.VersionDeletedBy == null && o.Version == 0
-                                  && o.GraphDataRelated.VersionOwnerCompanyID == company && o.GraphDataRelated.VersionDeletedBy == null && o.GraphDataRelated.Version == 0
+                                  companies.Contains(o.VersionOwnerCompanyID)  && 
+                                  o.VersionDeletedBy == null && o.Version == 0 &&
+                                  companies.Contains(o.GraphDataOriginal.VersionOwnerCompanyID) &&
+                                  o.GraphDataRelated.VersionDeletedBy == null && o.GraphDataRelated.Version == 0
                                   select o.GraphDataRelated).Union(disconnected);
 
                 FlowGroupViewModel m = new FlowGroupViewModel();
                  if (includeContent)
                  {
-                     m.Nodes = nodes.Select(g => new FlowViewModel
+                     m.Nodes = nodes.Select(g => new FlowViewModelDetailed
                      {
                          GraphDataID = g.GraphDataID,
                          GraphName = g.GraphName,
-                         GraphData = g.GraphContent
+                         GraphData = g.GraphContent,
+                         Children = (from o in g.GraphDataRelation
+                                     where o.VersionDeletedBy == null && o.Version == 0
+                                     select
+                                         new FlowEdgeViewModel
+                                         {
+                                             GraphDataRelationID = o.GraphDataRelationID,
+                                             FromID = o.FromGraphDataID,
+                                             ToID = o.ToGraphDataID,
+                                             GroupID = o.GraphDataGroupID,
+                                             Weight = o.Weight,
+                                             RelationTypeID = o.RelationTypeID,
+                                             Sequence = o.Sequence
+                                         }),
+                         Parents = (from o in g.GraphDataOrigin
+                                    where o.VersionDeletedBy == null && o.Version == 0
+                                    select
+                                        new FlowEdgeViewModel
+                                        {
+                                            GraphDataRelationID = o.GraphDataRelationID,
+                                            FromID = o.FromGraphDataID,
+                                            ToID = o.ToGraphDataID,
+                                            GroupID = o.GraphDataGroupID,
+                                            Weight = o.Weight,
+                                            RelationTypeID = o.RelationTypeID,
+                                            Sequence = o.Sequence
+                                        })
                      }).ToArray();
                  }
                  else
                  {
-                     m.Nodes = nodes.Select(g => new FlowViewModel
+                     m.Nodes = nodes.Select(g => new FlowViewModelDetailed
                      {
                          GraphDataID = g.GraphDataID,
-                         GraphName = g.GraphName
+                         GraphName = g.GraphName,
+                         Parents = (from o in d.GraphDataRelation
+                                  where (o.ToGraphDataID == id || o.GraphDataGroupID == gid) && o.VersionDeletedBy == null && o.Version == 0
+                                  select
+                                      new FlowEdgeViewModel
+                                      {
+                                          GraphDataRelationID = o.GraphDataRelationID,
+                                          FromID = o.FromGraphDataID,
+                                          ToID = o.ToGraphDataID,
+                                          GroupID = o.GraphDataGroupID,
+                                          Weight = o.Weight,
+                                          RelationTypeID = o.RelationTypeID,
+                                          Sequence = o.Sequence
+                                      }),
+                        Children = (from o in d.GraphDataRelation
+                                  where o.FromGraphDataID == id && o.VersionDeletedBy == null && o.Version == 0
+                                  select
+                                      new FlowEdgeViewModel
+                                      {
+                                          GraphDataRelationID = o.GraphDataRelationID,
+                                          FromID = o.FromGraphDataID,
+                                          ToID = o.ToGraphDataID,
+                                          GroupID = o.GraphDataGroupID,
+                                          Weight = o.Weight,
+                                          RelationTypeID = o.RelationTypeID,
+                                          Sequence = o.Sequence
+                                      })
                      }).ToArray();
                  }
                  m.Edges = (from o in d.GraphDataRelation
-                            where o.GraphDataGroupID == gid && o.VersionOwnerCompanyID == company && o.VersionDeletedBy == null && o.Version == 0
+                            where o.GraphDataGroupID == gid && o.VersionDeletedBy == null && o.Version == 0
                             select new FlowEdgeViewModel
                             {
                                 GraphDataRelationID = o.GraphDataRelationID,
@@ -551,107 +618,21 @@ namespace EXPEDIT.Flow.Services {
         }
        
        
-        public FlowViewModelDetailed GetNode(string name, Guid? nid, bool includeContent = false)
-        {
-            name = name.ToSlug();
-            if (string.IsNullOrWhiteSpace(name) && !nid.HasValue)
-                return null;
-            var company = _users.DefaultContactCompanyID;
-            var contact = _users.ContactID;
-            var now = DateTime.UtcNow;
-            using (new TransactionScope(TransactionScopeOption.Suppress))
-            {
-                var d = new NKDC(_users.ApplicationConnectionString, null);
-                if (!nid.HasValue)
-                    nid = (from o in d.GraphData where (o.GraphName == name && o.VersionOwnerCompanyID == company) select o.GraphDataID).SingleOrDefault();
-                if (nid == default(Guid))
-                    return null;
-                bool isNew;
-                var id = CheckNodePrivileges(d, null, nid, company, ActionPermission.Read, out isNew);
-                if (!id.HasValue || isNew || nid != id)
-                    return null;
-                FlowViewModelDetailed m;
-                if (includeContent)
-                {
-                    var g = (from o in d.GraphData where o.GraphDataID == id && o.VersionDeletedBy == null && o.Version == 0 select o).Single();
-                    m = new FlowViewModelDetailed
-                    {
-                        GraphDataID = g.GraphDataID,
-                        GraphName = g.GraphName,
-                        GraphData = g.GraphContent,
-                        Children = (from o in g.GraphDataRelation where o.VersionDeletedBy == null && o.Version==0 select 
-                                        new FlowEdgeViewModel {
-                                            GraphDataRelationID = o.GraphDataRelationID,
-                                            FromID = o.FromGraphDataID,
-                                            ToID = o.ToGraphDataID,
-                                            GroupID = o.GraphDataGroupID,
-                                            Weight = o.Weight,
-                                            RelationTypeID = o.RelationTypeID,
-                                            Sequence = o.Sequence
-                                        }).ToArray(),
-                        Parents = (from o in g.GraphDataOrigin where o.VersionDeletedBy == null && o.Version==0 select 
-                                        new FlowEdgeViewModel {
-                                            GraphDataRelationID = o.GraphDataRelationID,
-                                            FromID = o.FromGraphDataID,
-                                            ToID = o.ToGraphDataID,
-                                            GroupID = o.GraphDataGroupID,
-                                            Weight = o.Weight,
-                                            RelationTypeID = o.RelationTypeID,
-                                            Sequence = o.Sequence}).ToArray()
-                    };
-                }
-                else
-                {
-                    m = (from o in d.GraphData where o.GraphDataID == id select
-                    new FlowViewModelDetailed
-                    {
-                        GraphDataID = o.GraphDataID,
-                        GraphName = o.GraphName
-                    }).Single();
-                    m.Parents = (from o in d.GraphDataRelation
-                                  where o.ToGraphDataID == id && o.VersionDeletedBy == null && o.Version == 0
-                                  select
-                                      new FlowEdgeViewModel
-                                      {
-                                          GraphDataRelationID = o.GraphDataRelationID,
-                                          FromID = o.FromGraphDataID,
-                                          ToID = o.ToGraphDataID,
-                                          GroupID = o.GraphDataGroupID,
-                                          Weight = o.Weight,
-                                          RelationTypeID = o.RelationTypeID,
-                                          Sequence = o.Sequence
-                                      }).ToArray();
-                    m.Children = (from o in d.GraphDataRelation
-                                  where o.FromGraphDataID == id && o.VersionDeletedBy == null && o.Version == 0
-                                  select
-                                      new FlowEdgeViewModel
-                                      {
-                                          GraphDataRelationID = o.GraphDataRelationID,
-                                          FromID = o.FromGraphDataID,
-                                          ToID = o.ToGraphDataID,
-                                          GroupID = o.GraphDataGroupID,
-                                          Weight = o.Weight,
-                                          RelationTypeID = o.RelationTypeID,
-                                          Sequence = o.Sequence
-                                      }).ToArray();
-                }
-                return m;
-            }
-        }
-
+        
         public bool CreateNode(FlowViewModel m)
         {
             m.GraphName = m.GraphName.ToSlug();
             if (!m.GraphDataID.HasValue || string.IsNullOrWhiteSpace(m.GraphName))
                 return false;
             var company = _users.DefaultContactCompanyID;
+            var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
             var now = DateTime.UtcNow;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
-                var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, company, ActionPermission.Create, out isNew);
+                var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, companies, ActionPermission.Create, out isNew);
                 if (!id.HasValue || !isNew)
                     return false;
                 Guid? creatorContact, creatorCompany;
@@ -680,14 +661,15 @@ namespace EXPEDIT.Flow.Services {
             m.GraphName = m.GraphName.ToSlug();
             if (!m.GraphDataID.HasValue || string.IsNullOrWhiteSpace(m.GraphName))
                 return false;
-            var company = _users.DefaultContactCompanyID;
+            //var company = _users.DefaultContactCompanyID;
+            var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
             var now = DateTime.UtcNow;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
-                var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, company, ActionPermission.Update, out isNew);
+                var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, companies, ActionPermission.Update, out isNew);
                 if (!id.HasValue || isNew || id != m.GraphDataID)
                     return false;
                 var g = (from o in d.GraphData where o.GraphDataID == m.GraphDataID select o).Single();
@@ -711,14 +693,15 @@ namespace EXPEDIT.Flow.Services {
             m.GraphName = m.GraphName.ToSlug();
             if (!m.GraphDataID.HasValue || string.IsNullOrWhiteSpace(m.GraphName))
                 return false;
-            var company = _users.DefaultContactCompanyID;
+            //var company = _users.DefaultContactCompanyID;
+            var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
             var now = DateTime.UtcNow;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
-                var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, company, ActionPermission.Delete, out isNew);
+                var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, companies, ActionPermission.Delete, out isNew);
                 if (!id.HasValue || isNew || id != m.GraphDataID)
                     return false;
                 var g = (from o in d.GraphData where o.GraphDataID == m.GraphDataID select o).Single();
@@ -735,16 +718,17 @@ namespace EXPEDIT.Flow.Services {
             if (!m.GraphDataRelationID.HasValue || !m.FromID.HasValue || !m.ToID.HasValue || !m.GroupID.HasValue)
                 return false;
             var company = _users.DefaultContactCompanyID;
+            var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
             var now = DateTime.UtcNow;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
-                var id = CheckNodePrivileges(d, null, m.FromID, company, ActionPermission.Update, out isNew);
+                var id = CheckNodePrivileges(d, null, m.FromID, companies, ActionPermission.Update, out isNew);
                 if (id == null || isNew)
                     return false;
-                id = CheckNodePrivileges(d, null, m.ToID, company, ActionPermission.Update, out isNew);
+                id = CheckNodePrivileges(d, null, m.ToID, companies, ActionPermission.Update, out isNew);
                 if (id == null || isNew)
                     return false;
                 if ((from o in d.GraphDataRelation where (o.FromGraphDataID == m.FromID && o.ToGraphDataID == m.ToID && o.GraphDataGroupID == m.GroupID) || o.GraphDataRelationID == m.GraphDataRelationID select o).Any())
@@ -776,17 +760,18 @@ namespace EXPEDIT.Flow.Services {
         {
             if (!m.GraphDataRelationID.HasValue || !m.FromID.HasValue || !m.ToID.HasValue || !m.GroupID.HasValue)
                 return false;
-            var company = _users.DefaultContactCompanyID;
+            //var company = _users.DefaultContactCompanyID;
+            var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
             var now = DateTime.UtcNow;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
-                var id = CheckNodePrivileges(d, null, m.FromID, company, ActionPermission.Update, out isNew);
+                var id = CheckNodePrivileges(d, null, m.FromID, companies, ActionPermission.Delete, out isNew);
                 if (id == null || isNew)
                     return false;
-                id = CheckNodePrivileges(d, null, m.ToID, company, ActionPermission.Update, out isNew);
+                id = CheckNodePrivileges(d, null, m.ToID, companies, ActionPermission.Delete, out isNew);
                 if (id == null || isNew)
                     return false;
                 var disconnects = (from o in d.GraphDataRelation where (o.FromGraphDataID == m.FromID && o.ToGraphDataID == m.ToID && o.GraphDataGroupID == m.GroupID) || o.GraphDataRelationID == m.GraphDataRelationID select o);

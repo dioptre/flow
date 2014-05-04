@@ -8,15 +8,8 @@ App = Ember.Application.create({
 
 App.Router.map(function () {
     this.route('graph');
-    this.route('wiki');
+    this.route('wikipedia', {path: "/wikipedia/:id"});
     this.route('search');
-});
-
-
-App.IndexRoute = Ember.Route.extend({
-    beforeModel: function () {
-        this.transitionTo("search");
-    }
 });
 
 
@@ -766,100 +759,78 @@ App.DatePickerField = Em.View.extend({
 //    }
 //});
 
-$(document).ready(function () {
 
-    var contented = document.createElement('div');
-    contented.id = 'contented';
-    contented.localName = 'contented';
-    contented.style = 'width:100%;';
-    document.body.appendChild(contented);
+App.Wikipedia = App.Node.extend({});
 
-    function recurseTree(key, val, parent) {
-        if (key == '_') {
-            updateTree(val, parent);
-            return false;
-        }
-        else if (val instanceof Object) {
-            var missing = true;
-            $.each(val, function (key, val) {
-                missing = recurseTree(key, val, parent)
-                return missing;
-            });
-            return missing;
-        }
-        return true;
+App.WikipediaAdapter = DS.Adapter.extend({
+    find: function (store, type, id) {
+        //var url = [type, id].join('/');
+        //var q = '[[' + id + '|' + id + ']]';
+        return new Ember.RSVP.Promise(function (resolve, reject) {
+            var html;
+            var recurse = function (key, val, parent) {
+                if (key == '_') {
+                    html = val;
+                }
+                else if (val instanceof Object) {
+                    $.each(val, function (key, val) {
+                        return recurse(key, val, parent)
+                    });
+                }
+                return null;
+            };
 
-    }
-
-    function appendTree(val, parent) {
-        leafMax = leafCache.length + leafConst;
-        updateTree(val, parent);
-    }
-
-    var leafConst = 40;
-    var leafMax = leafConst;
-    var leafCache = [];
-    function updateTree(val, parent) {
-        var leaves = val.match(/\[\[.*?\]\]/igm);
-        var delay = -1;
-        $.each(leaves, function (key, val) {
-            var id = '';
-            if (val.indexOf('|') > -1)
-                id = val.replace(/\[\[(.*)?\|.*/, "$1");
-            else if (val.indexOf('[' > -1))
-                id = val.replace(/\[\[(.*)?\]\]/, "$1");
-            else id = val;
-            if (leafCache.indexOf(id == -1)) {
-                delay++;
-                setTimeout(function () {
-                    var url = 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=' + encodeURIComponent(id) + '&prop=revisions&rvprop=content';
-                    if (leafCache.length < leafMax) {
-                        leafCache.push(id);
-                        $.getJSON("http://query.yahooapis.com/v1/public/yql?" +
-                            "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
-                            encodeURIComponent(url) +
-                            "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
-                            ,
-                            // "q=select%20content%20from%20data%2Eheaders%20where%20url%3D%22" +
-                            // encodeURIComponent(url) +
-                            // "%22&format=json'&callback=?",
-                            function (data) {
-                                var missing = true;
-                                $.each(data, function (key, val) {
-                                    missing = recurseTree(key, val, id);
-                                    return missing;
-                                });
-                                if (missing) {
-                                    //alert(id);
-                                    //container.
-                                    //  html('Error').
-                                    //    focus().
-                                    //      effect('highlight', { color: '#c00' }, 1000);
-                                }
-                                else {
-                                    var container = $('#contented');
-                                    //val = filterData(val);
-                                    container.
-                                    html(container.html() + leaves); //.
-                                    //  focus().
-                                    //    effect("highlight", {}, 1000);
-                                }
-                            }
-                          );
-                    }
-                }, delay * 2000);
-
-            }
+            var url = 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=' + encodeURIComponent(id) + '&prop=revisions&rvprop=content';
+            jQuery.getJSON("http://query.yahooapis.com/v1/public/yql?" +
+                "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
+                encodeURIComponent(url) +
+                "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"               
+              ).then(function (data) {
+                  $.each(data, function (key, val) {
+                      recurse(key, val, id);
+                      if (html)
+                          return false;
+                  });
+                  var leaves = html.match(/\[\[.*?\]\]/igm);
+                  var edges = [];
+                  $.each(leaves, function (key, val) {
+                      var leaf = '';
+                      if (val.indexOf('|') > -1)
+                          leaf = val.replace(/\[\[(.*)?\|.*/, "$1");
+                      else if (val.indexOf('[' > -1))
+                          leaf = val.replace(/\[\[(.*)?\]\]/, "$1");
+                      else leaf = val;
+                      if (leaf) {                          
+                         edges.push({ id: id + '-' + leaf, from: id, to: leaf });
+                      }
+                  });
+                  //edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].get('from'), to: e.source[0].get('to')}").ToArray()
+                  edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].from, to: e.source[0].to}").ToArray()
+                  Enumerable.From(edges).ForEach(function (f) { App.Wikipedia.store.createRecord('edge', f); });
+                  Enumerable.From(edges).Where("$.to!='" + id + "'").ForEach(function (f) { App.Wikipedia.store.createRecord('wikipedia', { id: f.to, label: f.to }); });
+                  var content = filterData(html.wiki2html());
+                  $('#asddsfsdf').html(content);
+                  Ember.run(null, resolve, { id: id, label: id, content: content });
+              }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+                  Ember.run(null, reject, jqXHR);
+              });
         });
-
+    },
+    generateIdForRecord: function (store, record) {
+        var uuid = NewGUID();
+        return uuid;
     }
-
-
-
-
-
-    //updateTree('[[Main Page|Main Page]]');
 });
+
+
+App.WikipediaRoute = Ember.Route.extend({
+    model: function (params) {
+        console.log(params.id);
+        return this.store.find('wikipedia', params.id);
+    }
+});
+
 
     function filterData(data) {
         if (typeof data == 'undefined' || !data) return '';
@@ -885,3 +856,103 @@ $(document).ready(function () {
         var escaped = filterData('' + options.contexts[0].get(options.data.properties[0]));
         return new Handlebars.SafeString(escaped);
     });
+
+
+
+    
+
+
+    (function () {
+
+        var extendString = true;
+
+        if (extendString) {
+            String.prototype.wiki2html = wiki2html;
+            String.prototype.iswiki = iswiki;
+        } else {
+            window.wiki2html = wiki2html;
+            window.iswiki = iswiki;
+        }
+
+        // utility function to check whether it's worth running through the wiki2html
+        function iswiki(s) {
+            if (extendString) {
+                s = this;
+            }
+
+            return !!(s.match(/^[\s{2} `#\*='{2}]/m));
+        }
+
+        // the regex beast...
+        function wiki2html(s) {
+            if (extendString) {
+                s = this;
+            }
+
+            // lists need to be done using a function to allow for recusive calls
+            function list(str) {
+                return str.replace(/(?:(?:(?:^|\n)[\*#].*)+)/g, function (m) {  // (?=[\*#])
+                    var type = m.match(/(^|\n)#/) ? 'OL' : 'UL';
+                    // strip first layer of list
+                    m = m.replace(/(^|\n)[\*#][ ]{0,1}/g, "$1");
+                    m = list(m);
+                    return '<' + type + '><li>' + m.replace(/^\n/, '').split(/\n/).join('</li><li>') + '</li></' + type + '>';
+                });
+            }
+
+            return list(s
+
+                /* BLOCK ELEMENTS */
+                .replace(/(?:^|\n+)([^# =\*<].+)(?:\n+|$)/gm, function (m, l) {
+                    if (l.match(/^\^+$/)) return l;
+                    return "\n<p>" + l + "</p>\n";
+                })
+
+                .replace(/(?:^|\n)[ ]{2}(.*)+/g, function (m, l) { // blockquotes
+                    if (l.match(/^\s+$/)) return m;
+                    return '<blockquote>' + l + '</pre>';
+                })
+
+                .replace(/((?:^|\n)[ ]+.*)+/g, function (m) { // code
+                    if (m.match(/^\s+$/)) return m;
+                    return '<pre>' + m.replace(/(^|\n)[ ]+/g, "$1") + '</pre>';
+                })
+
+                .replace(/(?:^|\n)([=]+)(.*)\1/g, function (m, l, t) { // headings
+                    return '<h' + l.length + '>' + t + '</h' + l.length + '>';
+                })
+
+                /* INLINE ELEMENTS */
+                .replace(/'''(.*?)'''/g, function (m, l) { // bold
+                    return '<strong>' + l + '</strong>';
+                })
+
+                .replace(/''(.*?)''/g, function (m, l) { // italic
+                    return '<em>' + l + '</em>';
+                })
+
+                .replace(/[^\[](http[^\[\s]*)/g, function (m, l) { // normal link
+                    return '<a href="' + l + '">' + l + '</a>';
+                })
+
+                .replace(/[\[](http.*)[!\]]/g, function (m, l) { // external link
+                    var p = l.replace(/[\[\]]/g, '').split(/ /);
+                    var link = p.shift();
+                    return '<a href="' + link + '">' + (p.length ? p.join(' ') : link) + '</a>';
+                })
+
+                .replace(/\[\[(.*?)\]\]/g, function (m, l) { // internal link or image
+                    var p = l.split(/\|/);
+                    var link = p.shift();
+
+                    if (link.match(/^Image:(.*)/)) {
+                        // no support for images - since it looks up the source from the wiki db :-(
+                        return m;
+                    } else {
+                        return '<a href="' + link + '">' + (p.length ? p.join('|') : link) + '</a>';
+                    }
+                })
+            );
+        }
+
+    })();

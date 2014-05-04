@@ -44,7 +44,7 @@ namespace EXPEDIT.Flow.ViewModels
     [JsonObject]
     public class FlowViewModelDetailed : FlowViewModel
     {
-        public Guid?[] edges { get { return (from o in Children select o.GraphDataRelationID).ToArray(); } set { edges = value; } }
+        public Guid?[] edges { get { return (Children != null ? (from o in Children select o.GraphDataRelationID).ToArray() : new Guid?[] {}); } set { edges = value; } }
         [JsonIgnore]
         public IEnumerable<FlowEdgeViewModel> Parents { get; set; }
         [JsonIgnore]
@@ -74,7 +74,7 @@ namespace EXPEDIT.Flow.ViewModels
     [JsonObject]
     public class FlowGroupViewModel
     {
-        public IEnumerable<FlowViewModel> Nodes { get; set; }
+        public IEnumerable<FlowViewModelDetailed> Nodes { get; set; }
         public IEnumerable<FlowEdgeViewModel> Edges { get; set; }
     }
 
