@@ -440,7 +440,7 @@ App.GraphRoute = Ember.Route.extend({
         var array = {nodes: [], edges: []};
         var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
 
-        var data = getDataBitch(sel, array, this, 1, depthMax);
+        var data = getDataBitch(sel, array, this, 1, depthMax, 'node');
         console.log(data);
         // var model = this.get('model')
         m.data = data;
@@ -448,10 +448,9 @@ App.GraphRoute = Ember.Route.extend({
 })
 
 
-function getDataBitch(id , array, _this, depth, depthMax){
-    var node = _this.store.getById('node', id);
+function getDataBitch(id , array, _this, depth, depthMax, store){
+    var node = _this.store.getById(store, id);
 
-    ;
 
     console.log('this should happen twice')
 
@@ -477,7 +476,7 @@ function getDataBitch(id , array, _this, depth, depthMax){
             });
 
             // Check if id has already been processed
-            array = getDataBitch(edge.get('from'), array, _this, depth + 1, depthMax);
+            array = getDataBitch(edge.get('to'), array, _this, depth + 1, depthMax, store);
 
         })
     }
@@ -888,7 +887,7 @@ App.Node = DS.Model.extend({
 App.Edge = DS.Model.extend({
     //from: DS.belongsTo('node'),
     //from: DS.belongsTo('App.Node'),
-    // to: DS.belongsTo('node')
+    //to: DS.belongsTo('node')
     from: DS.attr(),
     to: DS.attr(),
     groupid: DS.attr()
@@ -941,12 +940,51 @@ App.DatePickerField = Em.View.extend({
 //});
 
 
-App.Wikipedia = App.Node.extend({});
+App.Wikipedia = DS.Model.extend({
+    label: DS.attr('string'),
+    content: DS.attr('string'),
+    edges: DS.hasMany('edge')
+});
+
+
+App.WikipediaRoute = Ember.Route.extend({
+    model: function (params) {
+        console.log(params.id);
+        this.store.findQuery('wikipedia', params.id);
+        return Ember.RSVP.hash({
+            data: this.store.find('wikipedia', params.id ),
+            selected: params.id
+        })
+    },
+    afterModel: function (m) {
+        var sel = m.selected;
+        var array = { nodes: [], edges: [] };
+        var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
+
+        var data = getDataBitch(sel, array, this, 1, depthMax, 'wikipedia');
+        console.log(data);
+        // var model = this.get('model')
+        m.data = data;
+    }
+});
+
+
+App.WikipediaController = Ember.ObjectController.extend({
+    changeSelected: function () {
+        console.log('Selection changed, should redirect!')
+        this.transitionToRoute('wikipedia', this.get('model.selected'));
+    }.observes('model.selected')
+})
 
 App.WikipediaAdapter = DS.Adapter.extend({
     find: function (store, type, id) {
-        //var url = [type, id].join('/');
-        //var q = '[[' + id + '|' + id + ']]';
+        return this.findMany(store, type, id);
+    },
+    findMany: function (store, type, ids) {
+        return this.findQuery(store, type, ids);
+    },
+    findQuery: function (store, type, query, array) {
+        var id = query;
         return new Ember.RSVP.Promise(function (resolve, reject) {
             var html;
             var recurse = function (key, val, parent) {
@@ -991,7 +1029,10 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   Enumerable.From(edges).Where("$.to!='" + id + "'").ForEach(function (f) { App.Wikipedia.store.createRecord('wikipedia', { id: f.to, label: f.to }); });
                   var content = filterData(html.wiki2html());
                   $('#asddsfsdf').html(content);
-                  Ember.run(null, resolve, { id: id, label: id, content: content });
+                  if (typeof array === 'undefined')
+                      Ember.run(null, resolve, { id: id, label: id, content: content, edges: Enumerable.From(edges).Select("$.id").ToArray() });
+                  else
+                      Ember.run(null, resolve, { Nodes: [{ id: id, label: id, content: content, edges: Enumerable.From(edges).Select("$.id").ToArray() }], Edges: [] });
               }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
                   Ember.run(null, reject, jqXHR);
@@ -1005,12 +1046,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
 });
 
 
-App.WikipediaRoute = Ember.Route.extend({
-    model: function (params) {
-        console.log(params.id);
-        return this.store.find('wikipedia', params.id);
-    }
-});
+
 
 
 function filterData(data) {
