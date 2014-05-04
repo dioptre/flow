@@ -950,9 +950,8 @@ App.Wikipedia = DS.Model.extend({
 App.WikipediaRoute = Ember.Route.extend({
     model: function (params) {
         console.log(params.id);
-        this.store.findQuery('wikipedia', params.id);
         return Ember.RSVP.hash({
-            data: this.store.find('wikipedia', params.id ),
+            data: this.store.findQuery('wikipedia', params.id ),
             selected: params.id
         })
     },
