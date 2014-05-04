@@ -450,7 +450,7 @@ App.GraphRoute = Ember.Route.extend({
 
 function getDataBitch(id , array, _this, depth, depthMax, store){
     var node = _this.store.getById(store, id);
-
+    //debugger;
 
     console.log('this should happen twice')
 
@@ -1025,14 +1025,49 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   });
                   //edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].get('from'), to: e.source[0].get('to')}").ToArray()
                   edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].from, to: e.source[0].to}").ToArray()
-                  Enumerable.From(edges).ForEach(function (f) { App.Wikipedia.store.createRecord('edge', f); });
-                  Enumerable.From(edges).Where("$.to!='" + id + "'").ForEach(function (f) { App.Wikipedia.store.createRecord('wikipedia', { id: f.to, label: f.to }); });
-                  var content = filterData(html.wiki2html());
-                  $('#asddsfsdf').html(content);
+                  //oldNodes = Enumerable.From(App.Wikipedia.store.all('wikipedia').content).Select("$.id").ToArray();
+                  //oldEdges = Enumerable.From(App.Wikipedia.store.all('edges').content).Select("$.id").ToArray();
+                  //Enumerable.From(edges).Where(function (f) {
+                  //    if (oldNodes.indexOf(f.to) > -1) {
+                  //        //Update
+                  //        //var node = App.Wikipedia.store.get('wikipedia', id);
+                  //        //node.set("content", );
+                  //        //post.save();
+                  //    } else {
+                  //        //Insert
+                  //        if (id == f.to)
+                  //            isNew = true;
+                  //        App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to, content: content });
+                  //    }
+                  //});
+                  //Enumerable.From(edges).Where(function (f) {
+                  //    if (oldEdges.indexOf(f.id) > -1) {
+                  //        //Update
+                  //    } else {
+                  //        //Insert
+                  //        App.Wikipedia.store.push('edge', f);
+                  //    }
+                  //});
+                  //if (!isNew) {
+                  //    var node = App.Wikipedia.store.getById('wikipedia', id);
+                  //    if (node) {
+                  //        App.Wikipedia.store.deleteRecord(node);
+                  //        App.Wikipedia.store.createRecord('wikipedia', { id: id, label: id, content: content });
+                  //    }
+                  //}
+
+                  
+                  var content = filterData(html.wiki2html());           
+                  var edgeids = Enumerable.From(edges).Select("$.id").ToArray();
+                  Enumerable.From(edges).ForEach(function (f) { App.Wikipedia.store.push('edge', f); });
+                  Enumerable.From(edges).Where("$.to!='" + id + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to }); });
+                  App.Wikipedia.store.push('wikipedia', { id: id, label: id, edges: edgeids, content: content });
                   if (typeof array === 'undefined')
-                      Ember.run(null, resolve, { id: id, label: id, content: content, edges: Enumerable.From(edges).Select("$.id").ToArray() });
-                  else
-                      Ember.run(null, resolve, { Nodes: [{ id: id, label: id, content: content, edges: Enumerable.From(edges).Select("$.id").ToArray() }], Edges: [] });
+                      Ember.run(null, resolve, { id: id, label: id, content: content, edges: edgeids });
+                  else {
+                      var toReturn = { Nodes: [{ id: id, label: id, content: content, edges: edgeids }], Edges: edges };
+                      Ember.run(null, resolve, toReturn );
+                  }
               }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
                   Ember.run(null, reject, jqXHR);
