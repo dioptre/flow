@@ -420,7 +420,9 @@ App.GraphRoute = Ember.Route.extend({
 
         return  Ember.RSVP.hash({
             data: this.store.find('node', {id: params.id}),
-            selected: params.id
+            selected: params.id,
+            content: '',
+            label: ''
         })
 
 
@@ -444,6 +446,8 @@ App.GraphRoute = Ember.Route.extend({
         console.log(data);
         // var model = this.get('model')
         m.data = data;
+        m.content = this.store.getById('node', sel).get('content');
+        m.label = this.store.getById('node', sel).get('label');
     }
 })
 

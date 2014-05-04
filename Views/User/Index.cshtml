@@ -14,7 +14,7 @@
     #masContent {
         width: 100% !important;
     }
-    canvas { border: 1px solid red; }
+    /*canvas { border: 1px solid red; }*/
 </style>
 <script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
 <script type="text/javascript">
@@ -64,22 +64,17 @@
 
   <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
+      <h1>{{model.label}}</h1>
+         <div class="container-fluid" style="margin-top:12px;">
         <div class="row-fluid">
           <div class="span6">
-            <div id="flowItem">{{selectedNode.Label}}</div>
-            <div>
-              <ul id="flowEdit" class="nav nav-pills" style="display:none;">
-                <li>
-                  <a href="#" id="flowEditLink"></a>
-                </li>
-              </ul>
-            </div>
+                {{safehtml model.content}}
           </div>
           <div class="span6">
-              {{selected}}
-            {{viz-editor data=data selected=selected}}
+              {{viz-editor data=data selected=selected}}
           </div>
          </div>
+      </div>
 
 
     <div id="graph-popUp">
