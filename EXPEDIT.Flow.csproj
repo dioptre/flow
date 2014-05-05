@@ -163,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Images\loading.gif" />
+    <Content Include="Scripts\wiki.js" />
     <Content Include="Scripts\flow.js" />
     <Content Include="Scripts\vis.js" />
     <Content Include="Styles\img\graph\acceptDeleteIcon.png" />

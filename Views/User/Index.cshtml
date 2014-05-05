@@ -51,10 +51,10 @@
          <div class="container-fluid" style="margin-top:12px;">
         <div class="row-fluid">
           <div class="span6">
-                {{safehtml model.content}}
+               {{viz-editor data=data selected=selected}}
           </div>
           <div class="span6">
-              {{viz-editor data=data selected=selected}}
+               {{safehtml model.content}}
           </div>
          </div>
       </div>
@@ -143,16 +143,18 @@
               <span class="glyphicon icon-search"></span>Search
             </button>
 
-            Graph:
+            Workflows:
             {{view Ember.Checkbox checkedBinding='graph'}}
 
-            File:
+            Files:
             {{view Ember.Checkbox checkedBinding='file'}}
 
-            Map:
+            Locations:
             {{view Ember.Checkbox checkedBinding='map'}}
-
-
+            
+             {{#if keywords}}
+                {{#link-to 'wikipedia' keywords}}Look up {{keywords}} on wikipedia{{/link-to}}
+            {{/if}}
           </div>
         </div>
       </div>
@@ -196,7 +198,7 @@
 
 
 <script type="text/x-handlebars" data-template-name="graphResults">
-  <h2>Graph output</h2>
+  <h2>Workflows</h2>
   <div class="table-responsive">
     <table class="table table-condensed table-hover">
         <thead>
@@ -222,7 +224,7 @@
 
 
 <script type="text/x-handlebars" data-template-name="fileResults">
-  <h2>File output</h2>
+  <h2>Files</h2>
   <div class="table-responsive">
     <table class="table table-condensed table-hover">
         <thead>
@@ -257,7 +259,7 @@
 
 
 <script type="text/x-handlebars" data-template-name="mapResults">
-  <h2>Map output</h2>
+  <h2>Locations</h2>
      {{map-result resultsGeo=resultsGeo}}
 </script>
 
