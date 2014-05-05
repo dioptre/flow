@@ -459,7 +459,7 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
         var node = _this.store.getById(store, id);
         //debugger;
 
-        console.log('this should happen twice')
+        //console.log('this should happen twice')
 
         array.nodes.push({
             id: node.get('id'),
@@ -473,7 +473,7 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
 
         if (depth <= depthMax && edges.length !== undefined) {
 
-            console.log('this should happen once')
+            //console.log('this should happen once')
 
             edges.forEach(function (edge) {
 
@@ -528,7 +528,7 @@ App.VizEditorComponent = Ember.View.extend({
     selected: '',
     graph: null,
     setup: function(){
-        console.log('test')
+        //console.log('test')
 
         var _this = this;
 
@@ -572,7 +572,7 @@ App.VizEditorComponent = Ember.View.extend({
         model_data.nodes.forEach(function(node){
             // debugger;
             if (data.nodes.get(node.id) === null) {
-                console.log('Adding nodes')
+                //console.log('Adding nodes')
                 data.nodes.add(node);
             }
         })
@@ -980,7 +980,7 @@ App.WikipediaRoute = Ember.Route.extend({
         var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
         var nodeMax = 25;
         var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'wikipedia');
-        console.log(data);
+        //console.log(data);
         // var model = this.get('model')
         m.data = data;
         m.content = this.store.getById('wikipedia', sel).get('content');
@@ -990,7 +990,7 @@ App.WikipediaRoute = Ember.Route.extend({
 
 App.WikipediaController = Ember.ObjectController.extend({
     changeSelected: function () {
-        console.log('Selection changed, should redirect!')
+        //console.log('Selection changed, should redirect!')
         this.transitionToRoute('wikipedia', this.get('model.selected'));
     }.observes('model.selected')
 })
@@ -1033,7 +1033,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   var edges = [];
                   var content = '';
                   if (html) {
-                      content = filterData(html.wiki2html());
+                      content = filterData(InstaView.convert(html));
                       var leaves = html.match(/\[\[.*?\]\]/igm);                      
                       $.each(leaves, function (key, val) {
                           var leaf = '';
@@ -1178,6 +1178,10 @@ Ember.Handlebars.helper('safehtml', function (item, options) {
         }
 
         return list(s
+
+            .replace(/\s*\{\{(.*)[^}{]+\}\}\s*/g, function (m, l) { // metadata
+                return '';
+            })
 
             /* BLOCK ELEMENTS */
             .replace(/(?:^|\n+)([^# =\*<].+)(?:\n+|$)/gm, function (m, l) {
