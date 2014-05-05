@@ -21,8 +21,6 @@ App.IndexRoute = Ember.Route.extend({
 });
 
 
-
-
 // Ember.run.debounce(this, this.calledRarely, 1000);
 
 
@@ -39,9 +37,6 @@ App.Search = DS.Model.extend({
     "SpatialJSON": DS.attr(''),
     "InternalURL": DS.attr(''),
     "ExternalURL": DS.attr(''),
-    "ResourcePath": function(){
-        return '/share/file/' + this.get('ReferenceID');
-    }.property('ReferenceID'),
     "Author": DS.attr(''),
     "Updated": DS.attr('')
 });
@@ -472,7 +467,7 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
             content: node.get('content')
         });
 
-
+        
         var edges = Enumerable.From(node.get('edges').content).OrderBy("$.get('sequence')").ToArray();
 
 
@@ -606,11 +601,11 @@ App.VizEditorComponent = Ember.View.extend({
                 if (data.nodes.get(edge.from) !== null && data.nodes.get(edge.to) !== null) {  // ensure that only edges are drawn where the to & from nodes exist
                     data.edges.add(edge);
                 }
-
+                
             }
         })
 
-
+ 
         data.edges.getIds().forEach(function(id){
             var match = false;
 
@@ -1039,7 +1034,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   var content = '';
                   if (html) {
                       content = filterData(InstaView.convert(html));
-                      var leaves = html.match(/\[\[.*?\]\]/igm);
+                      var leaves = html.match(/\[\[.*?\]\]/igm);                      
                       $.each(leaves, function (key, val) {
                           var leaf = '';
                           if (val.indexOf('|') > -1)
@@ -1085,8 +1080,8 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   //    }
                   //}
 
-
-
+                  
+                          
                   var edgeids = Enumerable.From(edges).Select("$.id").ToArray();
                   var sequence = 1;
                   Enumerable.From(edges).ForEach(function (f) { f.sequence = sequence; sequence++; App.Wikipedia.store.push('edge', f); });
@@ -1135,21 +1130,8 @@ function filterData(data) {
 
 
 Ember.Handlebars.helper('safehtml', function (item, options) {
-    if (this.results && this.results.length) {
-        var obj = Enumerable.From(options.contexts[0].results).Where("$.get('id')=='" + options.data.keywords.result.id + "'").FirstOrDefault();
-        if (obj) {
-            var escaped = filterData('' + obj.get(options.data.properties[0].split('.')[1]));
-            return new Handlebars.SafeString(escaped);
-        }
-    }
-    else {
-        var escaped = filterData('' + options.contexts[0].get(options.data.properties[0]));
-        return new Handlebars.SafeString(escaped);
-    }
-    return '';
+    var escaped = filterData('' + options.contexts[0].get(options.data.properties[0]));
+    return new Handlebars.SafeString(escaped);
 });
 
-Ember.TextField.reopen({
-    attributeBindings: ['autofocus'],
-    autofocus: 'autofocus'
-});
+
