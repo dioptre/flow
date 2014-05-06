@@ -100,7 +100,11 @@ namespace EXPEDIT.Flow.Controllers {
         public ActionResult Wiki(string id)
         {
             WikiViewModel m;
-            m = _Flow.GetWiki(id);
+            Guid nid;
+            if (Guid.TryParse(id, out nid))
+                m = _Flow.GetWiki(null, nid);
+            else
+                m = _Flow.GetWiki(id, null);
             if (m == null)
                 return new HttpUnauthorizedResult("Unauthorized access to protected article.");
             return View(m);

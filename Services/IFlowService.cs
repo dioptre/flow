@@ -17,7 +17,7 @@ namespace EXPEDIT.Flow.Services
          IEnumerable<SearchViewModel> Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow);
 
          [OperationContract]
-         WikiViewModel GetWiki(string wikiName);
+         WikiViewModel GetWiki(string wikiName, Guid? nid);
 
          [OperationContract]
          bool GetDuplicateNode(string wikiName);

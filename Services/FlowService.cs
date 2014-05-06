@@ -179,7 +179,7 @@ namespace EXPEDIT.Flow.Services {
       
         }
 
-        public WikiViewModel GetWiki(string wikiName)
+        public WikiViewModel GetWiki(string wikiName, Guid? nid)
         {
             wikiName = wikiName.ToSlug();
             var companies = _users.ContactCompanies;
@@ -189,10 +189,14 @@ namespace EXPEDIT.Flow.Services {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
                 WikiViewModel m;
-                var id = CheckNodePrivileges(d, wikiName, null, companies, ActionPermission.Update, out isNew);
+                Guid? id;
+                if (nid.HasValue)
+                    id = CheckNodePrivileges(d, null, nid, companies, ActionPermission.Update, out isNew);
+                else
+                    id = CheckNodePrivileges(d, wikiName, null, companies, ActionPermission.Update, out isNew);
                 if (id == null)
                     return null;
-                if (string.IsNullOrWhiteSpace(wikiName) || isNew)
+                if (isNew)
                     m = new WikiViewModel { GraphDataID = id.Value, IsNew = true, GraphName = wikiName};
                 else
                 {
@@ -376,7 +380,7 @@ namespace EXPEDIT.Flow.Services {
             try
             {
                 root = (from o in d.GraphData
-                        where ((o.GraphName == nodeName && companies.Contains(o.VersionOwnerCompanyID)) || o.GraphDataID == nodeID) && o.Version == 0 && o.VersionDeletedBy == null 
+                        where ((((!nodeID.HasValue && o.GraphName == nodeName) || (nodeID.HasValue && o.GraphDataID == nodeID.Value)) && companies.Contains(o.VersionOwnerCompanyID))) && o.Version == 0 && o.VersionDeletedBy == null 
                         select new LinqModels.MinimumGraphData { 
                             GraphDataID = o.GraphDataID, 
                             VersionAntecedentID = o.VersionAntecedentID, 
