@@ -120,7 +120,6 @@ namespace EXPEDIT.Flow.Controllers {
                 return new RedirectResult(System.Web.VirtualPathUtility.ToAbsolute(string.Format("~/flow/#/graph/{0}", m.GraphDataID)));
         }
 
-        [Authorize]
         [Themed(false)]
         [HttpGet]
         public ActionResult NodeDuplicate(string id)
@@ -128,7 +127,6 @@ namespace EXPEDIT.Flow.Controllers {
             return new JsonHelper.JsonNetResult(_Flow.GetDuplicateNode(id), JsonRequestBehavior.AllowGet);
         }
 
-        [Authorize]
         [Themed(false)]
         [HttpGet]
         [ActionName("Nodes")]
@@ -139,15 +137,19 @@ namespace EXPEDIT.Flow.Controllers {
             Guid temp;
             if (!Guid.TryParse(id, out temp))
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
-            return new JsonHelper.JsonNetResult(_Flow.GetNode(null, temp, null, true), JsonRequestBehavior.AllowGet);
+            var result = _Flow.GetNode(null, temp, null, true);
+            if (result == null)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+            return new JsonHelper.JsonNetResult(result, JsonRequestBehavior.AllowGet);
         }
 
-        [Authorize]
         [Themed(false)]
         [HttpPost]
         [ActionName("Nodes")]
         public ActionResult CreateNode(FlowViewModel m)
         {
+            if (!User.Identity.IsAuthenticated)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.node != null && m.node.id != null)
                 m = m.node;
             if (_Flow.CreateNode(m))
@@ -156,12 +158,13 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);    
         }
 
-        [Authorize]
         [Themed(false)]
         [HttpPut]
         [ActionName("Nodes")]
         public ActionResult UpdateNode(FlowViewModel m)
         {
+            if (!User.Identity.IsAuthenticated)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.node != null && m.node.id != null)
                 m = m.node;
             if (_Flow.UpdateNode(m))
@@ -170,12 +173,13 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);    
         }
 
-        [Authorize]
         [Themed(false)]
         [HttpDelete]
         [ActionName("Nodes")]
         public ActionResult DeleteNode(FlowViewModel m)
         {
+            if (!User.Identity.IsAuthenticated)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.node != null && m.node.id != null)
                 m = m.node;
             if (_Flow.DeleteNode(m))
@@ -185,12 +189,13 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
     
-        [Authorize]
         [Themed(false)]
         [HttpPost]
         [ActionName("Edges")]
         public ActionResult CreateEdge(FlowEdgeViewModel m)
         {
+            if (!User.Identity.IsAuthenticated)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.edge != null && m.edge.id != null)
                 m = m.edge;
             if (_Flow.CreateEdge(m))
@@ -199,12 +204,13 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
         }
 
-        [Authorize]
         [Themed(false)]
         [HttpDelete]
         [ActionName("Edges")]
         public ActionResult DeleteEdge(FlowEdgeViewModel m)
         {
+            if (!User.Identity.IsAuthenticated)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.edge != null && m.edge.id != null)
                 m = m.edge;
             if (_Flow.DeleteEdge(m))
