@@ -62,7 +62,7 @@ App.SearchSerializer = DS.RESTSerializer.extend({
 
 App.SearchController = Ember.Controller.extend({
     needs: ['graphResults','mapResults','fileResults'],
-    queryParams: ['keywords', 'tags', 'page', 'graph', 'file', 'map'],
+    queryParams: ['keywords', 'tags', 'graph', 'file', 'map', 'pageGraph', 'pageFile', 'pageMap'],
     graph: true,
     file: true,
     map: false,
@@ -75,7 +75,9 @@ App.SearchController = Ember.Controller.extend({
         if (i===0) return '';
         return 'span' + (12/i);
     }.property('graph', 'file', 'map'),
-    page: 0,
+    pageGraph: 0,
+    pageFile: 0,
+    pageMap: 0,
     keywords: '',
     tags: [],
     dateModalBtn: [
@@ -139,7 +141,7 @@ App.SearchController = Ember.Controller.extend({
         var controller = this;
         if (this.get('graph')) {
             this.store.find('search', {
-                page: this.get('page'),
+                page: this.get('pageGraph'),
                 keywords: this.get('keywords'),
                 tags: this.get('tags'),
                 type: 'flow',
@@ -150,7 +152,7 @@ App.SearchController = Ember.Controller.extend({
         }
         if (this.get('map')) {
             this.store.find('search', {
-                page: this.get('page'),
+                page: this.get('pageMap'),
                 keywords: this.get('keywords'),
                 tags: this.get('tags'),
                 type: 'flowlocation',
@@ -161,7 +163,7 @@ App.SearchController = Ember.Controller.extend({
         }
         if (this.get('file')) {
             this.store.find('search', {
-                page: this.get('page'),
+                page: this.get('pageFile'),
                 keywords: this.get('keywords'),
                 tags: this.get('tags'),
                 type: 'file',

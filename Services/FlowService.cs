@@ -139,8 +139,8 @@ namespace EXPEDIT.Flow.Services {
                                      results.Add(new SearchViewModel
                                      {
                                          Row = reader[0] as long?,
-                                         TotalRows = reader[1] as long?,
-                                         Score = reader[2] as decimal?,
+                                         TotalRows = reader[1] as int?,
+                                         Score = (reader[2] != null ? decimal.Parse(reader[2].ToString()) : default(decimal?)),
                                          id = reader[3] as Guid?,
                                          ReferenceID = reader[4] as Guid?,
                                          TableType = reader[5] as string,
