@@ -36,20 +36,7 @@
 
 
 
-<script type="text/x-handlebars" id="search-home">
-
-    {{searchText}} - tags
-
-    <h1>Search</h1>
-    {{render 'search' model}}
-
-</script>
-
-
-
-
-  <script type="text/x-handlebars" id="components/viz-editor">
-  </script>
+  <script type="text/x-handlebars" id="components/viz-editor"></script>
 
 
   <script type="text/x-handlebars" id="wikipedia">
@@ -106,6 +93,14 @@
 
   <script type="text/x-handlebars" id="search">
     <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span12">
+          {{#link-to 'graph' tagName='button'}}Create new workflow{{/link-to}}
+          <button><a href="/flow/wiki">Create new page</a></button>
+          <button onclick='alert('This is still a to-do')'>Add location to database</button>
+        </div>
+      </div>
+      <br>
 
       <div class="row-fluid">
         <div class="span12">

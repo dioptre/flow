@@ -96,11 +96,11 @@ App.SearchController = Ember.ObjectController.extend({
     actions: {
         next: function (i) {
             this.incrementProperty(i)
-            console.log('next Page for ', i)
+            //console.log('next Page for ', i)
         },
         prev: function (i) {
             this.decrementProperty(i)
-            console.log('previous Page for ', i)
+            //console.log('previous Page for ', i)
         },
         search: function () {
             this.loadAll();
@@ -344,6 +344,7 @@ App.MapResultComponent = Ember.Component.extend({
     mapReady: false,
     intialize: function () {
         var component = this;
+        //alert(component._id);
         $(window).on('redrawMap', function () {
             component.loading();
         });
@@ -351,27 +352,32 @@ App.MapResultComponent = Ember.Component.extend({
     update: function () {
         var component = this;
         Ember.RSVP.allSettled([deferredMap.promise]).then(function (array) {
-            if (component.map == null)
-                component.map = SetupMap(component._id);
-            DeleteShapes(component.map);
             var geos = component.get('resultsGeo');
-            $.each(geos, function (i, a) {
-                var geoData = ParseGeographyData(a.geo);
-                AddMarkerSingle(component.map, GetFirstLocation(geoData), false, a.name, a.id);
-            });
-            window.setTimeout(function () { google.maps.event.trigger(component.map, 'resize'); }, 10);
-            
-            RefocusMap(component.map);
+            var updateMapComponent = function () {
+                DeleteShapes(component.map);
+                $.each(geos, function (i, a) {
+                    var geoData = ParseGeographyData(a.geo);
+                    AddMarkerSingle(component.map, GetFirstLocation(geoData), false, a.name, a.id);
+                });
+                window.setTimeout(function () { google.maps.event.trigger(component.map, 'resize'); }, 100);
+                RefocusMap(component.map);
+            }
+            if (component.map == null) {
+                component.map = SetupMap(component._id);
+                window.setTimeout(updateMapComponent, 100);
+            }
+            else
+                window.setTimeout(updateMapComponent, 1);
         });
     }.observes('resultsGeo'),
     loading: function () {
         var tempmap = this.get('map');
-        if (typeof google != 'undefined') {
+        if (typeof google != 'undefined' && typeof tempmap != 'undefined' && tempmap != null) {
             if (this.get('visi'))
                 $("#" + this.get('id')).show();
             else
                 $("#" + this.get('id')).hide();
-            google.maps.event.trigger(tempmap, 'resize');  
+            window.setTimeout(function () { google.maps.event.trigger(tempmap, 'resize'); RefocusMap(tempmap); }, 100);            
         }        
     }.observes('visi').on('parentViewDidChange')
 })
@@ -387,7 +393,7 @@ var deferredMap = Ember.RSVP.defer();
 function MapInitialize() {
     if (!isMapInitialized) {
         LoadScript(mapHelper);
-        Ember.run.later(function () { deferredMap.resolve("Map Loaded"); },1800);
+        //Ember.run.later(function () { deferredMap.resolve("Map Loaded"); },1800);
     }
 }
 
