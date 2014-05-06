@@ -287,7 +287,7 @@ App.MapResultsController = Ember.Controller.extend({
             this.set('visi', true);
         }
     }.observes('loading', 'results'),
-    visi: false,
+    visi: true,
     needs: 'search',
     next: false,
     prev: false,
@@ -333,7 +333,7 @@ App.MapResultsController = Ember.Controller.extend({
 var isMapResultsSetup = false;
 App.MapResultComponent = Ember.Component.extend({
     map: null,
-    visi: true,
+    visi: false,
     _id: null,
     id: function () {
         if (this._id === null)
@@ -344,6 +344,8 @@ App.MapResultComponent = Ember.Component.extend({
     mapReady: false,
     intialize: function () {
         var component = this;
+        if (component.get('visi'))
+            component.update();
         //alert(component._id);
         $(window).on('redrawMap', function () {
             component.loading();
