@@ -129,6 +129,20 @@ namespace EXPEDIT.Flow.Services {
                         qT.DbType = DbType.String;
                         qT.Value = table;
                         cmd.Parameters.Add(qT);
+
+                        var qPS = cmd.CreateParameter();
+                        qPS.ParameterName = "@pageSize";
+                        qPS.DbType = DbType.Int32;
+                        qPS.Value = pageSize;
+                        cmd.Parameters.Add(qPS);
+
+                        var qPI = cmd.CreateParameter();
+                        qPI.ParameterName = "@startRowIndex";
+                        qPI.DbType = DbType.Int32;
+                        qPI.Value = start;
+                        cmd.Parameters.Add(qPI);
+
+
                         con.Open();
                         using (var reader = cmd.ExecuteReader())
                         {

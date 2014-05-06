@@ -18,6 +18,9 @@
     .row-fluid [class*="span"] {
         margin-left: 1px !important;
     }
+    .map-result img {
+        max-width: none;
+    }
 </style>
 <script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
 <script type="text/javascript">
@@ -145,6 +148,9 @@
               <span class="glyphicon icon-search"></span>Search
             </button>
 
+            Pagesize:
+            {{view Ember.Select content=pageSizes value=pageSize }}
+
             Workflows:
             {{view Ember.Checkbox checkedBinding='graph'}}
 
@@ -201,68 +207,149 @@
 
 <script type="text/x-handlebars" data-template-name="graphResults">
   <h2>Workflows</h2>
-  <div class="table-responsive" style="padding:12px;">
-    <table class="table table-condensed table-hover">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Updated</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each result in results}}
-            {{#link-to 'graph' result.ReferenceID tagName='tr'}}
 
-              <td>{{safehtml result.Title}}</td>
-              <td>{{safehtml result.Author}}</td>
-              <td>{{safehtml result.Updated}}</td>
-            {{/link-to}}
-          {{/each}}
-        </tbody>
-    </table>
-  </div>
+  {{#if loading}}
+
+    Loading...
+
+  {{else}}
+
+    {{#if results}}
+      <ul class="pager">
+          {{#if prev}}
+             <li><a {{action 'prev' 'pageGraph'}}>Previous</a></li>
+          {{/if}}
+          {{#if next}}
+            <li><a {{action 'next' 'pageGraph'}}>Next</a></li>
+          {{/if}}
+      </ul>
+
+
+      <div class="table-responsive" style="padding:12px;">
+        <table class="table table-condensed table-hover">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each result in results}}
+                {{#link-to 'graph' result.ReferenceID tagName='tr'}}
+
+                  <td>{{safehtml result.Title}}</td>
+                  <td>{{safehtml result.Author}}</td>
+                  <td>{{safehtml result.Updated}}</td>
+                {{/link-to}}
+              {{/each}}
+            </tbody>
+        </table>
+      </div>
+    {{else}}
+
+        Sorry no results could be found.
+
+    {{/if}}
+
+  {{/if}}
+
 </script>
 
 
 <script type="text/x-handlebars" data-template-name="fileResults">
   <h2>Files</h2>
-  <div class="table-responsive" style="padding:12px;">
-    <table class="table table-condensed table-hover">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Author</th>
-            <th>Updated</th>
-            <th>Link</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each result in results}}
-            <tr>
-              <td>{{safehtml result.Title}}</td>
-              <td>{{safehtml result.Description}}</td>
-              <td>{{safehtml result.Author}}</td>
-              <td>{{safehtml result.Updated}}</td>
-              <td><a {{bind-attr href=result.ResourcePath}}>Download File</a></td>
-            </tr>
-          {{/each}}
-        </tbody>
-    </table>
-  </div>
+
+  {{#if loading}}
+
+    Loading...
+
+  {{else}}
+
+
+    {{#if results}}
+
+      <ul class="pager">
+          {{#if prev}}
+             <li><a {{action 'prev' 'pageFile'}}>Previous</a></li>
+          {{/if}}
+          {{#if next}}
+            <li><a {{action 'next' 'pageFile'}}>Next</a></li>
+          {{/if}}
+      </ul>
+
+      <div class="table-responsive" style="padding:12px;">
+        <table class="table table-condensed table-hover">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Author</th>
+                <th>Updated</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each result in results}}
+                <tr>
+                  <td>{{safehtml result.Title}}</td>
+                  <td>{{safehtml result.Description}}</td>
+                  <td>{{safehtml result.Author}}</td>
+                  <td>{{safehtml result.Updated}}</td>
+                  <td><a {{bind-attr href=result.ResourcePath}}>Download File</a></td>
+                </tr>
+              {{/each}}
+            </tbody>
+        </table>
+      </div>
+
+    {{else}}
+
+        Sorry no results could be found.
+
+    {{/if}}
+
+
+  {{/if}}
+
 </script>
 
 
 
 <script type="text/x-handlebars" id="components/map-result">
-      <div {{bind-attr id='id'}} style="width: 100%; height: 75vh; padding:12px;"></div>
+      <div {{bind-attr id='id'}} style="width: 100%; height: 75vh; padding:12px;" class="map-result"></div>
 </script>
 
 
 <script type="text/x-handlebars" data-template-name="mapResults">
   <h2>Locations</h2>
-     {{map-result resultsGeo=resultsGeo}}
+
+  {{#if loading}}
+
+    Loading...
+
+  {{else}}
+
+    {{#if results}}
+      <ul class="pager">
+          {{#if prev}}
+             <li><a {{action 'prev' 'pageMap'}}>Previous</a></li>
+          {{/if}}
+          {{#if next}}
+            <li><a {{action 'next' 'pageMap'}}>Next</a></li>
+          {{/if}}
+      </ul>
+
+    {{else}}
+
+        Sorry no results could be found.
+
+    {{/if}}
+
+  {{/if}}
+
+  {{map-result resultsGeo=resultsGeo visi=visi}}
+
 </script>
 
 

@@ -26,7 +26,6 @@ App.IndexRoute = Ember.Route.extend({
 // Ember.run.debounce(this, this.calledRarely, 1000);
 
 
-var pfPageSize = 20;
 
 App.Search = DS.Model.extend({
     "Row": DS.attr(''),
@@ -60,9 +59,9 @@ App.SearchSerializer = DS.RESTSerializer.extend({
 
 
 
-App.SearchController = Ember.Controller.extend({
+App.SearchController = Ember.ObjectController.extend({
     needs: ['graphResults','mapResults','fileResults'],
-    queryParams: ['keywords', 'tags', 'graph', 'file', 'map', 'pageGraph', 'pageFile', 'pageMap'],
+    queryParams: ['keywords', 'tags', 'graph', 'file', 'map', 'pageGraph', 'pageFile', 'pageMap', 'pageSize'],
     graph: true,
     file: true,
     map: false,
@@ -71,13 +70,15 @@ App.SearchController = Ember.Controller.extend({
         if (this.get('graph')) i++
         if (this.get('file')) i++
         if (this.get('map')) i++
-            console.log(i)
+        $(window).trigger('redrawMap');
         if (i===0) return '';
-        return 'span' + (12/i);
+        return 'span' + (12 / i);
     }.property('graph', 'file', 'map'),
     pageGraph: 0,
     pageFile: 0,
     pageMap: 0,
+    pageSize: 50,
+    pageSizes: [5, 10, 20, 50, 100, 200],
     keywords: '',
     tags: [],
     dateModalBtn: [
@@ -93,14 +94,16 @@ App.SearchController = Ember.Controller.extend({
     searchLocation: "",
     searchText: "",
     actions: {
-        next: function () {
-            console.log('next')
+        next: function (i) {
+            this.incrementProperty(i)
+            console.log('next Page for ', i)
         },
-        previous: function () {
-            console.log('previous')
+        prev: function (i) {
+            this.decrementProperty(i)
+            console.log('previous Page for ', i)
         },
         search: function () {
-            this.getData();
+            this.loadAll();
             // On button click. Transition node.
             // this.transitionToRoute('search', 0, temp)
         },
@@ -137,48 +140,66 @@ App.SearchController = Ember.Controller.extend({
             return Bootstrap.ModalManager.hide('locationModal');
         }
     },
-    getData: function(){
+    loadGraph: function(){
         var controller = this;
         if (this.get('graph')) {
+            controller.set('controllers.graphResults.loading', true);
             this.store.find('search', {
                 page: this.get('pageGraph'),
                 keywords: this.get('keywords'),
                 tags: this.get('tags'),
                 type: 'flow',
-                pagesize: pfPageSize
+                pagesize: this.get('pageSize')
             }).then(function (res) {
                 controller.set('controllers.graphResults.results', res.get('content'))
+                controller.set('controllers.graphResults.loading', false);
             });
         }
+    }.observes('graph', 'pageGraph'),
+    loadMap: function(){
+        var controller = this;
         if (this.get('map')) {
+            controller.set('controllers.mapResults.loading', true);
             this.store.find('search', {
                 page: this.get('pageMap'),
                 keywords: this.get('keywords'),
                 tags: this.get('tags'),
                 type: 'flowlocation',
-                pagesize: pfPageSize
+                pagesize: this.get('pageSize')
             }).then(function (res) {
                 controller.set('controllers.mapResults.results', res.get('content'))
-            });
+                controller.set('controllers.mapResults.loading', false);
+            })
         }
+    }.observes('map', 'pageMap'),
+    loadFile: function(){
+        var controller = this;
         if (this.get('file')) {
+            controller.set('controllers.fileResults.loading', true);
             this.store.find('search', {
                 page: this.get('pageFile'),
                 keywords: this.get('keywords'),
                 tags: this.get('tags'),
                 type: 'file',
-                pagesize: pfPageSize
+                pagesize: this.get('pageSize')
             }).then(function (res) {
                 controller.set('controllers.fileResults.results', res.get('content'))
+                controller.set('controllers.fileResults.loading', false);
             });
         }
-
-    },
+    }.observes('file', 'pageFile'),
+    loadAll: function(){
+        this.loadGraph();
+        this.loadMap();
+        this.loadFile();
+    }.observes('pageSize').on('didInsertElement'),
     searchQuery: function () { // this builds the search query
         var controller = this;
-        Ember.run.debounce(this, controller.getData, 1000);
-
-    }.observes('graph', 'map', 'file', 'keywords', 'page')
+        this.set('pageGraph', 0);
+        this.set('pageFile', 0);
+        this.set('pageMap', 0);
+        Ember.run.debounce(this, controller.loadAll, 1000);
+    }.observes('keywords')
 });
 
 
@@ -198,10 +219,97 @@ App.ApplicationAdapter = DS.RESTAdapter.extend({
 
 
 
+App.GraphResultsController = Ember.ObjectController.extend({
+    needs: 'search',
+    next: false,
+    prev: false,
+    loading: true,
+    page: Ember.computed.alias('controllers.search.pageGraph'),
+    pageSize: Ember.computed.alias('controllers.search.pageSize'),
+    resultsUpdated: function(){
 
-App.GraphResultsController = Ember.Controller.extend({results: [] })
-App.FileResultsController = Ember.Controller.extend({results: [] })
+        if (this.get('results')[0]){
+            // Total Rows
+            var totalRows = this.get('results')[0].get('TotalRows');
+            var pageSize = this.get('pageSize');
+            var page = this.get('page');
+
+            // From ths info it can be calculate if next and prev should be true or false
+            this.set('prev', (page > 0));
+
+            var nOfPages = Math.ceil(totalRows / pageSize) - 1;
+            this.set('next', (nOfPages > page))
+        }
+
+    }.observes('results'),
+    results: []
+});
+
+
+App.FileResultsController = Ember.ObjectController.extend({
+    needs: 'search',
+    next: false,
+    prev: false,
+    loading: true,
+    page: Ember.computed.alias('controllers.search.pageFile'),
+    pageSize: Ember.computed.alias('controllers.search.pageSize'),
+    resultsUpdated: function(){
+
+        if (this.get('results')[0]){
+
+            // Total Rows
+            var totalRows = this.get('results')[0].get('TotalRows');
+            var pageSize = this.get('pageSize');
+            var page = this.get('page');
+
+            // From ths info it can be calculate if next and prev should be true or false
+            this.set('prev', (page > 0));
+
+            var nOfPages = Math.ceil(totalRows / pageSize) - 1;
+            this.set('next', (nOfPages > page))
+
+        }
+
+
+    }.observes('results'),
+    results: []
+});
+
 App.MapResultsController = Ember.Controller.extend({
+    _visi: function () {
+        if (this.get('results').length === 0) {
+            this.set('visi',false);
+        }
+        if (this.loading) {
+            this.set('visi', false);
+        }
+        else {
+            this.set('visi', true);
+        }
+    }.observes('loading', 'results'),
+    visi: false,
+    needs: 'search',
+    next: false,
+    prev: false,
+    loading: true,
+    page: Ember.computed.alias('controllers.search.pageMap'),
+    pageSize: Ember.computed.alias('controllers.search.pageSize'),
+    resultsUpdated: function(){
+
+        if (this.get('results')[0]){
+            // Total Rows
+            var totalRows = this.get('results')[0].get('TotalRows');
+            var pageSize = this.get('pageSize');
+            var page = this.get('page');
+
+            // From ths info it can be calculate if next and prev should be true or false
+            this.set('prev', (page > 0));
+
+            var nOfPages = Math.ceil(totalRows / pageSize) - 1;
+            this.set('next', (nOfPages > page))
+        }
+
+    }.observes('results'),
     results: [],
     resultsGeo: function () {
         var results = this.get('results');
@@ -221,9 +329,11 @@ App.MapResultsController = Ember.Controller.extend({
     }.property('results')
 })
 
+
 var isMapResultsSetup = false;
 App.MapResultComponent = Ember.Component.extend({
     map: null,
+    visi: true,
     _id: null,
     id: function () {
         if (this._id === null)
@@ -233,8 +343,10 @@ App.MapResultComponent = Ember.Component.extend({
     resultsGeo: [], //Expects geo (point data), name, id in array
     mapReady: false,
     intialize: function () {
-        //this.set('mapReady', true);
-        //debugger;
+        var component = this;
+        $(window).on('redrawMap', function () {
+            component.loading();
+        });
     }.on('didInsertElement'),
     update: function () {
         var component = this;
@@ -247,9 +359,21 @@ App.MapResultComponent = Ember.Component.extend({
                 var geoData = ParseGeographyData(a.geo);
                 AddMarkerSingle(component.map, GetFirstLocation(geoData), false, a.name, a.id);
             });
+            window.setTimeout(function () { google.maps.event.trigger(component.map, 'resize'); }, 10);
+            
             RefocusMap(component.map);
         });
-    }.observes('resultsGeo')
+    }.observes('resultsGeo'),
+    loading: function () {
+        var tempmap = this.get('map');
+        if (typeof google != 'undefined') {
+            if (this.get('visi'))
+                $("#" + this.get('id')).show();
+            else
+                $("#" + this.get('id')).hide();
+            google.maps.event.trigger(tempmap, 'resize');  
+        }        
+    }.observes('visi').on('parentViewDidChange')
 })
 
 var drawing = false;
@@ -263,7 +387,7 @@ var deferredMap = Ember.RSVP.defer();
 function MapInitialize() {
     if (!isMapInitialized) {
         LoadScript(mapHelper);
-        deferredMap.resolve("Map Loaded");
+        Ember.run.later(function () { deferredMap.resolve("Map Loaded"); },1800);
     }
 }
 
@@ -1155,3 +1279,5 @@ Ember.TextField.reopen({
     attributeBindings: ['autofocus'],
     autofocus: 'autofocus'
 });
+
+
