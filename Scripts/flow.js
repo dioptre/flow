@@ -44,7 +44,7 @@ App.ApplicationRoute = Ember.Route.extend({
 App.ApplicationController = Ember.Controller.extend({
         currentPathDidChange: function() {
           App.set('currentPath', this.get('currentPath'));
-        }.observes('currentPath') // This set the current path App.get('currentPath');
+        }.observes('currentPath'), // This set the current path App.get('currentPath');
       m: '',
       queryParams: ['m'],
       needs: ['graph', 'wikipedia', 'search']

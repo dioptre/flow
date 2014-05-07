@@ -35,14 +35,17 @@ using HtmlAgilityPack;
 using EXPEDIT.Share.ViewModels;
 using Newtonsoft.Json;
 using CookComputing.XmlRpc;
+using Orchard.Users.Events;
 
 namespace EXPEDIT.Flow.Services {
     
     [UsedImplicitly]
-    public class FlowService : IFlowService {
+    public class FlowService : IFlowService, Orchard.Users.Events.IUserEventHandler
+    {
 
         public const string STAT_NAME_FLOW_ACCESS = "FlowAccess";
         public static Guid FLOW_MODEL_ID = new Guid("1DB0B648-D8A7-4FB9-8F3F-B2846822258C");
+        public const string FS_FLOW_CONTACT_ID = "{0}:ValidFlowUser";
 
         private readonly IOrchardServices _orchardServices;
         private readonly IContentManager _contentManager;
@@ -369,6 +372,8 @@ namespace EXPEDIT.Flow.Services {
 
         public bool CheckPayment()
         {
+            if (!_users.ContactID.HasValue)
+                return false;
             var contactID = _users.ContactID;
             var modelID = FLOW_MODEL_ID;
             return CacheHelper.AddToCache<bool>(() =>
@@ -384,7 +389,7 @@ namespace EXPEDIT.Flow.Services {
                     return false;
                 return toReturn;
             }
-            , string.Format("{0}:ValidFlowUser", contactID), TimeSpan.FromMinutes(15.0));
+            , string.Format(FS_FLOW_CONTACT_ID, contactID), TimeSpan.FromMinutes(30.0));
         }
 
 
@@ -464,9 +469,10 @@ namespace EXPEDIT.Flow.Services {
                 }, permission);
             if (!verified)
                 return null;
+            StatisticData stat = null;
             if (!isNew)
             {
-                var stat = (from o in d.StatisticDatas
+                stat = (from o in d.StatisticDatas
                             where o.ReferenceID == id && o.TableType == table
                             && o.StatisticDataName == STAT_NAME_FLOW_ACCESS
                             select o).FirstOrDefault();
@@ -482,13 +488,18 @@ namespace EXPEDIT.Flow.Services {
                 || ((permission & ActionPermission.Update) == ActionPermission.Update)
                 || ((permission & ActionPermission.Delete) == ActionPermission.Delete))
             {
+
                 //OK We're editing
-                if (!_users.ContactID.HasValue || !CheckPayment())
+                if (_users.ContactID.HasValue && !CheckPayment()) //Logged in users must be paid
+                    return null;
+                //Logged in users should have their own company
+                if (_users.ContactID.HasValue && !(from o in d.Companies where o.PrimaryContactID == _users.ContactID select o).Any())
                     return null;
             }
             return id;
         }
 
+     
         public FlowGroupViewModel GetNode(string name, Guid? nid, Guid? gid, bool includeContent = false)
         {
             name = name.ToSlug();
@@ -831,7 +842,57 @@ namespace EXPEDIT.Flow.Services {
                 return true;
             }
         }
-    
+
+
+
+        public void Creating(UserContext context) { }
+
+        public void Created(UserContext context)  { }
+
+        public void LoggedIn(IUser user)
+        {
+            CacheHelper.Cache.Remove(string.Format(FS_FLOW_CONTACT_ID, _users.ContactID));
+            if (_users.ContactID.HasValue && CheckPayment())
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var cid = Guid.NewGuid();
+                var now = DateTime.UtcNow;
+                var c = new Company
+                {
+                    CompanyID = cid,
+                    CompanyName = cid.ToString(),
+                    PrimaryContactID = _users.ContactID,
+                    VersionUpdated = now,
+                    Comment = "Created by Flow"
+                };
+                d.Companies.AddObject(c);
+                var e = new Experience
+                {
+                    ExperienceID = Guid.NewGuid(),
+                    ExperienceName = "Private Company - " + _users.Username,
+                    CompanyID = cid,
+                    ContactID = _users.ContactID,
+                    DateStart = now,
+                    IsApproved = true,
+                    VersionUpdated = now
+                };
+                d.Experiences.AddObject(e);
+                d.SaveChanges();
+            }
+        }
+
+        public void LoggedOut(IUser user) { }
+
+        public void AccessDenied(IUser user) { }
+
+        public void ChangedPassword(IUser user) { }
+
+        public void SentChallengeEmail(IUser user) { }
+
+        public void ConfirmedEmail(IUser user) { }
+
+        public void Approved(IUser user) { }
 
        
     }
