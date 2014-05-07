@@ -368,13 +368,17 @@ namespace EXPEDIT.Flow.Services {
 
         public bool CheckPayment(Guid modelID, Guid contactID)
         {
-            ICheckPayment proxy = XmlRpcProxyGen.Create<ICheckPayment>();
-            proxy.Url = EXPEDIT.Share.Helpers.ConstantsHelper.APP_XMLRPC_URL;
-            var response = proxy.ValidateModelContact(modelID.ToString(), contactID.ToString());
-            if (string.IsNullOrWhiteSpace(response))
-                throw new System.Security.SecurityException("Could not retrieve model contact details from service.");
-            dynamic result = JsonConvert.DeserializeObject<NullableExpandoObject>(response);
-            return result.valid;
+            return CacheHelper.AddToCache<bool>(() =>
+            {
+                ICheckPayment proxy = XmlRpcProxyGen.Create<ICheckPayment>();
+                proxy.Url = EXPEDIT.Share.Helpers.ConstantsHelper.APP_XMLRPC_URL;
+                var response = proxy.ValidateModelContact(modelID.ToString(), contactID.ToString());
+                if (string.IsNullOrWhiteSpace(response))
+                    throw new System.Security.SecurityException("Could not retrieve model contact details from service.");
+                dynamic result = JsonConvert.DeserializeObject<NullableExpandoObject>(response);
+                return result.valid;
+            }
+            , string.Format("{0}:ValidFlowUser", contactID), TimeSpan.FromDays(1.0));
         }
 
 
