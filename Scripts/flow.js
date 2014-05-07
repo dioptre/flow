@@ -2,8 +2,8 @@ Ember.FEATURES["query-params"] = true;
 
 
 App = Ember.Application.create({
-    LOG_TRANSITIONS: true,
-    rootElement: '#application'
+    // LOG_TRANSITIONS: true,
+    rootElement: '#emberapphere'
 });
 
 App.Router.map(function () {
@@ -11,6 +11,54 @@ App.Router.map(function () {
     this.route('graph', {path: 'graph/:id'});
     this.route('wikipedia', { path: "/wikipedia/:id" });
     this.route('search');
+});
+
+
+App.ApplicationRoute = Ember.Route.extend({
+      actions: {
+        openModal: function(modalName, model) {
+
+
+        // Maybe instead of injecting the model, specify the whole model name
+        // like App.GraphRoute.Model and the put some code here to get it
+        // This means that models loaded via query params will have access to
+          this.set('controller.m', modalName)
+          this.controllerFor(modalName).set('model', model);
+          return this.render(modalName, {
+            into: 'application',
+            outlet: 'modal'
+          });
+        },
+
+        closeModal: function() {
+         this.set('controller.m', "")
+          return this.disconnectOutlet({
+            outlet: 'modal',
+            parentView: 'application'
+          });
+        }
+      }
+});
+
+
+App.ApplicationController = Ember.Controller.extend({
+        currentPathDidChange: function() {
+          App.set('currentPath', this.get('currentPath'));
+        }.observes('currentPath')
+      m: '',
+      queryParams: ['m']
+      // Add some code here to watch for modals and open them if it happens
+})
+
+
+
+// A tiny bit more modal code
+App.ModalDialogComponent = Ember.Component.extend({
+  actions: {
+    close: function() {
+      return this.sendAction();
+    }
+  }
 });
 
 
@@ -379,8 +427,8 @@ App.MapResultComponent = Ember.Component.extend({
                 $("#" + this.get('id')).show();
             else
                 $("#" + this.get('id')).hide();
-            window.setTimeout(function () { google.maps.event.trigger(tempmap, 'resize'); RefocusMap(tempmap); }, 100);            
-        }        
+            window.setTimeout(function () { google.maps.event.trigger(tempmap, 'resize'); RefocusMap(tempmap); }, 100);
+        }
     }.observes('visi').on('parentViewDidChange')
 })
 
@@ -525,68 +573,42 @@ var sessionGroupID = NewGUID();
 
 
 App.GraphRoute = Ember.Route.extend({
-    //
-    // data for current node
-
-
     model: function(params){
-        // var id = params.id
-        // Ember.RSVP.hash({
-        //    data: this.store.find('node', {id:id})
-        // }).then(function(data){
-        //     var d = data.data
-        //     // do the recursion business right here!!!
+        var id = params.id
 
-        //     // console.log(this.store.getById('node', id));
-
-        //     d.store.getById('node', d.query.id).get('edges')
-
-
-        //     var test = { Nodes: [], Edges: []}
-        //     // debugger;
-
-        // });
-
-        // console.log(data)
-
-        // return [];
-
-
-
-        // debugger\
-
-        params.id = params.id.toLowerCase();
-
-        return  Ember.RSVP.hash({
-            data: this.store.find('node', {id: params.id}),
-            selected: params.id,
-            content: '',
-            label: ''
-        })
-
-
-        // return this.store.find('node', params.id);
-    //     var id = params.id;
-    //     if (id) {
-    //         // return Ember.RSVP.hash({
-                    // current:  this.store.find('node', {id:params.id}),   // {}
-                    // current: data.node.byId
-    //         //     selected: id
-    //         // })
-    //     }
-    //     return '';
+        if (id) {
+            id = id.toLowerCase(); // just in case
+            return  Ember.RSVP.hash({
+                data: this.store.find('node', {id: id}),
+                selected: id,
+                content: '',
+                label: ''
+            })
+        } else {
+            return Ember.RSVP.hash({
+                data: this.store.find('node'),
+                content: '',
+                label: 'Create new Workflow!'
+            })
+        }
     },
     afterModel: function(m){
         var sel = m.selected;
-        var array = {nodes: [], edges: []};
-        var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
-        var nodeMax = -1;
-        var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
-        console.log(data);
-        // var model = this.get('model')
-        m.data = data;
-        m.content = this.store.getById('node', sel).get('content');
-        m.label = this.store.getById('node', sel).get('label');
+        if (sel) { // this means it's probably a wiki article
+            var array = {nodes: [], edges: []};
+            var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
+            var nodeMax = -1;
+            var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
+            console.log(data);
+            // var model = this.get('model')
+            m.data = data;
+            m.content = this.store.getById('node', sel).get('content');
+            m.label = this.store.getById('node', sel).get('label');
+        } else {
+            var nodes = Enumerable.From(m.data.content).Select("$._data").ToArray(); // this is to clean up ember data
+            m.data = {nodes: nodes, edges: []};
+            m.selected = '';
+        }
     }
 })
 
@@ -639,6 +661,15 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
 }
 
 
+App.ModalController = Ember.ObjectController.extend({
+  actions: {
+    close: function() {
+      return this.send('closeModal');
+    }
+  }
+});
+
+
 App.GraphController = Ember.ObjectController.extend({
 //     // selectedNode: function(){
 
@@ -678,7 +709,14 @@ App.VizEditorComponent = Ember.View.extend({
 
         var container = $('<div>').appendTo(this.$())[0];
         var data = this.get('vizDataSet');
-        var options = {stabilize:false, stabilizationIterations:1};
+        var options = {
+            stabilize:false,
+            stabilizationIterations:1,
+            dataManipulation: {
+              enabled: true,
+              initiallyVisible: false
+            }
+        };
 
         // // sample data
         // data.nodes.add({
@@ -721,7 +759,7 @@ App.VizEditorComponent = Ember.View.extend({
             }
         })
 
-               // Step 2: remove nodes which aren't in the data set anymore
+        // Step 2: remove nodes which aren't in the data set anymore
         data.nodes.getIds().forEach(function(id){
             var match = false;
 
@@ -738,14 +776,11 @@ App.VizEditorComponent = Ember.View.extend({
 
 
         // Same but this time for edges
-
         model_data.edges.forEach(function(edge){
             if (data.edges.get(edge.id) === null) {
-                //debugger;
                 if (data.nodes.get(edge.from) !== null && data.nodes.get(edge.to) !== null) {  // ensure that only edges are drawn where the to & from nodes exist
                     data.edges.add(edge);
                 }
-
             }
         })
 

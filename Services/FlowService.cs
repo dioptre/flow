@@ -33,6 +33,8 @@ using EntityFramework.Extensions;
 using EXPEDIT.License.Models;
 using HtmlAgilityPack;
 using EXPEDIT.Share.ViewModels;
+using Newtonsoft.Json;
+using CookComputing.XmlRpc;
 
 namespace EXPEDIT.Flow.Services {
     
@@ -363,6 +365,18 @@ namespace EXPEDIT.Flow.Services {
                 return d.GraphData.Any(f=>f.GraphName == wikiName && f.VersionOwnerCompanyID==company);
             }
         }
+
+        public bool CheckPayment(Guid modelID, Guid contactID)
+        {
+            ICheckPayment proxy = XmlRpcProxyGen.Create<ICheckPayment>();
+            proxy.Url = EXPEDIT.Share.Helpers.ConstantsHelper.APP_XMLRPC_URL;
+            var response = proxy.ValidateModelContact(modelID.ToString(), contactID.ToString());
+            if (string.IsNullOrWhiteSpace(response))
+                throw new System.Security.SecurityException("Could not retrieve model contact details from service.");
+            dynamic result = JsonConvert.DeserializeObject<NullableExpandoObject>(response);
+            return result.valid;
+        }
+
 
         /// <summary>
         /// For now lets only support one page per name.

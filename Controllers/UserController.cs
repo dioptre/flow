@@ -192,6 +192,14 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
         }
 
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("Edges")]
+        public ActionResult GetEdge(string id)
+        {
+            return new EmptyResult();
+        }
     
         [Themed(false)]
         [HttpPost]
@@ -223,9 +231,12 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
         }
 
+        [Authorize]
         [Themed(true)]
         public ActionResult Test()
         {
+
+            return new JsonHelper.JsonNetResult(_Flow.CheckPayment(new Guid("1DB0B648-D8A7-4FB9-8F3F-B2846822258C"), new Guid("1232cb94-6193-4607-be72-8e7d11eb64ba")), JsonRequestBehavior.AllowGet);
             return View();
         }
 

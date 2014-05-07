@@ -28,12 +28,41 @@
 </script>
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
 
-<div id="application" name="application"></div>
+<div id="emberapphere" name="application">
 
-<script type="text/x-handlebars" id="outlet">
+
+</div>
+
+
+<script type="text/x-handlebars" id="application">
     {{outlet}}
+    {{outlet modal}}
 </script>
 
+
+
+
+<script type="text/x-handlebars" id="components/modal-dialog">
+    {{! Pretty standard bootstrap modal code }}
+    <div class='modal-backdrop' {{action "close"}}></div>
+    <div class="modal fade in" id="myModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" {{action "close"}}>&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+          </div>
+          <div class="modal-body">
+              {{yield}}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" {{action "close"}}>Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</script>
 
 
   <script type="text/x-handlebars" id="components/viz-editor"></script>
@@ -58,6 +87,9 @@
   <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
       <h1>{{model.label}}</h1>
+
+
+          <button {{action 'openModal' 'modal' model}}>MODAL TEST</button>
          <div class="container-fluid" style="margin-top:12px;">
         <div class="row-fluid">
           <div class="span6">
@@ -82,9 +114,19 @@
     <input type="button" value="cancel" id="cancelButton"></button>
   </div>
   <br />
-
-
   </script>
+
+    <script type="text/x-handlebars" data-template-name="modal">
+    {{#modal-dialog action="close"}}
+
+        MODAL TEST
+
+      <button {{action "close"}}>Done</button>
+    {{/modal-dialog}}
+  </script>
+
+
+
 
 <!--  <script type="text/x-handlebars" id="loading">
     <h1>Loading...</h1>

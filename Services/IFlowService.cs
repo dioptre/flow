@@ -43,5 +43,8 @@ namespace EXPEDIT.Flow.Services
          [OperationContract]
          bool DeleteEdge(FlowEdgeViewModel flow);
 
+         [OperationContract]
+         bool CheckPayment(Guid modelID, Guid contactID);
+
     }
 }
