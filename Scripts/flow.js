@@ -593,6 +593,9 @@ App.GraphRoute = Ember.Route.extend({
 
 function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
 
+    if (typeof id == 'undefined')
+        return array;
+
     //TODO: nodemax based on sequence (priority) in edges
     if (!nodeMax || nodeMax < 0 || array.nodes.length < nodeMax) {
         var node = _this.store.getById(store, id);
@@ -606,7 +609,7 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
             content: node.get('content')
         });
 
-
+        //var tid = node.get('id');
         var edges = Enumerable.From(node.get('edges').content).OrderBy("$.get('sequence')").ToArray();
 
 
@@ -615,6 +618,8 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
             //console.log('this should happen once')
 
             edges.forEach(function (edge) {
+                if (!edge.get('from') || !edge.get('to'))
+                    return;
 
                 array.edges.push({
                     id: edge.get('id'),
@@ -1036,7 +1041,7 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 App.Node = DS.Model.extend({
     label: DS.attr('string'),
     content: DS.attr('string'),
-    edges: DS.hasMany('edge')
+    edges: DS.hasMany('edge', { async: true })
 });
 
 
