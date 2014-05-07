@@ -93,7 +93,6 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
 
-        [Authorize]
         [Themed(true)]
         [HttpGet]
         [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")] 
@@ -110,7 +109,6 @@ namespace EXPEDIT.Flow.Controllers {
             return View(m);
         }
      
-        [Authorize]
         [ValidateInput(false)]
         [Themed(true)]
         [HttpPost]
