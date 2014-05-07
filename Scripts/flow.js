@@ -44,9 +44,10 @@ App.ApplicationRoute = Ember.Route.extend({
 App.ApplicationController = Ember.Controller.extend({
         currentPathDidChange: function() {
           App.set('currentPath', this.get('currentPath'));
-        }.observes('currentPath')
+        }.observes('currentPath') // This set the current path App.get('currentPath');
       m: '',
-      queryParams: ['m']
+      queryParams: ['m'],
+      needs: ['graph', 'wikipedia', 'search']
       // Add some code here to watch for modals and open them if it happens
 })
 

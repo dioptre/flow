@@ -42,6 +42,7 @@ namespace EXPEDIT.Flow.Services {
     public class FlowService : IFlowService {
 
         public const string STAT_NAME_FLOW_ACCESS = "FlowAccess";
+        public static Guid FLOW_MODEL_ID = new Guid("1DB0B648-D8A7-4FB9-8F3F-B2846822258C");
 
         private readonly IOrchardServices _orchardServices;
         private readonly IContentManager _contentManager;
@@ -366,8 +367,10 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
-        public bool CheckPayment(Guid modelID, Guid contactID)
+        public bool CheckPayment()
         {
+            var contactID = _users.ContactID;
+            var modelID = FLOW_MODEL_ID;
             return CacheHelper.AddToCache<bool>(() =>
             {
                 ICheckPayment proxy = XmlRpcProxyGen.Create<ICheckPayment>();
@@ -376,9 +379,12 @@ namespace EXPEDIT.Flow.Services {
                 if (string.IsNullOrWhiteSpace(response))
                     throw new System.Security.SecurityException("Could not retrieve model contact details from service.");
                 dynamic result = JsonConvert.DeserializeObject<NullableExpandoObject>(response);
-                return result.valid;
+                bool toReturn;
+                if (!bool.TryParse(string.Format("{0}", result.valid), out toReturn))
+                    return false;
+                return toReturn;
             }
-            , string.Format("{0}:ValidFlowUser", contactID), TimeSpan.FromDays(1.0));
+            , string.Format("{0}:ValidFlowUser", contactID), TimeSpan.FromMinutes(15.0));
         }
 
 
@@ -471,6 +477,14 @@ namespace EXPEDIT.Flow.Services {
                 }
                 stat.Count++;
                 d.SaveChanges();
+            }
+            if (((permission & ActionPermission.Create) == ActionPermission.Create)
+                || ((permission & ActionPermission.Update) == ActionPermission.Update)
+                || ((permission & ActionPermission.Delete) == ActionPermission.Delete))
+            {
+                //OK We're editing
+                if (!_users.ContactID.HasValue || !CheckPayment())
+                    return null;
             }
             return id;
         }
