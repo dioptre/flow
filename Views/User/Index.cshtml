@@ -69,15 +69,17 @@
 
   <script type="text/x-handlebars" id="wikipedia">
       <h1>{{selected}}</h1>
-         <div class="container-fluid" style="margin-top:12px;">
+      <div class="container-fluid" style="margin-top:12px;">
         <div class="row-fluid">
-          <div class="span6">
-               {{safehtml model.content}}
-          </div>
-          <div class="span6">
-               {{viz-editor data=data selected=selected}}
-          </div>
-         </div>
+            <div class="span6">
+                {{#if model.content}}
+                  {{{model.content}}}
+                {{/if}}
+            </div>
+            <div class="span6">
+                 {{viz-editor data=data selected=selected}}
+            </div>
+        </div>
       </div>
 
   </script>
@@ -88,14 +90,14 @@
       <h1>{{model.label}}</h1>
 
 
-          <button {{action 'openModal' 'modal' model}}>MODAL TEST</button>
+          <!--<button {{action 'openModal' 'graphModalNewWorkflow'}}>MODAL TEST</button>-->
          <div class="container-fluid" style="margin-top:12px;">
         <div class="row-fluid">
           <div class="span6">
                 {{safehtml model.content}}
           </div>
           <div class="span6">
-              {{viz-editor data=data selected=selected}}
+              {{viz-editor data=data selected=selected editing=editing}}
           </div>
          </div>
       </div>
@@ -115,14 +117,14 @@
   <br />
   </script>
 
-    <script type="text/x-handlebars" data-template-name="modal">
+  <!--<script type="text/x-handlebars" data-template-name="graphModalNewWorkflow">
     {{#modal-dialog action="close"}}
 
-        MODAL TEST
 
       <button {{action "close"}}>Done</button>
     {{/modal-dialog}}
-  </script>
+  </script>-->
+
 
 
 

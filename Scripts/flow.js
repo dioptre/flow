@@ -16,40 +16,51 @@ App.Router.map(function () {
 
 App.ApplicationRoute = Ember.Route.extend({
       actions: {
-        openModal: function(modalName, model) {
+        openModal: function(viewName) {
 
+            // Names for modals should be made up in the following way
+            // ===>>> Controller Name + 'Modal' + Name for modal
 
-        // Maybe instead of injecting the model, specify the whole model name
-        // like App.GraphRoute.Model and the put some code here to get it
-        // This means that models loaded via query params will have access to
-          this.set('controller.m', modalName)
-          this.controllerFor(modalName).set('model', model);
-          return this.render(modalName, {
-            into: 'application',
-            outlet: 'modal'
-          });
+            // Step 1: Get Controller Name
+            var controllerName = viewName.match(/^(.*)Modal(.*)$/)[1]; // This gets controller Name from model
+
+            //debugger;
+
+            // Step 2: Get model from Controller
+            var model = this.get('controllers.' + controllerName);
+
+            // Step 3: Update Query parmas
+            this.set('controller.m', viewName);  // Add to URL
+
+            // Step 4: Insert modal into page
+            this.controllerFor(viewName).set('model', model);
+            return this.render(viewName, {
+                into: 'application',
+                outlet: 'modal'
+            });
         },
 
         closeModal: function() {
-         this.set('controller.m', "")
+          this.set('controller.m', ""); // Clean up URL
+
           return this.disconnectOutlet({
             outlet: 'modal',
             parentView: 'application'
-          });
+          }); // Remove from outlet
         }
       }
 });
 
 
 App.ApplicationController = Ember.Controller.extend({
-        currentPathDidChange: function() {
-          App.set('currentPath', this.get('currentPath'));
-        }.observes('currentPath'), // This set the current path App.get('currentPath');
-      m: '',
-      queryParams: ['m'],
-      needs: ['graph', 'wikipedia', 'search']
-      // Add some code here to watch for modals and open them if it happens
-})
+    currentPathDidChange: function () {
+        App.set('currentPath', this.get('currentPath'));
+    }.observes('currentPath'), // This set the current path App.get('currentPath');
+    m: '',
+    queryParams: ['m'],
+    needs: ['graph', 'wikipedia', 'search']
+    // Add some code here to watch for modals and open them if it happens
+});
 
 
 
@@ -116,9 +127,9 @@ App.SearchController = Ember.ObjectController.extend({
     map: false,
     activeResultsClass: function(){
         var i = 0;
-        if (this.get('graph')) i++
-        if (this.get('file')) i++
-        if (this.get('map')) i++
+        if (this.get('graph')) i++;
+        if (this.get('file')) i++;
+        if (this.get('map')) i++;
         $(window).trigger('redrawMap');
         if (i===0) return '';
         return 'span' + (12 / i);
@@ -144,11 +155,11 @@ App.SearchController = Ember.ObjectController.extend({
     searchText: "",
     actions: {
         next: function (i) {
-            this.incrementProperty(i)
+            this.incrementProperty(i);
             //console.log('next Page for ', i)
         },
         prev: function (i) {
-            this.decrementProperty(i)
+            this.decrementProperty(i);
             //console.log('previous Page for ', i)
         },
         search: function () {
@@ -157,7 +168,7 @@ App.SearchController = Ember.ObjectController.extend({
             // this.transitionToRoute('search', 0, temp)
         },
         deleteTag: function (tag) {
-            this.get('tags').removeObject(tag)
+            this.get('tags').removeObject(tag);
         },
         showDateModal: function () {
             return Bootstrap.ModalManager.show('dateModal');
@@ -168,8 +179,8 @@ App.SearchController = Ember.ObjectController.extend({
             this.get('tags').addObject({
                 n: date_data,
                 d: date_data
-            })
-            console.log(this.get('sched_date_from'))
+            });
+            console.log(this.get('sched_date_from'));
             return Bootstrap.ModalManager.hide('dateModal');
         },
         showLocationModal: function () {
@@ -200,7 +211,7 @@ App.SearchController = Ember.ObjectController.extend({
                 type: 'flow',
                 pagesize: this.get('pageSize')
             }).then(function (res) {
-                controller.set('controllers.graphResults.results', res.get('content'))
+                controller.set('controllers.graphResults.results', res.get('content'));
                 controller.set('controllers.graphResults.loading', false);
             });
         }
@@ -216,9 +227,9 @@ App.SearchController = Ember.ObjectController.extend({
                 type: 'flowlocation',
                 pagesize: this.get('pageSize')
             }).then(function (res) {
-                controller.set('controllers.mapResults.results', res.get('content'))
+                controller.set('controllers.mapResults.results', res.get('content'));
                 controller.set('controllers.mapResults.loading', false);
-            })
+            });
         }
     }.observes('map', 'pageMap'),
     loadFile: function(){
@@ -232,16 +243,17 @@ App.SearchController = Ember.ObjectController.extend({
                 type: 'file',
                 pagesize: this.get('pageSize')
             }).then(function (res) {
-                controller.set('controllers.fileResults.results', res.get('content'))
+                controller.set('controllers.fileResults.results', res.get('content'));
                 controller.set('controllers.fileResults.loading', false);
             });
         }
     }.observes('file', 'pageFile'),
     loadAll: function(){
+        //console.log('loading all');
         this.loadGraph();
         this.loadMap();
         this.loadFile();
-    }.observes('pageSize').on('didInsertElement'),
+    }.observes('pageSize').on('didInsertElement'), // the did insert element here doesn't actuall work that why the view is setup below to kickoff the initial search
     searchQuery: function () { // this builds the search query
         var controller = this;
         this.set('pageGraph', 0);
@@ -251,6 +263,13 @@ App.SearchController = Ember.ObjectController.extend({
     }.observes('keywords')
 });
 
+
+App.SearchView = Ember.View.extend({
+    didInsertElement: function () {
+        this.get('controller').send('search');
+        // this code is here since you can't watch for didInsertElement in Controllers
+    }
+});
 
 
 
@@ -287,7 +306,7 @@ App.GraphResultsController = Ember.ObjectController.extend({
             this.set('prev', (page > 0));
 
             var nOfPages = Math.ceil(totalRows / pageSize) - 1;
-            this.set('next', (nOfPages > page))
+            this.set('next', (nOfPages > page));
         }
 
     }.observes('results'),
@@ -315,7 +334,7 @@ App.FileResultsController = Ember.ObjectController.extend({
             this.set('prev', (page > 0));
 
             var nOfPages = Math.ceil(totalRows / pageSize) - 1;
-            this.set('next', (nOfPages > page))
+            this.set('next', (nOfPages > page));
 
         }
 
@@ -327,7 +346,7 @@ App.FileResultsController = Ember.ObjectController.extend({
 App.MapResultsController = Ember.Controller.extend({
     _visi: function () {
         if (this.get('results').length === 0) {
-            this.set('visi',false);
+            this.set('visi', false);
         }
         if (this.loading) {
             this.set('visi', false);
@@ -343,9 +362,9 @@ App.MapResultsController = Ember.Controller.extend({
     loading: true,
     page: Ember.computed.alias('controllers.search.pageMap'),
     pageSize: Ember.computed.alias('controllers.search.pageSize'),
-    resultsUpdated: function(){
+    resultsUpdated: function () {
 
-        if (this.get('results')[0]){
+        if (this.get('results')[0]) {
             // Total Rows
             var totalRows = this.get('results')[0].get('TotalRows');
             var pageSize = this.get('pageSize');
@@ -355,7 +374,7 @@ App.MapResultsController = Ember.Controller.extend({
             this.set('prev', (page > 0));
 
             var nOfPages = Math.ceil(totalRows / pageSize) - 1;
-            this.set('next', (nOfPages > page))
+            this.set('next', (nOfPages > page));
         }
 
     }.observes('results'),
@@ -376,10 +395,9 @@ App.MapResultsController = Ember.Controller.extend({
         return geos;
 
     }.property('results')
-})
+});
 
 
-var isMapResultsSetup = false;
 App.MapResultComponent = Ember.Component.extend({
     map: null,
     visi: false,
@@ -412,8 +430,8 @@ App.MapResultComponent = Ember.Component.extend({
                 });
                 window.setTimeout(function () { google.maps.event.trigger(component.map, 'resize'); }, 100);
                 RefocusMap(component.map);
-            }
-            if (component.map == null) {
+            };
+            if (component.map === null) {
                 component.map = SetupMap(component._id);
                 window.setTimeout(updateMapComponent, 100);
             }
@@ -423,7 +441,7 @@ App.MapResultComponent = Ember.Component.extend({
     }.observes('resultsGeo'),
     loading: function () {
         var tempmap = this.get('map');
-        if (typeof google != 'undefined' && typeof tempmap != 'undefined' && tempmap != null) {
+        if (typeof google != 'undefined' && typeof tempmap != 'undefined' && tempmap !== null) {
             if (this.get('visi'))
                 $("#" + this.get('id')).show();
             else
@@ -431,20 +449,16 @@ App.MapResultComponent = Ember.Component.extend({
             window.setTimeout(function () { google.maps.event.trigger(tempmap, 'resize'); RefocusMap(tempmap); }, 100);
         }
     }.observes('visi').on('parentViewDidChange')
-})
+});
 
 var drawing = false;
 var isMapSetup = false, isMapLoaded=false, isMapInitialized = false;
-var smap;
 var cmap;
 var deferredMap = Ember.RSVP.defer();
-//deferredMap.promise.then(function (value) {
-//    isMapInitialized = true;
-//});
 function MapInitialize() {
     if (!isMapInitialized) {
         LoadScript(mapHelper);
-        //Ember.run.later(function () { deferredMap.resolve("Map Loaded"); },1800);
+        //Ember.run.later(function () { deferredMap.resolve("Map Loaded"); },1800); //Moved to NKD Map JS
     }
 }
 
@@ -465,7 +479,7 @@ function OnMapUpdate(map, event, center, viewport) {
     cmap = map;
     if (event.eventType == "EDITED") {
         if (event.eventSource.type == "marker") {
-            DeleteExceptedShape(map, event.eventSource)
+            DeleteExceptedShape(map, event.eventSource);
         }
         else {
             DeleteExceptedShapeTypes(map);
@@ -486,16 +500,18 @@ function OnMapUpdate(map, event, center, viewport) {
         didInsertElement: function () {
             this._super();
         },
+        map: null,
         becameVisible: function () {
             this._super();
             if (!isMapSetup) {
                 LoadMap();
                 isMapSetup = true;
                 if (drawing)
-                    smap = SetupDrawingMap('map-search');
+                    this.map = SetupDrawingMap('map-search');
                 else
-                    smap = SetupMap('map-search');
-                RedrawMap(smap);
+                    this.map = SetupMap('map-search');
+                RedrawMap(this.map);
+                var smap = this.map;
                 $("#searchLocation").autocomplete({
                     delay: 100,
                     source: function (request, response) {
@@ -508,10 +524,10 @@ function OnMapUpdate(map, event, center, viewport) {
                                 response($.map(data, function (item) {
                                     return {
                                         label: item.Text, value: item.Text, id: item.Value
-                                    }
-                                }))
+                                    };
+                                }));
                             }
-                        })
+                        });
                     },
                     focus: function (event, ui) {
                         AddGeographyUnique(smap, JSON.parse(ui.item.id).spatial, false, ui.item.label, true, NewGUID());
@@ -543,60 +559,32 @@ function OnMapUpdate(map, event, center, viewport) {
 }).call(this);
 
 
-
-
-// App.Node.store.getById('node', '1e61b5cf-d2f0-4f49-aa36-00d8ec63acca').get('label')
-var c;
-var graph;
-var data = { nodes: new vis.DataSet(), edges: new vis.DataSet() };
-var sessionGroupID = NewGUID();
-// App.GraphRoute = Ember.Route.extend({
-//     model: function () {
-//         Ember.RSVP.hash(this.store.find('node')).then(function (hash) {
-
-//         });
-
-//         return Ember.RSVP.hash({
-//             nodes: this.store.all('node'),
-//             edges: this.store.all('edge')
-//         })
-//     },
-
-//     afterModel: function (model) {
-
-
-//     }
-// });
-
-
-
-
-
-
 App.GraphRoute = Ember.Route.extend({
-    model: function(params){
-        var id = params.id
+    model: function (params) {
+        var id = params.id;
 
         if (id) {
             id = id.toLowerCase(); // just in case
-            return  Ember.RSVP.hash({
-                data: this.store.find('node', {id: id}),
+            return Ember.RSVP.hash({
+                data: this.store.find('node', { id: id }),
                 selected: id,
                 content: '',
-                label: ''
-            })
+                label: '',
+                editing: false  // This gets passed to visjs to enable/disable editing dependig on context
+            });
         } else {
             return Ember.RSVP.hash({
                 data: this.store.find('node'),
                 content: '',
-                label: 'Create new Workflow!'
-            })
+                label: 'Create new Workflow!',
+                editing: true
+            });
         }
     },
-    afterModel: function(m){
+    afterModel: function (m) {
         var sel = m.selected;
         if (sel) { // this means it's probably a wiki article
-            var array = {nodes: [], edges: []};
+            var array = { nodes: [], edges: [] };
             var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
             var nodeMax = -1;
             var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
@@ -607,11 +595,11 @@ App.GraphRoute = Ember.Route.extend({
             m.label = this.store.getById('node', sel).get('label');
         } else {
             var nodes = Enumerable.From(m.data.content).Select("$._data").ToArray(); // this is to clean up ember data
-            m.data = {nodes: nodes, edges: []};
+            m.data = { nodes: nodes, edges: [] };
             m.selected = '';
         }
     }
-})
+});
 
 
 function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
@@ -654,7 +642,7 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
                 // Check if id has already been processed
                 array = getDataBitch(edge.get('to'), array, _this, depth + 1, depthMax, nodeMax, store);
 
-            })
+            });
         }
     }
 
@@ -672,138 +660,103 @@ App.ModalController = Ember.ObjectController.extend({
 
 
 App.GraphController = Ember.ObjectController.extend({
-//     // selectedNode: function(){
-
-//     //     var d = this.get('model.data');
-//     //     var s = this.get('model.selected');
-
-//     //     var a = {}
-
-//     //     d.forEach(function(item){
-//     //         if (item.id.toUpperCase() === s) {
-//     //             console.log('we have a match')
-//     //             a = item;
-//     //         }
-//     //     })
-
-//     //     return a;
-//     // }.property('model.selected', 'model.data'),
-    changeSelected: function(){
-        console.log('Selection changed, should redirect!')
+    changeSelected: function () {
+        console.log('Selection changed, should redirect!');
         this.transitionToRoute('graph', this.get('model.selected'));
     }.observes('model.selected')
-})
+});
 
-
-// App.GraphController = Ember.ObjectController.extend({})
 
 
 App.VizEditorComponent = Ember.View.extend({
+    editing: false,
+    toggleEditing: function () {
+        if (this.graph !== null) {
+            this.graph.setOptions({
+                dataManipulation: this.get('editing')
+            });
+        }
+    }.observes('editing'),
     data: null,
-    vizDataSet: {nodes: new vis.DataSet(), edges: new vis.DataSet()},
+    vizDataSet: { nodes: new vis.DataSet(), edges: new vis.DataSet() },
     selected: '',
     graph: null,
-    setup: function(){
-        //console.log('test')
+    setup: function () {
 
         var _this = this;
 
         var container = $('<div>').appendTo(this.$())[0];
         var data = this.get('vizDataSet');
         var options = {
-            stabilize:false,
-            stabilizationIterations:1,
-            dataManipulation: {
-              enabled: true,
-              initiallyVisible: false
-            }
+            // physics: {barnesHut: {enabled: false}},
+            stabilize: false,
+            stabilizationIterations: 1,
+            dataManipulation: this.get('editing')
         };
 
-        // // sample data
-        // data.nodes.add({
-        //     id: 1, label: 'test'
-        // })
-
-        // // Data was created in the route
+        // Initialise vis.js
         this.graph = new vis.Graph(container, data, options);
 
         // This sets the new selected item on click
         this.graph.on('click', function (data) {
             if (data.nodes.length > 0) {
-                _this.set('selected', data.nodes[0])
+                _this.set('selected', data.nodes[0]);
             }
         });
 
-        $(window).resize(function(){
-            _this.graph.redraw();
-        })
+        $(window).resize(function () {
+            _this.graph.redraw(); // This makes the graph responsive!!!
+        });
     },
-    dataUpdates: function() {
-
-
+    dataUpdates: function () {
 
         if (this.graph === null) {
             this.setup(); // graph hasn't been initialised yet
         }
 
-        var model_data = this.get('data'); // has to be synched with data
-        var data = this.get('vizDataSet');
+        var md = this.get('data'); // has to be synched with data
+        var d = this.get('vizDataSet');
 
 
-        // Step 1: add all the new nodes & edges to the dataset
-
-        model_data.nodes.forEach(function(node){
-            // debugger;
-            if (data.nodes.get(node.id) === null) {
-                //console.log('Adding nodes')
-                data.nodes.add(node);
+        // Step 1: remove nodes which aren't in the d set anymore
+        var delNodes = d.nodes.get({
+            filter: function (i) {
+                var yes = true;
+                md.nodes.forEach(function (j) {
+                    if (i.id === j.id) { yes = false; }
+                });
+                return yes;
             }
-        })
+        });
+        d.nodes.remove(delNodes);
 
-        // Step 2: remove nodes which aren't in the data set anymore
-        data.nodes.getIds().forEach(function(id){
-            var match = false;
 
-            model_data.nodes.forEach(function(item){
-                if(item.id === id){
-                    match = true;
-                }
-            });
+        // Step 2: add all the new nodes & update nodes
+        d.nodes.update(md.nodes);
 
-            if (!match) {
-                data.nodes.remove(id)
+
+        // Now same thing for edges
+        var delEdges = d.edges.get({
+            filter: function (i) {
+                var yes = true;
+                md.edges.forEach(function (j) {
+                    if (i.id === j.id) { yes = false; }
+                });
+                return yes;
             }
-        })
+        });
+        d.edges.remove(delEdges);
 
 
-        // Same but this time for edges
-        model_data.edges.forEach(function(edge){
-            if (data.edges.get(edge.id) === null) {
-                if (data.nodes.get(edge.from) !== null && data.nodes.get(edge.to) !== null) {  // ensure that only edges are drawn where the to & from nodes exist
-                    data.edges.add(edge);
-                }
-            }
-        })
-
-
-        data.edges.getIds().forEach(function(id){
-            var match = false;
-
-            model_data.edges.forEach(function(item){
-                if(item.id === id){
-                    match = true;
-                }
-            });
-
-            if (!match) {
-                data.edges.remove(id)
-            }
-        })
-
+        // This is longer than Step 2 for nodes, as edges with no exisiting nodes need to be filtered out first
+        var newEdges = md.edges.filter(function (edge) {
+            return (d.nodes.get(edge.from) !== null && d.nodes.get(edge.to) !== null);
+        });
+        d.edges.update(newEdges);
 
 
     }.observes('data').on('didInsertElement')
-
+});
 
     // didInsertElement: function () {
 
@@ -912,7 +865,7 @@ App.VizEditorComponent = Ember.View.extend({
 
 
     // }
-})
+
 
 
 function clearPopUp() {
@@ -939,7 +892,7 @@ function saveData(data, callback) {
         // already exist - just update record
         var record = App.Node.store.getById('node', data.id);
 
-        record.set('label', data.label)
+        record.set('label', data.label);
         record.save();
 
     } else {
@@ -969,9 +922,9 @@ App.EdgeSerializer = DS.RESTSerializer.extend({
 
         return []; //makes sure it does nothing
 
-        return this._super(store, type, payload, id, requestType);
+        //return this._super(store, type, payload, id, requestType);
     }
-})
+});
 
 
 App.NodeSerializer = DS.RESTSerializer.extend({
@@ -989,46 +942,22 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 
         if (edges) {
             edges.forEach(function (edge) {
-                //nodes[edge.from].children.push(edge.id)
-                //App.Edge.store.push('edge', edge);
                 nodes.forEach(function (node) {
                     if (edge.from == node.id) {
-                        // console.log('EDGES GETTING PUSHED')
-                        //node.edges.push(edge.id);
                         return false;
                     }
-                })
+                });
             });
         }
 
-
-
         nodes = nodes.map(function (a) {
-            // console.log(a,'test')
             return {
                 label: a.label,
                 content: a.content,
                 id: a.id,
                 edges: a.edges
-            }
-        })
-
-        //Update Graph
-        // Setup vis Dataset for Visualisation --> { nodes: new vis.DataSet(), edges: new vis.DataSet() };
-        // nodes.forEach(function (item) {
-        //     if (!data.nodes.get(item.id)) //Only insert new data not twice if reloading from restadapter
-        //         data.nodes.add(item)
-        // })
-
-        // if (edges) {
-        //     edges.forEach(function (item) {
-        //         if (!data.edges.get(item.id)) //Only insert new data not twice if reloading from restadapter
-        //             data.edges.add(item)
-        //     })
-        // }
-
-
-
+            };
+        });
 
         payload = { "Nodes": nodes, "Edges": edges };
         if (!edges || (edges.length === 0 && nodes.length === 1)) {
@@ -1045,7 +974,7 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 
         //var supp = this._super(store, type, payload, id, requestType);
         //return supp;
-      return this._super(store, type, payload, id, requestType);
+        return this._super(store, type, payload, id, requestType);
     }
     //,
     //extract: function (store, type, payload, id, requestType) {
@@ -1057,10 +986,10 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 
     //,
 
-//    normalizeHash: {
-//        edges: function (hash) {
-//            return hash;
-//        }
+    //    normalizeHash: {
+    //        edges: function (hash) {
+    //            return hash;
+    //        }
     // Next, normalize individual comments, which (after `extract`)
     // are now located under `comments`
     //comments: function(hash) {
@@ -1070,8 +999,8 @@ App.NodeSerializer = DS.RESTSerializer.extend({
     //    delete hash.comment_title;
     //    return hash;
     //}
-//}
-})
+    //}
+});
 
 
 App.Node = DS.Model.extend({
@@ -1082,9 +1011,6 @@ App.Node = DS.Model.extend({
 
 
 App.Edge = DS.Model.extend({
-    //from: DS.belongsTo('node'),
-    //from: DS.belongsTo('App.Node'),
-    //to: DS.belongsTo('node')
     from: DS.attr(),
     to: DS.attr(),
     groupid: DS.attr(),
@@ -1149,19 +1075,17 @@ App.WikipediaRoute = Ember.Route.extend({
     model: function (params) {
         console.log(params.id);
         return Ember.RSVP.hash({
-            data: this.store.findQuery('wikipedia', params.id ),
+            data: this.store.findQuery('wikipedia', params.id),
             selected: params.id,
             content: ''
-        })
+        });
     },
     afterModel: function (m) {
         var sel = m.selected;
         var array = { nodes: [], edges: [] };
         var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
-        var nodeMax = 25;
+        var nodeMax = 35;
         var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'wikipedia');
-        //console.log(data);
-        // var model = this.get('model')
         m.data = data;
         m.content = this.store.getById('wikipedia', sel).get('content');
     }
@@ -1173,7 +1097,7 @@ App.WikipediaController = Ember.ObjectController.extend({
         //console.log('Selection changed, should redirect!')
         this.transitionToRoute('wikipedia', this.get('model.selected'));
     }.observes('model.selected')
-})
+});
 
 App.WikipediaAdapter = DS.Adapter.extend({
     find: function (store, type, id) {
@@ -1192,7 +1116,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
                 }
                 else if (val instanceof Object) {
                     $.each(val, function (key, val) {
-                        return recurse(key, val, parent)
+                        return recurse(key, val, parent);
                     });
                 }
                 return null;
@@ -1228,7 +1152,10 @@ App.WikipediaAdapter = DS.Adapter.extend({
                       });
                   }
                   //edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].get('from'), to: e.source[0].get('to')}").ToArray()
-                  edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].from, to: e.source[0].to}").ToArray()
+                  edges = Enumerable.From(edges)
+                      .Where("$.to.search(/^(file|image|category):.*/i)!==0")
+                      .GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].from, to: e.source[0].to}")
+                      .ToArray();
                   //oldNodes = Enumerable.From(App.Wikipedia.store.all('wikipedia').content).Select("$.id").ToArray();
                   //oldEdges = Enumerable.From(App.Wikipedia.store.all('edges').content).Select("$.id").ToArray();
                   //Enumerable.From(edges).Where(function (f) {
@@ -1265,7 +1192,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   var edgeids = Enumerable.From(edges).Select("$.id").ToArray();
                   var sequence = 1;
                   Enumerable.From(edges).ForEach(function (f) { f.sequence = sequence; sequence++; App.Wikipedia.store.push('edge', f); });
-                  Enumerable.From(edges).Where("$.to!='" + id + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to }); });
+                  Enumerable.From(edges).Where("$.to!='" + id.replace("'","\\\'") + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to }); });
                   App.Wikipedia.store.push('wikipedia', { id: id, label: id, edges: edgeids, content: content });
                   if (typeof array === 'undefined')
                       Ember.run(null, resolve, { id: id, label: id, content: content, edges: edgeids });
@@ -1304,21 +1231,31 @@ function filterData(data) {
     data = data.replace(/<script[^>]*>[\S\s]*?<\/script>/g, '');
     // no self closing scripts
     data = data.replace(/<script.*\/>/, '');
+    //no refs
+    data = data.replace(/<ref>/, '');
+    data = data.replace(/<\/ref>/, '');
+    //no source
+    data = data.replace(/<source>/, '');
+    data = data.replace(/<\/source>/, '');
+    //no references
+    data = data.replace(/<references\/>/, '');
+
     // [... add as needed ...]
-    return data;
+    return '<div class=\'filteredData\'>' + data + '</div>';
 }
 
 
 Ember.Handlebars.helper('safehtml', function (item, options) {
+    var escaped = '';
     if (this.results && this.results.length) {
         var obj = Enumerable.From(options.contexts[0].results).Where("$.get('id')=='" + options.data.keywords.result.id + "'").FirstOrDefault();
         if (obj) {
-            var escaped = filterData('' + obj.get(options.data.properties[0].split('.')[1]));
+            escaped = filterData('' + obj.get(options.data.properties[0].split('.')[1]));
             return new Handlebars.SafeString(escaped);
         }
     }
     else {
-        var escaped = filterData('' + options.contexts[0].get(options.data.properties[0]));
+        escaped = filterData('' + options.contexts[0].get(options.data.properties[0]));
         return new Handlebars.SafeString(escaped);
     }
     return '';
