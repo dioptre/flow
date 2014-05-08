@@ -49,19 +49,28 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" {{action "close"}}>&times;</button>
-            <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+            <h4 class="modal-title" id="myModalLabel">{{title}}</h4>
           </div>
           <div class="modal-body">
               {{yield}}
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" {{action "close"}}>Close</button>
-            <button type="button" class="btn btn-primary">Save changes</button>
+            <button type="button" class="btn btn-default" {{action "close"}}>{{btnClose}}</button>
+            <button type="button" class="btn btn-primary" {{action "submit"}}>{{btnSubmit}}</button>
           </div>
         </div>
       </div>
     </div>
 </script>
+
+<script type="text/x-handlebars" data-template-name="graphModalNewWorkflow">    
+    {{#modal-dialog action="close" cancel='cancel' submit='submit'}}
+      testmodal
+
+      <button {{action "close"}}>Done</button>
+    {{/modal-dialog}}
+  </script>
+
 
 
   <script type="text/x-handlebars" id="components/viz-editor"></script>
@@ -87,44 +96,21 @@
 
   <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
-      <h1>{{model.label}}</h1>
-
-
-          <!--<button {{action 'openModal' 'graphModalNewWorkflow'}}>MODAL TEST</button>-->
-         <div class="container-fluid" style="margin-top:12px;">
-        <div class="row-fluid">
-          <div class="span6">
-                {{safehtml model.content}}
-          </div>
-          <div class="span6">
-              {{viz-editor data=data selected=selected editing=editing}}
-          </div>
-         </div>
+           <h1>{{model.label}}</h1>
+           <button {{action 'openModal' 'graphModalNewWorkflow'}}>MODAL TEST</button>
+           <div class="container-fluid" style="margin-top:12px;">
+           <div class="row-fluid">
+              <div class="span6">
+                    {{safehtml model.content}}
+              </div>
+              <div class="span6">
+                  {{viz-editor data=data selected=selected editing=editing openModal='openModal'}}
+              </div>
+           </div>
       </div>
-
-
-    <div id="graph-popUp">
-    <span id="operation">node</span> <br>
-    <table style="margin:auto;"><tr>
-      <td>id</td><td><input id="node-id" value="new value"></td>
-    </tr>
-      <tr>
-        <td>label</td><td><input id="node-label" value="new value"> </td>
-      </tr></table>
-    <input type="button" value="save" id="saveButton"></button>
-    <input type="button" value="cancel" id="cancelButton"></button>
-  </div>
-  <br />
   </script>
 
-  <!--<script type="text/x-handlebars" data-template-name="graphModalNewWorkflow">
-    {{#modal-dialog action="close"}}
-
-
-      <button {{action "close"}}>Done</button>
-    {{/modal-dialog}}
-  </script>-->
-
+  
 
 
 

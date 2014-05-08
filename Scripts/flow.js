@@ -16,7 +16,7 @@ App.Router.map(function () {
 
 App.ApplicationRoute = Ember.Route.extend({
       actions: {
-        openModal: function(viewName) {
+        openModal: function(viewName, data) {
 
             // Names for modals should be made up in the following way
             // ===>>> Controller Name + 'Modal' + Name for modal
@@ -24,16 +24,19 @@ App.ApplicationRoute = Ember.Route.extend({
             // Step 1: Get Controller Name
             var controllerName = viewName.match(/^(.*)Modal(.*)$/)[1]; // This gets controller Name from model
 
-            //debugger;
 
-            // Step 2: Get model from Controller
+            // Step 2a: Set callback on controller - this allows passing in any object to the conroller
+           // this.set('controllers.' + viewName + '.data', data);
+
+
+            // Step 2b: Get model from Controller
             var model = this.get('controllers.' + controllerName);
 
             // Step 3: Update Query parmas
             this.set('controller.m', viewName);  // Add to URL
 
             // Step 4: Insert modal into page
-            this.controllerFor(viewName).set('model', model);
+            this.controllerFor(viewName).set('cdata', data);
             return this.render(viewName, {
                 into: 'application',
                 outlet: 'modal'
@@ -66,12 +69,47 @@ App.ApplicationController = Ember.Controller.extend({
 
 // A tiny bit more modal code
 App.ModalDialogComponent = Ember.Component.extend({
-  actions: {
-    close: function() {
-      return this.sendAction();
-    }
-  }
+    title: 'Modal Title',
+    btnClose: "Close",
+    btnSubmit: 'Submit',
+      actions: {
+        close: function() {
+          return this.sendAction();
+        },
+        submit: function () {
+          return this.sendAction('submit');
+        }
+      }
 });
+
+
+App.GraphModalNewWorkflowController = Ember.Controller.extend({
+    needs: [],
+    data: function () {
+        //this.get('controllers.')
+        return [];
+    }.property(),
+    //submit: null,
+    cdata: null,
+    actions: {
+        close: function () {
+            return this.send('closeModal');
+        },
+        submit: function () {
+            // do extra stuff here
+            //var execute function()
+          
+
+           
+
+            if (this.cdata) {
+                this.cdata();
+            }
+
+            return this.send('closeModal');
+        }
+    }
+})
 
 
 App.IndexRoute = Ember.Route.extend({
@@ -661,14 +699,13 @@ App.ModalController = Ember.ObjectController.extend({
 
 App.GraphController = Ember.ObjectController.extend({
     changeSelected: function () {
-        console.log('Selection changed, should redirect!');
         this.transitionToRoute('graph', this.get('model.selected'));
     }.observes('model.selected')
 });
 
 
 
-App.VizEditorComponent = Ember.View.extend({
+App.VizEditorComponent = Ember.Component.extend({
     editing: false,
     toggleEditing: function () {
         if (this.graph !== null) {
@@ -691,7 +728,13 @@ App.VizEditorComponent = Ember.View.extend({
             // physics: {barnesHut: {enabled: false}},
             stabilize: false,
             stabilizationIterations: 1,
-            dataManipulation: this.get('editing')
+            dataManipulation: this.get('editing'),
+            onAdd: function (data, callback) {
+                
+                _this.sendAction('openModal', 'graphModalNewWorkflow', function () { callback(data) })
+
+                //createModal(callback, data)
+            }
         };
 
         // Initialise vis.js
