@@ -238,6 +238,46 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
 
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("Workflow")]
+        public ActionResult GetWorkflow(string id)
+        {
+            return new EmptyResult();
+        }
+
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Workflow")]
+        public ActionResult CreateWorkflow(FlowEdgeWorkflowViewModel m)
+        {
+            if (!User.Identity.IsAuthenticated)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            if (m.workflow != null && m.workflow.id != null)
+                m = m.workflow;
+            if (_Flow.CreateWorkflow(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+        }
+
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("Workflow")]
+        public ActionResult UpdateWorkflow(FlowEdgeWorkflowViewModel m)
+        {
+            if (!User.Identity.IsAuthenticated)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            if (m.workflow != null && m.workflow.id != null)
+                m = m.workflow;
+            if (_Flow.UpdateWorkflow(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+        }
+
+
+
         [Authorize]
         [Themed(true)]
         public ActionResult Test()

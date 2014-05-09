@@ -44,6 +44,12 @@ namespace EXPEDIT.Flow.Services
          bool DeleteEdge(FlowEdgeViewModel flow);
 
          [OperationContract]
+         bool CreateWorkflow(FlowEdgeWorkflowViewModel flow);
+
+         [OperationContract]
+         bool UpdateWorkflow(FlowEdgeWorkflowViewModel flow);
+
+         [OperationContract]
          bool CheckPayment();
 
          [OperationContract]

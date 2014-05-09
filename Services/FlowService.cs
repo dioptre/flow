@@ -851,6 +851,85 @@ namespace EXPEDIT.Flow.Services {
         }
 
 
+        public bool CreateWorkflow(FlowEdgeWorkflowViewModel m)
+        {
+            if (!m.GraphDataGroupID.HasValue)
+                return false;
+            var company = _users.DefaultContactCompanyID;
+            var companies = _users.ContactCompanies;
+            var contact = _users.ContactID;
+            var now = DateTime.UtcNow;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                if (d.GraphDataGroups.Any(f => f.GraphDataGroupID == m.GraphDataGroupID))
+                    return false;
+                var table = d.GetTableName(typeof(GraphDataGroup));
+                var verified = _users.CheckPermission(new SecuredBasic
+                {
+                    AccessorApplicationID = _users.ApplicationID,
+                    AccessorContactID = _users.ContactID,
+                    OwnerTableType = table
+                }, ActionPermission.Create);
+                if (contact.HasValue && !CheckPayment())
+                {
+                    return false;
+                }
+                Guid? creatorContact, creatorCompany;
+                _users.GetCreator(contact, company, out creatorContact, out creatorCompany);
+                var g = new GraphDataGroup
+                {
+                    GraphDataGroupID = m.GraphDataGroupID.Value,
+                    GraphDataGroupName = m.GraphDataGroupName,
+                    Comment = m.Comment,
+                    VersionUpdated = now,
+                    VersionUpdatedBy = contact,
+                    VersionOwnerCompanyID = creatorCompany,
+                    VersionOwnerContactID = creatorContact
+                };
+                d.GraphDataGroups.AddObject(g);
+                d.SaveChanges();
+                return true;
+            }
+        }
+
+
+        public bool UpdateWorkflow(FlowEdgeWorkflowViewModel m)
+        {
+            if (!m.GraphDataGroupID.HasValue)
+                return false;
+            var company = _users.DefaultContactCompanyID;
+            var companies = _users.ContactCompanies;
+            var contact = _users.ContactID;
+            var now = DateTime.UtcNow;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var obj = (from o in d.GraphDataGroups where m.GraphDataGroupID == m.GraphDataGroupID select o).SingleOrDefault();
+                if (obj == null)
+                    return false;
+                var table = d.GetTableName(typeof(GraphDataGroup));
+                var verified = _users.CheckPermission(new SecuredBasic
+                {
+                    AccessorApplicationID = _users.ApplicationID,
+                    AccessorContactID = _users.ContactID,
+                    OwnerReferenceID = m.GraphDataGroupID,
+                    OwnerTableType = table
+                }, ActionPermission.Update);
+                if (contact.HasValue && !CheckPayment())
+                {
+                    return false;
+                }
+                obj.GraphDataGroupName = m.GraphDataGroupName;
+                obj.Comment = m.Comment;
+                obj.VersionUpdated = now;
+                obj.VersionUpdatedBy = contact;
+                d.SaveChanges();
+                return true;
+            }
+        }
+
+
         public void Creating(UserContext context) { }
 
         public void Created(UserContext context)  { }
@@ -858,7 +937,7 @@ namespace EXPEDIT.Flow.Services {
         public void LoggedIn(IUser user)
         {
             CacheHelper.Cache.Remove(string.Format(FS_FLOW_CONTACT_ID, _users.ContactID));
-            if (_users.ContactID.HasValue && CheckPayment())
+            if (_users.ContactID.HasValue && CheckPayment() && !_users.HasPrivateCompanyID)
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -870,7 +949,7 @@ namespace EXPEDIT.Flow.Services {
                     CompanyName = cid.ToString(),
                     PrimaryContactID = _users.ContactID,
                     VersionUpdated = now,
-                    Comment = "Created by Flow"
+                    Comment = "Generated Private Company"
                 };
                 d.Companies.AddObject(c);
                 var e = new Experience

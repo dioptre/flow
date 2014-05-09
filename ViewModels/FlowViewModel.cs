@@ -68,6 +68,24 @@ namespace EXPEDIT.Flow.ViewModels
         public decimal? Weight { get; set; }
         public Guid? RelationTypeID { get; set; }
         public int? Sequence { get; set; }
+        [JsonIgnore]
+        public IEnumerable<FlowEdgeWorkflowViewModel> Workflows { get; set; }
+
+    }
+
+
+    [JsonObject]
+    public class FlowEdgeWorkflowViewModel
+    {
+        public FlowEdgeWorkflowViewModel workflow { get; set; }
+        public Guid? id { get { return GraphDataGroupID; } set { GraphDataGroupID = value; } }
+        public string name { get { return GraphDataGroupName; } set { GraphDataGroupName = value; } }
+        [JsonIgnore]
+        public string GraphDataGroupName { get; set; }
+        [JsonIgnore]
+        public Guid? GraphDataGroupID { get; set; }
+        [JsonIgnore]
+        public string Comment { get; set; }
 
     }
 
