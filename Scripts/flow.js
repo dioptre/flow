@@ -298,7 +298,14 @@ App.SearchController = Ember.ObjectController.extend({
         this.set('pageFile', 0);
         this.set('pageMap', 0);
         Ember.run.debounce(this, controller.loadAll, 1000);
-    }.observes('keywords')
+    }.observes('keywords'),
+    componentURI: function () {
+        var args = this.get('keywords');
+        if (typeof args === 'string' && args !== null && args.length > 0)
+            return args.replace(/ /g, '_');
+        else
+            return '';
+    }.property('keywords')
 });
 
 
@@ -1116,11 +1123,12 @@ App.Wikipedia = DS.Model.extend({
 
 App.WikipediaRoute = Ember.Route.extend({
     model: function (params) {
-        console.log(params.id);
+        //console.log(params.id);
         return Ember.RSVP.hash({
             data: this.store.findQuery('wikipedia', params.id),
             selected: params.id,
-            content: ''
+            content: '',
+            title: ((typeof params.id === 'string' && params.id !== null && params.id.length > 0) ? params.id.replace(/_/g, ' ') : params.id)
         });
     },
     afterModel: function (m) {
@@ -1180,7 +1188,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   var edges = [];
                   var content = '';
                   if (html) {
-                      content = filterData(InstaView.convert(html));
+                      content = InstaView.convert(html);
                       var leaves = html.match(/\[\[.*?\]\]/igm);
                       $.each(leaves, function (key, val) {
                           var leaf = '';
@@ -1190,7 +1198,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
                               leaf = val.replace(/\[\[(.*)?\]\]/, "$1");
                           else leaf = val;
                           if (leaf) {
-                              edges.push({ id: id + '-' + leaf, from: id, to: leaf });
+                              edges.push({ id: id + '-' + leaf, from: id, to: leaf.replace(/ /g,'_') });
                           }
                       });
                   }
@@ -1235,12 +1243,12 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   var edgeids = Enumerable.From(edges).Select("$.id").ToArray();
                   var sequence = 1;
                   Enumerable.From(edges).ForEach(function (f) { f.sequence = sequence; sequence++; App.Wikipedia.store.push('edge', f); });
-                  Enumerable.From(edges).Where("$.to!='" + id.replace("'","\\\'") + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to }); });
-                  App.Wikipedia.store.push('wikipedia', { id: id, label: id, edges: edgeids, content: content });
+                  Enumerable.From(edges).Where("$.to!='" + id.replace("'","\\\'") + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to.replace(/_/g,' ') }); });
+                  App.Wikipedia.store.push('wikipedia', { id: id, label: id.replace(/_/g, ' '), edges: edgeids, content: content });
                   if (typeof array === 'undefined')
-                      Ember.run(null, resolve, { id: id, label: id, content: content, edges: edgeids });
+                      Ember.run(null, resolve, { id: id, label: id.replace(/_/g, ' '), content: content, edges: edgeids });
                   else {
-                      var toReturn = { Nodes: [{ id: id, label: id, content: content, edges: edgeids }], Edges: edges };
+                      var toReturn = { Nodes: [{ id: id, label: id.replace(/_/g, ' '), content: content, edges: edgeids }], Edges: edges };
                       Ember.run(null, resolve, toReturn );
                   }
               }, function (jqXHR) {
@@ -1302,6 +1310,25 @@ Ember.Handlebars.helper('safehtml', function (item, options) {
         return new Handlebars.SafeString(escaped);
     }
     return '';
+});
+
+Ember.Handlebars.helper('wikiurl', function (item, options) {
+
+});
+
+
+//Not working...
+Ember.Handlebars.registerHelper('wikipedia-link-to', function (name, options) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        //var resource = this.get(name);
+        //if (!options.fn) {
+        options.types = ['STRING'];
+        options.contexts = [this];
+        if (typeof item === 'string' && item.length > 0)
+            args.unshift(encodeURIComponent(item));
+        else 
+            args.unshift('');
+        return Ember.Handlebars.helpers['link-to'].apply(this, args);
 });
 
 Ember.TextField.reopen({

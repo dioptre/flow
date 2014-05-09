@@ -36,6 +36,7 @@ using EXPEDIT.Share.ViewModels;
 using Newtonsoft.Json;
 using CookComputing.XmlRpc;
 using Orchard.Users.Events;
+using NKD.ViewModels;
 
 namespace EXPEDIT.Flow.Services {
     
@@ -843,6 +844,11 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
+
+        public ContactViewModel GetMyInfo()
+        {
+            return _users.GetMyInfo();
+        }
 
 
         public void Creating(UserContext context) { }

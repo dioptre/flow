@@ -77,12 +77,12 @@
 
 
   <script type="text/x-handlebars" id="wikipedia">
-      <h1>{{selected}}</h1>
+      <h1>{{title}}</h1>
       <div class="container-fluid" style="margin-top:12px;">
         <div class="row-fluid">
             <div class="span6">
                 {{#if model.content}}
-                  {{{model.content}}}
+                  {{safehtml model.content}}
                 {{/if}}
             </div>
             <div class="span6">
@@ -185,7 +185,7 @@
             {{view Ember.Checkbox checkedBinding='map'}}
             <br />
              {{#if keywords}}
-                {{#link-to 'wikipedia' keywords}}Research {{keywords}} from wikipedia{{/link-to}}
+                {{#link-to 'wikipedia' componentURI}}Research {{keywords}} from wikipedia{{/link-to}}
             {{/if}}
           </div>
         </div>

@@ -229,6 +229,15 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
         }
 
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("MyInfo")]
+        public ActionResult GetMyInfo(string id)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.GetMyInfo(), JsonRequestBehavior.AllowGet);
+        }
+
+
         [Authorize]
         [Themed(true)]
         public ActionResult Test()

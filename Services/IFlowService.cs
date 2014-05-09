@@ -4,7 +4,7 @@ using System.IO;
 using System.Web;
 using Orchard;
 using System.ServiceModel;
-
+using NKD.ViewModels;
 using EXPEDIT.Flow.ViewModels;
 using EXPEDIT.Share.ViewModels;
 
@@ -45,6 +45,9 @@ namespace EXPEDIT.Flow.Services
 
          [OperationContract]
          bool CheckPayment();
+
+         [OperationContract]
+         ContactViewModel GetMyInfo();
 
     }
 }
