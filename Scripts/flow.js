@@ -732,7 +732,7 @@ App.VizEditorComponent = Ember.Component.extend({
         var container = $('<div>').appendTo(this.$())[0];
         var data = this.get('vizDataSet');
         var options = {
-            // physics: {barnesHut: {enabled: false}},
+            physics: {barnesHut: {enabled: false}},
             stabilize: false,
             stabilizationIterations: 1,
             dataManipulation: this.get('editing'),
@@ -1281,15 +1281,17 @@ function filterData(data) {
     // no script blocks
     data = data.replace(/<script[^>]*>[\S\s]*?<\/script>/g, '');
     // no self closing scripts
-    data = data.replace(/<script.*\/>/, '');
+    data = data.replace(/<script.*\/>/g, '');
     //no refs
-    data = data.replace(/<ref>/, '');
-    data = data.replace(/<\/ref>/, '');
+    data = data.replace(/<ref>/g, '');
+    data = data.replace(/<\/ref>/g, '');
     //no source
-    data = data.replace(/<source>/, '');
-    data = data.replace(/<\/source>/, '');
+    data = data.replace(/<source>/g, '');
+    data = data.replace(/<\/source>/g, '');
     //no references
-    data = data.replace(/<references\/>/, '');
+    data = data.replace(/<references\/>/g, '');
+    //empty points
+    data = data.replace(/<\/em><li><\/em>/ig, '<\/li>'); //HACK:?
 
     // [... add as needed ...]
     return '<div class=\'filteredData\'>' + data + '</div>';
