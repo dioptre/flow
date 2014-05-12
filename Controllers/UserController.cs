@@ -134,12 +134,25 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Nodes")]
         public ActionResult GetNode(string id)
         {
+
+            string group = Request.Params["groupid"];
+            Guid? gid = null;
+            if (!string.IsNullOrWhiteSpace(group) && group != "undefined")
+            {
+                Guid tgid;
+                if (Guid.TryParse(group, out tgid))
+                    gid = tgid;
+            }
+
             if (string.IsNullOrWhiteSpace(id))
-                return new JsonHelper.JsonNetResult(_Flow.GetNode(null, null, null, false), JsonRequestBehavior.AllowGet);
+                return new JsonHelper.JsonNetResult(_Flow.GetNode(null, null, gid, false), JsonRequestBehavior.AllowGet);
             Guid temp;
+            string name = null;
+            FlowGroupViewModel result = null;
             if (!Guid.TryParse(id, out temp))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
-            var result = _Flow.GetNode(null, temp, null, true);
+                result = _Flow.GetNode(name, null, gid, true);
+            else
+                result = _Flow.GetNode(null, temp, gid, true);
             if (result == null)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
             return new JsonHelper.JsonNetResult(result, JsonRequestBehavior.AllowGet);
@@ -240,15 +253,23 @@ namespace EXPEDIT.Flow.Controllers {
 
         [Themed(false)]
         [HttpGet]
-        [ActionName("Workflow")]
+        [ActionName("Workflows")]
         public ActionResult GetWorkflow(string id)
         {
-            return new EmptyResult();
+            FlowEdgeWorkflowViewModel m;
+            Guid gid;
+            if (Guid.TryParse(id, out gid))
+                 m = _Flow.GetWorkflow(gid); 
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);  
+            if (m == null)
+                return new HttpUnauthorizedResult("Unauthorized access to protected workflow.");
+            return View(m);
         }
 
         [Themed(false)]
         [HttpPost]
-        [ActionName("Workflow")]
+        [ActionName("Workflows")]
         public ActionResult CreateWorkflow(FlowEdgeWorkflowViewModel m)
         {
             if (!User.Identity.IsAuthenticated)
@@ -263,7 +284,7 @@ namespace EXPEDIT.Flow.Controllers {
 
         [Themed(false)]
         [HttpPut]
-        [ActionName("Workflow")]
+        [ActionName("Workflows")]
         public ActionResult UpdateWorkflow(FlowEdgeWorkflowViewModel m)
         {
             if (!User.Identity.IsAuthenticated)

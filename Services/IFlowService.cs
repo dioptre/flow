@@ -7,6 +7,7 @@ using System.ServiceModel;
 using NKD.ViewModels;
 using EXPEDIT.Flow.ViewModels;
 using EXPEDIT.Share.ViewModels;
+using System.Data;
 
 namespace EXPEDIT.Flow.Services
 {
@@ -26,7 +27,7 @@ namespace EXPEDIT.Flow.Services
          bool SubmitWiki(ref WikiViewModel wiki);
 
          [OperationContract]
-         FlowGroupViewModel GetNode(string name, Guid? nid, Guid? gid, bool includeContent = false);
+         FlowGroupViewModel GetNode(string name, Guid? nid, Guid? gid, bool includeContent = false, bool includeDisconnected = false);
 
          [OperationContract]
          bool CreateNode(FlowViewModel flow);
@@ -43,6 +44,10 @@ namespace EXPEDIT.Flow.Services
          [OperationContract]
          bool DeleteEdge(FlowEdgeViewModel flow);
 
+
+         [OperationContract]
+         FlowEdgeWorkflowViewModel GetWorkflow(Guid id);
+
          [OperationContract]
          bool CreateWorkflow(FlowEdgeWorkflowViewModel flow);
 
@@ -54,6 +59,7 @@ namespace EXPEDIT.Flow.Services
 
          [OperationContract]
          ContactViewModel GetMyInfo();
+
 
     }
 }

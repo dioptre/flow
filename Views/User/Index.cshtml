@@ -63,7 +63,7 @@
     </div>
 </script>
 
-<script type="text/x-handlebars" data-template-name="graphModalNewWorkflow">    
+<script type="text/x-handlebars" data-template-name="graphModalNewWorkflow">
     {{#modal-dialog action="close" cancel='cancel' submit='submit'}}
       testmodal
 
@@ -98,6 +98,7 @@
       <div class="container-fluid" style="margin-top:12px;">
            <h1>{{model.label}}</h1>
            <button {{action 'openModal' 'graphModalNewWorkflow'}}>MODAL TEST</button>
+           <button {{action 'customModalTrigger'}}>Custo Modal Trigger</button>
            <div class="container-fluid" style="margin-top:12px;">
            <div class="row-fluid">
               <div class="span6">
@@ -110,7 +111,7 @@
       </div>
   </script>
 
-  
+
 
 
 

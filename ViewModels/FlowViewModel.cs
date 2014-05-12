@@ -44,11 +44,9 @@ namespace EXPEDIT.Flow.ViewModels
     [JsonObject]
     public class FlowViewModelDetailed : FlowViewModel
     {
-        public Guid?[] edges { get { return (Parents != null ? (from o in Parents select o.GraphDataRelationID).ToArray() : new Guid?[] {}); } set { edges = value; } }
+        public Guid?[] edges { get { return (Relations != null ? (from o in Relations where o.FromID==GraphDataID select o.GraphDataRelationID).ToArray() : new Guid?[] {}); } set { edges = value; } }
         [JsonIgnore]
-        public IEnumerable<FlowEdgeViewModel> Parents { get; set; }
-        [JsonIgnore]
-        public IEnumerable<FlowEdgeViewModel> Children { get; set; }
+        public IEnumerable<FlowEdgeViewModel> Relations { get; set; }
     }
 
     [JsonObject]
@@ -67,6 +65,7 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? ToID { get; set; }
         public decimal? Weight { get; set; }
         public Guid? RelationTypeID { get; set; }
+        public DateTime? Related { get; set; }
         public int? Sequence { get; set; }
         [JsonIgnore]
         public IEnumerable<FlowEdgeWorkflowViewModel> Workflows { get; set; }
@@ -90,10 +89,57 @@ namespace EXPEDIT.Flow.ViewModels
     }
 
     [JsonObject]
+    public class FlowFileViewModel
+    {
+        public Guid? id { get { return GraphDataFileDataID; } set { GraphDataFileDataID = value; } }
+        [JsonIgnore]
+        public Guid? GraphDataFileDataID { get; set; }
+        public Guid? GraphDataID { get; set; }
+        public Guid? FileDataID { get; set; }
+        public string FileName { get; set; }
+    }
+
+    [JsonObject]
+    public class FlowLocationViewModel
+    {
+        public Guid? id { get { return GraphDataLocationID; } set { GraphDataLocationID = value; } }
+        [JsonIgnore]
+        public Guid? GraphDataLocationID { get; set; }
+        public Guid? GraphDataID { get; set; }
+        public Guid? LocationID { get; set; }
+        public string LocationName { get; set; }
+    }
+
+    [JsonObject]
+    public class FlowContextViewModel
+    {
+        public Guid? id { get { return GraphDataContextID; } set { GraphDataContextID = value; } }
+        [JsonIgnore]
+        public Guid? GraphDataContextID { get; set; }
+        public Guid? GraphDataID { get; set; }
+        public Guid? ExperienceID { get; set; }
+        public string ExperienceName { get; set; }
+    }
+
+    [JsonObject]
+    public class FlowWorkTypeViewModel
+    {
+        public Guid? id { get { return WorkTypeID; } set { WorkTypeID = value; } }
+        [JsonIgnore]
+        public Guid? WorkTypeID { get; set; }
+        public string WorkTypeName { get; set; }
+    }
+
+    [JsonObject]
     public class FlowGroupViewModel
     {
         public IEnumerable<FlowViewModelDetailed> Nodes { get; set; }
         public IEnumerable<FlowEdgeViewModel> Edges { get; set; }
+        public IEnumerable<FlowEdgeWorkflowViewModel> Workflows { get; set; }
+        public IEnumerable<FlowFileViewModel> Files { get; set; }
+        public IEnumerable<FlowLocationViewModel> Locations { get; set; }
+        public IEnumerable<FlowContextViewModel> Contexts { get; set; }
+        public IEnumerable<FlowWorkTypeViewModel> WorkTypes { get; set; }
     }
 
 }

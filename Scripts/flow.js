@@ -36,7 +36,7 @@ App.ApplicationRoute = Ember.Route.extend({
             this.set('controller.m', viewName);  // Add to URL
 
             // Step 4: Insert modal into page
-            this.controllerFor(viewName).set('cdata', data);
+            this.controllerFor(viewName).set('callbackData', data);
             return this.render(viewName, {
                 into: 'application',
                 outlet: 'modal'
@@ -84,28 +84,15 @@ App.ModalDialogComponent = Ember.Component.extend({
 
 
 App.GraphModalNewWorkflowController = Ember.Controller.extend({
-    needs: [],
-    data: function () {
-        //this.get('controllers.')
-        return [];
-    }.property(),
-    //submit: null,
-    cdata: null,
+    callbackData: null,
     actions: {
         close: function () {
             return this.send('closeModal');
         },
         submit: function () {
-            // do extra stuff here
-            //var execute function()
-          
-
-           
-
             if (this.cdata) {
                 this.cdata();
             }
-
             return this.send('closeModal');
         }
     }
@@ -707,7 +694,14 @@ App.ModalController = Ember.ObjectController.extend({
 App.GraphController = Ember.ObjectController.extend({
     changeSelected: function () {
         this.transitionToRoute('graph', this.get('model.selected'));
-    }.observes('model.selected')
+    }.observes('model.selected'),
+    actions: {
+        customModalTrigger: function(){
+
+            this.send('openModal', 'graphModalNewWorkflow', function () { alert('Test') })
+
+        }
+    }
 });
 
 
@@ -737,10 +731,49 @@ App.VizEditorComponent = Ember.Component.extend({
             stabilizationIterations: 1,
             dataManipulation: this.get('editing'),
             onAdd: function (data, callback) {
-                
+
+
+                // Get modals working...
                 _this.sendAction('openModal', 'graphModalNewWorkflow', function () { callback(data) })
 
-                //createModal(callback, data)
+                var name = prompt("Please enter name for Workflow", "");
+
+                if (name!=null) {
+                    data.label = name;
+                    callback(data);
+                }
+            },
+            onDelete: function (data, callback) {
+
+                debugger;
+
+                callback(data);
+            },
+            onEdit: function (data, callback) {
+                debugger;
+
+            },
+            onConnect: function (data, callback) {
+                function saveLink() {
+                    data.id = NewGUID();
+                    data.groupid = NewGUID();
+                    App.Node.store.createRecord('edge', data).save().then(function(){
+                        callback(data);
+                    })
+
+                }
+
+                debugger;
+
+                if (data.from == data.to) {
+                    var r = confirm("Do you want to connect the node to itself?");
+                    if (r == true) {
+                        saveLink()
+                    }
+                }
+                else {
+                    saveLink()
+                }
             }
         };
 
@@ -985,6 +1018,12 @@ App.NodeSerializer = DS.RESTSerializer.extend({
         var nodes = payload.Nodes;
         var edges = payload.Edges;
 
+        // If there are no nodes, just return null for everything
+        if (nodes === null) {
+            payload = { "Nodes": [], "Edges": []};
+            return this._super(store, type, payload, id, requestType);
+        }
+
         nodes.forEach(function (node) {
             if (!node.edges)
                 node.edges = [];
@@ -1020,10 +1059,6 @@ App.NodeSerializer = DS.RESTSerializer.extend({
             //payload.edge = edges[0];
         }
 
-        //console.log(payload);
-
-        //var supp = this._super(store, type, payload, id, requestType);
-        //return supp;
         return this._super(store, type, payload, id, requestType);
     }
     //,
@@ -1064,7 +1099,12 @@ App.Edge = DS.Model.extend({
     from: DS.attr(),
     to: DS.attr(),
     groupid: DS.attr(),
-    sequence: DS.attr()
+    sequence: DS.attr(),
+});
+
+App.Workflow = DS.Model.extend({
+    name: DS.attr('string'),
+    comment: DS.attr('string'),
 });
 
 
@@ -1082,37 +1122,6 @@ App.DatePickerField = Em.View.extend({
         }).on("changeDate", onChangeDate);
     }
 });
-
-
-
-//App.Node.FIXTURES = [
-//    { id: '1', label: "Node_1", content: "Sample Content", children: [1, 2] },
-//    { id: '2', label: "Node_2", content: "Sample Content 2", children: [] },
-//    { id: '3', label: "Node_3", content: "Sample Content 3", children: [] }
-//];
-
-
-
-
-//App.Edge.FIXTURES = [
-//    { id: '1', from: 1, to: 2 },
-//    { id: '2', from: 1, to: 3 }
-//];
-
-
-
-
-//<script src="~/Modules/EXPEDIT.Share/Scripts/jquery-fn/cross-domain-ajax/jquery.xdomainajax.js"></script>
-//$('#contented').load('http://google.com'); // SERIOUSLY!
-//$.ajax({
-//    url: 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=Main%20Page&prop=revisions&rvprop=content',
-//    type: 'GET',
-//    success: function (res) {
-//        var headline = $(res.responseText).find('a.tsh').text();
-//        alert(res.responseText);
-//    }
-//});
-
 
 App.Wikipedia = DS.Model.extend({
     label: DS.attr('string'),
@@ -1320,18 +1329,19 @@ Ember.Handlebars.helper('wikiurl', function (item, options) {
 
 
 //Not working...
-Ember.Handlebars.registerHelper('wikipedia-link-to', function (name, options) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        //var resource = this.get(name);
-        //if (!options.fn) {
-        options.types = ['STRING'];
-        options.contexts = [this];
-        if (typeof item === 'string' && item.length > 0)
-            args.unshift(encodeURIComponent(item));
-        else 
-            args.unshift('');
-        return Ember.Handlebars.helpers['link-to'].apply(this, args);
-});
+// This is unecessary, links should be used for links
+// Ember.Handlebars.registerHelper('wikipedia-link-to', function (name, options) {
+//         var args = Array.prototype.slice.call(arguments, 1);
+//         //var resource = this.get(name);
+//         //if (!options.fn) {
+//         options.types = ['STRING'];
+//         options.contexts = [this];
+//         if (typeof item === 'string' && item.length > 0)
+//             args.unshift(encodeURIComponent(item));
+//         else
+//             args.unshift('');
+//         return Ember.Handlebars.helpers['link-to'].apply(this, args);
+// });
 
 Ember.TextField.reopen({
     attributeBindings: ['autofocus'],
