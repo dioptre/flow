@@ -635,6 +635,7 @@ App.GraphRoute = Ember.Route.extend({
             console.log(data);
             // var model = this.get('model')
             m.data = data;
+            //AGTODO
             m.content = this.store.getById('node', sel).get('content');
             m.label = this.store.getById('node', sel).get('label');
         } else {
@@ -677,7 +678,8 @@ App.GraphRoute = Ember.Route.extend({
 
 
 function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
-
+    //AGTODO
+    //return array;
     if (typeof id == 'undefined')
         return array;
 
@@ -1058,6 +1060,8 @@ App.EdgeSerializer = DS.RESTSerializer.extend({
 
 App.NodeSerializer = DS.RESTSerializer.extend({
     extractArray: function (store, type, payload, id, requestType) {
+        //AGTODO
+        //return [];
         var nodes = payload.Nodes;
         var edges = payload.Edges;
 
