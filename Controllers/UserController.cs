@@ -131,6 +131,13 @@ namespace EXPEDIT.Flow.Controllers {
 
         [Themed(false)]
         [HttpGet]
+        public ActionResult WorkflowDuplicate(string id)
+        {
+            return new JsonHelper.JsonNetResult(_Flow.GetDuplicateWorkflow(id), JsonRequestBehavior.AllowGet);
+        }
+
+        [Themed(false)]
+        [HttpGet]
         [ActionName("Nodes")]
         public ActionResult GetNode(string id)
         {

@@ -27,6 +27,8 @@
     var mapHelper = '@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")';
 </script>
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
+<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui.css">
+<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui-default-theme.css">
 
 
 <!-- The ember app gets injected here -->
@@ -65,7 +67,7 @@
 
 
 
-<script type="text/x-handlebars" data-template-name="graphModalNewWorkflow">
+@*<script type="text/x-handlebars" data-template-name="graphModalNewWorkflow">
     {{#modal-dialog action="close" cancel='cancel' submit='submit' model='controller.model'}}
 
 
@@ -78,7 +80,7 @@
 
       End of sample text.
     {{/modal-dialog}}
-  </script>
+  </script>*@
 
 
 
@@ -106,14 +108,29 @@
   <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
            <h1>{{model.label}}</h1>
+            {{#eui-modal openBinding="showFirstModal" cancel="firstModalCancel" style="full"}}
+                <div style="padding: 50px; text-align: center;">
+                <p>
+                    You may also press <em>esc</em> to close this modal.
+                </p>
 
-          {{#if renamingWorkflow}}
-                {{View Ember.TextField valueBinding="model.workflow"}}
-                <button {{action "toggleRenamingWorkflow"}}>Save</button>
-                
-          {{else}}
-                <h3 {{action "toggleRenamingWorkflow"}}>{{model.workflow}}</h3>
-          {{/if}}
+                {{eui-button label="Close Modal" size="small" action="toggleFirstModal"}}
+                </div>
+            {{/eui-modal}}
+
+            {{eui-button label='Open "default" Style Modal' action="toggleFirstModal"}}
+          
+            {{#if renamingWorkflow}}
+                {{view Ember.TextField valueBinding="model.workflow" autofocus="autofocus"}}
+                <button {{action "toggleRenamingWorkflow" true}}>Save</button>
+                <button {{action "toggleRenamingWorkflow"}}>Cancel</button>
+                <br>
+
+            {{else}}
+                <h3 {{action "toggleRenamingWorkflow" class=':workflowRenamer'}}>{{model.workflow}}</h3>
+                <a {{action "toggleRenamingWorkflow"}}>Edit Name</a>
+                <br>
+            {{/if}}
            <button {{action 'openModal' 'graphModalNewWorkflow'}}>MODAL TEST</button>
            <button {{action 'customModalTrigger'}}>Custo Modal Trigger</button>
            <div class="container-fluid" style="margin-top:12px;">
@@ -164,15 +181,15 @@
                 {{view Ember.TextField action='search' valueBinding="keywords" type='text' placeholder="Add keywords" autofocus="autofocus"}}
 
               {{! location }}
-              {{#flow-modal name="locationModal" fade=true footerButtonsBinding="locationModalBtn" title="Add a location filter!"}}
+@*              {{#flow-modal name="locationModal" fade=true footerButtonsBinding="locationModalBtn" title="Add a location filter!"}}
                       {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}
                       <div id="map-search" style="width: 100%; height: 30vh"></div>
-              {{/flow-modal}}
+              {{/flow-modal}}*@
               <span {{action 'showLocationModal'}} class="glyphicon icon-globe"></span>
 
 
               {{! calendar }}
-              {{#bs-modal name="dateModal" fade=true footerButtonsBinding="dateModalBtn" title="Add a time filer!"}}
+@*              {{#bs-modal name="dateModal" fade=true footerButtonsBinding="dateModalBtn" title="Add a time filer!"}}
                   <p>Date from</p>
                   {{view App.DatePickerField  valueBinding='sched_date_from'}}
                   <p>to</p>
@@ -180,7 +197,7 @@
 
                   <br><br>
                   Current filter {{sched_date_from}} - {{sched_date_to}}
-              {{/bs-modal}}
+              {{/bs-modal}}*@
               <span {{action 'showDateModal'}} class="glyphicon icon-calendar"></span>
             </div>
 
@@ -406,3 +423,4 @@
         <input size="16" type="text" readonly><span class="add-on"><i class="icon-th"></i></span>
     </div>
   </script>
+

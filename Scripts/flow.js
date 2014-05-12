@@ -16,48 +16,48 @@ App.Router.map(function () {
 
 App.ApplicationRoute = Ember.Route.extend({
       actions: {
-        openModal: function(viewName, param1, param2) {
-            // param1 - optional callback or data object
-            // param2 - optional callback, only if data object is used for param 1
+      //  openModal: function(viewName, param1, param2) {
+      //      // param1 - optional callback or data object
+      //      // param2 - optional callback, only if data object is used for param 1
 
-            // Names for modals should be made up in the following way
-            // ===>>> Controller Name + 'Modal' + Name for modal
+      //      // Names for modals should be made up in the following way
+      //      // ===>>> Controller Name + 'Modal' + Name for modal
 
-            // Step 1: Get Controller Name
-            var controllerName = viewName.match(/^(.*)Modal(.*)$/)[1]; // This gets controller Name from model
-
-
-            // Step 3: Update Query parmas
-            this.set('controller.m', viewName);  // Add to URL
-
-             // Check if param 1 is a function
-            if (typeof param1 === 'function') {
-                this.controllerFor(viewName).set('callbackData', param1);
-            } else if (param1 !== null) {
-                // Must be data if not function
-                this.controllerFor(viewName).set('model', param1)
-
-                // Check if param 2 is used
-                if (param2 !== null) {
-                    this.controllerFor(viewName).set('callbackData', param2);
-                }
-            }
+      //      // Step 1: Get Controller Name
+      //      var controllerName = viewName.match(/^(.*)Modal(.*)$/)[1]; // This gets controller Name from model
 
 
-            return this.render(viewName, {
-                into: 'application',
-                outlet: 'modal'
-            });
-        },
+      //      // Step 3: Update Query parmas
+      //      this.set('controller.m', viewName);  // Add to URL
 
-        closeModal: function() {
-          this.set('controller.m', ""); // Clean up URL
+      //       // Check if param 1 is a function
+      //      if (typeof param1 === 'function') {
+      //          this.controllerFor(viewName).set('callbackData', param1);
+      //      } else if (param1 !== null) {
+      //          // Must be data if not function
+      //          this.controllerFor(viewName).set('model', param1)
 
-          return this.disconnectOutlet({
-            outlet: 'modal',
-            parentView: 'application'
-          }); // Remove from outlet
-        }
+      //          // Check if param 2 is used
+      //          if (param2 !== null) {
+      //              this.controllerFor(viewName).set('callbackData', param2);
+      //          }
+      //      }
+
+
+      //      return this.render(viewName, {
+      //          into: 'application',
+      //          outlet: 'modal'
+      //      });
+      //  },
+
+      //  closeModal: function() {
+      //    this.set('controller.m', ""); // Clean up URL
+
+      //    return this.disconnectOutlet({
+      //      outlet: 'modal',
+      //      parentView: 'application'
+      //    }); // Remove from outlet
+      //  }
       }
 });
 
@@ -539,68 +539,68 @@ function OnMapUpdate(map, event, center, viewport) {
 
 
 
-(function () {
-    App.DateModal = Bootstrap.BsModalComponent.extend({
-        didInsertElement: function () {
-            this._super();
-        },
-        map: null,
-        becameVisible: function () {
-            this._super();
-            if (!isMapSetup) {
-                LoadMap();
-                isMapSetup = true;
-                if (drawing)
-                    this.map = SetupDrawingMap('map-search');
-                else
-                    this.map = SetupMap('map-search');
-                RedrawMap(this.map);
-                var smap = this.map;
-                $("#searchLocation").autocomplete({
-                    delay: 100,
-                    source: function (request, response) {
-                        $.ajax({
-                            url: "/share/getlocations/" + request.term,
-                            type: "GET",
-                            dataType: "json",
-                            //data: { id: request.term },
-                            success: function (data) {
-                                response($.map(data, function (item) {
-                                    return {
-                                        label: item.Text, value: item.Text, id: item.Value
-                                    };
-                                }));
-                            }
-                        });
-                    },
-                    focus: function (event, ui) {
-                        AddGeographyUnique(smap, JSON.parse(ui.item.id).spatial, false, ui.item.label, true, NewGUID());
-                        RefocusMap(smap);
-                        smap.setZoom(9);
-                    },
-                    response: function (event, ui) {
-                        if (ui.content.length > 0) {
-                            AddGeographyUnique(smap, JSON.parse(ui.content[0].id).spatial, false, ui.content[0].label, true, NewGUID());
-                            RefocusMap(smap);
-                            smap.setZoom(9);
-                        }
-                        else {
-                            GetAddressLocation($("#searchLocation").val(), function (latlng) {
-                                DeleteShapes(smap);
-                                AddMarkerSingle(smap, latlng, false, $("#searchLocation").val(), NewGUID());
-                                RefocusMap(smap);
-                                smap.setZoom(15);
-                            });
-                        }
+//(function () {
+//    App.DateModal = Bootstrap.BsModalComponent.extend({
+//        didInsertElement: function () {
+//            this._super();
+//        },
+//        map: null,
+//        becameVisible: function () {
+//            this._super();
+//            if (!isMapSetup) {
+//                LoadMap();
+//                isMapSetup = true;
+//                if (drawing)
+//                    this.map = SetupDrawingMap('map-search');
+//                else
+//                    this.map = SetupMap('map-search');
+//                RedrawMap(this.map);
+//                var smap = this.map;
+//                $("#searchLocation").autocomplete({
+//                    delay: 100,
+//                    source: function (request, response) {
+//                        $.ajax({
+//                            url: "/share/getlocations/" + request.term,
+//                            type: "GET",
+//                            dataType: "json",
+//                            //data: { id: request.term },
+//                            success: function (data) {
+//                                response($.map(data, function (item) {
+//                                    return {
+//                                        label: item.Text, value: item.Text, id: item.Value
+//                                    };
+//                                }));
+//                            }
+//                        });
+//                    },
+//                    focus: function (event, ui) {
+//                        AddGeographyUnique(smap, JSON.parse(ui.item.id).spatial, false, ui.item.label, true, NewGUID());
+//                        RefocusMap(smap);
+//                        smap.setZoom(9);
+//                    },
+//                    response: function (event, ui) {
+//                        if (ui.content.length > 0) {
+//                            AddGeographyUnique(smap, JSON.parse(ui.content[0].id).spatial, false, ui.content[0].label, true, NewGUID());
+//                            RefocusMap(smap);
+//                            smap.setZoom(9);
+//                        }
+//                        else {
+//                            GetAddressLocation($("#searchLocation").val(), function (latlng) {
+//                                DeleteShapes(smap);
+//                                AddMarkerSingle(smap, latlng, false, $("#searchLocation").val(), NewGUID());
+//                                RefocusMap(smap);
+//                                smap.setZoom(15);
+//                            });
+//                        }
 
-                    }
-                });
-            }
-        }
-    });
+//                    }
+//                });
+//            }
+//        }
+//    });
 
-    Ember.Handlebars.helper('flow-modal', App.DateModal);
-}).call(this);
+//    Ember.Handlebars.helper('flow-modal', App.DateModal);
+//}).call(this);
 
 
 App.GraphRoute = Ember.Route.extend({
@@ -641,6 +641,36 @@ App.GraphRoute = Ember.Route.extend({
             var nodes = Enumerable.From(m.data.content).Select("$._data").ToArray(); // this is to clean up ember data
             m.data = { nodes: nodes, edges: [] };
             m.selected = '';
+        }
+        // Check if workflow name is defined, otherwise popup
+        if (m.workflow === undefined) {
+
+            function getName() {
+                var name = prompt('Name workflow', '')
+                if (name) {
+                    m.workflow = name;
+
+                    //var newWorkflow =  App.Workflow.store.createRecord('workflow', {name: name})
+                   // newWorkflow.save().then(function(){
+                    //    console.log('Workflow saved Succesfully!')
+                    //}, function(){
+                    //    console.log('Workflow saved Succesfully!')
+                    //    getName();
+                    //});
+                } else {
+                    getName();
+                }
+            }
+
+            //getName();
+        }
+    },
+    actions: {
+        toggleFirstModal: function () {
+            this.toggleProperty('controller.showFirstModal');
+        },
+        firstModalCancel: function () {
+            console.log('You pressed ESC to close the first modal');
         }
     }
 });
@@ -714,9 +744,10 @@ App.GraphController = Ember.ObjectController.extend({
             this.send('openModal', 'graphModalNewWorkflow', function () { alert('Test') })
 
         },
-        toggleRenamingWorkflow: function () {
-            if (this.get('renamingWorkflow')) {
+        toggleRenamingWorkflow: function (save) {
+            if (save) {
                 // Do saving of workflow here!!
+
                 alert('save workflow')
             }
             this.toggleProperty('renamingWorkflow');
@@ -756,23 +787,18 @@ App.VizEditorComponent = Ember.Component.extend({
 
                 data.id = NewGUID();
                 var newNode =  App.Node.store.createRecord('node', data)
-                // Get modals working...
+
+                // This creates a nice modal:
                 _this.sendAction('openModal', 'graphModalNewWorkflow', newNode, function(){
+                    // This is what happens on submit button!!!
                     newNode.save().then(function(){
-                        // debugger;
-                        // _this.get('data').addObject(newNode);
                         alert('Succesfully added!')
                     }, function(){
                         alert('Unsuccesful add!')
                     });
                 })
 
-                // var name = prompt("Please enter name for Workflow", "");
 
-                // if (name!=null) {
-                //     data.label = name;
-                //     callback(data);
-                // }
             },
             onDelete: function (data, callback) {
 
@@ -1017,12 +1043,6 @@ function saveData(data, callback) {
 
 }
 
-// function saveEmber()
-
-
-
-
-//App.ApplicationAdapter = DS.FixtureAdapter;
 
 DS.RESTAdapter.reopen({
     namespace: 'flow'
@@ -1030,22 +1050,14 @@ DS.RESTAdapter.reopen({
 
 
 App.EdgeSerializer = DS.RESTSerializer.extend({
-    // First, restructure the top-level so it's organized by type
-    // and the comments are listed under a post's `comments` key.
     extractArray: function (store, type, payload, id, requestType) {
-
-        return []; //makes sure it does nothing
-
-        //return this._super(store, type, payload, id, requestType);
+        return []; //makes sure it does nothing - edges are created as part of the node serializer
     }
 });
 
 
 App.NodeSerializer = DS.RESTSerializer.extend({
-    // First, restructure the top-level so it's organized by type
-    // and the comments are listed under a post's `comments` key.
     extractArray: function (store, type, payload, id, requestType) {
-
         var nodes = payload.Nodes;
         var edges = payload.Edges;
 
@@ -1080,42 +1092,13 @@ App.NodeSerializer = DS.RESTSerializer.extend({
         });
 
         payload = { "Nodes": nodes, "Edges": edges };
+
         if (!edges || (edges.length === 0 && nodes.length === 1)) {
             delete payload.Edges;
-            //payload.node = nodes[0];
-            //delete payload.Edges;
-            //delete payload.Nodes;
-            //$('#flowItem').html(nodes[0].content); //Really not cool
-        } else if (nodes.length === 0 && edges.length === 1) {
-            //payload.edge = edges[0];
         }
 
         return this._super(store, type, payload, id, requestType);
     }
-    //,
-    //extract: function (store, type, payload, id, requestType) {
-    //    if (payload.Nodes && payload.Nodes.length === 1) {
-    //        return this._super(store, type, { "node": payload.Nodes[0] }, payload.Nodes[0].id, requestType);
-    //    }
-    //    return this._super(store, type, payload, id, requestType);
-    //}
-
-    //,
-
-    //    normalizeHash: {
-    //        edges: function (hash) {
-    //            return hash;
-    //        }
-    // Next, normalize individual comments, which (after `extract`)
-    // are now located under `comments`
-    //comments: function(hash) {
-    //    hash.id = hash._id;
-    //    hash.title = hash.comment_title;
-    //    delete hash._id;
-    //    delete hash.comment_title;
-    //    return hash;
-    //}
-    //}
 });
 
 
@@ -1359,21 +1342,6 @@ Ember.Handlebars.helper('wikiurl', function (item, options) {
 
 });
 
-
-//Not working...
-// This is unecessary, links should be used for links
-// Ember.Handlebars.registerHelper('wikipedia-link-to', function (name, options) {
-//         var args = Array.prototype.slice.call(arguments, 1);
-//         //var resource = this.get(name);
-//         //if (!options.fn) {
-//         options.types = ['STRING'];
-//         options.contexts = [this];
-//         if (typeof item === 'string' && item.length > 0)
-//             args.unshift(encodeURIComponent(item));
-//         else
-//             args.unshift('');
-//         return Ember.Handlebars.helpers['link-to'].apply(this, args);
-// });
 
 Ember.TextField.reopen({
     attributeBindings: ['autofocus'],

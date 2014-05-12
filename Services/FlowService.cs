@@ -365,10 +365,35 @@ namespace EXPEDIT.Flow.Services {
         {
             wikiName = wikiName.ToSlug();
             var company = _users.DefaultContactCompanyID;
+            var contact = _users.ContactID;
+            Guid? creatorContact, creatorCompany;
+            _users.GetCreator(contact, company, out creatorContact, out creatorCompany);
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                return d.GraphData.Any(f=>f.GraphName == wikiName && f.VersionOwnerCompanyID==company);
+                if (!creatorCompany.HasValue)
+                    return d.GraphData.Any(f => f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null));
+                else
+                    return d.GraphData.Any(f=>f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany)); 
+
+            }
+        }
+
+        public bool GetDuplicateWorkflow(string workflowName)
+        {
+            workflowName = workflowName.ToSlug();
+            var company = _users.DefaultContactCompanyID;
+            var contact = _users.ContactID;
+            Guid? creatorContact, creatorCompany;
+            _users.GetCreator(contact, company, out creatorContact, out creatorCompany);
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var test = d.GraphDataGroups.Any(f => f.VersionOwnerCompanyID == creatorCompany);
+                if (!creatorCompany.HasValue)
+                    return d.GraphDataGroups.Any(f => f.GraphDataGroupName == workflowName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null));
+                else
+                    return d.GraphDataGroups.Any(f => f.GraphDataGroupName == workflowName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany));
             }
         }
 
