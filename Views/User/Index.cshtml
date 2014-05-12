@@ -178,17 +178,26 @@
               <span {{action 'showLocationModal'}} class="glyphicon icon-globe"></span>
 
 
-              {{! calendar }}
-@*              {{#bs-modal name="dateModal" fade=true footerButtonsBinding="dateModalBtn" title="Add a time filer!"}}
-                  <p>Date from</p>
-                  {{view App.DatePickerField  valueBinding='sched_date_from'}}
-                  <p>to</p>
-                  {{view App.DatePickerField  valueBinding='sched_date_to'}}
 
-                  <br><br>
-                  Current filter {{sched_date_from}} - {{sched_date_to}}
-              {{/bs-modal}}*@
-              <span {{action 'showDateModal'}} class="glyphicon icon-calendar"></span>
+            {{#eui-modal openBinding="dateModal" style="full"}}
+                <div style="padding: 50px; text-align: center;">
+                <p>
+                    Please choose a starting and ending date for the filter:
+                </p>
+                {{!eui-selectdate style="default" valueBinding='sched_date_from' placeholder="Starting date"}}
+                {{!eui-selectdate style="default" valueBinding='sched_date_to' placeholder="Ending date"}}
+
+                {{eui-calendar selectionBinding='sched_date_from' showNextMonth=false}}
+                    
+                {{eui-calendar selectionBinding='sched_date_to' showNextMonth=false}}
+
+                <br /><br />
+
+                {{eui-button label="Cancel" action="toggleDateModal" size='large'}}                    
+                {{eui-button label="Submit" action="addDate" style='primary' size='large'}}                    
+                </div>
+            {{/eui-modal}}
+              <span {{action 'toggleDateModal'}} class="glyphicon icon-calendar"></span>
             </div>
 
             {{! search }}
@@ -401,16 +410,4 @@
 
 </script>
 
-
-
-
-
-  <!-- Datepicker widget -->
-  <script type="text/x-handlebars" data-template-name="datepicker" >
-    {{! This article was used http://azrnd.wordpress.com/2013/04/03/bootstrap-datepicker-in-ember-js/ }}
-    <div class="input-append date datepicker" data-date-format="yyyy-mm-dd">
-      {{!log view.date_string}}
-        <input size="16" type="text" readonly><span class="add-on"><i class="icon-th"></i></span>
-    </div>
-  </script>
 

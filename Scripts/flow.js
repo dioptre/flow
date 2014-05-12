@@ -174,19 +174,15 @@ App.SearchController = Ember.ObjectController.extend({
     pageSizes: [5, 10, 20, 50, 100, 200],
     keywords: '',
     tags: [],
-    dateModalBtn: [
-      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
-      Ember.Object.create({ title: 'Insert Date Filter', type: 'success', clicked: "addDate" })
-    ],
-    locationModalBtn: [
-      Ember.Object.create({ title: 'Cancel', dismiss: 'modal' }),
-      Ember.Object.create({ title: 'Insert Location Filter', type: 'success', clicked: "addLocation" })
-    ],
     sched_date_from: "",
     sched_date_to: "",
     searchLocation: "",
     searchText: "",
+    dateModal: false,
     actions: {
+        toggleDateModal: function(){
+            this.toggleProperty('dateModal');
+        },
         next: function (i) {
             this.incrementProperty(i);
             //console.log('next Page for ', i)
@@ -208,13 +204,15 @@ App.SearchController = Ember.ObjectController.extend({
         },
         addDate: function () {
             var controller = this;
-            var date_data = this.get('sched_date_from') + ' - ' + this.get('sched_date_to');
+            var f = this.get('sched_date_from')
+            var t = this.get('sched_date_to');
+            var a = [f, t].map(function (i) { return moment.utc(i).format("DD/MM/YYYY") }).join(' - ');
             this.get('tags').addObject({
-                n: date_data,
-                d: date_data
+                n: a,
+                d: f + '-' + t
             });
-            console.log(this.get('sched_date_from'));
-            return Bootstrap.ModalManager.hide('dateModal');
+            
+            return this.toggleProperty('dateModal');
         },
         showLocationModal: function () {
             return Bootstrap.ModalManager.show('locationModal');
@@ -1141,22 +1139,6 @@ App.Edge = DS.Model.extend({
 App.Workflow = DS.Model.extend({
     name: DS.attr('string'),
     comment: DS.attr('string'),
-});
-
-
-
-App.DatePickerField = Em.View.extend({
-    templateName: 'datepicker',
-    didInsertElement: function () {
-        var onChangeDate, self;
-        self = this;
-        onChangeDate = function (ev) {
-            return self.set("value", moment.utc(ev.date).format("YYYY-MM-DD"));
-        };
-        return this.$('.datepicker').datepicker({
-            separator: "-"
-        }).on("changeDate", onChangeDate);
-    }
 });
 
 App.Wikipedia = DS.Model.extend({
