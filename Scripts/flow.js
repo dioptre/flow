@@ -644,46 +644,29 @@ App.GraphRoute = Ember.Route.extend({
             m.selected = '';
         }
         //AGTODO
-        m.workflowName = 'test wf name';
-        // Check if workflow name is defined, otherwise popup
-        if (m.workflow === undefined) {
-
-            function getName() {
-                var name = prompt('Name workflow', '')
-                if (name) {
-                    m.workflow = name;
-
-                    //var newWorkflow =  App.Workflow.store.createRecord('workflow', {name: name})
-                   // newWorkflow.save().then(function(){
-                    //    console.log('Workflow saved Succesfully!')
-                    //}, function(){
-                    //    console.log('Workflow saved Succesfully!')
-                    //    getName();
-                    //});
-                } else {
-                    getName();
-                }
-            }
-
-            //getName();
-        }
+        m.workflowName = null;
+        m.workflowID = null;
     },
     actions: {
-        toggleFirstModal: function (save) {
-            this.toggleProperty('controller.showFirstModal');
+        toggleWorkflowNameModal: function (save) {
+            this.toggleProperty('controller.workflowNameModal');
 
-            if (!this.get('controller.showFirstModal')) {
+            if (!this.get('controller.workflowNameModal')) {
                 // must have been just closed - save results
                 console.log('save it'); 
             }
             
             
-        },
-        firstModalCancel: function () {
-            return true;
-            this.toggleProperty('controller.showFirstModal');
-            console.log('You pressed ESC to close the first modal');
         }
+    },
+    setupController: function (controller, model) {
+        controller.set('model', model);
+        // Check if workflow name is defined, otherwise popup
+        Ember.run.scheduleOnce('afterRender', this, function () {
+            if (model.workflowName === null) {
+                controller.toggleProperty('workflowNameModal');
+            }
+        });
     }
 });
 
@@ -747,7 +730,7 @@ App.ModalController = Ember.ObjectController.extend({
 
 
 App.GraphController = Ember.ObjectController.extend({
-    renamingWorkflow: false,
+    workflowNameModal: false,
     validateWorkflowName: false,
     checkWorkflowName: function () {
         var _this = this;

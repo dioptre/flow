@@ -160,3 +160,7 @@ div.graph-manipulation-closeDiv {
     left: -10px;
     margin-left: 100% !important;
 }
+
+.hlink {
+    cursor:pointer;
+}

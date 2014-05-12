@@ -108,23 +108,21 @@
   <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
            <h1>{{model.label}}</h1>
-            {{#eui-modal openBinding="showFirstModal" cancel="firstModalCancel" style="full"}}
+            {{#eui-modal openBinding="workflowNameModal" style="full"}}
                 <div style="padding: 50px; text-align: center;">
                 <p>
                     Please enter a workflow name:
                 </p>
                 {{eui-input valueBinding="model.workflowName" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
-                {{eui-button label="Submit" size="small" action="toggleFirstModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}                    
+                {{eui-button label="Submit" size="small" action="toggleWorkflowNameModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}                    
                 </div>
             {{/eui-modal}}
                   
 
-            <h3 {{action "toggleFirstModal" class=':workflowRenamer'}}>{{model.workflowName}}</h3>
-            <a {{action "toggleFirstModal"}}>Edit Name</a>
+            <h3 {{action "toggleWorkflowNameModal"}} class="hlink">{{model.workflowName}}</h3>
+            @*<a {{action "toggleWorkflowNameModal"}}  class="hlink">Edit Name</a>*@
             <br>
 
-           <button {{action 'openModal' 'graphModalNewWorkflow'}}>MODAL TEST</button>
-           <button {{action 'customModalTrigger'}}>Custo Modal Trigger</button>
            <div class="container-fluid" style="margin-top:12px;">
            <div class="row-fluid">
               <div class="span6">
