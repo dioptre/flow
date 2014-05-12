@@ -643,6 +643,8 @@ App.GraphRoute = Ember.Route.extend({
             m.data = { nodes: nodes, edges: [] };
             m.selected = '';
         }
+        //AGTODO
+        m.workflowName = 'test wf name';
         // Check if workflow name is defined, otherwise popup
         if (m.workflow === undefined) {
 
@@ -667,10 +669,19 @@ App.GraphRoute = Ember.Route.extend({
         }
     },
     actions: {
-        toggleFirstModal: function () {
+        toggleFirstModal: function (save) {
             this.toggleProperty('controller.showFirstModal');
+
+            if (!this.get('controller.showFirstModal')) {
+                // must have been just closed - save results
+                console.log('save it'); 
+            }
+            
+            
         },
         firstModalCancel: function () {
+            return true;
+            this.toggleProperty('controller.showFirstModal');
             console.log('You pressed ESC to close the first modal');
         }
     }
@@ -737,6 +748,29 @@ App.ModalController = Ember.ObjectController.extend({
 
 App.GraphController = Ember.ObjectController.extend({
     renamingWorkflow: false,
+    validateWorkflowName: false,
+    checkWorkflowName: function () {
+        var _this = this;
+        if (!_this.get('workflowName') || typeof _this.get('workflowName') !== 'string' || _this.get('workflowName').trim().length < 1) {
+            _this.set('validateWorkflowName', 'Name required.');
+            return;
+        }
+        _this.set('loadingWorkflowName', true);
+        return new Ember.RSVP.Promise(function (resolve, reject) {                     
+            jQuery.getJSON('/Flow/User/WorkflowDuplicate/' + encodeURIComponent(_this.get('workflowName').trim())
+              ).then(function (data) {
+                  _this.set('loadingWorkflowName', false);                  
+                 Ember.run(null, resolve, data);
+              }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+                  Ember.run(null, reject, jqXHR);
+              });
+        }).then(function (value) {
+            _this.set('validateWorkflowName', value ? 'Name already in use.' : false);
+        });
+               
+    }.observes('model.workflowName'),
+    loadingWorkflowName: false,
     changeSelected: function () {
         this.transitionToRoute('graph', this.get('model.selected'));
     }.observes('model.selected'),

@@ -111,26 +111,18 @@
             {{#eui-modal openBinding="showFirstModal" cancel="firstModalCancel" style="full"}}
                 <div style="padding: 50px; text-align: center;">
                 <p>
-                    You may also press <em>esc</em> to close this modal.
+                    Please enter a workflow name:
                 </p>
-
-                {{eui-button label="Close Modal" size="small" action="toggleFirstModal"}}
+                {{eui-input valueBinding="model.workflowName" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+                {{eui-button label="Submit" size="small" action="toggleFirstModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}                    
                 </div>
             {{/eui-modal}}
+                  
 
-            {{eui-button label='Open "default" Style Modal' action="toggleFirstModal"}}
-          
-            {{#if renamingWorkflow}}
-                {{view Ember.TextField valueBinding="model.workflow" autofocus="autofocus"}}
-                <button {{action "toggleRenamingWorkflow" true}}>Save</button>
-                <button {{action "toggleRenamingWorkflow"}}>Cancel</button>
-                <br>
+            <h3 {{action "toggleFirstModal" class=':workflowRenamer'}}>{{model.workflowName}}</h3>
+            <a {{action "toggleFirstModal"}}>Edit Name</a>
+            <br>
 
-            {{else}}
-                <h3 {{action "toggleRenamingWorkflow" class=':workflowRenamer'}}>{{model.workflow}}</h3>
-                <a {{action "toggleRenamingWorkflow"}}>Edit Name</a>
-                <br>
-            {{/if}}
            <button {{action 'openModal' 'graphModalNewWorkflow'}}>MODAL TEST</button>
            <button {{action 'customModalTrigger'}}>Custo Modal Trigger</button>
            <div class="container-fluid" style="margin-top:12px;">
