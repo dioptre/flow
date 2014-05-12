@@ -137,22 +137,18 @@ namespace EXPEDIT.Flow.Controllers {
 
             string group = Request.Params["groupid"];
             Guid? gid = null;
-            if (!string.IsNullOrWhiteSpace(group) && group != "undefined")
-            {
-                Guid tgid;
-                if (Guid.TryParse(group, out tgid))
-                    gid = tgid;
-            }
-
+            Guid tgid;
+            if (Guid.TryParse(group, out tgid))
+                gid = tgid;
             if (string.IsNullOrWhiteSpace(id))
-                return new JsonHelper.JsonNetResult(_Flow.GetNode(null, null, gid, false), JsonRequestBehavior.AllowGet);
+                return new JsonHelper.JsonNetResult(_Flow.GetNode(null, null, gid, false, true), JsonRequestBehavior.AllowGet);
             Guid temp;
             string name = null;
             FlowGroupViewModel result = null;
             if (!Guid.TryParse(id, out temp))
-                result = _Flow.GetNode(name, null, gid, true);
+                result = _Flow.GetNode(name, null, gid, true, false);
             else
-                result = _Flow.GetNode(null, temp, gid, true);
+                result = _Flow.GetNode(null, temp, gid, true, false);
             if (result == null)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
             return new JsonHelper.JsonNetResult(result, JsonRequestBehavior.AllowGet);
@@ -303,7 +299,6 @@ namespace EXPEDIT.Flow.Controllers {
         [Themed(true)]
         public ActionResult Test()
         {
-            return new JsonHelper.JsonNetResult(_Flow.CheckPayment(), JsonRequestBehavior.AllowGet);
             return View();
         }
 

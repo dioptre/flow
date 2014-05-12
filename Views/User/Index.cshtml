@@ -63,11 +63,20 @@
     </div>
 </script>
 
-<script type="text/x-handlebars" data-template-name="graphModalNewWorkflow">
-    {{#modal-dialog action="close" cancel='cancel' submit='submit'}}
-      testmodal
 
+
+<script type="text/x-handlebars" data-template-name="graphModalNewWorkflow">
+    {{#modal-dialog action="close" cancel='cancel' submit='submit' model='controller.model'}}
+
+
+      Sample text inside modal:
       <button {{action "close"}}>Done</button>
+
+      {{model.label}}
+
+      {{view Ember.TextField valueBinding="model.label"}}
+
+      End of sample text.
     {{/modal-dialog}}
   </script>
 
@@ -97,6 +106,14 @@
   <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
            <h1>{{model.label}}</h1>
+
+          {{#if renamingWorkflow}}
+                {{View Ember.TextField valueBinding="model.workflow"}}
+                <button {{action "toggleRenamingWorkflow"}}>Save</button>
+                
+          {{else}}
+                <h3 {{action "toggleRenamingWorkflow"}}>{{model.workflow}}</h3>
+          {{/if}}
            <button {{action 'openModal' 'graphModalNewWorkflow'}}>MODAL TEST</button>
            <button {{action 'customModalTrigger'}}>Custo Modal Trigger</button>
            <div class="container-fluid" style="margin-top:12px;">

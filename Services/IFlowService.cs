@@ -60,6 +60,9 @@ namespace EXPEDIT.Flow.Services
          [OperationContract]
          ContactViewModel GetMyInfo();
 
+         [OperationContract]
+         bool GetDuplicateWorkflow(string workflowName);
+
 
     }
 }

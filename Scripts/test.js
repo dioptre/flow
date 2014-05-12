@@ -33,6 +33,7 @@ App.ApplicationRoute = Ember.Route.extend({
              // Check if param 1 is a function
             if (typeof param1 === 'function') {
                 this.controllerFor(viewName).set('callbackData', param1);
+                
             } else if (param1 !== null) {
                 // Must be data if not function
                 this.controllerFor(viewName).set('model', param1)
@@ -76,7 +77,6 @@ App.ApplicationController = Ember.Controller.extend({
 
 // A tiny bit more modal code
 App.ModalDialogComponent = Ember.Component.extend({
-    model: null,
     title: 'Modal Title',
     btnClose: "Close",
     btnSubmit: 'Submit',
@@ -98,6 +98,7 @@ App.Modal = Ember.Mixin.create({
             return this.send('closeModal');
         },
         submit: function () {
+            debugger;
             console.log(this.get('model.content'));
             if (this.callbackData) {
                 this.callbackData(this.get('model'));
@@ -319,10 +320,6 @@ App.ApplicationAdapter = DS.RESTAdapter.extend({
     namespace: 'flow',
     headers: {
         __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-    },
-    generateIdForRecord: function (store, record) {
-        var uuid = NewGUID();
-        return uuid;
     }
 });
 
@@ -704,7 +701,6 @@ App.ModalController = Ember.ObjectController.extend({
 
 
 App.GraphController = Ember.ObjectController.extend({
-    renamingWorkflow: false,
     changeSelected: function () {
         this.transitionToRoute('graph', this.get('model.selected'));
     }.observes('model.selected'),
@@ -712,14 +708,6 @@ App.GraphController = Ember.ObjectController.extend({
         customModalTrigger: function(){
 
             this.send('openModal', 'graphModalNewWorkflow', function () { alert('Test') })
-
-        },
-        toggleRenamingWorkflow: function () {
-            if (this.get('renamingWorkflow')) {
-                // Do saving of workflow here!!
-                alert('save workflow')
-            }
-            this.toggleProperty('renamingWorkflow');
 
         }
     }
@@ -754,18 +742,8 @@ App.VizEditorComponent = Ember.Component.extend({
             onAdd: function (data, callback) {
 
 
-                data.id = NewGUID();
-                var newNode =  App.Node.store.createRecord('node', data)
                 // Get modals working...
-                _this.sendAction('openModal', 'graphModalNewWorkflow', newNode, function(){
-                    newNode.save().then(function(){
-                        // debugger;
-                        // _this.get('data').addObject(newNode);
-                        alert('Succesfully added!')
-                    }, function(){
-                        alert('Unsuccesful add!')
-                    });
-                })
+                _this.sendAction('openModal', 'graphModalNewWorkflow', data, callback)
 
                 // var name = prompt("Please enter name for Workflow", "");
 
@@ -1131,7 +1109,6 @@ App.Edge = DS.Model.extend({
     to: DS.attr(),
     groupid: DS.attr(),
     sequence: DS.attr(),
-    workflows: DS.hasMany('workflow', { async: true })
 });
 
 App.Workflow = DS.Model.extend({
