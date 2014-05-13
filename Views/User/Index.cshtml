@@ -70,8 +70,7 @@
       <div class="container-fluid" style="margin-top:12px;">
            <h1>{{model.label}}</h1>
            {{#if model.node.workflows}}
-                {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.label" value=model.workflowID disabled='graphDataLte2'}}
-                @*<h3 {{action "toggleWorkflowNameModal"}} class="hlink">{{model.workflowName}}</h3>*@
+                {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.label" value=workflowID disabled='graphDataLte2'}}
                 <a {{action "toggleWorkflowNameModal"}}  class="hlink">Edit Name</a>
             {{/if}}
             {{#eui-modal openBinding="workflowNameModal" style="full"}}
@@ -79,15 +78,15 @@
                 <p>
                     Please enter a workflow name:
                 </p>
-                {{eui-input valueBinding="model.workflowName" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+                {{eui-input valueBinding="workflowName" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
                 <p>
                     Please enter a process name:
                 </p>
-                {{eui-input valueBinding="model.workflowName" placeholder='Enter a process name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+                {{eui-input valueBinding="workflowName" placeholder='Enter a process name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
                 <p>
                     Please enter process detail:
                 </p>
-                {{eui-input valueBinding="model.workflowName" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+                {{eui-input valueBinding="workflowName" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
                 {{eui-button label="Submit" size="small" action="toggleWorkflowNameModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}                    
                 </div>
             {{/eui-modal}}

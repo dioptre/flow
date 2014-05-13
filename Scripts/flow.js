@@ -704,7 +704,7 @@ App.GraphController = Ember.ObjectController.extend({
     editing: true,
     workflowName: null,
     workflowID: null,
-    workflowNameModal: true,
+    workflowNameModal: false,
     validateWorkflowName: false,
     graphDataLte2: Ember.computed.lte('graphData.length', 2),
     graphData : null,
@@ -750,12 +750,12 @@ App.GraphController = Ember.ObjectController.extend({
                     if (typeof newwf !== 'undefined' && newwf) {
                         _this.set("workflowID", newwf.id);
                         _this.set("workflowName", newwf.label);
-                        _this.set('workflowNameModal', false);
                     }
                     else {
                         _this.set("workflowID", null);
                         _this.set("workflowName", null);
-                        _this.set('workflowNameModal', true);
+                        //Ember.run.scheduleOnce('actions', _this, _this.actions.toggleWorkflowModal);                                
+                        _this.send('toggleWorkflowModal');
                     }
                 }
                 //Enumerable.From(data.get('workflows')).Where("f=>f.get('
@@ -787,25 +787,14 @@ App.GraphController = Ember.ObjectController.extend({
             _this.set('validateWorkflowName', value ? 'Name already in use.' : false);
         });
 
-    }.observes('model.workflowName'),
+    }.observes('workflowName'),
     loadingWorkflowName: false,
     changeSelected: function () {
         this.transitionToRoute('graph', this.get('model.selected'));
     }.observes('model.selected'),
     actions: {
-        customModalTrigger: function(){
-
-            this.send('openModal', 'graphModalNewWorkflow', function () { alert('Test') })
-
-        },
-        toggleRenamingWorkflow: function (save) {
-            if (save) {
-                // Do saving of workflow here!!
-
-                alert('save workflow')
-            }
-            this.toggleProperty('renamingWorkflow');
-
+        toggleWorkflowModal: function () {
+            this.toggleProperty('workflowNameModal');
         }
     }
 });
