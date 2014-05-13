@@ -23,12 +23,15 @@
     }
 </style>
 <script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
+@*<script src="~/Modules/EXPEDIT.Share/Scripts/nprogress.js"></script>*@
 <script type="text/javascript">
     var mapHelper = '@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")';
 </script>
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui.css">
 <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui-default-theme.css">
+@*<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/nprogress.css">*@
+
 
 
 <!-- The ember app gets injected here -->
@@ -37,13 +40,12 @@
 
 <script type="text/x-handlebars" id="application">
     {{outlet}}
-    {{outlet modal}}
 </script>
 
 
 
 
-<script type="text/x-handlebars" id="components/modal-dialog">
+@*<script type="text/x-handlebars" id="components/modal-dialog">
     {{! Pretty standard bootstrap modal code }}
     <div class='modal-backdrop' {{action "close"}}></div>
     <div class="modal fade in" id="myModal" tabindex="-1" role="dialog">
@@ -63,7 +65,7 @@
         </div>
       </div>
     </div>
-</script>
+</script>*@
 
 
 
@@ -267,7 +269,7 @@
 
 
 <script type="text/x-handlebars" data-template-name="graphResults">
-  <h2>Processes<small>&nbsp;&nbsp;<div {{action 'newProcess'}}><i class="glyphicon icon-plus-sign"></i>&nbsp;</div></small></h2>
+  <h2>Processes<small>&nbsp;&nbsp;<a {{action 'newProcess'}}><i class="glyphicon icon-plus-sign"></i>&nbsp;</a></small></h2>
 
   {{#if loading}}
 

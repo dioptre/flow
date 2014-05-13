@@ -12,6 +12,38 @@ App.Router.map(function () {
     this.route('search');
 });
 
+// App.LoadingRoute = Ember.Route.extend({
+//   activate: function() {
+//     this._super();
+//     return Pace.restart();
+//   },
+//   deactivate: function() {
+//     this._super();
+//     return Pace.stop();
+//   }
+// });
+
+
+// App.ApplicationRoute = Ember.Route.extend({
+//   actions: {
+//     loading: function() {
+//       NProgress.start();
+//       this.router.one('didTransition', function() {
+//         return setTimeout((function() {
+//           return NProgress.done();
+//         }), 50);
+//       });
+//       return true;
+//     },
+//     error: function() {
+//       return setTimeout((function() {
+//         return NProgress.done();
+//       }), 50);
+//     }
+//   }
+// });
+
+
 
 App.ApplicationRoute = Ember.Route.extend({
       actions: {
@@ -213,7 +245,7 @@ App.SearchController = Ember.ObjectController.extend({
                 n: a,
                 d: f + '-' + t
             });
-            
+
             return this.toggleProperty('dateModal');
         },
         showLocationModal: function () {
@@ -664,10 +696,10 @@ App.GraphRoute = Ember.Route.extend({
 
             if (!this.get('controller.workflowNameModal')) {
                 // must have been just closed - save results
-                console.log('save it'); 
+                console.log('save it');
             }
-            
-            
+
+
         }
     },
     setupController: function (controller, model) {
@@ -752,10 +784,10 @@ App.GraphController = Ember.ObjectController.extend({
             return;
         }
         _this.set('loadingWorkflowName', true);
-        return new Ember.RSVP.Promise(function (resolve, reject) {                     
+        return new Ember.RSVP.Promise(function (resolve, reject) {
             jQuery.getJSON('/Flow/User/WorkflowDuplicate/' + encodeURIComponent(_this.get('workflowName').trim())
               ).then(function (data) {
-                  _this.set('loadingWorkflowName', false);                  
+                  _this.set('loadingWorkflowName', false);
                  Ember.run(null, resolve, data);
               }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -764,7 +796,7 @@ App.GraphController = Ember.ObjectController.extend({
         }).then(function (value) {
             _this.set('validateWorkflowName', value ? 'Name already in use.' : false);
         });
-               
+
     }.observes('model.workflowName'),
     loadingWorkflowName: false,
     changeSelected: function () {
@@ -1108,7 +1140,7 @@ App.NodeSerializer = DS.RESTSerializer.extend({
             if (!node.workflows)
                 node.workflows = [];
         });
-        
+
         if (workflows) {
             workflows.forEach(function (workflow) {
                 if (edges) {
@@ -1156,13 +1188,28 @@ App.Node = DS.Model.extend({
     label: DS.attr('string'),
     content: DS.attr('string'),
     edges: DS.hasMany('edge', { async: true }),
-    workflows: DS.hasMany('workflow', { async: true })
+    workflows: DS.hasMany('workflow', { async: true }),
+    shape: function() {
+        return 'ellipse'; // can also us circle
+    }.property(),
+    group: function() {
+        return 'x'; // any string, will be grouped
+    }
 });
 
 
 App.Edge = DS.Model.extend({
     from: DS.attr(),
     to: DS.attr(),
+    style: function(){
+        return 'arrow'; // Type available ['arrow','dash-line','arrow-center']
+    }.property(),
+    width: function(){
+        return 1;
+    }.property(),
+    color: function(){
+        return 'gray';
+    }.property(),
     GroupID: DS.attr(),
     Related: DS.attr('date'),
     RelationTypeID: DS.attr(),
