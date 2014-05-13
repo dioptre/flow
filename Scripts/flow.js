@@ -754,8 +754,7 @@ App.GraphController = Ember.ObjectController.extend({
                     else {
                         _this.set("workflowID", null);
                         _this.set("workflowName", null);
-                        Ember.run.scheduleOnce('afterRender', _this.get('model'), 'send', 'toggleWorkflowModal');                                
-                        //_this.send('toggleWorkflowModal');
+                        Ember.run.scheduleOnce('afterRender', _this, 'send', 'toggleWorkflowModal');                                
                     }
                 }
                 //Enumerable.From(data.get('workflows')).Where("f=>f.get('
