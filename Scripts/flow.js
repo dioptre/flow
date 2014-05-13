@@ -852,6 +852,7 @@ function recurseGraphData(id, array, _this, depth, depthMax, nodeMax, store) {
 
 
 App.VizEditorComponent = Ember.Component.extend({
+    needs: ['graph'],
     editing: false,
     toggleEditing: function () {
         if (this.graph !== null) {
@@ -906,7 +907,7 @@ App.VizEditorComponent = Ember.Component.extend({
             onConnect: function (data, callback) {
                 function saveLink() {
                     data.id = NewGUID();
-                    data.GroupID = NewGUID();
+                    data.GroupID = _this.get('workflowID');
                     App.Node.store.createRecord('edge', data).save().then(function(){
                         callback(data);
                     })

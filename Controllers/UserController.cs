@@ -54,7 +54,7 @@ namespace EXPEDIT.Flow.Controllers {
 
         public Localizer T { get; set; }
 
-        [Themed(true)]
+        [Themed(false)]
         public ActionResult Index()
         {
             return View();
