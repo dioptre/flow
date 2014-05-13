@@ -129,6 +129,9 @@
                     {{safehtml model.content}}
               </div>
               <div class="span6">
+                  {{#if model.node.workflows}}
+                    {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.label" value=model.workflowID }}
+                  {{/if}}
                   {{viz-editor data=data selected=selected editing=editing openModal='openModal'}}
               </div>
            </div>
@@ -184,12 +187,12 @@
                 <p>
                     Please choose a starting and ending date for the filter:
                 </p>
-                {{!eui-selectdate style="default" valueBinding='sched_date_from' placeholder="Starting date"}}
-                {{!eui-selectdate style="default" valueBinding='sched_date_to' placeholder="Ending date"}}
+                {{eui-selectdate style="default" valueBinding='sched_date_from' placeholder="Starting date"}}
+                {{eui-selectdate style="default" valueBinding='sched_date_to' placeholder="Ending date" showNextMonth=false}}
 
-                {{eui-calendar selectionBinding='sched_date_from' showNextMonth=false}}
+                {{!eui-calendar selectionBinding='sched_date_from' showNextMonth=false}}
                     
-                {{eui-calendar selectionBinding='sched_date_to' showNextMonth=false}}
+                {{!eui-calendar selectionBinding='sched_date_to' showNextMonth=false}}
 
                 <br /><br />
 
@@ -209,13 +212,13 @@
             Pagesize:
             {{view Ember.Select content=pageSizes value=pageSize }}
 
-            Workflows:
+            Processes:
             {{view Ember.Checkbox checkedBinding='graph'}}
 
             Files:
             {{view Ember.Checkbox checkedBinding='file'}}
 
-            Locations:
+            Process Locations:
             {{view Ember.Checkbox checkedBinding='map'}}
             <br />
              {{#if keywords}}
@@ -264,7 +267,7 @@
 
 
 <script type="text/x-handlebars" data-template-name="graphResults">
-  <h2>Workflows</h2>
+  <h2>Processes<small>&nbsp;&nbsp;<div {{action 'newProcess'}}><i class="glyphicon icon-plus-sign"></i>&nbsp;</div></small></h2>
 
   {{#if loading}}
 
@@ -380,7 +383,7 @@
 
 
 <script type="text/x-handlebars" data-template-name="mapResults">
-  <h2>Locations</h2>
+  <h2>Process Locations</h2>
 
   {{#if loading}}
 

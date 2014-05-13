@@ -7,8 +7,7 @@ App = Ember.Application.create({
 });
 
 App.Router.map(function () {
-    this.route('graph', {path: 'graph'});
-    this.route('graph', {path: 'graph/:id'});
+    this.route('graph', {path: 'process/:id'});
     this.route('wikipedia', { path: "/wikipedia/:id" });
     this.route('search');
 });
@@ -190,6 +189,9 @@ App.SearchController = Ember.ObjectController.extend({
         prev: function (i) {
             this.decrementProperty(i);
             //console.log('previous Page for ', i)
+        },
+        newProcess: function () {
+            this.transitionToRoute('graph', NewGUID());
         },
         search: function () {
             this.loadAll();
@@ -625,25 +627,36 @@ App.GraphRoute = Ember.Route.extend({
     },
     afterModel: function (m) {
         var sel = m.selected;
+        if (!m.workflowName)
+            m.workflowName = null;
+        if (!m.workflowID)
+            m.workflowID = null;
         if (sel) { // this means it's probably a wiki article
             var array = { nodes: [], edges: [] };
-            var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
+            var depthMax = 15; // currently depthMax is limited to 1 unless the data is already in ember store
             var nodeMax = -1;
             var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
             console.log(data);
             // var model = this.get('model')
             m.data = data;
             //AGTODO
-            m.content = this.store.getById('node', sel).get('content');
-            m.label = this.store.getById('node', sel).get('label');
+            m.node = this.store.getById('node', sel);
+            if (m.node) {
+                m.content = m.node.get('content');
+                m.label = m.node.get('label');
+                m.node.get('workflows').then(function (workflows) {
+                    if (workflows.get('length') > 0) {
+                        workflows.forEach(function (workflow) {
+                            //AGTODO
+                        });
+                    }
+                });
+            }
         } else {
             var nodes = Enumerable.From(m.data.content).Select("$._data").ToArray(); // this is to clean up ember data
             m.data = { nodes: nodes, edges: [] };
             m.selected = '';
         }
-        //AGTODO
-        m.workflowName = null;
-        m.workflowID = null;
     },
     actions: {
         toggleWorkflowNameModal: function (save) {
@@ -680,6 +693,8 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
         var node = _this.store.getById(store, id);
         //debugger;
 
+        if (!node)
+            return array;
         //console.log('this should happen twice')
 
         array.nodes.push({
@@ -830,7 +845,7 @@ App.VizEditorComponent = Ember.Component.extend({
             onConnect: function (data, callback) {
                 function saveLink() {
                     data.id = NewGUID();
-                    data.groupid = NewGUID();
+                    data.GroupID = NewGUID();
                     App.Node.store.createRecord('edge', data).save().then(function(){
                         callback(data);
                     })
@@ -1079,26 +1094,41 @@ App.NodeSerializer = DS.RESTSerializer.extend({
         //return [];
         var nodes = payload.Nodes;
         var edges = payload.Edges;
+        var workflows = payload.Workflows;
 
         // If there are no nodes, just return null for everything
         if (nodes === null) {
-            payload = { "Nodes": [], "Edges": []};
+            payload = { "Nodes": [], "Edges": [], "Workflows": [], "Files": [], "Locations": [], "Contexts":[], "WorkTypes" : []};
             return this._super(store, type, payload, id, requestType);
         }
 
         nodes.forEach(function (node) {
             if (!node.edges)
                 node.edges = [];
+            if (!node.workflows)
+                node.workflows = [];
         });
-
-        if (edges) {
-            edges.forEach(function (edge) {
-                nodes.forEach(function (node) {
-                    if (edge.from == node.id) {
-                        return false;
-                    }
-                });
+        
+        if (workflows) {
+            workflows.forEach(function (workflow) {
+                if (edges) {
+                    edges.forEach(function (edge) {
+                        nodes.forEach(function (node) {
+                            if (edge.from == node.id) {
+                                node.edges.push(edge.id);
+                                if (edge.GroupID == workflow.id && !Enumerable.From(node.workflows).Any("f=>f==\'" + edge.GroupID + "\'"))
+                                    node.workflows.push(workflow.id);
+                            }
+                        });
+                    });
+                }
+                else {
+                    edges = [];
+                }
             });
+        }
+        else {
+            workflows = [];
         }
 
         nodes = nodes.map(function (a) {
@@ -1106,15 +1136,16 @@ App.NodeSerializer = DS.RESTSerializer.extend({
                 label: a.label,
                 content: a.content,
                 id: a.id,
-                edges: a.edges
+                edges: a.edges,
+                workflows: a.workflows
             };
         });
 
-        payload = { "Nodes": nodes, "Edges": edges };
+        payload = { "Nodes": nodes, "Edges": edges, "Workflows": workflows };
 
-        if (!edges || (edges.length === 0 && nodes.length === 1)) {
-            delete payload.Edges;
-        }
+        //if (!edges || (edges.length === 0 && nodes.length === 1)) {
+        //    delete payload.Edges;
+        //}
 
         return this._super(store, type, payload, id, requestType);
     }
@@ -1124,20 +1155,30 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 App.Node = DS.Model.extend({
     label: DS.attr('string'),
     content: DS.attr('string'),
-    edges: DS.hasMany('edge', { async: true })
+    edges: DS.hasMany('edge', { async: true }),
+    workflows: DS.hasMany('workflow', { async: true })
 });
 
 
 App.Edge = DS.Model.extend({
     from: DS.attr(),
     to: DS.attr(),
-    groupid: DS.attr(),
-    sequence: DS.attr(),
-    workflows: DS.hasMany('workflow', { async: true })
+    GroupID: DS.attr(),
+    Related: DS.attr('date'),
+    RelationTypeID: DS.attr(),
+    Weight: DS.attr(),
+    Sequence: DS.attr(),
 });
 
 App.Workflow = DS.Model.extend({
     name: DS.attr('string'),
+    label: function () {
+        var temp = this.get('name');
+        if (temp)
+            return temp.replace('_', ' ');
+        else
+            return null;
+    }.property(),
     comment: DS.attr('string'),
 });
 
