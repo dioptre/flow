@@ -770,9 +770,10 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
 App.GraphController = Ember.ObjectController.extend({
     workflowNameModal: false,
     validateWorkflowName: false,
-    graphData: function () {
+    graphData : null,
+    graphDataTrigger : function () {
         // get data bitch equiv
-        
+        var _this = this;
         var array = { nodes: [], edges: [] };
         var depthMax = 15; // currently depthMax is limited to 1 unless the data is already in ember store
         var nodeMax = -1;
@@ -789,25 +790,21 @@ App.GraphController = Ember.ObjectController.extend({
         var addEdge = function (edges) {
             if (edges.get('length') > 0) {
                 edges.forEach(function (edge) {
-                    prime.edges.push({ id: edge.get('id'), from: edge.get('from'), to: edge.get('to') });
+                    prime.edges.push({ id: edge.get('id'), from: edge.get('from'), to: edge.get('to'), color: edge.get('color'), width: edge.get('width'), style: edge.get('style') });
                 });
             }
         };
         Ember.RSVP.map(promises, addEdge).then(
             function () {
-                debugger;
-                return prime;
+                //return prime;
+                //var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
+                //console.log(data);
+                // var model = this.get('model')
+                //m.data = data;
+                //return data;
+                _this.set('graphData', prime);
             });
-        return array;
-        debugger;
-        //return prime;
-        //var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
-        //console.log(data);
-        // var model = this.get('model')
-        //m.data = data;
-        //return data;
-
-    }.property('model', 'selected', 'node.@each.workflows'),
+    }.observes('model', 'selected', 'node.@each.workflows'),
     checkWorkflowName: function () {
         var _this = this;
         if (!_this.get('workflowName') || typeof _this.get('workflowName') !== 'string' || _this.get('workflowName').trim().length < 1) {
