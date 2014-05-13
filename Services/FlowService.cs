@@ -577,7 +577,7 @@ namespace EXPEDIT.Flow.Services {
                     var qG = cmd.CreateParameter();
                     qG.ParameterName = "@gid";
                     qG.DbType = DbType.Guid;
-                    qG.Value = nid;
+                    qG.Value = gid;
                     cmd.Parameters.Add(qG);
 
                     var qD = cmd.CreateParameter();

@@ -76,6 +76,10 @@
   <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
            <h1>{{model.label}}</h1>
+           {{#if model.node.workflows}}
+                {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.label" value=model.workflowID disabled='graphDataLte2'}}
+                @*<h3 {{action "toggleWorkflowNameModal"}} class="hlink">{{model.workflowName}}</h3>*@
+            {{/if}}
             {{#eui-modal openBinding="workflowNameModal" style="full"}}
                 <div style="padding: 50px; text-align: center;">
                 <p>
@@ -87,7 +91,7 @@
             {{/eui-modal}}
                   
 
-            <h3 {{action "toggleWorkflowNameModal"}} class="hlink">{{model.workflowName}}</h3>
+            
             @*<a {{action "toggleWorkflowNameModal"}}  class="hlink">Edit Name</a>*@
             <br>
 
@@ -97,9 +101,6 @@
                     {{safehtml model.content}}
               </div>
               <div class="span6">
-                  {{#if model.node.workflows}}
-                    {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.label" value=model.workflowID }}
-                  {{/if}}
                   {{viz-editor data=graphData selected=selected editing=editing openModal='openModal'}}
               </div>
            </div>

@@ -675,13 +675,6 @@ App.GraphRoute = Ember.Route.extend({
             if (m.node) {
                 m.content = m.node.get('content');
                 m.label = m.node.get('label');
-                //m.node.get('workflows').then(function (workflows) {
-                //    if (workflows.get('length') > 0) {
-                //        workflows.forEach(function (workflow) {
-                //            //AGTODO
-                //        });
-                //    }
-                //});
             }
         } else {
             var nodes = Enumerable.From(m.data.content).Select("$._data").ToArray(); // this is to clean up ember data
@@ -695,7 +688,7 @@ App.GraphRoute = Ember.Route.extend({
 
             if (!this.get('controller.workflowNameModal')) {
                 // must have been just closed - save results
-                console.log('save it');
+                //console.log('save it');
             }
 
 
@@ -736,8 +729,6 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
 
         //var tid = node.get('id');
 
-        var edges = Enumerable.From(node.get('nodes').content).OrderBy("$.get('sequence')").ToArray();
-
         var edges = Enumerable.From(node.get('edges').content).OrderBy("$.get('sequence')").ToArray();
 
 
@@ -768,8 +759,10 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
 
 
 App.GraphController = Ember.ObjectController.extend({
+    editing: true,
     workflowNameModal: false,
     validateWorkflowName: false,
+    graphDataLte2: Ember.computed.lte('graphData.length', 2),
     graphData : null,
     graphDataTrigger : function () {
         // get data bitch equiv
@@ -779,13 +772,17 @@ App.GraphController = Ember.ObjectController.extend({
         var nodeMax = -1;
         var prime = {};
         prime.edges = [];
-        var promises = [];
-        prime.nodes = Enumerable.From(this.get('model.data').content).Select(
+        prime.workflows = [];
+        var edgePromises = [];
+        var workflowPromises = [];
+        var data = this.get('model.data').content;
+        prime.nodes = Enumerable.From(data).Select(
             function (f) {
-                    promises.push(f.get('edges'));
-                    return {
-                        id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group')
-                    }
+                edgePromises.push(f.get('edges'));
+                workflowPromises.push(f.get('workflows'));
+                return {
+                    id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group')
+                }
             }).ToArray();
         var addEdge = function (edges) {
             if (edges.get('length') > 0) {
@@ -794,9 +791,21 @@ App.GraphController = Ember.ObjectController.extend({
                 });
             }
         };
-        Ember.RSVP.map(promises, addEdge).then(
-            function () {
-                //return prime;
+        var getWorkflow = function (workflows) {
+            if (workflows.get('length') > 0) {
+                workflows.forEach(function (workflow) {
+                    prime.workflows.push({ id: workflow.get('id'), name: workflow.get('name'), label: workflow.get('label')});
+                });
+            }
+        };
+        Ember.RSVP.allSettled([Ember.RSVP.map(edgePromises, addEdge), Ember.RSVP.map(workflowPromises, getWorkflow)])
+            .then(function () {
+                if (!Enumerable.From(prime.workflows).Any("f=>f.id=='" + _this.get("model.workflowID") + "'")) {
+                    var newwf = Enumerable.From(prime.workflows).FirstOrDefault();
+                    _this.set("model.workflowID", newwf.id);
+                    _this.set("model.workflowName", newwf.label);
+                }
+                //Enumerable.From(data.get('workflows')).Where("f=>f.get('
                 //var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
                 //console.log(data);
                 // var model = this.get('model')
@@ -985,6 +994,10 @@ App.VizEditorComponent = Ember.Component.extend({
             return (d.nodes.get(edge.from) !== null && d.nodes.get(edge.to) !== null);
         });
         d.edges.update(newEdges);
+
+
+        // Make sure all items are displayed in view
+        this.graph.zoomExtent();
 
 
     }.observes('data').on('didInsertElement')
@@ -1268,7 +1281,7 @@ App.WikipediaRoute = Ember.Route.extend({
     model: function (params) {
         //console.log(params.id);
         return Ember.RSVP.hash({
-            data: this.store.findQuery('wikipedia', params.id),
+            graphData: this.store.findQuery('wikipedia', params.id),
             selected: params.id,
             content: '',
             title: ((typeof params.id === 'string' && params.id !== null && params.id.length > 0) ? params.id.replace(/_/g, ' ') : params.id)
@@ -1280,7 +1293,7 @@ App.WikipediaRoute = Ember.Route.extend({
         var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
         var nodeMax = 35;
         var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'wikipedia');
-        m.data = data;
+        m.graphData = data;
         m.content = this.store.getById('wikipedia', sel).get('content');
     }
 });
