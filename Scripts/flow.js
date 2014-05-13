@@ -12,36 +12,196 @@ App.Router.map(function () {
     this.route('search');
 });
 
-// App.LoadingRoute = Ember.Route.extend({
-//   activate: function() {
-//     this._super();
-//     return Pace.restart();
-//   },
-//   deactivate: function() {
-//     this._super();
-//     return Pace.stop();
-//   }
-// });
+
+App.ApplicationView = Ember.View.extend({
+    didInsertElement: function () {
+        Ember.run.scheduleOnce('afterRender', this, function () {
+            // navbar notification popups
+            $(".notification-dropdown").each(function (index, el) {
+                var $el = $(el);
+                var $dialog = $el.find(".pop-dialog");
+                var $trigger = $el.find(".trigger");
+    
+                $dialog.click(function (e) {
+                    e.stopPropagation()
+                });
+                $dialog.find(".close-icon").click(function (e) {
+                    e.preventDefault();
+                    $dialog.removeClass("is-visible");
+                    $trigger.removeClass("active");
+                });
+                $("body").click(function () {
+                    $dialog.removeClass("is-visible");
+                    $trigger.removeClass("active");
+                });
+
+                $trigger.click(function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+      
+                    // hide all other pop-dialogs
+                    $(".notification-dropdown .pop-dialog").removeClass("is-visible");
+                    $(".notification-dropdown .trigger").removeClass("active")
+
+                    $dialog.toggleClass("is-visible");
+                    if ($dialog.hasClass("is-visible")) {
+                        $(this).addClass("active");
+                    } else {
+                        $(this).removeClass("active");
+                    }
+                });
+            });
 
 
-// App.ApplicationRoute = Ember.Route.extend({
-//   actions: {
-//     loading: function() {
-//       NProgress.start();
-//       this.router.one('didTransition', function() {
-//         return setTimeout((function() {
-//           return NProgress.done();
-//         }), 50);
-//       });
-//       return true;
-//     },
-//     error: function() {
-//       return setTimeout((function() {
-//         return NProgress.done();
-//       }), 50);
-//     }
-//   }
-// });
+            // skin changer
+            $(".skins-nav .skin").click(function (e) {
+                e.preventDefault();
+                if ($(this).hasClass("selected")) {
+                    return;
+                }
+                $(".skins-nav .skin").removeClass("selected");
+                $(this).addClass("selected");
+    
+                if (!$("#skin-file").length) {
+                    $("head").append('<link rel="stylesheet" type="text/css" id="skin-file" href="">');
+                }
+                var $skin = $("#skin-file");
+                if ($(this).attr("data-file")) {
+                    $skin.attr("href", $(this).data("file"));
+                } else {
+                    $skin.attr("href", "");
+                }
+
+            });
+
+
+            // sidebar menu dropdown toggle
+            $("#dashboard-menu .dropdown-toggle").click(function (e) {
+                e.preventDefault();
+                var $item = $(this).parent();
+                $item.toggleClass("active");
+                if ($item.hasClass("active")) {
+                    $item.find(".submenu").slideDown("fast");
+                } else {
+                    $item.find(".submenu").slideUp("fast");
+                }
+            });
+
+
+            // mobile side-menu slide toggler
+            var $menu = $("#sidebar-nav");
+            $("body").click(function () {
+                if ($(this).hasClass("menu")) {
+                    $(this).removeClass("menu");
+                }
+            });
+            $menu.click(function(e) {
+                e.stopPropagation();
+            });
+            $("#menu-toggler").click(function (e) {
+                e.stopPropagation();
+                $("body").toggleClass("menu");
+            });
+            $(window).resize(function() { 
+                $(this).width() > 769 && $("body.menu").removeClass("menu")
+            })
+
+
+            // build all tooltips from data-attributes
+            $("[data-toggle='tooltip']").each(function (index, el) {
+                $(el).tooltip({
+                    placement: $(this).data("placement") || 'top'
+                });
+            });
+
+
+            // custom uiDropdown element, example can be seen in user-list.html on the 'Filter users' button
+            var uiDropdown = new function() {
+                var self;
+                self = this;
+                this.hideDialog = function($el) {
+                    return $el.find(".dialog").hide().removeClass("is-visible");
+                };
+                this.showDialog = function($el) {
+                    return $el.find(".dialog").show().addClass("is-visible");
+                };
+                return this.initialize = function() {
+                    $("html").click(function() {
+                        $(".ui-dropdown .head").removeClass("active");
+                        return self.hideDialog($(".ui-dropdown"));
+                    });
+                    $(".ui-dropdown .body").click(function(e) {
+                        return e.stopPropagation();
+                    });
+                    return $(".ui-dropdown").each(function(index, el) {
+                        return $(el).click(function(e) {
+                            e.stopPropagation();
+                            $(el).find(".head").toggleClass("active");
+                            if ($(el).find(".head").hasClass("active")) {
+                                return self.showDialog($(el));
+                            } else {
+                                return self.hideDialog($(el));
+                            }
+                        });
+                    });
+                };
+            };
+
+            // instantiate new uiDropdown from above to build the plugins
+            new uiDropdown();
+
+
+            // toggle all checkboxes from a table when header checkbox is clicked
+            $(".table th input:checkbox").click(function () {
+                $checks = $(this).closest(".table").find("tbody input:checkbox");
+                if ($(this).is(":checked")) {
+                    $checks.prop("checked", true);
+                } else {
+                    $checks.prop("checked", false);
+                }  		
+            });
+
+            // quirk to fix dark skin sidebar menu because of B3 border-box
+            if ($("#sidebar-nav").height() > $(".content").height()) {
+                $("html").addClass("small");
+            }
+
+
+       
+        });
+    }
+})
+
+ //App.LoadingRoute = Ember.Route.extend({
+ //  activate: function() {
+ //    this._super();
+ //    return Pace.restart();
+ //  },
+ //  deactivate: function() {
+ //    this._super();
+ //    return Pace.stop();
+ //  }
+ //});
+
+
+ App.ApplicationRoute = Ember.Route.extend({
+   actions: {
+     loading: function() {
+       Pace.restart();
+       this.router.one('didTransition', function() {
+         return setTimeout((function() {
+           return Pace.stop();
+         }), 0);
+       });
+       return true;
+     },
+     error: function() {
+       return setTimeout((function() {
+         return Pace.stop();
+       }), 0);
+     }
+   }
+ });
 
 
 
@@ -990,7 +1150,7 @@ App.VizEditorComponent = Ember.Component.extend({
 
 
         // Make sure all items are displayed in view
-        this.graph.zoomExtent();
+        //this.graph.zoomExtent();
 
 
     }.observes('data').on('didInsertElement')
@@ -1289,7 +1449,9 @@ App.WikipediaRoute = Ember.Route.extend({
         var nodeMax = 35;
         var data = recurseGraphData(sel, array, this, 1, depthMax, nodeMax, 'wikipedia');
         m.graphData = data;
-        m.content = this.store.getById('wikipedia', sel).get('content');
+        var article = this.store.getById('wikipedia', sel);
+        if (article)
+            m.content = article.get('content');
     }
 });
 
@@ -1298,7 +1460,10 @@ App.WikipediaController = Ember.ObjectController.extend({
     changeSelected: function () {
         //console.log('Selection changed, should redirect!')
         this.transitionToRoute('wikipedia', this.get('model.selected'));
-    }.observes('model.selected')
+    }.observes('model.selected'),
+    watchSearch: function () {
+        this.transitionToRoute('wikipedia', this.get('model.title'));
+    }.observes('model.title')
 });
 
 App.WikipediaAdapter = DS.Adapter.extend({
@@ -1433,17 +1598,6 @@ function filterData(data) {
     data = data.replace(/<script[^>]*>[\S\s]*?<\/script>/g, '');
     // no self closing scripts
     data = data.replace(/<script.*\/>/g, '');
-    //no refs
-    data = data.replace(/<ref>/g, '');
-    data = data.replace(/<\/ref>/g, '');
-    //no source
-    data = data.replace(/<source>/g, '');
-    data = data.replace(/<\/source>/g, '');
-    //no references
-    data = data.replace(/<references\/>/g, '');
-    //empty points
-    data = data.replace(/<\/em><li><\/em>/ig, '<\/li>'); //HACK:?
-
     // [... add as needed ...]
     return '<div class=\'filteredData\'>' + data + '</div>';
 }

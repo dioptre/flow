@@ -13,7 +13,17 @@ label.error {
 label.valid {
 	background: none;
 }
+.navbar-brand img {
+    max-height: 22px;
+}
 
+.filteredData img {
+    max-width: 100%;
+}
+
+.filteredData div.thumb {
+    margin-bottom: 20px;
+}
 
 .ui-autocomplete {
   position: absolute; 
@@ -119,16 +129,16 @@ label.valid {
     border: 1px solid lightgray;
 }
 table.legend_table {
-    font-size: 11px;
+    /*font-size: 11px;
     border-width:1px;
     border-color:#d3d3d3;
-    border-style:solid;
+    border-style:solid;*/
 }
 table.legend_table,td {
-    border-width:1px;
+    /*border-width:1px;
     border-color:#d3d3d3;
     border-style:solid;
-    padding: 2px;
+    padding: 2px;*/
 }
 div.table_content {
     width:80px;
