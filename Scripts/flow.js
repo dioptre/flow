@@ -100,6 +100,43 @@ App.ApplicationRoute = Ember.Route.extend({
 //    }
 //});
 
+// A tiny bit more modal code
+//App.ModalDialogComponent = Ember.Component.extend({
+//    model: null,
+//    title: 'Modal Title',
+//    btnClose: "Close",
+//    btnSubmit: 'Submit',
+//    actions: {
+//        close: function () {
+//            return this.sendAction();
+//        },
+//        submit: function () {
+//            return this.sendAction('submit');
+//        }
+//    }
+//});
+
+
+//App.Modal = Ember.Mixin.create({
+//    callbackData: null,
+//    actions: {
+//        close: function () {
+//            return this.send('closeModal');
+//        },
+//        submit: function () {
+//            console.log(this.get('model.content'));
+//            if (this.callbackData) {
+//                this.callbackData(this.get('model'));
+//            }
+//            return this.send('closeModal');
+//        }
+//    }
+//});
+
+//App.GraphModalNewWorkflowController = Ember.ObjectController.extend(App.Modal, {
+
+//});
+
 
 App.ApplicationController = Ember.Controller.extend({
     currentPathDidChange: function () {
@@ -112,43 +149,19 @@ App.ApplicationController = Ember.Controller.extend({
 });
 
 
-
-// A tiny bit more modal code
-App.ModalDialogComponent = Ember.Component.extend({
-    model: null,
-    title: 'Modal Title',
-    btnClose: "Close",
-    btnSubmit: 'Submit',
-      actions: {
-        close: function() {
-          return this.sendAction();
-        },
-        submit: function () {
-          return this.sendAction('submit');
-        }
-      }
-});
-
-
-App.Modal = Ember.Mixin.create({
-    callbackData: null,
-    actions: {
-        close: function () {
-            return this.send('closeModal');
-        },
-        submit: function () {
-            console.log(this.get('model.content'));
-            if (this.callbackData) {
-                this.callbackData(this.get('model'));
-            }
-            return this.send('closeModal');
-        }
+App.ApplicationAdapter = DS.RESTAdapter.extend({
+    namespace: 'flow',
+    headers: {
+        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+    },
+    generateIdForRecord: function (store, record) {
+        var uuid = NewGUID();
+        return uuid;
     }
 });
 
-App.GraphModalNewWorkflowController = Ember.ObjectController.extend(App.Modal, {
 
-});
+
 
 
 App.IndexRoute = Ember.Route.extend({
@@ -348,21 +361,6 @@ App.SearchView = Ember.View.extend({
     didInsertElement: function () {
         this.get('controller').send('search');
         // this code is here since you can't watch for didInsertElement in Controllers
-    }
-});
-
-
-
-
-
-App.ApplicationAdapter = DS.RESTAdapter.extend({
-    namespace: 'flow',
-    headers: {
-        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-    },
-    generateIdForRecord: function (store, record) {
-        var uuid = NewGUID();
-        return uuid;
     }
 });
 
@@ -666,10 +664,6 @@ App.GraphRoute = Ember.Route.extend({
     },
     afterModel: function (m) {
         var sel = m.selected;
-        if (!m.workflowName)
-            m.workflowName = null;
-        if (!m.workflowID)
-            m.workflowID = null;
         if (sel) { // this means it's probably a wiki article
             m.node = this.store.getById('node', sel);
             if (m.node) {
@@ -693,74 +687,24 @@ App.GraphRoute = Ember.Route.extend({
 
 
         }
-    },
-    setupController: function (controller, model) {
-        controller.set('model', model);
-        // Check if workflow name is defined, otherwise popup
-        Ember.run.scheduleOnce('afterRender', this, function () {
-            if (model.workflowName === null) {
-                controller.toggleProperty('workflowNameModal');
-            }
-        });
     }
+    //,setupController: function (controller, model) {
+    //    controller.set('model', model);
+    //    // Check if workflow name is defined, otherwise popup
+    //    Ember.run.scheduleOnce('afterRender', this, function () {
+    //        if (model.workflowName === null) {
+    //            controller.toggleProperty('workflowNameModal');
+    //        }
+    //    });
+    //}
 });
-
-
-function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
-    //AGTODO
-    //return array;
-    if (typeof id == 'undefined')
-        return array;
-
-    //TODO: nodemax based on sequence (priority) in edges
-    if (!nodeMax || nodeMax < 0 || array.nodes.length < nodeMax) {
-        var node = _this.store.getById(store, id);
-        //debugger;
-
-        if (!node)
-            return array;
-        //console.log('this should happen twice')
-
-        array.nodes.push({
-            id: node.get('id'),
-            label: node.get('label'),
-            content: node.get('content')
-        });
-
-        //var tid = node.get('id');
-
-        var edges = Enumerable.From(node.get('edges').content).OrderBy("$.get('sequence')").ToArray();
-
-
-        if (depth <= depthMax && edges.length !== undefined) {
-
-            //console.log('this should happen once')
-
-            edges.forEach(function (edge) {
-                if (!edge.get('from') || !edge.get('to'))
-                    return;
-
-                array.edges.push({
-                    id: edge.get('id'),
-                    from: edge.get('from'),
-                    to: edge.get('to')
-                });
-
-
-                // Check if id has already been processed
-                array = getDataBitch(edge.get('to'), array, _this, depth + 1, depthMax, nodeMax, store);
-
-            });
-        }
-    }
-
-    return array;
-}
 
 
 App.GraphController = Ember.ObjectController.extend({
     editing: true,
-    workflowNameModal: false,
+    workflowName: null,
+    workflowID: null,
+    workflowNameModal: true,
     validateWorkflowName: false,
     graphDataLte2: Ember.computed.lte('graphData.length', 2),
     graphData : null,
@@ -800,13 +744,22 @@ App.GraphController = Ember.ObjectController.extend({
         };
         Ember.RSVP.allSettled([Ember.RSVP.map(edgePromises, addEdge), Ember.RSVP.map(workflowPromises, getWorkflow)])
             .then(function () {
-                if (!Enumerable.From(prime.workflows).Any("f=>f.id=='" + _this.get("model.workflowID") + "'")) {
+                debugger;
+                if (!Enumerable.From(prime.workflows).Any("f=>f.id=='" + _this.get("workflowID") + "'")) {
                     var newwf = Enumerable.From(prime.workflows).FirstOrDefault();
-                    _this.set("model.workflowID", newwf.id);
-                    _this.set("model.workflowName", newwf.label);
+                    if (typeof newwf !== 'undefined' && newwf) {
+                        _this.set("workflowID", newwf.id);
+                        _this.set("workflowName", newwf.label);
+                        _this.set('workflowNameModal', false);
+                    }
+                    else {
+                        _this.set("workflowID", null);
+                        _this.set("workflowName", null);
+                        _this.set('workflowNameModal', true);
+                    }
                 }
                 //Enumerable.From(data.get('workflows')).Where("f=>f.get('
-                //var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
+                //var data = recurseGraphData(sel, array, this, 1, depthMax, nodeMax, 'node');
                 //console.log(data);
                 // var model = this.get('model')
                 //m.data = data;
@@ -857,6 +810,57 @@ App.GraphController = Ember.ObjectController.extend({
     }
 });
 
+
+function recurseGraphData(id, array, _this, depth, depthMax, nodeMax, store) {
+    //AGTODO
+    //return array;
+    if (typeof id == 'undefined')
+        return array;
+
+    //TODO: nodemax based on sequence (priority) in edges
+    if (!nodeMax || nodeMax < 0 || array.nodes.length < nodeMax) {
+        var node = _this.store.getById(store, id);
+        //debugger;
+
+        if (!node)
+            return array;
+        //console.log('this should happen twice')
+
+        array.nodes.push({
+            id: node.get('id'),
+            label: node.get('label'),
+            content: node.get('content')
+        });
+
+        //var tid = node.get('id');
+
+        var edges = Enumerable.From(node.get('edges').content).OrderBy("$.get('sequence')").ToArray();
+
+
+        if (depth <= depthMax && edges.length !== undefined) {
+
+            //console.log('this should happen once')
+
+            edges.forEach(function (edge) {
+                if (!edge.get('from') || !edge.get('to'))
+                    return;
+
+                array.edges.push({
+                    id: edge.get('id'),
+                    from: edge.get('from'),
+                    to: edge.get('to')
+                });
+
+
+                // Check if id has already been processed
+                array = recurseGraphData(edge.get('to'), array, _this, depth + 1, depthMax, nodeMax, store);
+
+            });
+        }
+    }
+
+    return array;
+}
 
 
 App.VizEditorComponent = Ember.Component.extend({
@@ -1188,7 +1192,9 @@ App.NodeSerializer = DS.RESTSerializer.extend({
                     edges.forEach(function (edge) {
                         nodes.forEach(function (node) {
                             if (edge.from == node.id) {
-                                node.edges.push(edge.id);
+                                node.edges.push(edge.id);                                
+                            }
+                            if (edge.from == node.id || edge.to == node.id) {
                                 if (edge.GroupID == workflow.id && !Enumerable.From(node.workflows).Any("f=>f==\'" + edge.GroupID + "\'"))
                                     node.workflows.push(workflow.id);
                             }
@@ -1292,7 +1298,7 @@ App.WikipediaRoute = Ember.Route.extend({
         var array = { nodes: [], edges: [] };
         var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
         var nodeMax = 35;
-        var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'wikipedia');
+        var data = recurseGraphData(sel, array, this, 1, depthMax, nodeMax, 'wikipedia');
         m.graphData = data;
         m.content = this.store.getById('wikipedia', sel).get('content');
     }
