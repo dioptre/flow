@@ -217,7 +217,7 @@ App.SearchController = Ember.ObjectController.extend({
         if (this.get('map')) i++;
         $(window).trigger('redrawMap');
         if (i===0) return '';
-        return 'span' + (12 / i);
+        return 'col-md-' + (12 / i);
     }.property('graph', 'file', 'map'),
     pageGraph: 0,
     pageFile: 0,
