@@ -744,7 +744,7 @@ App.GraphController = Ember.ObjectController.extend({
         };
         Ember.RSVP.allSettled([Ember.RSVP.map(edgePromises, addEdge), Ember.RSVP.map(workflowPromises, getWorkflow)])
             .then(function () {
-                debugger;
+                //debugger;
                 if (!Enumerable.From(prime.workflows).Any("f=>f.id=='" + _this.get("workflowID") + "'")) {
                     var newwf = Enumerable.From(prime.workflows).FirstOrDefault();
                     if (typeof newwf !== 'undefined' && newwf) {
@@ -754,8 +754,8 @@ App.GraphController = Ember.ObjectController.extend({
                     else {
                         _this.set("workflowID", null);
                         _this.set("workflowName", null);
-                        //Ember.run.scheduleOnce('actions', _this, _this.actions.toggleWorkflowModal);                                
-                        _this.send('toggleWorkflowModal');
+                        Ember.run.scheduleOnce('afterRender', _this.get('model'), 'send', 'toggleWorkflowModal');                                
+                        //_this.send('toggleWorkflowModal');
                     }
                 }
                 //Enumerable.From(data.get('workflows')).Where("f=>f.get('
