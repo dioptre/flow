@@ -92,6 +92,14 @@ App.ApplicationRoute = Ember.Route.extend({
       }
 });
 
+//App.ModalController = Ember.ObjectController.extend({
+//    actions: {
+//        close: function () {
+//            return this.send('closeModal');
+//        }
+//    }
+//});
+
 
 App.ApplicationController = Ember.Controller.extend({
     currentPathDidChange: function () {
@@ -638,7 +646,6 @@ function OnMapUpdate(map, event, center, viewport) {
 App.GraphRoute = Ember.Route.extend({
     model: function (params) {
         var id = params.id;
-
         if (id) {
             id = id.toLowerCase(); // just in case
             return Ember.RSVP.hash({
@@ -664,25 +671,17 @@ App.GraphRoute = Ember.Route.extend({
         if (!m.workflowID)
             m.workflowID = null;
         if (sel) { // this means it's probably a wiki article
-            var array = { nodes: [], edges: [] };
-            var depthMax = 15; // currently depthMax is limited to 1 unless the data is already in ember store
-            var nodeMax = -1;
-            var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
-            console.log(data);
-            // var model = this.get('model')
-            m.data = data;
-            //AGTODO
             m.node = this.store.getById('node', sel);
             if (m.node) {
                 m.content = m.node.get('content');
                 m.label = m.node.get('label');
-                m.node.get('workflows').then(function (workflows) {
-                    if (workflows.get('length') > 0) {
-                        workflows.forEach(function (workflow) {
-                            //AGTODO
-                        });
-                    }
-                });
+                //m.node.get('workflows').then(function (workflows) {
+                //    if (workflows.get('length') > 0) {
+                //        workflows.forEach(function (workflow) {
+                //            //AGTODO
+                //        });
+                //    }
+                //});
             }
         } else {
             var nodes = Enumerable.From(m.data.content).Select("$._data").ToArray(); // this is to clean up ember data
@@ -736,6 +735,9 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
         });
 
         //var tid = node.get('id');
+
+        var edges = Enumerable.From(node.get('nodes').content).OrderBy("$.get('sequence')").ToArray();
+
         var edges = Enumerable.From(node.get('edges').content).OrderBy("$.get('sequence')").ToArray();
 
 
@@ -765,18 +767,47 @@ function getDataBitch(id, array, _this, depth, depthMax, nodeMax, store) {
 }
 
 
-App.ModalController = Ember.ObjectController.extend({
-  actions: {
-    close: function() {
-      return this.send('closeModal');
-    }
-  }
-});
-
-
 App.GraphController = Ember.ObjectController.extend({
     workflowNameModal: false,
     validateWorkflowName: false,
+    graphData: function () {
+        // get data bitch equiv
+        
+        var array = { nodes: [], edges: [] };
+        var depthMax = 15; // currently depthMax is limited to 1 unless the data is already in ember store
+        var nodeMax = -1;
+        var prime = {};
+        prime.edges = [];
+        var promises = [];
+        prime.nodes = Enumerable.From(this.get('model.data').content).Select(
+            function (f) {
+                    promises.push(f.get('edges'));
+                    return {
+                        id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group')
+                    }
+            }).ToArray();
+        var addEdge = function (edges) {
+            if (edges.get('length') > 0) {
+                edges.forEach(function (edge) {
+                    prime.edges.push({ id: edge.get('id'), from: edge.get('from'), to: edge.get('to') });
+                });
+            }
+        };
+        Ember.RSVP.map(promises, addEdge).then(
+            function () {
+                debugger;
+                return prime;
+            });
+        return array;
+        debugger;
+        //return prime;
+        //var data = getDataBitch(sel, array, this, 1, depthMax, nodeMax, 'node');
+        //console.log(data);
+        // var model = this.get('model')
+        //m.data = data;
+        //return data;
+
+    }.property('model', 'selected', 'node.@each.workflows'),
     checkWorkflowName: function () {
         var _this = this;
         if (!_this.get('workflowName') || typeof _this.get('workflowName') !== 'string' || _this.get('workflowName').trim().length < 1) {
@@ -1194,7 +1225,7 @@ App.Node = DS.Model.extend({
     }.property(),
     group: function() {
         return 'x'; // any string, will be grouped
-    }
+    }.property()
 });
 
 

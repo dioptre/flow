@@ -45,44 +45,10 @@
 
 
 
-@*<script type="text/x-handlebars" id="components/modal-dialog">
-    {{! Pretty standard bootstrap modal code }}
-    <div class='modal-backdrop' {{action "close"}}></div>
-    <div class="modal fade in" id="myModal" tabindex="-1" role="dialog">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" {{action "close"}}>&times;</button>
-            <h4 class="modal-title" id="myModalLabel">{{title}}</h4>
-          </div>
-          <div class="modal-body">
-              {{yield}}
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" {{action "close"}}>{{btnClose}}</button>
-            <button type="button" class="btn btn-primary" {{action "submit"}}>{{btnSubmit}}</button>
-          </div>
-        </div>
-      </div>
-    </div>
-</script>*@
 
 
 
-@*<script type="text/x-handlebars" data-template-name="graphModalNewWorkflow">
-    {{#modal-dialog action="close" cancel='cancel' submit='submit' model='controller.model'}}
 
-
-      Sample text inside modal:
-      <button {{action "close"}}>Done</button>
-
-      {{model.label}}
-
-      {{view Ember.TextField valueBinding="model.label"}}
-
-      End of sample text.
-    {{/modal-dialog}}
-  </script>*@
 
 
 
@@ -99,7 +65,7 @@
                 {{/if}}
             </div>
             <div class="span6">
-                 {{viz-editor data=data selected=selected}}
+                 {{viz-editor data=graphData selected=selected}}
             </div>
         </div>
       </div>
@@ -134,7 +100,7 @@
                   {{#if model.node.workflows}}
                     {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.label" value=model.workflowID }}
                   {{/if}}
-                  {{viz-editor data=data selected=selected editing=editing openModal='openModal'}}
+                  {{viz-editor data=graphData selected=selected editing=editing openModal='openModal'}}
               </div>
            </div>
       </div>
