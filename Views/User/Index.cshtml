@@ -256,7 +256,7 @@
                     <i class="icon-chevron-down"></i>
                 </a>
                 <ul class="submenu">
-                    <li>{{#link-to 'graph' NewGUID}}New Process{{/link-to}}</li>
+                    <li>{{#link-to 'graph' 'undefined'}}New Process{{/link-to}}</li>
                 </ul>
             {{/view}}
             {{#view App.HomeNavView}}
@@ -272,17 +272,16 @@
                     <i class="icon-chevron-down"></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="user-list.html">Search users</a></li>
-                    <li><a href="user-list.html">User permissions</a></li>
-                    <li><a href="new-user.html">My permissions</a></li>
-                    <li><a href="user-profile.html">My profile</a></li>
+                    <li>{{#link-to 'userlist'}}Search user{{/link-to}}</li>
+                    <li>{{#link-to 'usernew'}}User permissions{{/link-to}}</li>
+                    <li>{{#link-to 'userprofile'}}My profile{{/link-to}}</li>
                 </ul>
             {{/view}}
             {{#view App.HomeNavView}}
-                <a href="personal-info.html">
+                {{#link-to 'userprofile'}}
                     <i class="icon-cog"></i>
                     <span>My Info</span>
-                </a>
+                {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 <a class="dropdown-toggle" href="#">
@@ -291,10 +290,10 @@
                     <i class="icon-chevron-down"></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="code-editor.html">Sign out</a></li>
-                    <li><a href="grids.html">Reset password</a></li>
-                    <li><a href="signin.html">Update Subscription</a></li>
-                    <li><a href="signup.html">Help</a></li>
+                    <li onlick='alert("Logged out!")'><a href="#">Sign out</a></li>
+                    <li>{{#link-to 'userprofile'}}Reset Password{{/link-to}}</li>
+                    <li>{{#link-to 'userprofile'}}My profile{{/link-to}}</li>
+                    <li onlick='alert("Help page!")'><a href="#">Help</a></li>
                 </ul>
             {{/view}}
         </ul>
@@ -648,5 +647,515 @@
 </script>
 
 
+      <script type="text/x-handlebars" id="userlist">
+
+        <div id="pad-wrapper" class="users-list">
+            <div class="row header">
+                <h3>Users</h3>
+                <div class="col-md-10 col-sm-12 col-xs-12 pull-right">
+                    <input type="text" class="col-md-5 search" placeholder="Type a user's name...">
+
+                    <!-- custom popup filter -->
+                    <!-- styles are located in css/elements.css -->
+                    <!-- script that enables this dropdown is located in js/theme.js -->
+                    <div class="ui-dropdown">
+                        <div class="head" data-toggle="tooltip" title="Click me!">
+                            Filter users
+                            <i class="arrow-down"></i>
+                        </div>
+                        <div class="dialog">
+                            <div class="pointer">
+                                <div class="arrow"></div>
+                                <div class="arrow_border"></div>
+                            </div>
+                            <div class="body">
+                                <p class="title">
+                                    Show users where:
+                                </p>
+                                <div class="form">
+                                    <select>
+                                        <option>Name</option>
+                                        <option>Email</option>
+                                        <option>Number of orders</option>
+                                        <option>Signed up</option>
+                                        <option>Last seen</option>
+                                    </select>
+                                    <select>
+                                        <option>is equal to</option>
+                                        <option>is not equal to</option>
+                                        <option>is greater than</option>
+                                        <option>starts with</option>
+                                        <option>contains</option>
+                                    </select>
+                                    <input type="text" class="form-control" />
+                                    <a class="btn-flat small">Add filter</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="new-user.html" class="btn-flat success pull-right">
+                        <span>&#43;</span>
+                        NEW USER
+                    </a>
+                </div>
+            </div>
+
+            <!-- Users table -->
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th class="col-md-4 sortable">
+                                    Name
+                                </th>
+                                <th class="col-md-3 sortable">
+                                    <span class="line"></span>Signed up
+                                </th>
+                                <th class="col-md-2 sortable">
+                                    <span class="line"></span>Total spent
+                                </th>
+                                <th class="col-md-3 sortable align-right">
+                                    <span class="line"></span>Email
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <!-- row -->
+                        <tr class="first">
+                            <td>
+                                <img src="img/contact-img.png" alt="contact" class="img-circle avatar hidden-phone" />
+                                <a href="user-profile.html" class="name">Alejandra Galvan Castillo</a>
+                                <span class="subtext">Graphic Design</span>
+                            </td>
+                            <td>
+                                Mar 13, 2012
+                            </td>
+                            <td>
+                                $ 4,500.00
+                            </td>
+                            <td class="align-right">
+                                <a href="#">alejandra@canvas.com</a>
+                            </td>
+                        </tr>
+                        <!-- row -->
+                        <tr>
+                            <td>
+                                <img src="img/contact-img2.png" alt="contact" class="img-circle avatar hidden-phone" />
+                                <a href="user-profile.html" class="name">Alejandra Galvan Castillo</a>
+                                <span class="subtext">Graphic Design</span>
+                            </td>
+                            <td>
+                                Jun 03, 2012
+                            </td>
+                            <td>
+                                $ 549.99
+                            </td>
+                            <td class="align-right">
+                                <a href="#">alejandra@canvas.com</a>
+                            </td>
+                        </tr>
+                        <!-- row -->
+                        <tr>
+                            <td>
+                                <img src="img/contact-img.png" alt="contact" class="img-circle avatar hidden-phone" />
+                                <a href="user-profile.html" class="name">Alejandra Galvan Castillo</a>
+                                <span class="subtext">Graphic Design</span>
+                            </td>
+                            <td>
+                                Mar 01, 2013
+                            </td>
+                            <td>
+                                $ 30.00
+                            </td>
+                            <td class="align-right">
+                                <a href="#">alejandra@canvas.com</a>
+                            </td>
+                        </tr>
+                        <!-- row -->
+                        <tr>
+                            <td>
+                                <img src="img/contact-img2.png" alt="contact" class="img-circle avatar hidden-phone" />
+                                <a href="user-profile.html" class="name">Alejandra Galvan Castillo</a>
+                                <span class="subtext">Graphic Design</span>
+                            </td>
+                            <td>
+                                Jan 28, 2012
+                            </td>
+                            <td>
+                                $ 1,320.00
+                            </td>
+                            <td class="align-right">
+                                <a href="#">alejandra@canvas.com</a>
+                            </td>
+                        </tr>
+                        <!-- row -->
+                        <tr>
+                            <td>
+                                <img src="img/contact-img.png" alt="contact" class="img-circle avatar hidden-phone" />
+                                <a href="user-profile.html" class="name">Alejandra Galvan Castillo</a>
+                                <span class="subtext">Graphic Design</span>
+                            </td>
+                            <td>
+                                May 16, 2012
+                            </td>
+                            <td>
+                                $ 89.99
+                            </td>
+                            <td class="align-right">
+                                <a href="#">alejandra@canvas.com</a>
+                            </td>
+                        </tr>
+                        <!-- row -->
+                        <tr>
+                            <td>
+                                <img src="img/contact-img2.png" alt="contact" class="img-circle avatar hidden-phone" />
+                                <a href="user-profile.html" class="name">Alejandra Galvan Castillo</a>
+                                <span class="subtext">Graphic Design</span>
+                            </td>
+                            <td>
+                                Sep 06, 2012
+                            </td>
+                            <td>
+                                $ 344.00
+                            </td>
+                            <td class="align-right">
+                                <a href="#">alejandra@canvas.com</a>
+                            </td>
+                        </tr>
+                        <!-- row -->
+                        <tr>
+                            <td>
+                                <img src="img/contact-img.png" alt="contact" class="img-circle avatar hidden-phone" />
+                                <a href="user-profile.html" class="name">Alejandra Galvan Castillo</a>
+                                <span class="subtext">Graphic Design</span>
+                            </td>
+                            <td>
+                                Jul 13, 2012
+                            </td>
+                            <td>
+                                $ 800.00
+                            </td>
+                            <td class="align-right">
+                                <a href="#">alejandra@canvas.com</a>
+                            </td>
+                        </tr>
+                        <!-- row -->
+                        <tr>
+                            <td>
+                                <img src="img/contact-img2.png" alt="contact" class="img-circle avatar hidden-phone" />
+                                <a href="user-profile.html" class="name">Alejandra Galvan Castillo</a>
+                                <span class="subtext">Graphic Design</span>
+                            </td>
+                            <td>
+                                Feb 13, 2013
+                            </td>
+                            <td>
+                                $ 250.00
+                            </td>
+                            <td class="align-right">
+                                <a href="#">alejandra@canvas.com</a>
+                            </td>
+                        </tr>
+                        <!-- row -->
+                        <tr>
+                            <td>
+                                <img src="img/contact-img.png" alt="contact" class="img-circle avatar hidden-phone" />
+                                <a href="user-profile.html" class="name">Alejandra Galvan Castillo</a>
+                                <span class="subtext">Graphic Design</span>
+                            </td>
+                            <td>
+                                Feb 27, 2013
+                            </td>
+                            <td>
+                                $ 1,300.00
+                            </td>
+                            <td class="align-right">
+                                <a href="#">alejandra@canvas.com</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <ul class="pagination pull-right">
+                <li><a href="#">&#8249;</a></li>
+                <li class="active"><a href="#">1</a></li>
+                <li><a href="#">2</a></li>
+                <li><a href="#">3</a></li>
+                <li><a href="#">4</a></li>
+                <li><a href="#">5</a></li>
+                <li><a href="#">&#8250;</a></li>
+            </ul>
+            <!-- end users table -->
+        </div>
+    </script>
+
+
+    <script type="text/x-handlebars" id="userprofile">
+        <div id="pad-wrapper" class="user-profile">
+            <!-- header -->
+            <div class="row header">
+                <div class="col-md-8">
+                    <img src="img/contact-profile.png" alt="contact" class="avatar img-circle" />
+                    <h3 class="name">Alejandra Galván Castillo</h3>
+                    <span class="area">Graphic Designer</span>
+                </div>
+                <a class="btn-flat icon pull-right delete-user" data-toggle="tooltip" title="Delete user" data-placement="top">
+                    <i class="icon-trash"></i>
+                </a>
+                 <a class="btn-flat icon large pull-right edit">
+                    Edit this person
+                </a>
+            </div>
+
+            <div class="row profile">
+                <!-- bio, new note & orders column -->
+                <div class="col-md-9 bio">
+                    <div class="profile-box">
+                        <!-- biography -->
+                        <div class="col-md-12 section">
+                            <h6>Biography</h6>
+                            <p>There are many variations of passages of Lorem Ipsum available but the majority have humour suffered alteration in believable some formhumour , by injected humour, or randomised words which dont look even slightly believable. </p>
+                        </div>
+
+                        <h6>Recent orders</h6>
+                        <br>
+                        <!-- recent orders table -->
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="col-md-2">
+                                        Order ID
+                                    </th>
+                                    <th class="col-md-3">
+                                        <span class="line"></span>
+                                        Date
+                                    </th>
+                                    <th class="col-md-3">
+                                        <span class="line"></span>
+                                        Items
+                                    </th>
+                                    <th class="col-md-3">
+                                        <span class="line"></span>
+                                        Total amount
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- row -->
+                                <tr class="first">
+                                    <td>
+                                        <a href="#">#459</a>
+                                    </td>
+                                    <td>
+                                        Jan 03, 2013
+                                    </td>
+                                    <td>
+                                        3
+                                    </td>
+                                    <td>
+                                        $ 3,500.00
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <a href="#">#510</a>
+                                    </td>
+                                    <td>
+                                        Feb 22, 2013
+                                    </td>
+                                    <td>
+                                        5
+                                    </td>
+                                    <td>
+                                        $ 800.00
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <a href="#">#618</a>
+                                    </td>
+                                    <td>
+                                        Jan 03, 2013
+                                    </td>
+                                    <td>
+                                        8
+                                    </td>
+                                    <td>
+                                        $ 3,499.99
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- new comment form -->
+                        <div class="col-md-12 section comment">
+                            <h6>Add a quick note</h6>
+                            <p>Add a note about this user to keep a history of your interactions.</p>
+                            <textarea></textarea>
+                            <a href="#">Attach files</a>
+                            <div class="col-md-12 submit-box pull-right">
+                                <input type="submit" class="btn-glow primary" value="Add Note">
+                                <span>OR</span>
+                                <input type="reset" value="Cancel" class="reset">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- side address column -->
+                <div class="col-md-3 col-xs-12 address pull-right">
+                    <h6>Address</h6>
+                    <iframe width="300" height="133" scrolling="no" src="https://maps.google.com.mx/?ie=UTF8&amp;t=m&amp;ll=19.715081,-155.071421&amp;spn=0.010746,0.025749&amp;z=14&amp;output=embed"></iframe>
+                    <ul>
+                        <li>2301 East Lamar Blvd. Suite 140. </li>
+                        <li>City, Arlington. United States,</li>
+                        <li>Zip Code, TX 76006.</li>
+                        <li class="ico-li">
+                            <i class="ico-phone"></i>
+                            1817 274 2933
+                        </li>
+                         <li class="ico-li">
+                            <i class="ico-mail"></i>
+                            <a href="#">alejandra@detail.com</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        </script>
+
+
+      <script type="text/x-handlebars" id="usernew">
+          <div id="pad-wrapper" class="new-user">
+            <div class="row header">
+                <div class="col-md-12">
+                    <h3>Create a new user</h3>
+                </div>
+            </div>
+
+            <div class="row form-wrapper">
+                <!-- left column -->
+                <div class="col-md-9 with-sidebar">
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label for="inputName1" class="col-md-2 control-label">Name</label>
+                            <div class="col-md-8">
+                                <input type="text" class="form-control" id="inputName1" placeholder="Name">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputEmail1" class="col-md-2 control-label">Email</label>
+                            <div class="col-md-8">
+                              <input type="text" class="form-control" id="inputEmail1" placeholder="Email">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputPhone1" class="col-md-2 control-label">Phone</label>
+                            <div class="col-md-8">
+                              <input type="text" class="form-control" id="inputPhone1" placeholder="Phone">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputWebsite1" class="col-md-2 control-label">Website</label>
+                            <div class="col-md-8">
+                              <input type="text" class="form-control" id="inputWebsite1" placeholder="Website">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputAddress1" class="col-md-2 control-label">Address</label>
+                            <div class="col-md-8">
+                              <input type="text" class="form-control" id="inputAddress1" placeholder="Address">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputContent1" class="col-md-2 control-label">Content</label>
+                            <div class="col-md-8">
+                              <textarea id="inputContent1" class="form-control" placeholder="Content" rows="5"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-offset-2 col-md-8">
+                              <button type="submit" class="btn btn-default">Sign in</button>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- <form class="new_user_form">
+                        <div class="col-md-12 field-box">
+                            <label>Name:</label>
+                            <input class="form-control" type="text" />
+                        </div>
+                        <div class="col-md-12 field-box">
+                            <label>State:</label>
+                            <div class="ui-select span5">
+                                <select>
+                                    <option value="AK">Alaska</option>
+                                    <option value="HI">Hawaii</option>
+                                    <option value="CA">California</option>
+                                    <option value="NV">Nevada</option>
+                                    <option value="OR">Oregon</option>
+                                    <option value="WA">Washington</option>
+                                    <option value="AZ">Arizona</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12 field-box">
+                            <label>Company:</label>
+                            <input class="col-md-9 form-control" type="text" />
+                        </div>
+                        <div class="col-md-12 field-box">
+                            <label>Email:</label>
+                            <input class="col-md-9 form-control" type="text" />
+                        </div>
+                        <div class="col-md-12 field-box">
+                            <label>Phone:</label>
+                            <input class="col-md-9 form-control" type="text" />
+                        </div>
+                        <div class="col-md-12 field-box">
+                            <label>Website:</label>
+                            <input class="col-md-9 form-control" type="text" />
+                        </div>
+                        <div class="col-md-12 field-box">
+                            <label>Address:</label>
+                            <div class="address-fields">
+                                <input class="form-control" type="text" placeholder="Street address" />
+                                <input class="small form-control" type="text" placeholder="City" />
+                                <input class="small form-control" type="text" placeholder="State" />
+                                <input class="small last form-control" type="text" placeholder="Postal Code" />
+                            </div>
+                        </div>
+                        <div class="col-md-12 field-box textarea">
+                            <label>Notes:</label>
+                            <textarea class="col-md-9"></textarea>
+                            <span class="charactersleft">90 characters remaining. Field limited to 100 characters</span>
+                        </div>
+                        <div class="col-md-11 field-box actions">
+                            <input type="button" class="btn-glow primary" value="Create user">
+                            <span>OR</span>
+                            <input type="reset" value="Cancel" class="reset">
+                        </div>
+                    </form> -->
+                </div>
+
+                <!-- side right column -->
+                <div class="col-md-3 form-sidebar">
+                    <div class="alert alert-info">
+                        <i class="icon-lightbulb pull-left"></i>
+                        Display a sidebar note over here
+                    </div>
+                    <h6>Sidebar text for instructions</h6>
+                    <p>Add multiple users at once</p>
+                    <p>Choose one of the following file types:</p>
+                    <ul>
+                        <li><a href="#">Upload a vCard file</a></li>
+                        <li><a href="#">Import from a CSV file</a></li>
+                        <li><a href="#">Import from an Excel file</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        </script>
     </body>
 </html>

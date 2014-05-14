@@ -158,7 +158,22 @@ div.graph-manipulation-closeDiv {
     max-width: none;
 }
 .eui-modal.eui-full .eui-overlay {
-    background: rgba(236,248,255,0.90) !important;
+    background: rgba(207,213,223,0.90) !important;
+}
+
+.eui-modal.eui-full .eui-modalobject {
+  max-width: 100%;
+  min-height: 100%;
+  height: 100%;
+  display: block;
+}
+
+.eui-modalobject-wrapper > div {
+    padding: 50px;
+    text-align: center;
+    height: 100vh;
+    overflow-y: scroll;
+    /*width: 100vw;*/
 }
 
 .vis-component {

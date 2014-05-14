@@ -10,6 +10,9 @@ App.Router.map(function () {
     this.route('graph', {path: 'process/:id'});
     this.route('wikipedia', { path: "/wikipedia/:id" });
     this.route('search');
+    this.route('userlist');
+    this.route('userprofile');
+    this.route('usernew');
 });
 
 
@@ -21,7 +24,7 @@ App.ApplicationView = Ember.View.extend({
                 var $el = $(el);
                 var $dialog = $el.find(".pop-dialog");
                 var $trigger = $el.find(".trigger");
-    
+
                 $dialog.click(function (e) {
                     e.stopPropagation()
                 });
@@ -38,7 +41,7 @@ App.ApplicationView = Ember.View.extend({
                 $trigger.click(function (e) {
                     e.preventDefault();
                     e.stopPropagation();
-      
+
                     // hide all other pop-dialogs
                     $(".notification-dropdown .pop-dialog").removeClass("is-visible");
                     $(".notification-dropdown .trigger").removeClass("active")
@@ -61,7 +64,7 @@ App.ApplicationView = Ember.View.extend({
                 }
                 $(".skins-nav .skin").removeClass("selected");
                 $(this).addClass("selected");
-    
+
                 if (!$("#skin-file").length) {
                     $("head").append('<link rel="stylesheet" type="text/css" id="skin-file" href="">');
                 }
@@ -102,7 +105,7 @@ App.ApplicationView = Ember.View.extend({
                 e.stopPropagation();
                 $("body").toggleClass("menu");
             });
-            $(window).resize(function() { 
+            $(window).resize(function() {
                 $(this).width() > 769 && $("body.menu").removeClass("menu")
             })
 
@@ -158,7 +161,7 @@ App.ApplicationView = Ember.View.extend({
                     $checks.prop("checked", true);
                 } else {
                     $checks.prop("checked", false);
-                }  		
+                }
             });
 
             // quirk to fix dark skin sidebar menu because of B3 border-box
@@ -167,7 +170,7 @@ App.ApplicationView = Ember.View.extend({
             }
 
 
-       
+
         });
     }
 })
@@ -448,7 +451,7 @@ App.SearchController = Ember.ObjectController.extend({
     },
     loadGraph: function(){
         var controller = this;
-        if (this.get('graph')) {
+        if (this.get('graph') && this.get('componentURI').length > 0) {
             controller.set('controllers.graphResults.loading', true);
             this.store.find('search', {
                 page: this.get('pageGraph'),
@@ -464,7 +467,7 @@ App.SearchController = Ember.ObjectController.extend({
     }.observes('graph', 'pageGraph'),
     loadMap: function(){
         var controller = this;
-        if (this.get('map')) {
+        if (this.get('map') && this.get('componentURI').length > 0) {
             controller.set('controllers.mapResults.loading', true);
             this.store.find('search', {
                 page: this.get('pageMap'),
@@ -480,7 +483,7 @@ App.SearchController = Ember.ObjectController.extend({
     }.observes('map', 'pageMap'),
     loadFile: function(){
         var controller = this;
-        if (this.get('file')) {
+        if (this.get('file') && this.get('componentURI').length > 0) {
             controller.set('controllers.fileResults.loading', true);
             this.store.find('search', {
                 page: this.get('pageFile'),
@@ -805,6 +808,8 @@ App.GraphRoute = Ember.Route.extend({
     model: function (params) {
         var id = params.id;
         if (id) {
+            if (id == 'undefined')
+                this.replaceWith('graph', NewGUID());
             id = id.toLowerCase(); // just in case
             return Ember.RSVP.hash({
                 data: this.store.find('node', { id: id }),
@@ -842,7 +847,7 @@ App.GraphRoute = Ember.Route.extend({
 
             if (!this.get('controller.workflowNameModal')) {
                 // must have been just closed - save results
-                //console.log('save it');
+                console.log('save it');
             }
 
 
@@ -914,7 +919,7 @@ App.GraphController = Ember.ObjectController.extend({
                     else {
                         _this.set("workflowID", null);
                         _this.set("workflowName", null);
-                        Ember.run.scheduleOnce('afterRender', _this, 'send', 'toggleWorkflowModal');                                
+                        Ember.run.scheduleOnce('afterRender', _this, 'send', 'toggleWorkflowModal');
                     }
                 }
                 //Enumerable.From(data.get('workflows')).Where("f=>f.get('
@@ -1342,7 +1347,7 @@ App.NodeSerializer = DS.RESTSerializer.extend({
                     edges.forEach(function (edge) {
                         nodes.forEach(function (node) {
                             if (edge.from == node.id) {
-                                node.edges.push(edge.id);                                
+                                node.edges.push(edge.id);
                             }
                             if (edge.from == node.id || edge.to == node.id) {
                                 if (edge.GroupID == workflow.id && !Enumerable.From(node.workflows).Any("f=>f==\'" + edge.GroupID + "\'"))
