@@ -331,7 +331,7 @@
                 {{/if}}
             </div>
             <div class="col-md-6">
-                 {{viz-editor data=graphData selected=selected openModal="toggleWorkflowModal"}}
+                 {{viz-editor data=graphData selected=selected openModal="toggleWorkflowEditModal"}}
             </div>
         </div>
       </div>
@@ -341,12 +341,12 @@
 
   <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
-           <h1>{{model.humanName}}<small>&nbsp;&nbsp;<a {{action 'toggleWorkflowNameModal'}}><i class="glyphicon icon-pencil"></i>&nbsp;</a></small></h1>
+           <h1>{{model.humanName}}<small>&nbsp;&nbsp;<a {{action 'toggleWorkflowEditModal'}}><i class="glyphicon icon-pencil"></i>&nbsp;</a></small></h1>
            {{#if model.node.workflows}}
                 {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.humanName" value=workflowID disabled='graphDataLte2'}}
 
             {{/if}}
-            {{#eui-modal openBinding="workflowNameModal" style="full"}}
+            {{#eui-modal openBinding="workflowEditModal" style="full"}}
                 <div style="padding: 50px; text-align: center;">
                 <p>
                     {{#if workflowName}}Update workflow {{workflowName}}{{else}}Create a workflow{{/if}} name:
@@ -361,7 +361,7 @@
                 </p>
                 @*{{eui-textarea valueBinding="model.content" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}}*@ <br /><br />
                 {{tinymce-editor data=model.content}}
-                {{eui-button label="Submit" size="small" action="toggleWorkflowNameModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}
+                {{eui-button label="Submit" size="small" action="toggleWorkflowEditModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}
                 </div>
             {{/eui-modal}}
             {{#eui-modal openBinding="workflowNewModal" style="full"}}

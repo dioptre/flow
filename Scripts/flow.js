@@ -880,11 +880,11 @@ App.GraphRoute = Ember.Route.extend({
         }
     },
     actions: {
-        toggleWorkflowNameModal: function (save) {
+        toggleWorkflowEditModal : function (save) {
             alert('todo')
-            this.toggleProperty('controller.workflowNameModal');
+            this.toggleProperty('controller.workflowEditModal ');
 
-            if (!this.get('controller.workflowNameModal')) {
+            if (!this.get('controller.workflowEditModal ')) {
                 // must have been just closed - save results
                 console.log('save it');
             }
@@ -896,7 +896,7 @@ App.GraphRoute = Ember.Route.extend({
     //    // Check if workflow name is defined, otherwise popup
     //    Ember.run.scheduleOnce('afterRender', this, function () {
     //        if (model.workflowName === null) {
-    //            controller.toggleProperty('workflowNameModal');
+    //            controller.toggleProperty('workflowEditModal ');
     //        }
     //    });
     //}
@@ -910,7 +910,7 @@ App.GraphController = Ember.ObjectController.extend({
     editing: true,
     workflowName: null,
     workflowID: null,
-    workflowNameModal: false,
+    workflowEditModal : false,
     validateWorkflowName: false,
     graphDataLte2: Ember.computed.lte('graphData.length', 2),
     graphData : null,
@@ -959,7 +959,7 @@ App.GraphController = Ember.ObjectController.extend({
                     else {
                         _this.set("workflowID", null);
                         _this.set("workflowName", null);
-                        Ember.run.scheduleOnce('afterRender', _this, 'send', 'toggleWorkflowModal');
+                        Ember.run.scheduleOnce('afterRender', _this, 'send', 'toggleWorkflowEditModal');
                     }
                 }
                 //Enumerable.From(data.get('workflows')).Where("f=>f.get('
@@ -996,12 +996,12 @@ App.GraphController = Ember.ObjectController.extend({
     changeSelected: function () {
         this.transitionToRoute('graph', this.get('model.selected'));
     }.observes('model.selected'),
-    actions: {
-        toggleWorkflowModal: function (data, callback) {
-            this.toggleProperty('workflowNameModal');
-        },
+    actions: {       
         toggleWorkflowNewModal: function (data, callback) {
             this.toggleProperty('workflowNewModal');
+        },
+        toggleWorkflowEditModal: function (data, callback) {
+            this.toggleProperty('workflowEditModal');
         },
         addNewNode: function () {
             var _this = this;
@@ -1031,6 +1031,9 @@ App.GraphController = Ember.ObjectController.extend({
             }, function () {
                 alertify.log('Error Adding Connection');
             });
+        },
+        deleteGraphItems: function (data, callback) {
+            debugger;
         }
     }
 });
@@ -1117,12 +1120,16 @@ App.VizEditorComponent = Ember.Component.extend({
                 _this.sendAction('toggleWorkflowNewModal', data, callback);
             },
             onDelete: function (data, callback) {
-                debugger;
-                callback(data);
+                if (data.nodes.length > 0) {
+                    var r = confirm("Sure you want to delete this process?");
+                    if (!r) {
+                        return false;
+                    }
+                }
+                _this.sendAction('deleteGraphItems', data, callback);
             },
             onEdit: function (data, callback) {
-                debugger;
-
+                _this.sendAction('toggleWorkflowEditModal', data, callback);
             },
             onConnect: function (data, callback) {
                 function saveLink() {
