@@ -957,7 +957,7 @@ App.GraphController = Ember.ObjectController.extend({
         this.transitionToRoute('graph', this.get('model.selected'));
     }.observes('model.selected'),
     actions: {
-        toggleWorkflowModal: function () {
+        toggleWorkflowModal: function (data, callback) {
             this.toggleProperty('workflowNameModal');
         }
     }
@@ -1045,18 +1045,21 @@ App.VizEditorComponent = Ember.Component.extend({
             onAdd: function (data, callback) {
 
 
-                data.id = NewGUID();
-                var newNode =  App.Node.store.createRecord('node', data)
+                //data.id = NewGUID();
+                //var newNode =  App.Node.store.createRecord('node', data)
 
-                // This creates a nice modal:
-                _this.sendAction('openModal', 'graphModalNewWorkflow', newNode, function(){
-                    // This is what happens on submit button!!!
-                    newNode.save().then(function(){
-                        alert('Succesfully added!')
-                    }, function(){
-                        alert('Unsuccesful add!')
-                    });
-                })
+                //// This creates a nice modal:
+                //_this.sendAction('openModal', 'graphModalNewWorkflow', newNode, function(){
+                //    // This is what happens on submit button!!!
+                //    newNode.save().then(function(){
+                //        alert('Succesfully added!')
+                //    }, function(){
+                //        alert('Unsuccesful add!')
+                //    });
+                //})
+
+                _this.sendAction('toggleWorkflowModal', data, callback);
+
 
 
             },
@@ -1271,41 +1274,6 @@ App.VizEditorComponent = Ember.Component.extend({
     // }
 
 
-
-function clearPopUp() {
-    var saveButton = document.getElementById('saveButton');
-    var cancelButton = document.getElementById('cancelButton');
-    saveButton.onclick = null;
-    cancelButton.onclick = null;
-    var div = document.getElementById('graph-popUp');
-    div.style.display = 'none';
-
-}
-
-function saveData(data, callback) {
-    var idInput = document.getElementById('node-id');
-    var labelInput = document.getElementById('node-label');
-    var div = document.getElementById('graph-popUp');
-    data.id = idInput.value;
-    data.label = labelInput.value;
-    clearPopUp();
-
-    //console.log('Save data function: ', data)
-
-    if (App.Node.store.hasRecordForId('node', data.id)) {
-        // already exist - just update record
-        var record = App.Node.store.getById('node', data.id);
-
-        record.set('label', data.label);
-        record.save();
-
-    } else {
-        App.Node.store.createRecord('node', data).save();
-    }
-
-    callback(data);
-
-}
 
 
 DS.RESTAdapter.reopen({
