@@ -26,7 +26,7 @@ label.valid {
 }
 
 .ui-autocomplete {
-  position: absolute; 
+  position: absolute;
   cursor: default;
   z-index:3000 !important;
   /*position: block;*/
@@ -55,7 +55,7 @@ label.valid {
   background-clip: padding-box;
   *border-right-width: 2px;
   *border-bottom-width: 2px;
- 
+
   .ui-menu-item > a.ui-corner-all {
     display: block;
     padding: 3px 15px;
@@ -64,7 +64,7 @@ label.valid {
     line-height: 18px;
     color: #555555;
     white-space: nowrap;
- 
+
     &.ui-state-hover, &.ui-state-active {
       color: #ffffff;
       text-decoration: none;
@@ -77,7 +77,7 @@ label.valid {
   }
 }
 
-.ui-helper-hidden-accessible { 
+.ui-helper-hidden-accessible {
     display:block;
     /*display:none;*/
 }
@@ -86,13 +86,13 @@ label.valid {
   -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
  }
 
-.input {
+/*.input {
   float:left;
   border:1px solid #ccc;
   padding: 5px;
   font-family:Arial;
   width: 500px;
-}
+}*/
 .input span.tag{
   cursor:pointer;
   display:block;
@@ -122,24 +122,6 @@ label.valid {
 }
 
 
-#mygraph {
-    position:relative;
-    width: 100%;
-    height: 85vh;
-    border: 1px solid lightgray;
-}
-table.legend_table {
-    /*font-size: 11px;
-    border-width:1px;
-    border-color:#d3d3d3;
-    border-style:solid;*/
-}
-table.legend_table,td {
-    /*border-width:1px;
-    border-color:#d3d3d3;
-    border-style:solid;
-    padding: 2px;*/
-}
 div.table_content {
     width:80px;
     text-align:center;
@@ -150,21 +132,6 @@ div.table_description {
 #operation {
     font-size:28px;
 }
-#graph-popUp {
-    display:none;
-    position:absolute;
-    top:350px;
-    left:170px;
-    z-index:299;
-    width:250px;
-    height:120px;
-    background-color: #f9f9f9;
-    border-style:solid;
-    border-width:3px;
-    border-color: #5394ed;
-    padding:10px;
-    text-align: center;
-}
 
 div.graph-manipulation-closeDiv {
     left: -10px;
@@ -173,4 +140,31 @@ div.graph-manipulation-closeDiv {
 
 .hlink {
     cursor:pointer;
+}
+
+
+
+.header-main {
+    display: none;
+}
+#masContent {
+    width: 100% !important;
+}
+/*canvas { border: 1px solid red; }*/
+.row-fluid [class*="span"] {
+    margin-left: 1px !important;
+}
+.map-result img {
+    max-width: none;
+}
+.eui-modal.eui-full .eui-overlay {
+    background: rgba(236,248,255,0.90) !important;
+}
+
+.vis-component {
+  height: 80vh;
+}
+.graph-frame {
+    background: rgba(250,250,250,1) !important;
+    border: 1px rgb(231, 231, 231) solid;
 }

@@ -1023,6 +1023,7 @@ App.VizEditorComponent = Ember.Component.extend({
     }.observes('editing'),
     data: null,
     vizDataSet: { nodes: new vis.DataSet(), edges: new vis.DataSet() },
+    classNames: ['vis-component'],
     selected: '',
     graph: null,
     setup: function () {
@@ -1452,6 +1453,14 @@ App.WikipediaRoute = Ember.Route.extend({
         var article = this.store.getById('wikipedia', sel);
         if (article)
             m.content = article.get('content');
+    },
+    actions: {
+        // then this hook will be fired with the error and most importantly a Transition
+        // object which you can use to retry the transition after you handled the error
+        error: function (error, transition) {
+            if (error && error.id && error.redirect)
+                this.transitionTo(error.redirect, error.id);
+        }
     }
 });
 
@@ -1474,21 +1483,37 @@ App.WikipediaAdapter = DS.Adapter.extend({
         return this.findQuery(store, type, ids);
     },
     findQuery: function (store, type, query, array) {
+        var _this = this;
         var id = query;
+        var html;
+        var recurse = function (key, val, parent) {
+            if (key == '_') {
+                html = val;
+            }
+            else if (val instanceof Object) {
+                $.each(val, function (key, val) {
+                    return recurse(key, val, parent);
+                });
+            }
+            return null;
+        };
+        if (id == 'Special:Random') {
+            return new Ember.RSVP.Promise(function (resolve, reject) {
+                var randomURL = 'http://en.wikipedia.org/w/api.php?format=json&action=query&list=random&prop=revisions&rvprop=content&rnnamespace=0';
+                jQuery.getJSON("http://query.yahooapis.com/v1/public/yql?" +
+                   "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
+                   encodeURIComponent(randomURL) +
+                   "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
+                 ).then(function (data) {
+                     Ember.run(null, reject, { redirect: 'wikipedia', id: data.query.results.resources.content.query.random.title });
+                 }, function (jqXHR) {
+                     jqXHR.then = null; // tame jQuery's ill mannered promises
+                     Ember.run(null, reject, jqXHR);
+                 });
+            });
+        }
+        else
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            var html;
-            var recurse = function (key, val, parent) {
-                if (key == '_') {
-                    html = val;
-                }
-                else if (val instanceof Object) {
-                    $.each(val, function (key, val) {
-                        return recurse(key, val, parent);
-                    });
-                }
-                return null;
-            };
-
             var url = 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=' + encodeURIComponent(id) + '&prop=revisions&rvprop=content';
             jQuery.getJSON("http://query.yahooapis.com/v1/public/yql?" +
                 "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
@@ -1514,7 +1539,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
                               leaf = val.replace(/\[\[(.*)?\]\]/, "$1");
                           else leaf = val;
                           if (leaf) {
-                              edges.push({ id: id + '-' + leaf, from: id, to: leaf.replace(/ /g,'_') });
+                              edges.push({ id: id + '-' + leaf, from: id, to: leaf.replace(/ /g, '_') });
                           }
                       });
                   }
@@ -1559,13 +1584,13 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   var edgeids = Enumerable.From(edges).Select("$.id").ToArray();
                   var sequence = 1;
                   Enumerable.From(edges).ForEach(function (f) { f.sequence = sequence; sequence++; App.Wikipedia.store.push('edge', f); });
-                  Enumerable.From(edges).Where("$.to!='" + id.replace("'","\\\'") + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to.replace(/_/g,' ') }); });
+                  Enumerable.From(edges).Where("$.to!='" + id.replace("'", "\\\'") + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to.replace(/_/g, ' ') }); });
                   App.Wikipedia.store.push('wikipedia', { id: id, label: id.replace(/_/g, ' '), edges: edgeids, content: content });
                   if (typeof array === 'undefined')
                       Ember.run(null, resolve, { id: id, label: id.replace(/_/g, ' '), content: content, edges: edgeids });
                   else {
                       var toReturn = { Nodes: [{ id: id, label: id.replace(/_/g, ' '), content: content, edges: edgeids }], Edges: edges };
-                      Ember.run(null, resolve, toReturn );
+                      Ember.run(null, resolve, toReturn);
                   }
               }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -1630,3 +1655,21 @@ Ember.TextField.reopen({
 });
 
 
+App.HomeNavView = Ember.View.extend({
+    tagName: 'li',
+    classNameBindings: ['active'],
+    layoutName: 'home-nav',
+    isActive: Ember.computed.equal('activeTagzz', 'active'),
+    activeTagzz: null,
+    tagThisMate: function () {
+        var _this = this;
+        $(window).on('hashchange', function () {
+            _this.set('activeTagzz', false);
+            _this.$('a').each(function (i, j, y) {
+                if (j.getAttribute('href').replace(/^#\//, '') === window.location.hash.substring(2)) {
+                    _this.set('activeTagzz', true);
+                }
+            });
+        }).trigger('hashchange')
+    }.on('didInsertElement')
+});

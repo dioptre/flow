@@ -1,10 +1,10 @@
 ﻿<!DOCTYPE html>
 <html>
     <head>
-        <title>Detail Admin - Home</title>
+        <title>Flow Pro</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
         <!-- bootstrap -->
         <link href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap.css")" rel="stylesheet" />
         <link href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap-overrides.css")" type="text/css" rel="stylesheet" />
@@ -27,6 +27,12 @@
         <!-- lato font -->
         <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css' />
 
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui-default-theme.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/pace.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/expedit-flow.css">
+
         <!--[if lt IE 9]>
           <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
@@ -44,8 +50,8 @@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/ember-data.js")"></script>
         @* map function currently missing
         <script src="http://builds.emberjs.com/canary/ember-data.js"></script>*@
-        @*<script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/ember-list-view.min.js")"></script>*@
-        <script src="http://builds.emberjs.com/list-view/list-view-latest.js"></script>
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/ember-list-view.min.js")"></script>
+        @*<script src="http://builds.emberjs.com/list-view/list-view-latest.js"></script>*@
         <script src="@Url.Content("~/Modules/NKD/Scripts/NKD.utils.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.validate.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.validate.unobtrusive.js")"></script>
@@ -58,55 +64,51 @@
         @*<script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/moment.js")"></script>*@
         <script src="http://momentjs.com/downloads/moment.js"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/twix.min.js")"></script>
-        @*<script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.velocity.min.js")"></script>*@
-        <script src="https://s3.amazonaws.com/emberui/dist/jquery.velocity.min.js"></script>
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.velocity.min.js")"></script>
+        @*<script src="https://s3.amazonaws.com/emberui/dist/jquery.velocity.min.js"></script>*@
         @* Will work after latest ember data
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/ic-ajax.js")"></script>
         <script type="text/javascript">
             //ic.ajax.request.OVERRIDE_REST_ADAPTER = false;
         </script>*@
         <script src="~/Modules/EXPEDIT.Share/Scripts/emberui.js"></script>
-        @*<script src="https://s3.amazonaws.com/emberui/dist/main.js"></script>*@   
-        <style>
-            .header-main {
-                display: none;
-            }
-            #masContent {
-                width: 100% !important;
-            }
-            /*canvas { border: 1px solid red; }*/
-            .row-fluid [class*="span"] {
-                margin-left: 1px !important;
-            }
-            .map-result img {
-                max-width: none;
-            }
-            .eui-modal.eui-full .eui-overlay {
-                background: rgba(236,248,255,0.90) !important;
-            }
-            .graph-frame {
-                background: rgba(250,250,250,1) !important;
-                border: 1px rgb(231, 231, 231) solid;
-            }
-        </style>
+        @*<script src="https://s3.amazonaws.com/emberui/dist/main.js"></script>*@
+
     </head>
     <body>
-<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
-<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui.css">
-<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui-default-theme.css">
-<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/pace.css">
-<link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/expedit-flow.css">
+
 <script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
 <script src="~/Modules/EXPEDIT.Share/Scripts/pace.min.js"></script>
 <script type="text/javascript">
     var mapHelper = '@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")';
 </script>
 
+<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/bootstrap.min.js"></script>
+<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery-ui-1.10.2.custom.min.js"></script>
+<!-- knob -->
+<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.knob.js"></script>
+<!-- flot charts -->
+<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.js"></script>
+<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.stack.js"></script>
+<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.resize.js"></script>
+<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/theme.js"></script>
+<script src="~/Modules/EXPEDIT.Flow/Scripts/flow.js"></script>
+
 
 
 <!-- The ember app gets injected here -->
 <div id="emberapphere" name="application"></div>
 
+
+<script type="text/x-handlebars" data-template-name="home-nav">
+            {{#if view.activeTagzz}}
+    <div class="pointer">
+        <div class="arrow"></div>
+        <div class="arrow_border"></div>
+    </div>
+{{/if}}
+{{yield}}
+</script>
 
 <script type="text/x-handlebars" id="application">
      <!-- navbar -->
@@ -241,34 +243,29 @@
     <!-- sidebar -->
     <div id="sidebar-nav">
         <ul id="dashboard-menu">
-            {{#link-to 'search' tagName='li'}}
-                <div class="pointer">
-                    <div class="arrow"></div>
-                    <div class="arrow_border"></div>
-                </div>
-                <a>
-                    <i class="icon-search"></i>
-                    <span>Search</span>
-                </a>
-            {{/link-to}}           
-            <li>
+            {{#view App.HomeNavView}}
+                {{#link-to 'search'}}
+                        <i class="icon-search"></i>
+                        <span>Search</span>
+                {{/link-to}}
+            {{/view}}
+            {{#view App.HomeNavView}}
                 <a class="dropdown-toggle" href="#">
                     <i class="icon-sitemap"></i>
                     <span>Process</span>
                     <i class="icon-chevron-down"></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="form-showcase.html">New Process</a></li>
-                    <li><a href="form-wizard.html">New Location</a></li>
+                    <li>{{#link-to 'graph' NewGUID}}New Process{{/link-to}}</li>
                 </ul>
-            </li>
-            <li>
-                <a href="chart-showcase.html">
+            {{/view}}
+            {{#view App.HomeNavView}}
+                {{#link-to 'wikipedia' 'Special:Random'}}
                     <i class="icon-book"></i>
                     <span>Wikipedia</span>
-                </a>
-            </li>
-            <li>
+                {{/link-to}}
+            {{/view}}
+            {{#view App.HomeNavView}}
                 <a class="dropdown-toggle" href="#">
                     <i class="icon-group"></i>
                     <span>Users</span>
@@ -280,14 +277,14 @@
                     <li><a href="new-user.html">My permissions</a></li>
                     <li><a href="user-profile.html">My profile</a></li>
                 </ul>
-            </li>
-            <li>
+            {{/view}}
+            {{#view App.HomeNavView}}
                 <a href="personal-info.html">
                     <i class="icon-cog"></i>
                     <span>My Info</span>
                 </a>
-            </li>
-            <li>
+            {{/view}}
+            {{#view App.HomeNavView}}
                 <a class="dropdown-toggle" href="#">
                     <i class="icon-share-alt"></i>
                     <span>Extras</span>
@@ -299,7 +296,7 @@
                     <li><a href="signin.html">Update Subscription</a></li>
                     <li><a href="signup.html">Help</a></li>
                 </ul>
-            </li>
+            {{/view}}
         </ul>
     </div>
     <!-- end sidebar -->
@@ -344,7 +341,7 @@
            <h1>{{model.label}}<small>&nbsp;&nbsp;<a {{action 'toggleWorkflowNameModal'}}><i class="glyphicon icon-pencil"></i>&nbsp;</a></small></h1>
            {{#if model.node.workflows}}
                 {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.label" value=workflowID disabled='graphDataLte2'}}
-               
+
             {{/if}}
             {{#eui-modal openBinding="workflowNameModal" style="full"}}
                 <div style="padding: 50px; text-align: center;">
@@ -360,10 +357,10 @@
                     Current process detail:
                 </p>
                 {{eui-textarea valueBinding="model.content" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
-                {{eui-button label="Submit" size="small" action="toggleWorkflowNameModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}                    
+                {{eui-button label="Submit" size="small" action="toggleWorkflowNameModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}
                 </div>
             {{/eui-modal}}
-                        
+
             <br>
 
            <div class="container-fluid" style="margin-top:12px;">
@@ -389,17 +386,7 @@
 
 
   <script type="text/x-handlebars" id="search">
-    <div class="container-fluid">
-      <div class="row-fluid">
-        <div class="col-md-12">
-          {{#link-to 'graph' tagName='button'}}Create new workflow{{/link-to}}
-          <button><a href="/flow/wiki">Create new page</a></button>
-          <button onclick='alert('This is still a to-do')'>Add location to database</button>
-        </div>
-      </div>
-      <br>
-
-      <div class="row-fluid">
+      <div class="row">
         <div class="col-md-12">
           <div class="search-wrapper">
             <div class="input-wrapper">
@@ -431,13 +418,13 @@
                 {{eui-selectdate style="default" valueBinding='sched_date_to' placeholder="Ending date" showNextMonth=false}}
 
                 {{!eui-calendar selectionBinding='sched_date_from' showNextMonth=false}}
-                    
+
                 {{!eui-calendar selectionBinding='sched_date_to' showNextMonth=false}}
 
                 <br /><br />
 
-                {{eui-button label="Cancel" action="toggleDateModal" size='large'}}                    
-                {{eui-button label="Submit" action="addDate" style='primary' size='large'}}                    
+                {{eui-button label="Cancel" action="toggleDateModal" size='large'}}
+                {{eui-button label="Submit" action="addDate" style='primary' size='large'}}
                 </div>
             {{/eui-modal}}
               <span {{action 'toggleDateModal'}} class="glyphicon icon-calendar"></span>
@@ -471,25 +458,29 @@
       <br/>
     </div>
 
-      <div class="row-fluid">
-        {{#if graph}}
-          <div {{bind-attr class='activeResultsClass :overscroll'}}>
-            {{render 'graphResults'}}
-          </div>
-        {{/if}}
-        {{#if file}}
-          <div {{bind-attr class='activeResultsClass :overscroll'}}>
-            {{render 'fileResults'}}
-          </div>
-        {{/if}}
-        {{#if map}}
-          <div {{bind-attr class='activeResultsClass :overscroll'}}>
-            {{render 'mapResults'}}
-          </div>
-        {{/if}}
-
+      <div class="row">
+        <div class="col-md-12">
+            {{#if keywords}}
+                {{#if graph}}
+                  <div {{bind-attr class='activeResultsClass :overscroll'}}>
+                    {{render 'graphResults'}}
+                  </div>
+                {{/if}}
+                {{#if file}}
+                  <div {{bind-attr class='activeResultsClass :overscroll'}}>
+                    {{render 'fileResults'}}
+                  </div>
+                {{/if}}
+                {{#if map}}
+                  <div {{bind-attr class='activeResultsClass :overscroll'}}>
+                    {{render 'mapResults'}}
+                  </div>
+                {{/if}}
+            {{else}}
+                <h3>Please add a keyword to start searching...</h3>
+            {{/if}}
+         </div>
       </div>
-
     </div>
 
 
@@ -655,17 +646,7 @@
   {{map-result resultsGeo=resultsGeo visi=visi}}
 
 </script>
-        <!-- scripts -->
-        @*<script src="http://code.jquery.com/jquery-latest.js"></script>*@
-        <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/bootstrap.min.js"></script>
-        <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery-ui-1.10.2.custom.min.js"></script>
-        <!-- knob -->
-        <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.knob.js"></script>
-        <!-- flot charts -->
-        <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.js"></script>
-        <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.stack.js"></script>
-        <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.resize.js"></script>
-        <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/theme.js"></script>
-        <script src="~/Modules/EXPEDIT.Flow/Scripts/flow.js"></script>
+
+
     </body>
 </html>
