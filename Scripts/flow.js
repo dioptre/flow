@@ -394,9 +394,19 @@ App.SearchController = Ember.ObjectController.extend({
     searchLocation: "",
     searchText: "",
     dateModal: false,
+    mapModal: false,
+    _id: null,
+    id: function () {
+        if (this._id === null)
+            this._id = NewGUID();
+        return this._id;
+    }.property(),
     actions: {
         toggleDateModal: function(){
             this.toggleProperty('dateModal');
+        },
+        toggleMapModal: function(){
+            this.toggleProperty('mapModal');
         },
         next: function (i) {
             this.incrementProperty(i);
@@ -422,15 +432,28 @@ App.SearchController = Ember.ObjectController.extend({
         },
         addDate: function () {
             var controller = this;
-            var f = this.get('sched_date_from')
+            var f = this.get('sched_date_from');
             var t = this.get('sched_date_to');
-            var a = [f, t].map(function (i) { return moment.utc(i).format("DD/MM/YYYY") }).join(' - ');
-            this.get('tags').addObject({
-                n: a,
-                d: f + '-' + t
-            });
 
-            return this.toggleProperty('dateModal');
+            //debugger;
+            if (f !== null && t !== null) {
+                var a = [f, t].map(function (i) {
+                    return moment.unix(i).format("DD/MM/YYYY")
+                }).join(' - ');
+                this.get('tags').addObject({
+                    n: a,
+                    d: f + '-' + t
+                });
+
+                // Reset date selectors
+                this.set('sched_date_from', null);
+                this.set('sched_date_to', null);
+
+                this.toggleProperty('dateModal');
+            } else {
+               alert('Incomplete data selection. Please try again.')
+            }
+
         },
         showLocationModal: function () {
             return Bootstrap.ModalManager.show('locationModal');
@@ -446,7 +469,7 @@ App.SearchController = Ember.ObjectController.extend({
                 n: location,
                 l: lastMapUpdates
             });
-            return Bootstrap.ModalManager.hide('locationModal');
+           return  this.toggleProperty('mapModal');
         }
     },
     loadGraph: function(){
@@ -740,68 +763,73 @@ function OnMapUpdate(map, event, center, viewport) {
 
 
 
-//(function () {
-//    App.DateModal = Bootstrap.BsModalComponent.extend({
-//        didInsertElement: function () {
-//            this._super();
-//        },
-//        map: null,
-//        becameVisible: function () {
-//            this._super();
-//            if (!isMapSetup) {
-//                LoadMap();
-//                isMapSetup = true;
-//                if (drawing)
-//                    this.map = SetupDrawingMap('map-search');
-//                else
-//                    this.map = SetupMap('map-search');
-//                RedrawMap(this.map);
-//                var smap = this.map;
-//                $("#searchLocation").autocomplete({
-//                    delay: 100,
-//                    source: function (request, response) {
-//                        $.ajax({
-//                            url: "/share/getlocations/" + request.term,
-//                            type: "GET",
-//                            dataType: "json",
-//                            //data: { id: request.term },
-//                            success: function (data) {
-//                                response($.map(data, function (item) {
-//                                    return {
-//                                        label: item.Text, value: item.Text, id: item.Value
-//                                    };
-//                                }));
-//                            }
-//                        });
-//                    },
-//                    focus: function (event, ui) {
-//                        AddGeographyUnique(smap, JSON.parse(ui.item.id).spatial, false, ui.item.label, true, NewGUID());
-//                        RefocusMap(smap);
-//                        smap.setZoom(9);
-//                    },
-//                    response: function (event, ui) {
-//                        if (ui.content.length > 0) {
-//                            AddGeographyUnique(smap, JSON.parse(ui.content[0].id).spatial, false, ui.content[0].label, true, NewGUID());
-//                            RefocusMap(smap);
-//                            smap.setZoom(9);
-//                        }
-//                        else {
-//                            GetAddressLocation($("#searchLocation").val(), function (latlng) {
-//                                DeleteShapes(smap);
-//                                AddMarkerSingle(smap, latlng, false, $("#searchLocation").val(), NewGUID());
-//                                RefocusMap(smap);
-//                                smap.setZoom(15);
-//                            });
-//                        }
+(function () {
+   App.MappyModal = window.eui.EuiModalComponent.extend({
+       setup: function () {
+           this._super();
+           var _this = this;
+           Ember.run.scheduleOnce('afterRender', this, function(){
+                setTimeout(function(){
+                    _this.becameVisible();
+                }, 20);
+           })
+       },
+       map: null,
+       becameVisible: function () {
+           if (!isMapSetup) {
+               LoadMap();
+               isMapSetup = true;
+               if (drawing)
+                   this.map = SetupDrawingMap('map-search');
+               else
+                   this.map = SetupMap('map-search');
+               RedrawMap(this.map);
+               var smap = this.map;
+               $("#searchLocation").autocomplete({
+                   delay: 100,
+                   source: function (request, response) {
+                       $.ajax({
+                           url: "/share/getlocations/" + request.term,
+                           type: "GET",
+                           dataType: "json",
+                           //data: { id: request.term },
+                           success: function (data) {
+                               response($.map(data, function (item) {
+                                   return {
+                                       label: item.Text, value: item.Text, id: item.Value
+                                   };
+                               }));
+                           }
+                       });
+                   },
+                   focus: function (event, ui) {
+                       AddGeographyUnique(smap, JSON.parse(ui.item.id).spatial, false, ui.item.label, true, NewGUID());
+                       RefocusMap(smap);
+                       smap.setZoom(9);
+                   },
+                   response: function (event, ui) {
+                       if (ui.content.length > 0) {
+                           AddGeographyUnique(smap, JSON.parse(ui.content[0].id).spatial, false, ui.content[0].label, true, NewGUID());
+                           RefocusMap(smap);
+                           smap.setZoom(9);
+                       }
+                       else {
+                           GetAddressLocation($("#searchLocation").val(), function (latlng) {
+                               DeleteShapes(smap);
+                               AddMarkerSingle(smap, latlng, false, $("#searchLocation").val(), NewGUID());
+                               RefocusMap(smap);
+                               smap.setZoom(15);
+                           });
+                       }
 
-//                    }
-//                });
-//            }
-//        }
-//    });
+                   }
+               });
+           }
+       }
+   });
 
-//    Ember.Handlebars.helper('flow-modal', App.DateModal);
-//}).call(this);
+   Ember.Handlebars.helper('map-modal', App.MappyModal);
+}).call(this);
 
 
 App.GraphRoute = Ember.Route.extend({
@@ -1058,7 +1086,7 @@ App.VizEditorComponent = Ember.Component.extend({
                 //    });
                 //})
 
-                _this.sendAction('toggleWorkflowModal', data, callback);
+                _this.sendAction('openModal', data, callback);
 
 
 
