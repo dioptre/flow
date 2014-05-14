@@ -412,8 +412,8 @@
               {{#map-modal  openBinding='mapModal' style="full"}}
                     <div style="padding: 50px; text-align: center;">
                         {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}
-                        <br>
-                        <div id="map-search" style="width: 100%; height: 65vh"></div>
+                        <br><br />
+                        <div id="map-search" style="width: 80%; height: 65vh; margin: 0 auto;"></div>
                         <br><br>
                         {{eui-button label="Cancel" action="toggleMapModal" size='large'}}
                         {{eui-button label="Submit" action="addLocation" style='primary' size='large'}}
@@ -426,7 +426,7 @@
 
 
             {{#eui-modal openBinding="dateModal" style="full"}}
-                <div style="padding: 50px; text-align: center;">
+                <div style="padding: 50px; text-align: center; margin-top: 100px;">
                 <p>
                     Please choose a starting and ending date for the filter:
                 </p>
