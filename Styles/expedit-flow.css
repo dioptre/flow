@@ -194,3 +194,7 @@ div.graph-manipulation-closeDiv {
     margin: -35px auto 25px auto;
 }
 
+.eui-error-message {
+    position: relative;
+}
+
