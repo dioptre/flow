@@ -200,7 +200,9 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.node != null && m.node.id != null)
                 m = m.node;
-            if (_Flow.DeleteNode(m))
+            if (!m.GraphDataID.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.DeleteEdge(m.GraphDataID.Value))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
@@ -239,7 +241,9 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.edge != null && m.edge.id != null)
                 m = m.edge;
-            if (_Flow.DeleteEdge(m))
+            if (!m.GraphDataRelationID.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);   
+            if (_Flow.DeleteEdge(m.GraphDataRelationID.Value))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   

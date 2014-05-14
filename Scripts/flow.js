@@ -1029,11 +1029,45 @@ App.GraphController = Ember.ObjectController.extend({
                 var a = { id: f.get('id'), from: f.get('from'), to: f.get('to'), color: f.get('color'), width: f.get('width'), style: f.get('style') }
                 _this.get('graphData').edges.addObject(a);                
             }, function () {
-                alertify.log('Error Adding Connection');
+                alertify.error('Error Adding Connection');
             });
         },
         deleteGraphItems: function (data, callback) {
-            debugger;
+            var _this = this;
+            var promises = [];
+            Enumerable.From(data.edges).ForEach(function (f) {
+                var m = App.Node.store.getById('edge', f);
+                if (m)
+                    promises.push(m.destroyRecord());
+            });
+            Enumerable.From(data.nodes).ForEach(function (f) {
+                var m = App.Node.store.getById('node', f);
+                if (m)
+                    promises.push(m.destroyRecord());
+            });
+            Ember.RSVP.allSettled(promises).then(function (array) {                
+                if (Enumerable.From(array).Any("f=>f.state=='rejected'"))
+                    alertify.error('Error Updating Workflow');
+                else {
+                    alertify.log('Successfully Updated Workflow');
+                    debugger;
+                    //Enumerable.From(data.edges).ForEach(function (f) {
+                    //    var m = App.Node.store.getById('edge', f);
+                    //    if (m)
+                    //        promises.push(m.destroyRecord());
+                    //});
+                    //Enumerable.From(data.nodes).ForEach(function (f) {
+                    //    var m = App.Node.store.getById('node', f);
+                    //    if (m)
+                    //        promises.push(m.destroyRecord());
+                    //});
+
+                }
+
+            }, function (error) {
+                
+            });
+
         }
     }
 });

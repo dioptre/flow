@@ -728,11 +728,8 @@ namespace EXPEDIT.Flow.Services {
             }
         }
         
-        public bool DeleteNode(FlowViewModel m)
+        public bool DeleteNode(Guid mid)
         {
-            m.GraphName = m.GraphName.ToSlug();
-            if (!m.GraphDataID.HasValue || string.IsNullOrWhiteSpace(m.GraphName))
-                return false;
             var company = _users.DefaultContactCompanyID;
             var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
@@ -741,12 +738,12 @@ namespace EXPEDIT.Flow.Services {
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
-                var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, companies, company, ActionPermission.Delete, out isNew);
-                if (!id.HasValue || isNew || id != m.GraphDataID)
+                var id = CheckNodePrivileges(d, null, mid, companies, company, ActionPermission.Delete, out isNew);
+                if (!id.HasValue || isNew || id != mid)
                     return false;
-                var g = (from o in d.GraphData where o.GraphDataID == m.GraphDataID select o).Single();
-                d.GraphDataRelation.Where(f => f.FromGraphDataID == m.GraphDataID || f.ToGraphDataID == m.GraphDataID).Delete();
-                d.GraphDataContexts.Where(f => f.GraphDataID == m.GraphDataID).Delete();
+                var g = (from o in d.GraphData where o.GraphDataID == mid select o).Single();
+                d.GraphDataRelation.Where(f => f.FromGraphDataID == mid || f.ToGraphDataID == mid).Delete();
+                d.GraphDataContexts.Where(f => f.GraphDataID == mid).Delete();
                 d.GraphData.DeleteObject(g);
                 d.SaveChanges();
                 return true;
@@ -796,10 +793,8 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
-        public bool DeleteEdge(FlowEdgeViewModel m)
+        public bool DeleteEdge(Guid mid)
         {
-            if (!m.GraphDataRelationID.HasValue || !m.FromID.HasValue || !m.ToID.HasValue || !m.GroupID.HasValue)
-                return false;
             var company = _users.DefaultContactCompanyID;
             var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
@@ -808,15 +803,16 @@ namespace EXPEDIT.Flow.Services {
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
-                var id = CheckNodePrivileges(d, null, m.FromID, companies, company, ActionPermission.Delete, out isNew);
+                var edge = (from o in d.GraphDataRelation where o.GraphDataRelationID == mid select o).SingleOrDefault();
+                if (edge == null)
+                    return true;
+                var id = CheckNodePrivileges(d, null, edge.FromGraphDataID, companies, company, ActionPermission.Delete, out isNew);
                 if (id == null || isNew)
                     return false;
-                id = CheckNodePrivileges(d, null, m.ToID, companies, company, ActionPermission.Delete, out isNew);
+                id = CheckNodePrivileges(d, null, edge.ToGraphDataID, companies, company, ActionPermission.Delete, out isNew);
                 if (id == null || isNew)
                     return false;
-                var disconnects = (from o in d.GraphDataRelation where (o.FromGraphDataID == m.FromID && o.ToGraphDataID == m.ToID && o.GraphDataGroupID == m.GroupID) || o.GraphDataRelationID == m.GraphDataRelationID select o);
-                foreach (var g in disconnects)
-                    d.GraphDataRelation.DeleteObject(g);
+                d.GraphDataRelation.DeleteObject(edge);
                 d.SaveChanges();
                 return true;
             }

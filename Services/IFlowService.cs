@@ -36,13 +36,13 @@ namespace EXPEDIT.Flow.Services
          bool UpdateNode(FlowViewModel flow);
 
          [OperationContract]
-         bool DeleteNode(FlowViewModel flow);
+         bool DeleteNode(Guid nid);
 
          [OperationContract]
          bool CreateEdge(FlowEdgeViewModel flow);
 
          [OperationContract]
-         bool DeleteEdge(FlowEdgeViewModel flow);
+         bool DeleteEdge(Guid eid);
 
 
          [OperationContract]
