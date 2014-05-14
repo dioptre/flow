@@ -31,6 +31,7 @@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui-default-theme.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/pace.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/colorbox.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/expedit-flow.css">
 
         <!--[if lt IE 9]>
@@ -73,6 +74,8 @@
         </script>*@
         <script src="~/Modules/EXPEDIT.Share/Scripts/emberui.js"></script>
         @*<script src="https://s3.amazonaws.com/emberui/dist/main.js"></script>*@
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/tinymce/tinymce.min.js")"></script>
+        <script src="@Url.Content("~/Modules/Orchard.jQuery/Scripts/jquery.colorbox.js")"></script>
 
     </head>
     <body>
@@ -345,17 +348,18 @@
             {{#eui-modal openBinding="workflowNameModal" style="full"}}
                 <div style="padding: 50px; text-align: center;">
                 <p>
-                    {{#unless workflowName}}Create {{else}}Update {{/unless}} a workflow name:
+                    {{#if workflowName}}Update workflow {{workflowName}}{{else}}Create a workflow{{/if}} name:
                 </p>
                 {{eui-input valueBinding="workflowName" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
                 <p>
-                    Current a process name:
+                    The {{model.label}} process name:
                 </p>
                 {{eui-input valueBinding="model.label" placeholder='Enter a process name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
                 <p>
-                    Current process detail:
+                    The {{model.label}} process detail:
                 </p>
-                {{eui-textarea valueBinding="model.content" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+                @*{{eui-textarea valueBinding="model.content" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}}*@ <br /><br />
+                {{tinymce-editor data=model.content}}
                 {{eui-button label="Submit" size="small" action="toggleWorkflowNameModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}
                 </div>
             {{/eui-modal}}
@@ -404,7 +408,7 @@
                       {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}
                       <div id="map-search" style="width: 100%; height: 30vh"></div>
               {{/flow-modal}}*@
-              <span {{action 'showLocationModal'}} class="glyphicon icon-globe"></span>
+              <button {{action 'showLocationModal'}} class="glyphicon icon-globe"></span>
 
 
 
@@ -426,14 +430,19 @@
                 {{eui-button label="Submit" action="addDate" style='primary' size='large'}}
                 </div>
             {{/eui-modal}}
-              <span {{action 'toggleDateModal'}} class="glyphicon icon-calendar"></span>
-            </div>
+              <button {{action 'toggleDateModal'}} class="glyphicon icon-calendar"></button>
 
-            {{! search }}
+
+              {{! search }}
             &nbsp;
             <button {{action 'search'}} type="button" class="btn btn-primary">
               <span class="glyphicon icon-search"></span>Search
             </button>
+
+
+            </div>
+
+
 
             Pagesize:
             {{view Ember.Select content=pageSizes value=pageSize }}

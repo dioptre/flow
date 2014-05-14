@@ -183,3 +183,14 @@ div.graph-manipulation-closeDiv {
     background: rgba(250,250,250,1) !important;
     border: 1px rgb(231, 231, 231) solid;
 }
+
+/*Puts dropdowns above modals*/
+.mce-container.mce-panel.mce-floatpanel.mce-menu.mce-menu-align {
+    z-index: 100000000000 !important;
+}
+
+.eui-modal.eui-full .mce-tinymce.mce-container.mce-panel {
+    max-width: 640px;   
+    margin: -35px auto 25px auto;
+}
+

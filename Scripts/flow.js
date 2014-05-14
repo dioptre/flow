@@ -1678,3 +1678,100 @@ App.HomeNavView = Ember.View.extend({
         }).trigger('hashchange')
     }.on('didInsertElement')
 });
+
+
+App.TinymceEditorComponent = Ember.Component.extend({
+    // Warning!!! only use tinyMCE not tinymce !!!
+    editor: null,
+    data: {},
+    watchData: true,
+    didInsertElement: function () {
+        var _this = this;
+
+        // The magic config - http://www.tinymce.com/wiki.php/Configuration
+        var config = {};
+
+        config = $.extend(config, {
+            statusbar: false,
+            resize: false,
+
+
+            // inline: true
+            // mode: "exact",
+            width: "100%",
+            //height: '100%',// this is for auto height onhly
+            height: "400",
+            autoresize: true
+        });
+
+
+        //// this code make it adjust to container height
+        //function resize() {
+        //    setTimeout(function () {
+        //        var max = $('.mce-tinymce').css('border', 'none').parent().outerHeight()
+        //        max = max - $('.mce-menubar.mce-toolbar').outerHeight() //menubar
+        //        max = max - $('.mce-toolbar-grp').outerHeight() //toolbar
+        //        max = max - 1;
+        //        $('.mce-edit-area').height(max)
+        //    }, 200);
+        //}
+        //$(window).on('resize', function () {
+        //    resize();
+        //})
+
+
+        //tinyMCE.init({
+        //    theme: "advanced",
+        //    schema: "html5",
+        //    mode: "specific_textareas",
+        //    editor_selector: "tinymce",
+        //    plugins: "fullscreen,autoresize,searchreplace,filepicker,locationpicker,inlinepopups",
+        //    theme_advanced_toolbar_location: "top",
+        //    theme_advanced_toolbar_align: "left",
+        //    theme_advanced_buttons1: "search,replace,|,cut,copy,paste,|,undo,redo,|,link,unlink,charmap,emoticon,codeblock,|,filepicker,|,locationpicker,|,bold,italic,|,numlist,bullist,formatselect,|,code,fullscreen",
+        //    theme_advanced_buttons2: "",
+        //    theme_advanced_buttons3: "",
+        //    convert_urls: false,
+        //    valid_elements: "*[*]",
+        //    // shouldn't be needed due to the valid_elements setting, but TinyMCE would strip script.src without it.
+        //    extended_valid_elements: "script[type|defer|src|language]"
+        //});
+
+        // Setup plugins and toolbar
+        config.plugins = ["locationpicker myfilepicker"];
+        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | locationpicker | myfilepicker"];
+        config.schema = "html5";
+        config.menubar = false;
+        config.valid_elements = "*[*]";
+        config.extended_valid_elements = "script[type|defer|src|language]";
+        // Choose selector
+        config.selector = "#" + _this.get("elementId");
+
+        // Setup what happens on data changes
+        config.setup = function (editor) {
+            editor.on('change', function (e) {
+                var newData = e.level.content;
+                _this.set('watchData', false);
+                if (newData) _this.set('data', newData);
+                _this.set('watchData', true);
+            });
+        }
+
+        // Set content once initialized
+        config.init_instance_callback = function (editor) {
+            _this.update();
+            //resize();
+        }
+
+        tinyMCE.init(config);
+
+    },
+    update: function () {
+        if (this.get('watchData')) {
+            var content = this.get('data');
+            if (content && tinyMCE.activeEditor !== null) {
+                tinyMCE.activeEditor.setContent(content);
+            }
+        }
+    }.observes('data')
+});
