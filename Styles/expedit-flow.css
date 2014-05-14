@@ -25,6 +25,10 @@ label.valid {
     margin-bottom: 20px;
 }
 
+.alertify-log {
+     z-index:10000000000000 !important;
+}
+
 .ui-autocomplete {
   position: absolute;
   cursor: default;

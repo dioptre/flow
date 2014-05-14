@@ -364,7 +364,19 @@
                 {{eui-button label="Submit" size="small" action="toggleWorkflowNameModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}
                 </div>
             {{/eui-modal}}
-
+            {{#eui-modal openBinding="workflowNewModal" style="full"}}
+                <div style="padding: 50px; text-align: center;">               
+                <p>
+                    The new process name:
+                </p>
+                {{eui-input valueBinding=newName placeholder='Enter a new process name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+                <p>
+                    The new process detail:
+                </p>                
+                {{tinymce-editor data=newContent}}
+                {{eui-button label="Submit" size="small" action="addNewNode" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}
+                </div>
+            {{/eui-modal}}
             <br>
 
            <div class="container-fluid" style="margin-top:12px;">
@@ -373,7 +385,7 @@
                     {{safehtml model.content}}
               </div>
               <div class="col-md-6">
-                  {{viz-editor data=graphData selected=selected editing=editing openModal='openModal'}}
+                  {{viz-editor data=graphData selected=selected editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' addNewEdge='addNewEdge'}}
               </div>
            </div>
       </div>
@@ -413,7 +425,7 @@
                     <div style="padding: 50px; text-align: center;">
                         {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}
                         <br><br />
-                        <div id="map-search" style="width: 80%; height: 65vh; margin: 0 auto;"></div>
+                        <div id="mapmodalid" style="width: 80%; height: 65vh; margin: 0 auto;"></div>
                         <br><br>
                         {{eui-button label="Cancel" action="toggleMapModal" size='large'}}
                         {{eui-button label="Submit" action="addLocation" style='primary' size='large'}}

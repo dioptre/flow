@@ -395,12 +395,6 @@ App.SearchController = Ember.ObjectController.extend({
     searchText: "",
     dateModal: false,
     mapModal: false,
-    _id: null,
-    id: function () {
-        if (this._id === null)
-            this._id = NewGUID();
-        return this._id;
-    }.property(),
     actions: {
         toggleDateModal: function(){
             this.toggleProperty('dateModal');
@@ -764,7 +758,15 @@ function OnMapUpdate(map, event, center, viewport) {
 
 
 (function () {
-   App.MappyModal = window.eui.EuiModalComponent.extend({
+    App.MapModal = window.eui.EuiModalComponent.extend({
+        magicid: null,
+        id: function () {
+            return 'mapmodalid';
+            if (this.get('magicid') === null)
+                this.set('magicid', NewGUID());
+
+            return this.get('magicid');
+        }.property(),
        setup: function () {
            this._super();
            var _this = this;
@@ -776,13 +778,13 @@ function OnMapUpdate(map, event, center, viewport) {
        },
        map: null,
        becameVisible: function () {
-           if (!isMapSetup) {
+           if (!isMapSetup || true) {
                LoadMap();
                isMapSetup = true;
                if (drawing)
-                   this.map = SetupDrawingMap('map-search');
+                   this.map = SetupDrawingMap(this.get('id'));
                else
-                   this.map = SetupMap('map-search');
+                   this.map = SetupMap(this.get('id'));
                RedrawMap(this.map);
                var smap = this.map;
                $("#searchLocation").autocomplete({
@@ -828,7 +830,7 @@ function OnMapUpdate(map, event, center, viewport) {
        }
    });
 
-   Ember.Handlebars.helper('map-modal', App.MappyModal);
+   Ember.Handlebars.helper('map-modal', App.MapModal);
 }).call(this);
 
 
@@ -879,6 +881,9 @@ App.GraphRoute = Ember.Route.extend({
             }
 
 
+        },
+        toggleWorkflowModal: function () {
+            alert('motherfucker');
         }
     }
     //,setupController: function (controller, model) {
@@ -894,6 +899,9 @@ App.GraphRoute = Ember.Route.extend({
 
 
 App.GraphController = Ember.ObjectController.extend({
+    newName: null,
+    newContent: null,
+    workflowNewModal: false, // up to here is for new ones
     editing: true,
     workflowName: null,
     workflowID: null,
@@ -987,6 +995,38 @@ App.GraphController = Ember.ObjectController.extend({
     actions: {
         toggleWorkflowModal: function (data, callback) {
             this.toggleProperty('workflowNameModal');
+        },
+        toggleWorkflowNewModal: function (data, callback) {
+            this.toggleProperty('workflowNewModal');
+        },
+        addNewNode: function () {
+            var _this = this;
+            var c = this.get('newContent')
+            var n = this.get('newName')
+            var id = NewGUID();
+            var newNode = {id: id, label: n, content: c };
+            App.Node.store.createRecord('node', newNode).save().then(function () {
+                alertify.log('Successfully Added Process');
+                var f = App.Node.store.getById('node', id);
+                var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
+                _this.get('graphData').nodes.addObject(a);
+                _this.toggleProperty('workflowNewModal');
+            }, function () {
+                alertify.error('Error Adding Process');                
+            });
+        },
+        addNewEdge: function (data) {
+            var _this = this;
+            data.id = NewGUID();
+            data.GroupID = this.get('workflowID');
+            App.Node.store.createRecord('edge', data).save().then(function () { 
+                alertify.log('Successfully Added Connection');
+                var f = App.Node.store.getById('edge', data.id);
+                var a = { id: f.get('id'), from: f.get('from'), to: f.get('to'), color: f.get('color'), width: f.get('width'), style: f.get('style') }
+                _this.get('graphData').edges.addObject(a);                
+            }, function () {
+                alertify.log('Error Adding Connection');
+            });
         }
     }
 });
@@ -1071,30 +1111,10 @@ App.VizEditorComponent = Ember.Component.extend({
             stabilizationIterations: 1,
             dataManipulation: this.get('editing'),
             onAdd: function (data, callback) {
-
-
-                //data.id = NewGUID();
-                //var newNode =  App.Node.store.createRecord('node', data)
-
-                //// This creates a nice modal:
-                //_this.sendAction('openModal', 'graphModalNewWorkflow', newNode, function(){
-                //    // This is what happens on submit button!!!
-                //    newNode.save().then(function(){
-                //        alert('Succesfully added!')
-                //    }, function(){
-                //        alert('Unsuccesful add!')
-                //    });
-                //})
-
-                _this.sendAction('openModal', data, callback);
-
-
-
+                _this.sendAction('toggleWorkflowNewModal', data, callback);
             },
             onDelete: function (data, callback) {
-
                 debugger;
-
                 callback(data);
             },
             onEdit: function (data, callback) {
@@ -1103,21 +1123,14 @@ App.VizEditorComponent = Ember.Component.extend({
             },
             onConnect: function (data, callback) {
                 function saveLink() {
-                    data.id = NewGUID();
-                    data.GroupID = _this.get('workflowID');
-                    App.Node.store.createRecord('edge', data).save().then(function(){
-                        callback(data);
-                    })
-
+                    _this.sendAction('addNewEdge', data, callback);
                 }
-
-                debugger;
-
                 if (data.from == data.to) {
-                    var r = confirm("Do you want to connect the node to itself?");
-                    if (r == true) {
-                        saveLink()
-                    }
+                    //TODO NOT SUPPORTED
+                    //var r = confirm("Do you want to connect the node to itself?");
+                    //if (r == true) {
+                    //    saveLink()
+                    //}
                 }
                 else {
                     saveLink()
@@ -1140,6 +1153,8 @@ App.VizEditorComponent = Ember.Component.extend({
         });
     },
     dataUpdates: function () {
+        debugger;
+        console.log('graph data updated')
 
         if (this.graph === null) {
             this.setup(); // graph hasn't been initialised yet
@@ -1187,10 +1202,10 @@ App.VizEditorComponent = Ember.Component.extend({
 
 
         // Make sure all items are displayed in view
-        //this.graph.zoomExtent();
+        this.graph.zoomExtent();
 
 
-    }.observes('data').on('didInsertElement')
+    }.observes('data.nodes.@each', 'data.edges.@each').on('didInsertElement')
 });
 
     // didInsertElement: function () {
