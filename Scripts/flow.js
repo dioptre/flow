@@ -1406,7 +1406,7 @@ App.Node = DS.Model.extend({
         return 'ellipse'; // can also us circle
     }.property(),
     group: function() {
-        return 'x'; // any string, will be grouped
+        return 'x'; // any string, will be grouped //Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
     }.property()
 });
 
