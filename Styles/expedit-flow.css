@@ -29,6 +29,10 @@ label.valid {
      z-index:10000000000000 !important;
 }
 
+.alertify-error {
+     z-index:10000000000000 !important;
+}
+
 .ui-autocomplete {
   position: absolute;
   cursor: default;
@@ -202,3 +206,11 @@ div.graph-manipulation-closeDiv {
     position: relative;
 }
 
+.srh {
+	font-weight:bold; 
+	background-color:yellow;
+}
+
+.searchbox {
+    margin:10px;
+}

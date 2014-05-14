@@ -341,9 +341,9 @@
 
   <script type="text/x-handlebars" id="graph">
       <div class="container-fluid" style="margin-top:12px;">
-           <h1>{{model.label}}<small>&nbsp;&nbsp;<a {{action 'toggleWorkflowNameModal'}}><i class="glyphicon icon-pencil"></i>&nbsp;</a></small></h1>
+           <h1>{{model.humanName}}<small>&nbsp;&nbsp;<a {{action 'toggleWorkflowNameModal'}}><i class="glyphicon icon-pencil"></i>&nbsp;</a></small></h1>
            {{#if model.node.workflows}}
-                {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.label" value=workflowID disabled='graphDataLte2'}}
+                {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.humanName" value=workflowID disabled='graphDataLte2'}}
 
             {{/if}}
             {{#eui-modal openBinding="workflowNameModal" style="full"}}
@@ -581,7 +581,7 @@
               {{#each result in results}}
                 {{#link-to 'graph' result.ReferenceID tagName='tr'}}
 
-                  <td>{{safehtml result.Title}}</td>
+                  <td>{{safehtml result.humanName}}</td>
                   <td>{{safehtml result.Author}}</td>
                   <td>{{safehtml result.Updated}}</td>
                 {{/link-to}}

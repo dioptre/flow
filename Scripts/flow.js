@@ -350,7 +350,14 @@ App.Search = DS.Model.extend({
         return '/share/file/' + this.get('ReferenceID');
     }.property('ReferenceID'),
     "Author": DS.attr(''),
-    "Updated": DS.attr('')
+    "Updated": DS.attr(''),
+    humanName: function () {
+        var temp = this.get('Title');
+        if (temp)
+            return ToTitleCase(temp.replace(/_/g, ' '));
+        else
+            return null;
+    }.property()
 });
 
 
@@ -429,7 +436,6 @@ App.SearchController = Ember.ObjectController.extend({
             var f = this.get('sched_date_from');
             var t = this.get('sched_date_to');
 
-            //debugger;
             if (f !== null && t !== null) {
                 var a = [f, t].map(function (i) {
                     return moment.unix(i).format("DD/MM/YYYY")
@@ -762,6 +768,7 @@ function OnMapUpdate(map, event, center, viewport) {
         magicid: null,
         id: function () {
             return 'mapmodalid';
+            //Todo:fix
             if (this.get('magicid') === null)
                 this.set('magicid', NewGUID());
 
@@ -864,6 +871,7 @@ App.GraphRoute = Ember.Route.extend({
             if (m.node) {
                 m.content = m.node.get('content');
                 m.label = m.node.get('label');
+                m.humanName = m.node.get('humanName');
             }
         } else {
             var nodes = Enumerable.From(m.data.content).Select("$._data").ToArray(); // this is to clean up ember data
@@ -873,6 +881,7 @@ App.GraphRoute = Ember.Route.extend({
     },
     actions: {
         toggleWorkflowNameModal: function (save) {
+            alert('todo')
             this.toggleProperty('controller.workflowNameModal');
 
             if (!this.get('controller.workflowNameModal')) {
@@ -880,10 +889,6 @@ App.GraphRoute = Ember.Route.extend({
                 console.log('save it');
             }
 
-
-        },
-        toggleWorkflowModal: function () {
-            alert('motherfucker');
         }
     }
     //,setupController: function (controller, model) {
@@ -939,18 +944,17 @@ App.GraphController = Ember.ObjectController.extend({
         var getWorkflow = function (workflows) {
             if (workflows.get('length') > 0) {
                 workflows.forEach(function (workflow) {
-                    prime.workflows.push({ id: workflow.get('id'), name: workflow.get('name'), label: workflow.get('label')});
+                    prime.workflows.push({ id: workflow.get('id'), name: workflow.get('name'), humanName: workflow.get('humanName')});
                 });
             }
         };
         Ember.RSVP.allSettled([Ember.RSVP.map(edgePromises, addEdge), Ember.RSVP.map(workflowPromises, getWorkflow)])
             .then(function () {
-                //debugger;
                 if (!Enumerable.From(prime.workflows).Any("f=>f.id=='" + _this.get("workflowID") + "'")) {
                     var newwf = Enumerable.From(prime.workflows).FirstOrDefault();
                     if (typeof newwf !== 'undefined' && newwf) {
                         _this.set("workflowID", newwf.id);
-                        _this.set("workflowName", newwf.label);
+                        _this.set("workflowName", newwf.humanName);
                     }
                     else {
                         _this.set("workflowID", null);
@@ -1041,7 +1045,6 @@ function recurseGraphData(id, array, _this, depth, depthMax, nodeMax, store) {
     //TODO: nodemax based on sequence (priority) in edges
     if (!nodeMax || nodeMax < 0 || array.nodes.length < nodeMax) {
         var node = _this.store.getById(store, id);
-        //debugger;
 
         if (!node)
             return array;
@@ -1153,9 +1156,6 @@ App.VizEditorComponent = Ember.Component.extend({
         });
     },
     dataUpdates: function () {
-        debugger;
-        console.log('graph data updated')
-
         if (this.graph === null) {
             this.setup(); // graph hasn't been initialised yet
         }
@@ -1176,6 +1176,13 @@ App.VizEditorComponent = Ember.Component.extend({
         });
         d.nodes.remove(delNodes);
 
+        //Step 1a: Clean Nodes for Presentation
+        md.nodes = Enumerable.From(md.nodes).Select(
+            function (value, index) {
+                if (typeof value !== 'undefined' && typeof value.label === 'string')
+                    value.label = value.label.replace(/_/g, ' ');
+                return value;
+            }).ToArray();
 
         // Step 2: add all the new nodes & update nodes
         d.nodes.update(md.nodes);
@@ -1406,7 +1413,14 @@ App.Node = DS.Model.extend({
         return 'ellipse'; // can also us circle
     }.property(),
     group: function() {
-        return 'x'; // any string, will be grouped //Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
+        return Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
+    }.property(),
+    humanName: function () {
+        var temp = this.get('label');
+        if (temp)
+            return ToTitleCase(temp.replace(/_/g, ' '));
+        else
+            return null;
     }.property()
 });
 
@@ -1432,20 +1446,27 @@ App.Edge = DS.Model.extend({
 
 App.Workflow = DS.Model.extend({
     name: DS.attr('string'),
-    label: function () {
+    comment: DS.attr('string'),
+    humanName: function () {
         var temp = this.get('name');
         if (temp)
-            return temp.replace('_', ' ');
+            return ToTitleCase(temp.replace(/_/g, ' '));
         else
             return null;
-    }.property(),
-    comment: DS.attr('string'),
+    }.property()
 });
 
 App.Wikipedia = DS.Model.extend({
     label: DS.attr('string'),
     content: DS.attr('string'),
-    edges: DS.hasMany('edge')
+    edges: DS.hasMany('edge'),
+    humanName: function () {
+        var temp = this.get('label');
+        if (temp)
+            return ToTitleCase(temp.replace(/_/g, ' '));
+        else
+            return null;
+    }.property()
 });
 
 
@@ -1600,12 +1621,12 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   var edgeids = Enumerable.From(edges).Select("$.id").ToArray();
                   var sequence = 1;
                   Enumerable.From(edges).ForEach(function (f) { f.sequence = sequence; sequence++; App.Wikipedia.store.push('edge', f); });
-                  Enumerable.From(edges).Where("$.to!='" + id.replace("'", "\\\'") + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to.replace(/_/g, ' ') }); });
-                  App.Wikipedia.store.push('wikipedia', { id: id, label: id.replace(/_/g, ' '), edges: edgeids, content: content });
+                  Enumerable.From(edges).Where("$.to!='" + id.replace("'", "\\\'") + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to }); });
+                  App.Wikipedia.store.push('wikipedia', { id: id, label: id, edges: edgeids, content: content });
                   if (typeof array === 'undefined')
-                      Ember.run(null, resolve, { id: id, label: id.replace(/_/g, ' '), content: content, edges: edgeids });
+                      Ember.run(null, resolve, { id: id, label: id, content: content, edges: edgeids });
                   else {
-                      var toReturn = { Nodes: [{ id: id, label: id.replace(/_/g, ' '), content: content, edges: edgeids }], Edges: edges };
+                      var toReturn = { Nodes: [{ id: id, label: id, content: content, edges: edgeids }], Edges: edges };
                       Ember.run(null, resolve, toReturn);
                   }
               }, function (jqXHR) {
@@ -1640,6 +1661,7 @@ function filterData(data) {
     // no self closing scripts
     data = data.replace(/<script.*\/>/g, '');
     // [... add as needed ...]
+    data = data.replace(/^null$/, '');
     return '<div class=\'filteredData\'>' + data + '</div>';
 }
 
