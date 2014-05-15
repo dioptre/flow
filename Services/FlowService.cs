@@ -361,7 +361,7 @@ namespace EXPEDIT.Flow.Services {
 
         }
 
-        public bool GetDuplicateNode(string wikiName)
+        public bool GetDuplicateNode(string wikiName, Guid? id)
         {
             wikiName = wikiName.ToSlug();
             var company = _users.DefaultContactCompanyID;
@@ -371,15 +371,17 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
+                if (id.HasValue && d.GraphData.Where(f=>f.GraphDataID==id.Value && f.GraphName == wikiName).Any())
+                    return false;
                 if (!creatorCompany.HasValue)
-                    return d.GraphData.Any(f => f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null));
+                    return d.GraphData.Any(f => (f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null)));
                 else
-                    return d.GraphData.Any(f=>f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany)); 
+                    return d.GraphData.Any(f => (f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany))); 
 
             }
         }
 
-        public bool GetDuplicateWorkflow(string workflowName)
+        public bool GetDuplicateWorkflow(string workflowName, Guid? id = default(Guid?))
         {
             workflowName = workflowName.ToSlug();
             var company = _users.DefaultContactCompanyID;
@@ -389,11 +391,12 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                var test = d.GraphDataGroups.Any(f => f.VersionOwnerCompanyID == creatorCompany);
+                if (id.HasValue && d.GraphDataGroups.Where(f => f.GraphDataGroupID == id.Value && f.GraphDataGroupName == workflowName).Any())
+                    return false;
                 if (!creatorCompany.HasValue)
-                    return d.GraphDataGroups.Any(f => f.GraphDataGroupName == workflowName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null));
+                    return d.GraphDataGroups.Any(f => (f.GraphDataGroupName == workflowName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null)));
                 else
-                    return d.GraphDataGroups.Any(f => f.GraphDataGroupName == workflowName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany));
+                    return d.GraphDataGroups.Any(f => (f.GraphDataGroupName == workflowName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany)));
             }
         }
 
@@ -906,7 +909,7 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                var obj = (from o in d.GraphDataGroups where m.GraphDataGroupID == m.GraphDataGroupID select o).SingleOrDefault();
+                var obj = (from o in d.GraphDataGroups where o.GraphDataGroupID == m.GraphDataGroupID select o).SingleOrDefault();
                 if (obj == null)
                     return false;
                 var table = d.GetTableName(typeof(GraphDataGroup));

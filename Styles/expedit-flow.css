@@ -25,10 +25,14 @@ label.valid {
     margin-bottom: 20px;
 }
 
-.alertify-log {
-     z-index:1000000000000000000000 !important;
+.alertify-logs {
+     z-index:1000000000000 !important;
 }
 
+
+ul.pager { /* This is the pager on the search page */
+  margin-top: 5px;
+}
 
 .ui-autocomplete {
   position: absolute;
@@ -91,33 +95,30 @@ label.valid {
   -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
  }
 
-/*.input {
-  float:left;
-  border:1px solid #ccc;
-  padding: 5px;
-  font-family:Arial;
-  width: 500px;
-}*/
-.input span.tag{
-  cursor:pointer;
-  display:block;
-  float:left;
-  color:#fff;
-  background:#689;
-  padding:5px;
-  padding-right:25px;
-  margin:4px;
+
+.input span.tag {
+    cursor: pointer;
+    display: block;
+    float: left;
+    color: #fff;
+    background: #428bca;
+    padding: 7px;
+    padding-right: 32px;
+    margin: 4px;
 }
+
+
+.input span.tag:after {
+    position: absolute;
+    content: "x";
+    border: 1px solid;
+    padding: 0 4px;
+    margin: 1px 0 0px 6px;
+    font-size: 10px;
+}
+
 .input span.tag:hover{
   opacity:0.7;
-}
-.input span.tag:after{
- position:absolute;
- content:"x";
- border:1px solid;
- padding:0 4px;
- margin:3px 0 10px 5px;
- font-size:10px;
 }
 .input input{
   background:#eee;
@@ -173,7 +174,7 @@ div.graph-manipulation-closeDiv {
   display: block;
 }
 
-.eui-modalobject-wrapper > div {
+.eui-modal.eui-full > .eui-modalobject-wrapper > div {
     padding: 50px;
     text-align: center;
     height: 100vh;
@@ -204,7 +205,7 @@ div.graph-manipulation-closeDiv {
 }
 
 .srh {
-	font-weight:bold; 
+	font-weight:bold;
 	background-color:yellow;
 }
 

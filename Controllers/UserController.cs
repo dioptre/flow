@@ -126,14 +126,24 @@ namespace EXPEDIT.Flow.Controllers {
         [HttpGet]
         public ActionResult NodeDuplicate(string id)
         {
-            return new JsonHelper.JsonNetResult(_Flow.GetDuplicateNode(id), JsonRequestBehavior.AllowGet);
+            string gid = Request.Params["guid"];
+            Guid? guid = null;
+            Guid tgid;
+            if (Guid.TryParse(gid, out tgid))
+                guid = tgid;
+            return new JsonHelper.JsonNetResult(_Flow.GetDuplicateNode(id, guid), JsonRequestBehavior.AllowGet);
         }
 
         [Themed(false)]
         [HttpGet]
         public ActionResult WorkflowDuplicate(string id)
         {
-            return new JsonHelper.JsonNetResult(_Flow.GetDuplicateWorkflow(id), JsonRequestBehavior.AllowGet);
+            string gid = Request.Params["guid"];
+            Guid? guid = null;
+            Guid tgid;
+            if (Guid.TryParse(gid, out tgid))
+                guid = tgid;
+            return new JsonHelper.JsonNetResult(_Flow.GetDuplicateWorkflow(id, guid), JsonRequestBehavior.AllowGet);
         }
 
         [Themed(false)]

@@ -402,12 +402,16 @@ App.SearchController = Ember.ObjectController.extend({
     searchText: "",
     dateModal: false,
     mapModal: false,
+    settingsModal: false,
     actions: {
         toggleDateModal: function(){
             this.toggleProperty('dateModal');
         },
         toggleMapModal: function(){
             this.toggleProperty('mapModal');
+        },
+        toggleSettingsModal: function(){
+            this.toggleProperty('settingsModal');
         },
         next: function (i) {
             this.incrementProperty(i);
@@ -912,6 +916,11 @@ App.GraphController = Ember.ObjectController.extend({
     workflowID: null,
     workflowEditModal : false,
     validateWorkflowName: false,
+    validateNewName: false,
+    validateExistingName: false,
+    loadingWorkflowName: false,
+    loadingNewName: false,
+    loadingExistingName: false,
     graphDataLte2: Ember.computed.lte('graphData.length', 2),
     graphData : null,
     graphDataTrigger : function () {
@@ -948,7 +957,19 @@ App.GraphController = Ember.ObjectController.extend({
                 });
             }
         };
-        Ember.RSVP.allSettled([Ember.RSVP.map(edgePromises, addEdge), Ember.RSVP.map(workflowPromises, getWorkflow)])
+        var sessionNodes = [];
+        var residents = App.Node.store.filter('node', function (record) {
+            return (record.get('edges').content == null || record.get('edges').content.loadingRecordsCount == 0) && typeof record.get('VersionUpdated') !== 'undefined';
+        }).then(function (val) {
+            sessionNodes = Enumerable.From(val.content).Select(
+                function (f) {
+                    return {
+                        id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group')
+                    }
+                }).ToArray();
+            });
+
+        Ember.RSVP.allSettled([Ember.RSVP.map(edgePromises, addEdge), Ember.RSVP.map(workflowPromises, getWorkflow), residents])
             .then(function () {
                 if (!Enumerable.From(prime.workflows).Any("f=>f.id=='" + _this.get("workflowID") + "'")) {
                     var newwf = Enumerable.From(prime.workflows).FirstOrDefault();
@@ -968,6 +989,7 @@ App.GraphController = Ember.ObjectController.extend({
                 // var model = this.get('model')
                 //m.data = data;
                 //return data;
+                prime.nodes = prime.nodes.concat(sessionNodes);
                 _this.set('graphData', prime);
             });
     }.observes('model', 'selected', 'node.@each.workflows'),
@@ -979,7 +1001,7 @@ App.GraphController = Ember.ObjectController.extend({
         }
         _this.set('loadingWorkflowName', true);
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            jQuery.getJSON('/Flow/User/WorkflowDuplicate/' + encodeURIComponent(_this.get('workflowName').trim())
+            jQuery.getJSON('/Flow/User/WorkflowDuplicate/' + encodeURIComponent(_this.get('workflowName').trim()) + '?guid=' + _this.get('workflowID')
               ).then(function (data) {
                   _this.set('loadingWorkflowName', false);
                  Ember.run(null, resolve, data);
@@ -992,11 +1014,57 @@ App.GraphController = Ember.ObjectController.extend({
         });
 
     }.observes('workflowName'),
-    loadingWorkflowName: false,
+    checkNewNodeName: function () {
+        var _this = this;
+        if (!_this.get('newName') || typeof _this.get('newName') !== 'string' || _this.get('newName').trim().length < 1) {
+            _this.set('validateNewName', 'Name required.');
+            return;
+        }
+        _this.set('loadingNewName', true);
+        return new Ember.RSVP.Promise(function (resolve, reject) {
+            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('newName').trim()) + '?guid=' + _this.get('selected')
+              ).then(function (data) {
+                  _this.set('loadingNewName', false);
+                  Ember.run(null, resolve, data);
+              }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+                  Ember.run(null, reject, jqXHR);
+              });
+        }).then(function (value) {
+            _this.set('validateNewName', value ? 'Name already in use.' : false);
+        });
+
+    }.observes('newName'),
+    checkExistingNodeName: function () {
+        var _this = this;
+        if (!_this.get('model.label') || typeof _this.get('model.label') !== 'string' || _this.get('model.label').trim().length < 1) {
+            _this.set('validateExistingName', 'Name required.');
+            return;
+        }
+        _this.set('loadingExistingName', true);
+        return new Ember.RSVP.Promise(function (resolve, reject) {
+            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('model.label').trim()) + '?guid=' + _this.get('selected')
+              ).then(function (data) {
+                  _this.set('loadingExistingName', false);
+                  Ember.run(null, resolve, data);
+              }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+                  Ember.run(null, reject, jqXHR);
+              });
+        }).then(function (value) {
+            _this.set('validateExistingName', value ? 'Name already in use.' : false);
+        });
+    }.observes('model.label'),
+    validateNames: function () {
+        if (this.get('newName') != null)
+            return (typeof this.get('validateNewName') === 'string') || (typeof this.get('validateWorkflowName') === 'string');
+        else
+            return (typeof this.get('validateExistingName') === 'string') || (typeof this.get('validateWorkflowName') === 'string');
+    }.property('validateWorkflowName', 'validateNewName', 'validateExistingName'),
     changeSelected: function () {
         this.transitionToRoute('graph', this.get('model.selected'));
     }.observes('model.selected'),
-    actions: {       
+    actions: {
         toggleWorkflowNewModal: function (data, callback) {
             this.toggleProperty('workflowNewModal');
         },
@@ -1058,18 +1126,18 @@ App.GraphController = Ember.ObjectController.extend({
                 _this.set('newContent', null);
                 _this.toggleProperty('workflowNewModal');
             }, function () {
-                alertify.error('Error Adding Process');                
+                alertify.error('Error Adding Process');
             });
         },
         addNewEdge: function (data) {
             var _this = this;
             data.id = NewGUID();
             data.GroupID = this.get('workflowID');
-            App.Node.store.createRecord('edge', data).save().then(function () { 
+            App.Node.store.createRecord('edge', data).save().then(function () {
                 alertify.log('Successfully Added Connection');
                 var f = App.Node.store.getById('edge', data.id);
                 var a = { id: f.get('id'), from: f.get('from'), to: f.get('to'), color: f.get('color'), width: f.get('width'), style: f.get('style') }
-                _this.get('graphData').edges.addObject(a);                
+                _this.get('graphData').edges.addObject(a);
             }, function () {
                 alertify.error('Error Adding Connection');
             });
@@ -1087,7 +1155,7 @@ App.GraphController = Ember.ObjectController.extend({
                 if (m)
                     promises.push(m.destroyRecord());
             });
-            Ember.RSVP.allSettled(promises).then(function (array) {                
+            Ember.RSVP.allSettled(promises).then(function (array) {
                 if (Enumerable.From(array).Any("f=>f.state=='rejected'"))
                     alertify.error('Error Updating Workflow');
                 else {
@@ -1104,7 +1172,7 @@ App.GraphController = Ember.ObjectController.extend({
                             return false;
                     }).ForEach(function (f) {
                         graphData.nodes.removeObject(f);
-                    });                    
+                    });
 
                     alertify.log('Successfully Updated Workflow');
                     //Enumerable.From(data.edges).ForEach(function (f) {
@@ -1117,7 +1185,7 @@ App.GraphController = Ember.ObjectController.extend({
                 }
 
             }, function (error) {
-                
+
             });
 
         }
@@ -1249,6 +1317,9 @@ App.VizEditorComponent = Ember.Component.extend({
         });
     },
     dataUpdates: function () {
+
+        console.log('updated')
+
         if (this.graph === null) {
             this.setup(); // graph hasn't been initialised yet
         }
@@ -1305,7 +1376,7 @@ App.VizEditorComponent = Ember.Component.extend({
         this.graph.zoomExtent();
 
 
-    }.observes('data.nodes.@each', 'data.edges.@each').on('didInsertElement')
+    }.observes('data.nodes.@each.label', 'data.edges.@each').on('didInsertElement')
 });
 
     // didInsertElement: function () {

@@ -21,7 +21,7 @@ namespace EXPEDIT.Flow.Services
          WikiViewModel GetWiki(string wikiName, Guid? nid);
 
          [OperationContract]
-         bool GetDuplicateNode(string wikiName);
+         bool GetDuplicateNode(string wikiName, Guid? id = default(Guid?));
 
          [OperationContract]
          bool SubmitWiki(ref WikiViewModel wiki);
@@ -61,7 +61,7 @@ namespace EXPEDIT.Flow.Services
          ContactViewModel GetMyInfo();
 
          [OperationContract]
-         bool GetDuplicateWorkflow(string workflowName);
+         bool GetDuplicateWorkflow(string workflowName, Guid? id = default(Guid?));
 
 
     }
