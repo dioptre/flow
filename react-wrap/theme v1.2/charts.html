@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />	
+	<title>React - Bootstrap Theme</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<!-- stylesheets -->
+	<link rel="stylesheet" type="text/css" href="css/compiled/theme.css">
+	<link rel="stylesheet" type="text/css" href="css/vendor/entypo.css">
+	<link rel="stylesheet" type="text/css" href="css/vendor/brankic.css">
+
+	<!-- javascript -->
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script src="js/bootstrap/bootstrap.min.js"></script>
+	<script src="js/theme.js"></script>
+
+	<!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body id="charts">
+	<header class="navbar navbar-inverse normal" role="banner">
+  		<div class="container">
+    		<div class="navbar-header">
+		      	<button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bs-navbar-collapse">
+			        <span class="icon-bar"></span>
+			        <span class="icon-bar"></span>
+			        <span class="icon-bar"></span>
+		      	</button>
+      			<a href="index.html" class="navbar-brand">React</a>
+    		</div>
+    		<nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
+      			<ul class="nav navbar-nav">
+      				<li class="dropdown">
+        				<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+          					Home alts <b class="caret"></b>
+          				</a>
+          				<ul class="dropdown-menu">
+							<li><a href="index.html">Home 1 (Static)</a></li>
+							<li><a href="index3.html">Home 2 (Sidebar menu)</a></li>
+							<li><a href="index4.html">Home 3 (Slider)</a></li>
+				        </ul>
+        			</li>
+      				<li class="dropdown">
+        				<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+          					Showcase <b class="caret"></b>
+          				</a>
+          				<ul class="dropdown-menu">
+							<li><a href="features.html">Features</a></li>
+							<li><a href="services.html">Services</a></li>
+				        </ul>
+        			</li>
+        			<li class="active dropdown">
+          				<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+          					Pricing <b class="caret"></b>
+          				</a>
+          				<ul class="dropdown-menu">
+							<li><a href="pricing.html">Pricing charts</a></li>
+							<li><a href="charts.html">Comparison tables</a></li>
+				        </ul>
+        			</li>
+        			<li class="dropdown">
+        				<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+          					More pages <b class="caret"></b>
+          				</a>
+          				<ul class="dropdown-menu">
+							<li><a href="aboutus.html">About us</a></li>
+							<li><a href="contactus.html">Contact us</a></li>
+							<li><a href="gallery.html">Gallery</a></li>
+							<li><a href="portfolio.html">Portfolio</a></li>
+							<li><a href="portfolio-item.html">Portfolio Item</a></li>
+							<li><a href="invoice.html">Invoice page</a></li>
+							<li><a href="timeline.html">Timeline Page</a></li>
+							<li><a href="docs.html">API Documentation</a></li>
+							<li><a href="support.html">Support</a></li>
+							<li><a href="coming-soon.html">Coming Soon</a></li>
+							<li><a href="status.html">Status</a></li>
+							<li><a href="signup.html">Sign Up & Sign In</a></li>
+							<li><a href="signup-rotate.html">Sign Up Miscellaneous</a></li>
+							<li><a href="404.html">404 Page</a></li>
+				        </ul>
+        			</li>
+        			<li class="dropdown">
+        				<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+	      					Blog <b class="caret"></b>
+	      				</a>
+	      				<ul class="dropdown-menu">
+							<li><a href="blog.html">Blog </a></li>
+							<li><a href="blogpost.html">Blog post</a></li>
+				        </ul>
+        			</li>
+      			</ul>
+      			<ul class="nav navbar-nav navbar-right visible-md visible-lg">
+      				<li>
+          				<a href="signup.html" class="button">Sign up free</a>
+        			</li>
+      			</ul>
+    		</nav>
+  		</div>
+	</header>
+
+	<div id="tabs-option">
+		<div class="container">
+			<div class="row header">
+				<h3>Different pricing charts</h3>
+				<p>For some cases that you might also need</p>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="tabs">
+						<div class="tab monthly active">
+							<span>Pay Monthly</span>
+						</div>
+						<div class="tab anually">
+							<span>
+								Pay anually
+								<small>20% off</small>
+							</span>
+						</div>
+					</div>
+					<div class="plans clearfix">
+						<div class="plan col-md-4">
+							<div class="header">
+								<span class="icon entypo-user"></span>
+								Solo Plan
+								<div class="price" data-monthly="$15/mo" data-anually="$150/y">
+									$15/mo
+								</div>
+							</div>
+							<div class="specs">
+								<div class="spec">
+									<span class="variable">1</span> team member
+								</div>
+								<div class="spec">
+									<span class="variable">Digital</span> recurring billing
+								</div>
+								<div class="spec">
+									<span class="variable">Virtual</span> online terminal
+								</div>
+								<div class="spec">
+									<span class="variable">100</span> total products
+								</div>
+							</div>
+						</div>
+						<div class="plan col-md-4 middle">
+							<div class="header">
+								<span class="icon entypo-users"></span>
+								Team Plan
+								<div class="price" data-monthly="$49/mo" data-anually="$550/y">
+									$49/mo
+								</div>
+							</div>
+							<div class="specs">
+								<div class="spec">
+									<span class="variable">20</span> team members
+								</div>
+								<div class="spec">
+									<span class="variable">Digital</span> recurring billing
+								</div>
+								<div class="spec">
+									<span class="variable">Virtual</span> online terminal
+								</div>
+								<div class="spec">
+									<span class="variable">225</span> total products
+								</div>
+								<div class="spec">
+									<span class="variable">Virtual</span> ssh keys
+								</div>
+							</div>
+						</div>
+						<div class="plan col-md-4">
+							<div class="header">
+								<span class="icon entypo-suitcase"></span>
+								Agency Plan
+								<div class="price" data-monthly="$99/mo" data-anually="$1,100/y">
+									$15/mo
+								</div>
+							</div>
+							<div class="specs">
+								<div class="spec">
+									<span class="variable">Unlimited</span> team members
+								</div>
+								<div class="spec">
+									<span class="variable">Digital</span> recurring billing
+								</div>
+								<div class="spec">
+									<span class="variable">Virtual</span> online terminal
+								</div>
+								<div class="spec">
+									<span class="variable">Unlimited</span> total products
+								</div>
+								<div class="spec">
+									<span class="variable">Virtual</span> ssh keys
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="signup">
+						<a href="signup.html" class="button button-small">
+							Start your unlimited trial for 30 days
+						</a>
+						<div class="message">
+							30-day money-back guarantee that starts after your first payment.
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="chart-option">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12"><div class="divider"></div></div>
+			</div>
+			<div class="row header">
+				<h3>Comparison charts</h3>
+				<p>
+					When you need to compare your plans or competitors
+				</p>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="chart clearfix">
+						<div class="features-col col-sm-6">
+							<div class="header">								
+								Features
+							</div>
+							<div class="spec">
+								<span class="icon brankic-calendar2"></span>
+								Sync across all your devices
+							</div>
+							<div class="spec">
+								<span class="icon brankic-loop"></span>
+								Recurring Billing
+							</div>
+							<div class="spec">
+								<span class="icon brankic-phone"></span>
+								Online terminal included
+							</div>
+							<div class="spec">
+								<span class="icon brankic-locked"></span>
+								Complete products catalog
+							</div>
+							<div class="spec">
+								<span class="icon brankic-key"></span>
+								Deployment with ssh keys
+							</div>
+							<div class="spec">
+								<span class="icon brankic-pictures3"></span>
+								Add files and photos from email
+							</div>
+							<div class="spec last">
+								<span class="icon brankic-envelope"></span>
+								Get daily email notifications
+							</div>
+						</div>
+						<div class="plan-col col-sm-2">
+							<div class="header">
+								Solo Plan
+								<div class="price">
+									$15/mo
+								</div>
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">&nbsp;</div>
+							<div class="spec">&nbsp;</div>
+							<div class="spec">&nbsp;</div>
+							<div class="spec">&nbsp;</div>
+
+							<a href="signup.html" class="button button-small">Sign up free</a>
+						</div>
+						<div class="plan-col col-sm-2">
+							<div class="header">
+								Team Plan
+								<div class="price">
+									$49/mo
+								</div>
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">&nbsp;</div>
+							<div class="spec">&nbsp;</div>
+
+							<a href="signup.html" class="button button-small">Sign up free</a>
+						</div>
+						<div class="plan-col last col-sm-2">
+							<div class="header">
+								Agency Plan
+								<div class="price">
+									$119/mo
+								</div>
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+							<div class="spec">
+								<img src="images/checkmark.png" class="check" alt="checkmark" />
+							</div>
+
+							<a href="signup.html" class="button button-small">Sign up free</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row message">
+				<p>
+					All of our plans come with a 30 day trial with no credit card required, we also offer a 
+					<a href="signup.html">free plan</a>.
+				</p>
+			</div>	
+			<div class="row faq">
+				<div class="col-md-12">
+					<div class="row header">
+						<div class="col-md-12">
+							<h3>Frequently Asked Questions</h3>
+						</div>
+					</div>
+					<div class="row questions">
+						<div class="col-md-6">
+							<div class="question">
+								<strong>Do I need a card to signup?</strong>
+								<p>
+									There are many variations of passages of Lorem Ipsum available, but the randomised words which don’t look even slightly believable. If you are anything embarrassing hidden in the middle of text.
+								</p>
+							</div>
+							<div class="question">
+								<strong>Can I cancel at anytime?</strong>
+								<p>
+									There are many variations of passages of Lorem Ipsum available, but the randomised words which don’t look even slightly believable. If you are anything embarrassing hidden in the middle of text.
+								</p>
+							</div>
+							<div class="question">
+								<strong>Do I need a card to signup?</strong>
+								<p>
+									There are many variations of passages of Lorem Ipsum available, but the randomised words which don’t look even slightly believable. If you are anything embarrassing hidden in the middle of text.
+								</p>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="question">
+								<strong>Can I cancel at anytime?</strong>
+								<p>
+									There are many variations of passages of Lorem Ipsum available, but the randomised words which don’t look even slightly believable. If you are anything embarrassing hidden in the middle of text.
+								</p>
+							</div>
+							<div class="question">
+								<strong>Do I need a card to signup?</strong>
+								<p>
+									There are many variations of passages of Lorem Ipsum available, but the randomised words which don’t look even slightly believable. If you are anything embarrassing hidden in the middle of text.
+								</p>
+							</div>
+							<div class="question">
+								<strong>Can I cancel at anytime?</strong>
+								<p>
+									There are many variations of passages of Lorem Ipsum available, but the randomised words which don’t look even slightly believable. If you are anything embarrassing hidden in the middle of text.
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="footer">
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-3 copyright">
+					React © 2014
+				</div>
+				<div class="col-sm-6 menu">
+					<ul>
+	      				<li>
+	          				<a href="features.html">Features</a>
+	        			</li>
+	        			<li>
+	        				<a href="services.html">Services</a>
+	        			</li>
+	        			<li class="active">
+	          				<a href="pricing.html">Pricing</a>
+	        			</li>
+	        			<li>
+	          				<a href="support.html">Support</a>
+	        			</li>
+	        			<li>
+	          				<a href="blog.html">Blog</a>
+	        			</li>
+	      			</ul>
+				</div>
+				<div class="col-sm-3 social">
+					<a href="#">
+						<img src="images/social/social-tw.png" alt="twitter" />
+					</a>
+					<a href="#">
+						<img src="images/social/social-dbl.png" alt="dribbble" />
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		$(function () {
+			
+			// Enables the pricing tabs
+			$tabs = $("#tabs-option .tab");
+			$prices = $("#tabs-option .price");
+			$tabs.click(function () {
+				$tabs.removeClass("active");
+				$(this).addClass("active");
+				var dataPrice = $(this).hasClass("monthly") ? "monthly" : "anually";
+				$prices.each(function (index, el) {
+					$(el).html($(el).data(dataPrice));
+				});
+			});
+		});
+	</script>
+</body>
+</html>
