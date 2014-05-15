@@ -274,7 +274,12 @@ padding: 0px 8px 0px 8px;
 
 }
 
-.thumbnail img {
+span.graph-manipulationUI:hover {
+  box-shadow: 0px 0px 1px rgba(255, 255, 255, 1);
+  background-color: rgb(214, 214, 214);
+}
 
+.process-header small {
+  margin-left: 0px;
 }
 

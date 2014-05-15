@@ -356,8 +356,8 @@
 
         <div class="container-fluid">
         <div class="row">
-            <div class="col-md-12">
-                   <h1>{{#if model}}{{model.humanName}}{{else}}{{newName}}{{/if}}
+            <div class="col-md-12 process-header">
+                   <h1>{{#if model}}{{humanReadableName}}{{else}}{{newName}}{{/if}}
                      <small>
                         &nbsp;&nbsp;<a {{action 'toggleWorkflowEditModal'}}><i class="glyphicon icon-pencil"></i></a>
                         </small>

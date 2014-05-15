@@ -931,6 +931,13 @@ App.GraphController = Ember.ObjectController.extend({
             $('body').fitVids();
         })
     }.observes('model.content'),
+    humanReadableName: function () {
+        var temp = this.get('model.label');
+        if (temp)
+            return ToTitleCase(temp.replace(/_/g, ' '));
+        else
+            return null;
+    }.property('model.label'),
     graphData : null,
     graphDataTrigger : function () {
         // get data bitch equiv
@@ -1632,7 +1639,7 @@ App.Node = DS.Model.extend({
             return ToTitleCase(temp.replace(/_/g, ' '));
         else
             return null;
-    }.property(),
+    }.property('label'),
     VersionUpdated: DS.attr('date')
 });
 
