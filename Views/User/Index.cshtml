@@ -349,19 +349,27 @@
             {{#eui-modal openBinding="workflowEditModal" style="full"}}
                 <div style="padding: 50px; text-align: center;">
                 <p>
-                    {{#if workflowName}}Update workflow {{workflowName}}{{else}}Create a workflow{{/if}} name:
+                    {{#if workflowID}}Update workflow {{workflowName}}{{else}}Create a workflow{{/if}} name:
                 </p>
                 {{eui-input valueBinding="workflowName" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
                 <p>
                     The {{model.humanName}} process name:
                 </p>
-                {{eui-input valueBinding="model.label" placeholder='Enter a process name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+                    {{#if model}}
+                        {{eui-input valueBinding="model.label" placeholder='Enter a process name' error=validateWorkflowName forceErrorCheck=true}}
+                    {{else}}
+                        {{eui-input valueBinding="newName" placeholder='Enter a process name' error=validateWorkflowName forceErrorCheck=true}}xx
+                    {{/if}} 
+                 <br /><br />
                 <p>
                     The {{model.humanName}} process detail:
-                </p>
-                @*{{eui-textarea valueBinding="model.content" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}}*@ <br /><br />
-                {{tinymce-editor data=model.content}}
-                {{eui-button label="Submit" size="small" action="toggleWorkflowEditModal" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}
+                </p>       
+                    {{#if model}}         
+                        {{tinymce-editor data=model.content}}
+                    {{else}}
+                        {{tinymce-editor data=newContent}}
+                    {{/if}}
+                {{eui-button label="Submit" size="small" action="updateWorkflow" style='primary' size='large' disabled=validateWorkflowName loading=loadingWorkflowName}}
                 </div>
             {{/eui-modal}}
             {{#eui-modal openBinding="workflowNewModal" style="full"}}

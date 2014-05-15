@@ -1003,17 +1003,59 @@ App.GraphController = Ember.ObjectController.extend({
         toggleWorkflowEditModal: function (data, callback) {
             this.toggleProperty('workflowEditModal');
         },
+        updateWorkflow: function () {
+            var _this = this;
+            var newWorkflow;
+            if (this.get('workflowID') == null)
+                newWorkflow = App.Workflow.store.createRecord('workflow', { id: NewGUID(), name: this.get('workflowName') });
+            else {
+                newWorkflow = App.Node.store.getById('workflow', _this.get('workflowID'));
+                newWorkflow.set('name', this.get('workflowName'));
+            }
+
+            newWorkflow.save().then(function () {
+                alertify.log('Successfully Added Workflow');
+                _this.set('workflowName', newWorkflow.get('name'));
+                _this.set('workflowID', newWorkflow.get('id'));
+                var newNode;
+                if (_this.get('model'))
+                    newNode = App.Node.store.getById('node', _this.get('selected'));
+                else
+                    newNode = App.Workflow.store.createRecord('node', { id: _this.get('selected'), label: _this.get('newName'), content: _this.get('newContent'), VersionUpdated: Ember.Date.parse(new Date()) });
+                newNode.save().then(function () {
+                    alertify.log('Successfully Updated Process');
+                    var f = App.Node.store.getById('node', _this.get('selected'));
+                    var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
+                    _this.get('graphData').nodes.addObject(a);
+                    _this.set('newName', null);
+                    _this.set('newContent', null);
+                    _this.toggleProperty('workflowEditModal');
+                }, function () {
+                    if (_this.get('model'))
+                        alertify.error('Error Updating Process');
+                    else
+                        alertify.error('Error Adding Process');
+                });
+            }, function () {
+                if (_this.get('workflowID'))
+                    alertify.error('Error Updating Workflow');
+                else
+                    alertify.error('Error Adding Workflow');
+            });
+        },
         addNewNode: function () {
             var _this = this;
             var c = this.get('newContent')
             var n = this.get('newName')
             var id = NewGUID();
-            var newNode = {id: id, label: n, content: c };
+            var newNode = { id: id, label: n, content: c, VersionUpdated: Ember.Date.parse(new Date()) };
             App.Node.store.createRecord('node', newNode).save().then(function () {
                 alertify.log('Successfully Added Process');
                 var f = App.Node.store.getById('node', id);
                 var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                 _this.get('graphData').nodes.addObject(a);
+                _this.set('newName', null);
+                _this.set('newContent', null);
                 _this.toggleProperty('workflowNewModal');
             }, function () {
                 alertify.error('Error Adding Process');                
@@ -1049,18 +1091,28 @@ App.GraphController = Ember.ObjectController.extend({
                 if (Enumerable.From(array).Any("f=>f.state=='rejected'"))
                     alertify.error('Error Updating Workflow');
                 else {
+                    _this = _this;
+
+                    var currentSelected = _this.get('selected');
+
+                    var graphData = _this.get('graphData');
+
+                    Enumerable.From(graphData.nodes).Where(function (f) {
+                        if (data.nodes.indexOf(f.id) > -1)
+                            return true;
+                        else
+                            return false;
+                    }).ForEach(function (f) {
+                        graphData.nodes.removeObject(f);
+                    });                    
+
                     alertify.log('Successfully Updated Workflow');
-                    debugger;
                     //Enumerable.From(data.edges).ForEach(function (f) {
                     //    var m = App.Node.store.getById('edge', f);
                     //    if (m)
                     //        promises.push(m.destroyRecord());
                     //});
-                    //Enumerable.From(data.nodes).ForEach(function (f) {
-                    //    var m = App.Node.store.getById('node', f);
-                    //    if (m)
-                    //        promises.push(m.destroyRecord());
-                    //});
+
 
                 }
 
@@ -1453,7 +1505,8 @@ App.Node = DS.Model.extend({
     shape: function() {
         return 'ellipse'; // can also us circle
     }.property(),
-    group: function() {
+    group: function () {
+        return 'x';
         return Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
     }.property(),
     humanName: function () {
@@ -1462,7 +1515,8 @@ App.Node = DS.Model.extend({
             return ToTitleCase(temp.replace(/_/g, ' '));
         else
             return null;
-    }.property()
+    }.property(),
+    VersionUpdated: DS.attr('date')
 });
 
 

@@ -662,7 +662,7 @@ namespace EXPEDIT.Flow.Services {
         public bool CreateNode(FlowViewModel m)
         {
             m.GraphName = m.GraphName.ToSlug();
-            if (!m.GraphDataID.HasValue || string.IsNullOrWhiteSpace(m.GraphName))
+            if (!m.GraphDataID.HasValue)
                 return false;
             var company = _users.DefaultContactCompanyID;
             var companies = _users.ContactCompanies;
@@ -673,7 +673,9 @@ namespace EXPEDIT.Flow.Services {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
                 var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, companies, company, ActionPermission.Create, out isNew);
-                if (!id.HasValue || !isNew)
+                if (!isNew)
+                    return UpdateNode(m);
+                if (!id.HasValue)
                     return false;
                 Guid? creatorContact, creatorCompany;
                 _users.GetCreator(contact, company, out creatorContact, out creatorCompany);
@@ -699,7 +701,7 @@ namespace EXPEDIT.Flow.Services {
         public bool UpdateNode(FlowViewModel m)
         {
             m.GraphName = m.GraphName.ToSlug();
-            if (!m.GraphDataID.HasValue || string.IsNullOrWhiteSpace(m.GraphName))
+            if (!m.GraphDataID.HasValue)
                 return false;
             var company = _users.DefaultContactCompanyID;
             var companies = _users.ContactCompanies;
@@ -713,11 +715,11 @@ namespace EXPEDIT.Flow.Services {
                 if (!id.HasValue || isNew || id != m.GraphDataID)
                     return false;
                 var g = (from o in d.GraphData where o.GraphDataID == m.GraphDataID select o).Single();
-                if (string.IsNullOrWhiteSpace(m.GraphName) && m.GraphName != g.GraphName)
+                if (!string.IsNullOrWhiteSpace(m.GraphName) && m.GraphName != g.GraphName)
                 {
                     g.GraphName = m.GraphName;
                 }
-                if (string.IsNullOrWhiteSpace(m.GraphData) && m.GraphData != g.GraphContent)
+                if (!string.IsNullOrWhiteSpace(m.GraphData) && m.GraphData != g.GraphContent)
                 {
                     g.GraphContent = m.GraphData;
                 }
