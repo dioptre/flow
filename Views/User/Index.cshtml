@@ -320,12 +320,20 @@
 
   <script type="text/x-handlebars" id="wikipedia">
 
-      {{view Ember.TextField valueBinding='title' classNameBindings=":search"}}
+    <div class="container-fluid" style="margin-top:12px;">
 
-      <h1>{{title}}</h1>
-      <div class="container-fluid" style="margin-top:12px;">
+        <div class="row">
+            <div class="col-md-4">
+                {{view Ember.TextField valueBinding='title' classNameBindings=":search :form-control" style="width: 100%;"}}
+            </div>
+        </div>
+
+        <br> <br>
+
+
         <div class="row">
             <div class="col-md-6">
+                <h2><b>{{title}}</b></h2>
                 {{#if model.content}}
                   {{safehtml model.content}}
                 {{/if}}
@@ -334,7 +342,7 @@
                  {{viz-editor data=graphData selected=selected openModal="toggleWorkflowEditModal"}}
             </div>
         </div>
-      </div>
+    </div>
 
   </script>
 
@@ -493,12 +501,11 @@
             <br><br>
             <br><br>
         </div>
-    <div>
+    </div>
 
 
 
       <div class="row">
-        <div class="col-md-12">
             {{#if keywords}}
                 {{#if graph}}
                   <div {{bind-attr class='activeResultsClass :overscroll'}}>
@@ -516,9 +523,10 @@
                   </div>
                 {{/if}}
             {{else}}
-                <h3>Please add a keyword to start searching...</h3>
+                <div class="col-md-12">
+                    <h4>Please add a keyword to start searching...</h4>
+                </div>
             {{/if}}
-         </div>
       </div>
 
 
@@ -592,14 +600,9 @@
   <h3><i class="icon-file"></i>&nbsp;Files</h3>
 
   {{#if loading}}
-
     Loading...
-
   {{else}}
-
-
     {{#if results}}
-
       <ul class="pager">
           {{#if prev}}
              <li><a {{action 'prev' 'pageFile'}}>Previous</a></li>
@@ -609,7 +612,6 @@
           {{/if}}
       </ul>
 
-       <div class="row">
       <div class="table-responsive">
         <table class="table table-condensed table-hover">
             <thead>
@@ -635,17 +637,10 @@
         </table>
       </div>
 
-           </div>
-
     {{else}}
-
         Sorry no results could be found.
-
     {{/if}}
-
-
   {{/if}}
-
 </script>
 
 

@@ -924,8 +924,10 @@ namespace EXPEDIT.Flow.Services {
                 {
                     return false;
                 }
-                obj.GraphDataGroupName = m.GraphDataGroupName;
-                obj.Comment = m.Comment;
+                if (!string.IsNullOrWhiteSpace(m.GraphDataGroupName) && obj.GraphDataGroupName != m.GraphDataGroupName)
+                    obj.GraphDataGroupName = m.GraphDataGroupName;
+                if (!string.IsNullOrWhiteSpace(m.Comment) && obj.Comment != m.Comment)
+                    obj.Comment = m.Comment;
                 obj.VersionUpdated = now;
                 obj.VersionUpdatedBy = contact;
                 d.SaveChanges();

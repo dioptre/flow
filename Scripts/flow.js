@@ -1074,22 +1074,28 @@ App.GraphController = Ember.ObjectController.extend({
         updateWorkflow: function () {
             var _this = this;
             var newWorkflow;
-            if (this.get('workflowID') == null)
-                newWorkflow = App.Workflow.store.createRecord('workflow', { id: NewGUID(), name: this.get('workflowName') });
-            else {
+            if (this.get('workflowID') != null) {
                 newWorkflow = App.Node.store.getById('workflow', _this.get('workflowID'));
                 newWorkflow.set('name', this.get('workflowName'));
+                newWorkflow.set('comment', 'asdasd');
+
+            }
+            else {
+                var wfid = NewGUID();
+                newWorkflow = App.Workflow.store.createRecord('workflow', { id: wfid, name: this.get('workflowName') });
+                _this.set('workflowID', wfid);
             }
 
             newWorkflow.save().then(function () {
                 alertify.log('Successfully Added Workflow');
-                _this.set('workflowName', newWorkflow.get('name'));
-                _this.set('workflowID', newWorkflow.get('id'));
-                var newNode;
-                if (_this.get('model'))
-                    newNode = App.Node.store.getById('node', _this.get('selected'));
-                else
-                    newNode = App.Workflow.store.createRecord('node', { id: _this.get('selected'), label: _this.get('newName'), content: _this.get('newContent'), VersionUpdated: Ember.Date.parse(new Date()) });
+                var newNode = App.Node.store.getById('node', _this.get('selected'));
+                if (typeof newNode === 'undefined' || !newNode)
+                    newNode = App.Node.store.createRecord('node', { id: _this.get('selected'), label: _this.get('newName'), content: _this.get('newContent'), VersionUpdated: Ember.Date.parse(new Date()) });
+                var model = _this.get('model');
+                if (model) {
+                    newNode.set('label', model.label);
+                    newNode.set('content', model.content);
+                }
                 newNode.save().then(function () {
                     alertify.log('Successfully Updated Process');
                     var f = App.Node.store.getById('node', _this.get('selected'));
@@ -1266,6 +1272,22 @@ App.VizEditorComponent = Ember.Component.extend({
         var container = $('<div>').appendTo(this.$())[0];
         var data = this.get('vizDataSet');
         var options = {
+            labels:{
+                  add:"Add Process",
+                  edit:"Edit",
+                  link:"Add Connection",
+                  del:"Delete selected",
+                  editNode:"Edit Process",
+                  back:"Back",
+                  addDescription:"Click in an empty space to create a new Process.",
+                  linkDescription:"Click on a Process and drag the Connection to another Process to link them.",
+                  addError:"The function for add does not support two arguments (data,callback).",
+                  linkError:"The function for connect does not support two arguments (data,callback).",
+                  editError:"The function for edit does not support two arguments (data, callback).",
+                  editBoundError:"No edit function has been bound to this button.",
+                  deleteError:"The function for delete does not support two arguments (data, callback).",
+                  deleteClusterError:"Clusters cannot be deleted."
+            },
             physics: {barnesHut: {enabled: false}},
             stabilize: false,
             stabilizationIterations: 1,
@@ -1854,8 +1876,9 @@ Ember.Handlebars.helper('wikiurl', function (item, options) {
 
 
 Ember.TextField.reopen({
-    attributeBindings: ['autofocus'],
-    autofocus: 'autofocus'
+    attributeBindings: ['autofocus', 'style'],
+    autofocus: 'autofocus',
+    style: 'style'
 });
 
 

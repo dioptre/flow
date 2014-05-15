@@ -178,8 +178,12 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (!User.Identity.IsAuthenticated)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
-            if (m.node != null && m.node.id != null)
+            if (m.node != null)
+            {
+                if (m.GraphDataID.HasValue)
+                    m.node.GraphDataID = m.GraphDataID;
                 m = m.node;
+            }
             if (_Flow.CreateNode(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
@@ -193,8 +197,12 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (!User.Identity.IsAuthenticated)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
-            if (m.node != null && m.node.id != null)
+            if (m.node != null)
+            {
+                if (m.GraphDataID.HasValue)
+                    m.node.GraphDataID = m.GraphDataID;
                 m = m.node;
+            }
             if (_Flow.UpdateNode(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
@@ -281,7 +289,9 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);  
             if (m == null)
                 return new HttpUnauthorizedResult("Unauthorized access to protected workflow.");
-            return View(m);
+            else
+                return new JsonHelper.JsonNetResult(m, JsonRequestBehavior.AllowGet);
+
         }
 
         [Themed(false)]
@@ -291,8 +301,12 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (!User.Identity.IsAuthenticated)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
-            if (m.workflow != null && m.workflow.id != null)
+            if (m.workflow != null)
+            {
+                if (m.GraphDataGroupID.HasValue)
+                    m.workflow.GraphDataGroupID = m.GraphDataGroupID;
                 m = m.workflow;
+            }
             if (_Flow.CreateWorkflow(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
@@ -306,8 +320,12 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (!User.Identity.IsAuthenticated)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
-            if (m.workflow != null && m.workflow.id != null)
+            if (m.workflow != null)
+            {
+                if (m.GraphDataGroupID.HasValue)
+                    m.workflow.GraphDataGroupID = m.GraphDataGroupID;
                 m = m.workflow;
+            }
             if (_Flow.UpdateWorkflow(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else

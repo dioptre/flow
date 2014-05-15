@@ -174,7 +174,7 @@ div.graph-manipulation-closeDiv {
   display: block;
 }
 
-.eui-modal.eui-full > .eui-modalobject-wrapper > div {
+.eui-modal.eui-full .eui-modalobject-wrapper > div {
     padding: 50px;
     text-align: center;
     height: 100vh;
@@ -211,4 +211,8 @@ div.graph-manipulation-closeDiv {
 
 .searchbox {
     margin:10px;
+}
+
+.form-control {
+  width: 100%; /* bootstrap template overrides this default bootstrap class*/
 }
