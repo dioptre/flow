@@ -200,6 +200,12 @@ div.graph-manipulation-closeDiv {
     margin: -35px auto 25px auto;
 }
 
+.eui-modal-open {
+  position: fixed; /*fixes modals for safariii */
+  width: 100%;
+  overflow: hidden;
+}
+
 .eui-error-message {
     position: relative;
 }
