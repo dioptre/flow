@@ -1078,7 +1078,7 @@ App.GraphController = Ember.ObjectController.extend({
             this.toggleProperty('workflowEditModal');
         },
         updateWorkflow: function () {
-            var _this = this;
+            var _this = this;            
             var newWorkflow;
             if (this.get('workflowID') != null) {
                 newWorkflow = App.Node.store.getById('workflow', _this.get('workflowID'));
@@ -1104,14 +1104,13 @@ App.GraphController = Ember.ObjectController.extend({
                     alertify.log('Successfully Updated Process');
                     var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                     var duplicate = Enumerable.From(_this.get('graphData.nodes')).Where("g=>g.id=='" + f.get('id') + "'").FirstOrDefault();
-                    return;
                     if (duplicate)
                         _this.get('graphData.nodes').removeObject(duplicate);
                     _this.get('graphData.nodes').pushObject(a);
                     _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //HACK TODO
                     _this.set('newName', null);
                     _this.set('newContent', null);
-                    _this.toggleProperty('workflowEditModal');
+                    _this.set('workflowEditModal', false);
                 }, function () {
                     if (_this.get('model'))
                         alertify.error('Error Updating Process');
@@ -1137,7 +1136,7 @@ App.GraphController = Ember.ObjectController.extend({
                 _this.get('graphData').nodes.pushObject(a);
                 _this.set('newName', null);
                 _this.set('newContent', null);
-                _this.toggleProperty('workflowNewModal');  
+                _this.toggleProperty('workflowNewModal');
                _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //HACK TODO
             }, function () {
                 alertify.error('Error Adding Process');
@@ -1155,6 +1154,8 @@ App.GraphController = Ember.ObjectController.extend({
                 _this.set('graphData.edges', _this.get('graphData.edges').concat([]));
             }, function () {
                 alertify.error('Error Adding Connection');
+                alertify.log('No Workflow name set. Please try again.');
+                _this.toggleProperty('workflowEditModal'); //Hack TODO can't save without wf
             });
         },
         deleteGraphItems: function (data, callback) {
@@ -1300,9 +1301,11 @@ App.VizEditorComponent = Ember.Component.extend({
                   deleteError:"The function for delete does not support two arguments (data, callback).",
                   deleteClusterError:"Clusters cannot be deleted."
             },
-            physics: {barnesHut: {enabled: false}},
-            stabilize: false,
-            stabilizationIterations: 1,
+            //physics: {barnesHut: {enabled: false}},
+            //physics: { barnesHut: { gravitationalConstant: -8425, centralGravity: 0.1, springLength: 150, springConstant: 0.058, damping: 0.3 } },
+            //physics: {barnesHut: {gravitationalConstant: -8425, centralGravity: 0.5, springLength: 150, springConstant: 0.5, damping: 0.3}},
+            //stabilize: false,
+            //stabilizationIterations: 100,
             dataManipulation: this.get('editing'),
             onAdd: function (data, callback) {
                 _this.sendAction('toggleWorkflowNewModal', data, callback);

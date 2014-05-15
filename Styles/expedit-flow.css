@@ -225,3 +225,7 @@ div.graph-manipulation-closeDiv {
 .form-control {
   width: 100%; /* bootstrap template overrides this default bootstrap class*/
 }
+
+.mce-widget.mce-tooltip {
+    display: none !important;
+}

@@ -357,7 +357,7 @@
             {{#if workflowName}}
                 <h3>{{workflowName}}</h3>
            {{else}}
-                {{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.humanName" value=workflowID disabled='graphDataLte2'}}
+                @*{{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.humanName" value=workflowID disabled='graphDataLte2'}}*@
             {{/if}}
             {{#eui-modal openBinding="workflowEditModal" style="full"}}
                 <div style="padding: 50px; text-align: center;">
@@ -501,7 +501,7 @@
             <br>
 
              {{#if keywords}}
-                {{#link-to 'wikipedia' componentURI}}Lookup <i>{{keywords}}</i> on wikipedia{{/link-to}}
+                {{#link-to 'wikipedia' componentURI}}Lookup <b>{{keywords}}</b> on wikipedia{{/link-to}}
             {{/if}}
 
             <br><br>
