@@ -78,6 +78,7 @@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/tinymce/tinymce.min.js")"></script>
         <script src="@Url.Content("~/Modules/Orchard.jQuery/Scripts/jquery.colorbox.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/common.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/jquery.fitvids.js")"></script>
     </head>
     <body>
 
@@ -352,67 +353,82 @@
 
 
   <script type="text/x-handlebars" id="graph">
-      <div class="container-fluid" style="margin-top:12px;">
-           <h1>{{#if model}}{{model.humanName}}{{else}}{{newName}}{{/if}}<small>&nbsp;&nbsp;<a {{action 'toggleWorkflowEditModal'}}><i class="glyphicon icon-pencil"></i>&nbsp;</a></small></h1>
-            {{#if workflowName}}
-                <h3>{{workflowName}}</h3>
-           {{else}}
-                @*{{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.humanName" value=workflowID disabled='graphDataLte2'}}*@
-            {{/if}}
-            {{#eui-modal openBinding="workflowEditModal" style="full"}}
-                <div style="padding: 50px; text-align: center;">
-                <p>
-                    {{#if workflowID}}Update workflow {{else}}New workflow{{/if}} name:
-                </p>
-                {{eui-input valueBinding="workflowName" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
-                <p>
-                    The process name:
-                </p>
-                    {{#if model}}
-                        {{eui-input valueBinding="model.label" placeholder='Enter a process name' error=validateExistingName forceErrorCheck=true}}
-                    {{else}}
-                        {{eui-input valueBinding="newName" placeholder='Enter a process name' error=validateNewName forceErrorCheck=true}}
-                    {{/if}}
-                 <br /><br />
-                <p>
-                    The process detail:
-                </p>
-                    {{#if model}}
-                        {{tinymce-editor data=model.content}}
-                    {{else}}
-                        {{tinymce-editor data=newContent}}
-                    {{/if}}
-                {{eui-button label="Cancel" action="toggleWorkflowEditModal" size='large'}}
-                {{eui-button label="Submit" action="updateWorkflow" style='primary' size='large' disabled=validateNames loading=loadingEditName}}
-                </div>
-            {{/eui-modal}}
-            {{#eui-modal openBinding="workflowNewModal" style="full"}}
-                <div style="padding: 50px; text-align: center;">
-                <p>
-                    The new process name:
-                </p>
-                {{eui-input valueBinding="newName" placeholder='Enter a new process name' error=validateNewName forceErrorCheck=true}} <br /><br />
-                <p>
-                    The new process detail:
-                </p>
-                {{tinymce-editor data=newContent}}
-                {{eui-button label="Cancel" action="toggleWorkflowNewModal" size='large'}}
-                {{eui-button label="Submit" action="addNewNode" style='primary' size='large' disabled=validateNewName loading=loadingNewName}}
-                </div>
-            {{/eui-modal}}
-            <br>
 
-           <div class="container-fluid" style="margin-top:12px;">
-           <div class="row-fluid">
-              <div class="col-md-6">
-                    {{safehtml model.content}}
-              </div>
+        <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                   <h1>{{#if model}}{{model.humanName}}{{else}}{{newName}}{{/if}}
+                     <small>
+                        &nbsp;&nbsp;<a {{action 'toggleWorkflowEditModal'}}><i class="glyphicon icon-pencil"></i></a>
+                        </small>
+                   </h1>
+                {{#if workflowName}}
+                    <h3>
+                     <small>
+                        {{workflowName}} Workflow
+                        </small>
+                    </h3>
+               {{else}}
+                    @*{{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.humanName" value=workflowID disabled='graphDataLte2'}}*@
+                {{/if}}
+                   <hr>
+            </div>
+            </div>
+            </div>
+      <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                {{#eui-modal openBinding="workflowEditModal" style="full"}}
+                    <div style="padding: 50px; text-align: center;">
+                    <p>
+                        {{#if workflowID}}Update workflow {{else}}New workflow{{/if}} name:
+                    </p>
+                    {{eui-input valueBinding="workflowName" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+                    <p>
+                        The process name:
+                    </p>
+                        {{#if model}}
+                            {{eui-input valueBinding="model.label" placeholder='Enter a process name' error=validateExistingName forceErrorCheck=true}}
+                        {{else}}
+                            {{eui-input valueBinding="newName" placeholder='Enter a process name' error=validateNewName forceErrorCheck=true}}
+                        {{/if}}
+                     <br /><br />
+                    <p>
+                        The process detail:
+                    </p>
+                        {{#if model}}
+                            {{tinymce-editor data=model.content}}
+                        {{else}}
+                            {{tinymce-editor data=newContent}}
+                        {{/if}}
+                    {{eui-button label="Cancel" action="toggleWorkflowEditModal" size='large'}}
+                    {{eui-button label="Submit" action="updateWorkflow" style='primary' size='large' disabled=validateNames loading=loadingEditName}}
+                    </div>
+                {{/eui-modal}}
+                {{#eui-modal openBinding="workflowNewModal" style="full"}}
+                    <div style="padding: 50px; text-align: center;">
+                    <p>
+                        The new process name:
+                    </p>
+                    {{eui-input valueBinding="newName" placeholder='Enter a new process name' error=validateNewName forceErrorCheck=true}} <br /><br />
+                    <p>
+                        The new process detail:
+                    </p>
+                    {{tinymce-editor data=newContent}}
+                    {{eui-button label="Cancel" action="toggleWorkflowNewModal" size='large'}}
+                    {{eui-button label="Submit" action="addNewNode" style='primary' size='large' disabled=validateNewName loading=loadingNewName}}
+                    </div>
+                {{/eui-modal}}
+
+
+                        {{safehtml model.content}}
+
+            </div>
               <div class="col-md-6">
                   {{viz-editor data=graphData selected=selected editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
               </div>
            </div>
-      </div>
-     </div>
+        </div>
   </script>
 
 
@@ -426,8 +442,51 @@
 
 
   <script type="text/x-handlebars" id="search">
+        {{#map-modal  openBinding='mapModal' style="full"}}
+            <div style="padding: 50px; text-align: center;">
+                {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}
+                <br><br />
+                <div id="mapmodalid" style="width: 80%; height: 65vh; margin: 0 auto;"></div>
+                <br><br>
+                {{eui-button label="Cancel" action="toggleMapModal" size='large'}}
+                {{eui-button label="Submit" action="addLocation" style='primary' size='large'}}
+            </div>
+        {{/map-modal}}
+
+        {{#eui-modal openBinding="dateModal" style="full"}}
+            <div style="padding: 50px; text-align: center; margin-top: 100px;">
+                <p>Please choose a starting and ending date for the filter: </p>
+                {{eui-selectdate style="default" valueBinding='sched_date_from' placeholder="Starting date"}}
+                {{eui-selectdate style="default" valueBinding='sched_date_to' placeholder="Ending date" showNextMonth=false}}
+                <br /><br />
+                {{eui-button label="Cancel" action="toggleDateModal" size='large'}}
+                {{eui-button label="Submit" action="addDate" style='primary' size='large'}}
+            </div>
+        {{/eui-modal}}
+
+        {{#eui-modal openBinding="settingsModal"}}
+            <div style="padding: 50px; text-align: center;">
+                <h4>Pagesize:</h4>
+                {{view Ember.Select content=pageSizes value=pageSize }}
+                <br> <br> <br>
+
+                <h4>Categroise to display:</h4>
+                Processes:
+                {{view Ember.Checkbox checkedBinding='graph'}}
+
+                Files:
+                {{view Ember.Checkbox checkedBinding='file'}}
+
+                Process Locations:
+                {{view Ember.Checkbox checkedBinding='map'}}
+
+                <br><br>
+                {{eui-button label="Done" action="toggleSettingsModal" style='primary' size='large'}}
+            </div>
+        {{/eui-modal}}
+
       <div class="row">
-        <div class="col-md-12 input">
+        <div class="col-md-12 main-searchbox">
 
 
 
@@ -438,56 +497,19 @@
 
             {{view Ember.TextField action='search' valueBinding="keywords" type='text' placeholder="Add keywords" autofocus="autofocus"}}
 
-            {{#map-modal  openBinding='mapModal' style="full"}}
-                <div style="padding: 50px; text-align: center;">
-                    {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}
-                    <br><br />
-                    <div id="mapmodalid" style="width: 80%; height: 65vh; margin: 0 auto;"></div>
-                    <br><br>
-                    {{eui-button label="Cancel" action="toggleMapModal" size='large'}}
-                    {{eui-button label="Submit" action="addLocation" style='primary' size='large'}}
-                </div>
-            {{/map-modal}}
+
             <button {{action 'toggleMapModal'}} class="btn btn-default">
                 <i class="icon icon-globe"></i>
             </button>
 
 
 
-            {{#eui-modal openBinding="dateModal" style="full"}}
-                <div style="padding: 50px; text-align: center; margin-top: 100px;">
-                    <p>Please choose a starting and ending date for the filter: </p>
-                    {{eui-selectdate style="default" valueBinding='sched_date_from' placeholder="Starting date"}}
-                    {{eui-selectdate style="default" valueBinding='sched_date_to' placeholder="Ending date" showNextMonth=false}}
-                    <br /><br />
-                    {{eui-button label="Cancel" action="toggleDateModal" size='large'}}
-                    {{eui-button label="Submit" action="addDate" style='primary' size='large'}}
-                </div>
-            {{/eui-modal}}
+
             <button {{action 'toggleDateModal'}} class="btn btn-default">
                 <i class='icon icon-calendar'></i>
             </button>
 
-            {{#eui-modal openBinding="settingsModal"}}
-                <div style="padding: 50px; text-align: center;">
-                    <h4>Pagesize:</h4>
-                    {{view Ember.Select content=pageSizes value=pageSize }}
-                    <br> <br> <br>
 
-                    <h4>Categroise to display:</h4>
-                    Processes:
-                    {{view Ember.Checkbox checkedBinding='graph'}}
-
-                    Files:
-                    {{view Ember.Checkbox checkedBinding='file'}}
-
-                    Process Locations:
-                    {{view Ember.Checkbox checkedBinding='map'}}
-
-                    <br><br>
-                    {{eui-button label="Done" action="toggleSettingsModal" style='primary' size='large'}}
-                </div>
-            {{/eui-modal}}
             <button {{action 'toggleSettingsModal'}} class="btn btn-default">
                 <i class='icon icon-gears'></i>
             </button>
