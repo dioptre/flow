@@ -29,6 +29,9 @@ label.valid {
      z-index:1000000000000 !important;
 }
 
+.mce-container.mce-panel.mce-floatpanel.mce-window.mce-in {
+     z-index:1000000000001 !important;
+}
 
 ul.pager { /* This is the pager on the search page */
   margin-top: 5px;

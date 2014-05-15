@@ -661,10 +661,10 @@ App.MapResultsController = Ember.Controller.extend({
         $.each(results, function (i, a) {
             var geo = JSON.parse(a.get('SpatialJSON'));
             if (!geos[geo.id]) {
-                geos[geo.id] = { name: '<a href="/flow/#/graph/' + a.get('ReferenceID') + '">' + a.get('Title') + '</a>', id: geo.id, geo: geo.data };
+                geos[geo.id] = { name: '<a href="/flow/#/process/' + a.get('ReferenceID') + '">' + a.get('Title') + '</a>', id: geo.id, geo: geo.data };
             }
             else {
-                geos[geo.id].name += '<br/><a href="/flow/#/graph/' + a.get('ReferenceID') + '">' + a.get('Title') + '</a>';
+                geos[geo.id].name += '<br/><a href="/flow/#/process/' + a.get('ReferenceID') + '">' + a.get('Title') + '</a>';
             }
         });
 
@@ -1972,14 +1972,16 @@ App.TinymceEditorComponent = Ember.Component.extend({
         //});
 
         // Setup plugins and toolbar
-        config.plugins = ["locationpicker myfilepicker"];
-        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | locationpicker | myfilepicker"];
+        config.plugins = ["locationpicker myfilepicker code"];
+        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent code | locationpicker | myfilepicker"];
         config.schema = "html5";
         config.menubar = false;
         config.valid_elements = "*[*]";
         config.extended_valid_elements = "script[type|defer|src|language]";
         // Choose selector
         config.selector = "#" + _this.get("elementId");
+        config.convert_urls = false;
+        config.extended_valid_elements = "script[type|defer|src|language]";
 
         // Setup what happens on data changes
         config.setup = function (editor) {
