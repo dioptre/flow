@@ -381,7 +381,8 @@
                     {{else}}
                         {{tinymce-editor data=newContent}}
                     {{/if}}
-                {{eui-button label="Submit" size="small" action="updateWorkflow" style='primary' size='large' disabled=validateNames loading=loadingEditName}}
+                {{eui-button label="Cancel" action="toggleWorkflowEditModal" size='large'}}
+                {{eui-button label="Submit" action="updateWorkflow" style='primary' size='large' disabled=validateNames loading=loadingEditName}}
                 </div>
             {{/eui-modal}}
             {{#eui-modal openBinding="workflowNewModal" style="full"}}
@@ -394,7 +395,8 @@
                     The new process detail:
                 </p>
                 {{tinymce-editor data=newContent}}
-                {{eui-button label="Submit" size="small" action="addNewNode" style='primary' size='large' disabled=validateNewName loading=loadingNewName}}
+                {{eui-button label="Cancel" action="toggleWorkflowNewModal" size='large'}}
+                {{eui-button label="Submit" action="addNewNode" style='primary' size='large' disabled=validateNewName loading=loadingNewName}}
                 </div>
             {{/eui-modal}}
             <br>
