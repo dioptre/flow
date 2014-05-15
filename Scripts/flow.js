@@ -304,6 +304,10 @@ App.ApplicationRoute = Ember.Route.extend({
 App.ApplicationController = Ember.Controller.extend({
     currentPathDidChange: function () {
         App.set('currentPath', this.get('currentPath'));
+        window.scrollTo(0, 0);
+        Ember.run.scheduleOnce('afterRender', this, function(){
+            $('body').removeClass('menu');
+        });
     }.observes('currentPath'), // This set the current path App.get('currentPath');
     m: '',
     queryParams: ['m'],
@@ -989,7 +993,9 @@ App.GraphController = Ember.ObjectController.extend({
                 // var model = this.get('model')
                 //m.data = data;
                 //return data;
-                prime.nodes = prime.nodes.concat(sessionNodes);
+                prime.nodes = Em.A(prime.nodes.concat(sessionNodes));
+                //debugger;
+                prime = Ember.Object.create(prime)
                 _this.set('graphData', prime);
             });
     }.observes('model', 'selected', 'node.@each.workflows'),
@@ -1077,8 +1083,6 @@ App.GraphController = Ember.ObjectController.extend({
             if (this.get('workflowID') != null) {
                 newWorkflow = App.Node.store.getById('workflow', _this.get('workflowID'));
                 newWorkflow.set('name', this.get('workflowName'));
-                newWorkflow.set('comment', 'asdasd');
-
             }
             else {
                 var wfid = NewGUID();
@@ -1096,11 +1100,15 @@ App.GraphController = Ember.ObjectController.extend({
                     newNode.set('label', model.label);
                     newNode.set('content', model.content);
                 }
-                newNode.save().then(function () {
+                newNode.save().then(function (f) {
                     alertify.log('Successfully Updated Process');
-                    var f = App.Node.store.getById('node', _this.get('selected'));
                     var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
-                    _this.get('graphData').nodes.addObject(a);
+                    var duplicate = Enumerable.From(_this.get('graphData.nodes')).Where("g=>g.id=='" + f.get('id') + "'").FirstOrDefault();
+                    return;
+                    if (duplicate)
+                        _this.get('graphData.nodes').removeObject(duplicate);
+                    _this.get('graphData.nodes').pushObject(a);
+                    _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //HACK TODO
                     _this.set('newName', null);
                     _this.set('newContent', null);
                     _this.toggleProperty('workflowEditModal');
@@ -1123,14 +1131,14 @@ App.GraphController = Ember.ObjectController.extend({
             var n = this.get('newName')
             var id = NewGUID();
             var newNode = { id: id, label: n, content: c, VersionUpdated: Ember.Date.parse(new Date()) };
-            App.Node.store.createRecord('node', newNode).save().then(function () {
+            App.Node.store.createRecord('node', newNode).save().then(function (f) {
                 alertify.log('Successfully Added Process');
-                var f = App.Node.store.getById('node', id);
                 var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
-                _this.get('graphData').nodes.addObject(a);
+                _this.get('graphData').nodes.pushObject(a);
                 _this.set('newName', null);
                 _this.set('newContent', null);
-                _this.toggleProperty('workflowNewModal');
+                _this.toggleProperty('workflowNewModal');  
+               _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //HACK TODO
             }, function () {
                 alertify.error('Error Adding Process');
             });
@@ -1143,7 +1151,8 @@ App.GraphController = Ember.ObjectController.extend({
                 alertify.log('Successfully Added Connection');
                 var f = App.Node.store.getById('edge', data.id);
                 var a = { id: f.get('id'), from: f.get('from'), to: f.get('to'), color: f.get('color'), width: f.get('width'), style: f.get('style') }
-                _this.get('graphData').edges.addObject(a);
+                _this.get('graphData.edges').pushObject(a);
+                _this.set('graphData.edges', _this.get('graphData.edges').concat([]));
             }, function () {
                 alertify.error('Error Adding Connection');
             });
@@ -1179,6 +1188,9 @@ App.GraphController = Ember.ObjectController.extend({
                     }).ForEach(function (f) {
                         graphData.nodes.removeObject(f);
                     });
+
+                    _this.set('graphData.edges', _this.get('graphData.edges').concat([])); //TODO HACK
+                    _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //TODO HACK
 
                     alertify.log('Successfully Updated Workflow');
                     //Enumerable.From(data.edges).ForEach(function (f) {
@@ -1398,7 +1410,7 @@ App.VizEditorComponent = Ember.Component.extend({
         this.graph.zoomExtent();
 
 
-    }.observes('data.nodes.@each.label', 'data.edges.@each').on('didInsertElement')
+    }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement')
 });
 
     // didInsertElement: function () {

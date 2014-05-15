@@ -124,7 +124,8 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="index.html">
+
+            <a class="navbar-brand" href="#">
                 <img src="@Url.Content("~/Modules/EXPEDIT.Flow/Images/logo.png")" alt="logo" />
             </a>
         </div>
@@ -269,37 +270,39 @@
                     <span>Wikipedia</span>
                 {{/link-to}}
             {{/view}}
-            {{#view App.HomeNavView}}
-                <a class="dropdown-toggle" href="#">
-                    <i class="icon-group"></i>
-                    <span>Users</span>
-                    <i class="icon-chevron-down"></i>
-                </a>
-                <ul class="submenu">
-                    <li>{{#link-to 'userlist'}}Search user{{/link-to}}</li>
-                    <li>{{#link-to 'usernew'}}User permissions{{/link-to}}</li>
-                    <li>{{#link-to 'userprofile'}}My profile{{/link-to}}</li>
-                </ul>
-            {{/view}}
-            {{#view App.HomeNavView}}
-                {{#link-to 'userprofile'}}
-                    <i class="icon-cog"></i>
-                    <span>My Info</span>
-                {{/link-to}}
-            {{/view}}
-            {{#view App.HomeNavView}}
-                <a class="dropdown-toggle" href="#">
-                    <i class="icon-share-alt"></i>
-                    <span>Extras</span>
-                    <i class="icon-chevron-down"></i>
-                </a>
-                <ul class="submenu">
-                    <li onlick='alert("Logged out!")'><a href="#">Sign out</a></li>
-                    <li>{{#link-to 'userprofile'}}Reset Password{{/link-to}}</li>
-                    <li>{{#link-to 'userprofile'}}My profile{{/link-to}}</li>
-                    <li onlick='alert("Help page!")'><a href="#">Help</a></li>
-                </ul>
-            {{/view}}
+            {{!-- hidden for now
+                {{#view App.HomeNavView}}
+                    <a class="dropdown-toggle" href="#">
+                        <i class="icon-group"></i>
+                        <span>Users</span>
+                        <i class="icon-chevron-down"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li>{{#link-to 'userlist'}}Search user{{/link-to}}</li>
+                        <li>{{#link-to 'usernew'}}User permissions{{/link-to}}</li>
+                        <li>{{#link-to 'userprofile'}}My profile{{/link-to}}</li>
+                    </ul>
+                {{/view}}
+                {{#view App.HomeNavView}}
+                    {{#link-to 'userprofile'}}
+                        <i class="icon-cog"></i>
+                        <span>My Info</span>
+                    {{/link-to}}
+                {{/view}}
+                {{#view App.HomeNavView}}
+                    <a class="dropdown-toggle" href="#">
+                        <i class="icon-share-alt"></i>
+                        <span>Extras</span>
+                        <i class="icon-chevron-down"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li onlick='alert("Logged out!")'><a href="#">Sign out</a></li>
+                        <li>{{#link-to 'userprofile'}}Reset Password{{/link-to}}</li>
+                        <li>{{#link-to 'userprofile'}}My profile{{/link-to}}</li>
+                        <li onlick='alert("Help page!")'><a href="#">Help</a></li>
+                    </ul>
+                {{/view}}
+            --}}
         </ul>
     </div>
     <!-- end sidebar -->
