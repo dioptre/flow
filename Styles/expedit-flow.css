@@ -14,7 +14,7 @@ label.valid {
 	background: none;
 }
 .navbar-brand img {
-    max-height: 22px;
+    max-height: 30px;
 }
 
 .filteredData img {
@@ -282,4 +282,15 @@ span.graph-manipulationUI:hover {
 .process-header small {
   margin-left: 0px;
 }
+
+.main-searchbox button.btn {
+  margin-top: -3px;
+}
+.main-searchbox span.tag, .main-searchbox input[type=text] {
+  margin-left: 0px;
+  margin-bottom: 13px;
+  margin-right: 6px;
+  margin-right: 10px;
+}
+
 
