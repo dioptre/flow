@@ -1426,7 +1426,7 @@ App.VizEditorComponent = Ember.Component.extend({
 
 
         // Make sure all items are displayed in view
-        this.graph.zoomExtent();
+        //this.graph.zoomExtent();
 
 
     }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement')
