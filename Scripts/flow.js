@@ -1306,13 +1306,15 @@ App.VizEditorComponent = Ember.Component.extend({
                   deleteError:"The function for delete does not support two arguments (data, callback).",
                   deleteClusterError:"Clusters cannot be deleted."
             },
+            //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}}, 
+            smoothCurves: false,
             //hierarchicalLayout: {enabled:true},
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
             //physics: {barnesHut: {enabled: false}},
             //physics: { barnesHut: { gravitationalConstant: -8425, centralGravity: 0.1, springLength: 150, springConstant: 0.058, damping: 0.3 } },
-            //physics: {barnesHut: {gravitationalConstant: -8425, centralGravity: 0.5, springLength: 150, springConstant: 0.5, damping: 0.3}},
-            //stabilize: false,
-            //stabilizationIterations: 100,
+            physics: {barnesHut: {gravitationalConstant: -12425, centralGravity: 0.1, springLength: 150, springConstant: 0.05, damping: 0.5}},
+            stabilize: true,
+            stabilizationIterations: 100,
             dataManipulation: this.get('editing'),
             onAdd: function (data, callback) {
                 _this.sendAction('toggleWorkflowNewModal', data, callback);
@@ -1694,7 +1696,7 @@ App.WikipediaRoute = Ember.Route.extend({
         var sel = m.selected;
         var array = { nodes: [], edges: [] };
         var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
-        var nodeMax = 35;
+        var nodeMax = 25;
         var data = recurseGraphData(sel, array, this, 1, depthMax, nodeMax, 'wikipedia');
         m.graphData = data;
         var article = this.store.getById('wikipedia', sel);
