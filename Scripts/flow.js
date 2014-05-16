@@ -926,6 +926,18 @@ App.GraphController = Ember.ObjectController.extend({
     loadingNewName: false,
     loadingExistingName: false,
     graphDataLte2: Ember.computed.lte('graphData.length', 2),
+    fitVis: function(){
+        Ember.run.scheduleOnce('afterRender', this, function(){
+            $('body').fitVids();
+        })
+    }.observes('model.content'),
+    humanReadableName: function () {
+        var temp = this.get('model.label');
+        if (temp)
+            return ToTitleCase(temp.replace(/_/g, ' '));
+        else
+            return null;
+    }.property('model.label'),
     graphData : null,
     graphDataTrigger : function () {
         // get data bitch equiv
@@ -1104,14 +1116,13 @@ App.GraphController = Ember.ObjectController.extend({
                     alertify.log('Successfully Updated Process');
                     var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                     var duplicate = Enumerable.From(_this.get('graphData.nodes')).Where("g=>g.id=='" + f.get('id') + "'").FirstOrDefault();
-                    return;
                     if (duplicate)
                         _this.get('graphData.nodes').removeObject(duplicate);
                     _this.get('graphData.nodes').pushObject(a);
                     _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //HACK TODO
                     _this.set('newName', null);
                     _this.set('newContent', null);
-                    _this.toggleProperty('workflowEditModal');
+                    _this.set('workflowEditModal', false);
                 }, function () {
                     if (_this.get('model'))
                         alertify.error('Error Updating Process');
@@ -1137,7 +1148,7 @@ App.GraphController = Ember.ObjectController.extend({
                 _this.get('graphData').nodes.pushObject(a);
                 _this.set('newName', null);
                 _this.set('newContent', null);
-                _this.toggleProperty('workflowNewModal');  
+                _this.toggleProperty('workflowNewModal');
                _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //HACK TODO
             }, function () {
                 alertify.error('Error Adding Process');
@@ -1155,6 +1166,8 @@ App.GraphController = Ember.ObjectController.extend({
                 _this.set('graphData.edges', _this.get('graphData.edges').concat([]));
             }, function () {
                 alertify.error('Error Adding Connection');
+                alertify.log('No Workflow name set. Please try again.');
+                _this.toggleProperty('workflowEditModal'); //Hack TODO can't save without wf
             });
         },
         deleteGraphItems: function (data, callback) {
@@ -1291,8 +1304,8 @@ App.VizEditorComponent = Ember.Component.extend({
                   del:"Delete selected",
                   editNode:"Edit Process",
                   back:"Back",
-                  addDescription:"Click in an empty space to create a new Process.",
-                  linkDescription:"Click on a Process and drag the Connection to another Process to link them.",
+                  addDescription:"Click the empty space to create a Process.",
+                  linkDescription:"Connect Processes by dragging.",
                   addError:"The function for add does not support two arguments (data,callback).",
                   linkError:"The function for connect does not support two arguments (data,callback).",
                   editError:"The function for edit does not support two arguments (data, callback).",
@@ -1300,9 +1313,15 @@ App.VizEditorComponent = Ember.Component.extend({
                   deleteError:"The function for delete does not support two arguments (data, callback).",
                   deleteClusterError:"Clusters cannot be deleted."
             },
-            physics: {barnesHut: {enabled: false}},
-            stabilize: false,
-            stabilizationIterations: 1,
+            //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}}, 
+            smoothCurves: false,
+            //hierarchicalLayout: {enabled:true},
+            //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
+            //physics: {barnesHut: {enabled: false}},
+            //physics: { barnesHut: { gravitationalConstant: -8425, centralGravity: 0.1, springLength: 150, springConstant: 0.058, damping: 0.3 } },
+            physics: {barnesHut: {gravitationalConstant: -12425, centralGravity: 0.1, springLength: 150, springConstant: 0.05, damping: 0.5}},
+            stabilize: true,
+            stabilizationIterations: 100,
             dataManipulation: this.get('editing'),
             onAdd: function (data, callback) {
                 _this.sendAction('toggleWorkflowNewModal', data, callback);
@@ -1407,7 +1426,7 @@ App.VizEditorComponent = Ember.Component.extend({
 
 
         // Make sure all items are displayed in view
-        this.graph.zoomExtent();
+        //this.graph.zoomExtent();
 
 
     }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement')
@@ -1620,7 +1639,7 @@ App.Node = DS.Model.extend({
             return ToTitleCase(temp.replace(/_/g, ' '));
         else
             return null;
-    }.property(),
+    }.property('label'),
     VersionUpdated: DS.attr('date')
 });
 
@@ -1684,7 +1703,7 @@ App.WikipediaRoute = Ember.Route.extend({
         var sel = m.selected;
         var array = { nodes: [], edges: [] };
         var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
-        var nodeMax = 35;
+        var nodeMax = 25;
         var data = recurseGraphData(sel, array, this, 1, depthMax, nodeMax, 'wikipedia');
         m.graphData = data;
         var article = this.store.getById('wikipedia', sel);
@@ -1862,6 +1881,9 @@ function filterData(data) {
     data = data.replace(/<script.*\/>/g, '');
     // [... add as needed ...]
     data = data.replace(/^null$/, '');
+    //Fix Vids
+    //data = $(data).fitVids().prop('outerHTML');
+
     return '<div class=\'filteredData\'>' + data + '</div>';
 }
 

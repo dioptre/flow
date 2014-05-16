@@ -265,94 +265,7 @@ namespace EXPEDIT.Flow.Services {
                     g = (from o in d.GraphData where o.GraphDataID == id select o).Single();
                 }
                 g.GraphContent = m.GraphData;
-                //Extract Data
-                HtmlDocument doc = new HtmlDocument();
-                if (!string.IsNullOrWhiteSpace(m.GraphData))
-                {
-                    doc.LoadHtml(m.GraphData);
-                    var nodes = doc.DocumentNode.SelectNodes("//a");
-                    if (nodes != null)
-                    {
-                        //Files
-                        var hrefList = nodes
-                                          .Select(p => p.GetAttributeValue("href", null))
-                                          .Where(f => f != null)
-                                          .ToList();
-                        var files = new List<Guid>();
-                        // First we see the input string.
-                        foreach (var href in hrefList)
-                        {
-                            var match = Regex.Match(href, @"share/file/((\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-                            if (match.Success)
-                                files.Add(Guid.Parse(match.Groups[1].Value));
-                        }
-                        (from o in d.GraphDataFileDatas where !files.Contains(o.FileDataID.Value) select o).Delete(); //Delete redundant links
-                        var fd = (from o in d.GraphDataFileDatas where o.GraphDataID == id select o).AsEnumerable();
-                        foreach (var file in files)
-                        {
-                            if (!fd.Any(f => f.FileDataID == file))
-                            {
-                                var gdc = new GraphDataFileData
-                                {
-                                    GraphDataFileDataID = Guid.NewGuid(),
-                                    GraphDataID = g.GraphDataID,
-                                    FileDataID = file,
-                                    VersionOwnerContactID = creatorContact,
-                                    VersionOwnerCompanyID = creatorCompany,
-                                    VersionAntecedentID = m.GraphDataID.Value,
-                                    VersionUpdated = now,
-                                    VersionUpdatedBy = contact
-                                };
-                                g.GraphDataFileData.Add(gdc);
-                            }
-
-                        }
-                        //Locations
-                        var locations = new List<Guid>();
-                        // First we see the input string.
-                        foreach (var href in hrefList)
-                        {
-                            var match = Regex.Match(href, @"share/location/((\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-                            if (match.Success)
-                                locations.Add(Guid.Parse(match.Groups[1].Value));
-                        }
-                        (from o in d.GraphDataLocations where !locations.Contains(o.LocationID.Value) select o).Delete(); //Delete redundant links
-                        var ld = (from o in d.GraphDataLocations where o.GraphDataID == id select o).AsEnumerable();
-                        foreach (var location in locations)
-                        {
-                            if (!ld.Any(f => f.LocationID == location))
-                            {
-                                var gdc = new GraphDataLocation
-                                {
-                                    GraphDataLocationID = Guid.NewGuid(),
-                                    GraphDataID = g.GraphDataID,
-                                    LocationID = location,
-                                    VersionOwnerContactID = creatorContact,
-                                    VersionOwnerCompanyID = creatorCompany,
-                                    VersionAntecedentID = m.GraphDataID.Value,
-                                    VersionUpdated = now,
-                                    VersionUpdatedBy = contact
-                                };
-                                g.GraphDataLocation.Add(gdc);
-                            }
-
-                        }
-
-                        //TODO: experience
-                    }
-                    else
-                    {
-                        (from o in d.GraphDataLocations where o.GraphDataID == id select o).Delete();
-                        (from o in d.GraphDataFileDatas where o.GraphDataID == id select o).Delete();
-                        (from o in d.GraphDataContexts where o.GraphDataID == id select o).Delete();
-                    }
-                }
-                else
-                {
-                    (from o in d.GraphDataLocations where o.GraphDataID == id select o).Delete();
-                    (from o in d.GraphDataFileDatas where o.GraphDataID == id select o).Delete();
-                    (from o in d.GraphDataContexts where o.GraphDataID == id select o).Delete();
-                }
+                ProcessNode(m, d, ref g, creatorContact, creatorCompany, contact, now);
                 g.VersionUpdated = now;
                 g.VersionUpdatedBy = contact;
                 d.SaveChanges();
@@ -659,8 +572,100 @@ namespace EXPEDIT.Flow.Services {
             }
             return result;
         }
-       
-       
+
+        private void ProcessNode(IFlow m, NKDC d, ref GraphData g, Guid? creatorContact, Guid? creatorCompany, Guid? contact, DateTime? now = default(DateTime?))
+        {
+            if (!now.HasValue)
+                now = DateTime.UtcNow;
+            //Extract Data
+            HtmlDocument doc = new HtmlDocument();
+            if (!string.IsNullOrWhiteSpace(m.GraphData))
+            {
+                doc.LoadHtml(m.GraphData);
+                var nodes = doc.DocumentNode.SelectNodes("//a");
+                if (nodes != null)
+                {
+                    //Files
+                    var hrefList = nodes
+                                      .Select(p => p.GetAttributeValue("href", null))
+                                      .Where(f => f != null)
+                                      .ToList();
+                    var files = new List<Guid>();
+                    // First we see the input string.
+                    foreach (var href in hrefList)
+                    {
+                        var match = Regex.Match(href, @"share/file/((\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                        if (match.Success)
+                            files.Add(Guid.Parse(match.Groups[1].Value));
+                    }
+                    (from o in d.GraphDataFileDatas where !files.Contains(o.FileDataID.Value) select o).Delete(); //Delete redundant links
+                    var fd = (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).AsEnumerable();
+                    foreach (var file in files)
+                    {
+                        if (!fd.Any(f => f.FileDataID == file))
+                        {
+                            var gdc = new GraphDataFileData
+                            {
+                                GraphDataFileDataID = Guid.NewGuid(),
+                                GraphDataID = m.GraphDataID,
+                                FileDataID = file,
+                                VersionOwnerContactID = creatorContact,
+                                VersionOwnerCompanyID = creatorCompany,
+                                VersionAntecedentID = m.GraphDataID.Value,
+                                VersionUpdated = now,
+                                VersionUpdatedBy = contact
+                            };
+                            g.GraphDataFileData.Add(gdc);
+                        }
+
+                    }
+                    //Locations
+                    var locations = new List<Guid>();
+                    // First we see the input string.
+                    foreach (var href in hrefList)
+                    {
+                        var match = Regex.Match(href, @"share/location/((\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                        if (match.Success)
+                            locations.Add(Guid.Parse(match.Groups[1].Value));
+                    }
+                    (from o in d.GraphDataLocations where !locations.Contains(o.LocationID.Value) select o).Delete(); //Delete redundant links
+                    var ld = (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).AsEnumerable();
+                    foreach (var location in locations)
+                    {
+                        if (!ld.Any(f => f.LocationID == location))
+                        {
+                            var gdc = new GraphDataLocation
+                            {
+                                GraphDataLocationID = Guid.NewGuid(),
+                                GraphDataID = g.GraphDataID,
+                                LocationID = location,
+                                VersionOwnerContactID = creatorContact,
+                                VersionOwnerCompanyID = creatorCompany,
+                                VersionAntecedentID = m.GraphDataID.Value,
+                                VersionUpdated = now,
+                                VersionUpdatedBy = contact
+                            };
+                            g.GraphDataLocation.Add(gdc);
+                        }
+
+                    }
+
+                    //TODO: experience
+                }
+                else
+                {
+                    (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
+                    (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
+                    (from o in d.GraphDataContexts where o.GraphDataID == m.GraphDataID select o).Delete();
+                }
+            }
+            else
+            {
+                (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
+                (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
+                (from o in d.GraphDataContexts where o.GraphDataID == m.GraphDataID select o).Delete();
+            }
+        }
         
         public bool CreateNode(FlowViewModel m)
         {
@@ -696,6 +701,7 @@ namespace EXPEDIT.Flow.Services {
                         VersionUpdatedBy = contact,
                     };
                 d.GraphData.AddObject(g);
+                ProcessNode(m, d, ref g, creatorContact, creatorCompany, contact, now);
                 d.SaveChanges();
                 return true;
             }
@@ -709,6 +715,8 @@ namespace EXPEDIT.Flow.Services {
             var company = _users.DefaultContactCompanyID;
             var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
+            Guid? creatorContact, creatorCompany;
+            _users.GetCreator(contact, company, out creatorContact, out creatorCompany);
             var now = DateTime.UtcNow;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
@@ -726,6 +734,7 @@ namespace EXPEDIT.Flow.Services {
                 {
                     g.GraphContent = m.GraphData;
                 }
+                ProcessNode(m, d, ref g, creatorContact, creatorCompany, contact, now);
                 g.VersionUpdated = now;
                 g.VersionUpdatedBy = contact;                
                 d.SaveChanges();
