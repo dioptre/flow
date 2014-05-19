@@ -5,6 +5,30 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+        <!-- Favicon ICO -->
+        <!-- Use this to regenerate icon if changed - http://iconogen.com/upload.php -->
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <!-- Apple Touch Icons -->
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon-57x57.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-72x72.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-114x114.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon-144x144.png" />
+        <link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon-60x60.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-120x120.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-76x76.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon-152x152.png" />
+        <!-- Windows 8 Tile Icons -->
+        <meta name="msapplication-square70x70logo" content="smalltile.png" />
+        <meta name="msapplication-square150x150logo" content="mediumtile.png" />
+        <meta name="msapplication-wide310x150logo" content="widetile.png" />
+        <meta name="msapplication-square310x310logo" content="largetile.png" />
+
+        <!-- Webapp capable - http://www.mobilexweb.com/blog/home-screen-web-apps-android-chrome-31 -->
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+
+
         <!-- bootstrap -->
         <link href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap.css")" rel="stylesheet" />
         <link href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap-overrides.css")" type="text/css" rel="stylesheet" />
@@ -259,11 +283,12 @@
             {{#view App.HomeNavView}}
                 <a class="dropdown-toggle" href="#">
                     <i class="icon-sitemap"></i>
-                    <span>Process</span>
+                    <span>Workflow</span>
                     <i class="icon-chevron-down"></i>
                 </a>
                 <ul class="submenu">
-                    <li>{{#link-to 'graph' 'undefined'}}New Process{{/link-to}}</li>
+                    <li>{{#link-to 'graph' 'undefined'}}New Workflow{{/link-to}}</li>
+                    <li>{{#link-to 'graph' 'undefined'}}My Workflows{{/link-to}}</li>
                 </ul>
             {{/view}}
             {{#view App.HomeNavView}}
@@ -354,16 +379,15 @@
 
   <script type="text/x-handlebars" id="graph">
 
-        <div class="container-fluid">
+    <div class="container-fluid">
         <div class="row">
             <div class="col-md-12 process-header">
-                   <h1>{{#if model}}{{humanReadableName}}{{else}}{{newName}}{{/if}}</h1>
+                   <h1>{{#if model}}{{humanReadableName}}{{else}}{{newName}}{{/if}}
 
-                        <small>
                             <div {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
                                 <i class="icon-pencil"></i> Edit Process
-                            <div>
-                        </small>
+                            </div>
+                    </h1>
 
                     <h3>
                         <small>
@@ -374,12 +398,11 @@
                             {{/if}}
                         </small>
                     </h3>
-
                    <hr>
+              </div>
             </div>
-            </div>
-            </div>
-      <div class="container-fluid">
+       </div>
+    <div class="container-fluid">
         <div class="row">
             <div class="col-md-6">
                 {{#eui-modal openBinding="workflowEditModal" style="full"}}
@@ -450,7 +473,7 @@
             <div style="padding: 50px; text-align: center;">
                 {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}
                 <br><br />
-                <div id="mapmodalid" style="width: 80%; min-height: 320px;  height: auto !important; height: 65%; height: 65vh; margin: 0 auto;"></div>
+                <div id="mapmodalid" style="width: 80%; margin: 0 auto;" class="vh-65"></div>
                 <br><br>
                 {{eui-button label="Cancel" action="toggleMapModal" size='large'}}
                 {{eui-button label="Submit" action="addLocation" style='primary' size='large'}}

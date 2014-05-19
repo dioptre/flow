@@ -15,7 +15,7 @@ namespace EXPEDIT.Flow.Services
     public interface IFlowService : IDependency 
     {
          [OperationContract]
-         IEnumerable<SearchViewModel> Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow);
+         IEnumerable<SearchViewModel> Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow, DateTime? dateFrom = default(DateTime?), DateTime? dateUntil = default(DateTime?), string viewport = null);
 
          [OperationContract]
          WikiViewModel GetWiki(string wikiName, Guid? nid);

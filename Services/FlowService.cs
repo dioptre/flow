@@ -77,7 +77,7 @@ namespace EXPEDIT.Flow.Services {
         public Localizer T { get; set; }
 
 
-        public IEnumerable<SearchViewModel> Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow)
+        public IEnumerable<SearchViewModel> Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow,  DateTime? dateFrom = default(DateTime?), DateTime? dateUntil = default(DateTime?), string viewport = null)
         {
             //if no results show wikipedia
             var application = _users.ApplicationID;
@@ -149,6 +149,33 @@ namespace EXPEDIT.Flow.Services {
                         qPI.Value = start;
                         cmd.Parameters.Add(qPI);
 
+                        if (dateFrom.HasValue)
+                        {
+                            var qdF = cmd.CreateParameter();
+                            qdF.ParameterName = "@dateFrom";
+                            qdF.DbType = DbType.DateTime;
+                            qdF.Value = dateFrom;
+                            cmd.Parameters.Add(qdF);
+                        }
+
+                        if (dateUntil.HasValue)
+                        {
+                            var qdT = cmd.CreateParameter();
+                            qdT.ParameterName = "@dateTo";
+                            qdT.DbType = DbType.DateTime;
+                            qdT.Value = dateUntil;
+                            cmd.Parameters.Add(qdT);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(viewport))
+                        {
+                            var qV = cmd.CreateParameter();
+                            qV.ParameterName = "@viewport";
+                            //qV.DbType =  DbType.String;
+                            //qV.UdtTypeName = "geography";
+                            qV.Value = viewport;
+                            cmd.Parameters.Add(qV);
+                        }
 
                         con.Open();
                         using (var reader = cmd.ExecuteReader())

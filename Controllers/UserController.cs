@@ -22,6 +22,7 @@ using System.Linq;
 using Orchard.Mvc;
 using Orchard.MediaLibrary.Services;
 using EXPEDIT.Flow.ViewModels;
+using System.Text.RegularExpressions;
 
 namespace EXPEDIT.Flow.Controllers {
     
@@ -65,6 +66,58 @@ namespace EXPEDIT.Flow.Controllers {
         {
             int page;
             int pageSize;
+            List<Tuple<double, double, double, double>> polygons = new List<Tuple<double, double, double, double>>();
+            DateTime? minDate = default(DateTime?);
+            DateTime? maxDate = default(DateTime?);
+            foreach (var key in Request.Params.AllKeys)
+            {
+                if (Regex.IsMatch(key, @"tags\[[0-9]?\]\[l\]", RegexOptions.Compiled | RegexOptions.IgnoreCase))
+                {
+                    string l = Request.Params[key];
+                    if (string.IsNullOrWhiteSpace(l))
+                        continue;
+                    var la = l.Split(new[] { ",", "(", ")", " " }, StringSplitOptions.RemoveEmptyEntries);
+                    if (la.Length != 4)
+                        continue;
+                    double tL1, tL2, tL3, tL4;
+                    if (!double.TryParse(la[0], out tL1))
+                        continue;
+                    if (!double.TryParse(la[1], out tL2))
+                        continue;
+                    if (!double.TryParse(la[2], out tL3))
+                        continue;
+                    if (!double.TryParse(la[3], out tL4))
+                        continue;
+                    polygons.Add(new Tuple<double, double, double, double>(tL1, tL2, tL3, tL4));
+                }
+                else if (Regex.IsMatch(key, @"tags\[[0-9]?\]\[d\]", RegexOptions.Compiled | RegexOptions.IgnoreCase))
+                {
+                    string dt = Request.Params[key];
+                    if (string.IsNullOrWhiteSpace(dt))
+                        continue;
+                    var dta = dt.Split(new [] {"-"}, StringSplitOptions.RemoveEmptyEntries);
+                    if (dta.Length != 2)
+                        continue;
+                    int tempTS;
+                    if (!int.TryParse(dta[0], out tempTS))
+                        continue;
+                    var tMin = DateHelper.UnixTimestampToDate(tempTS);
+                    if (!minDate.HasValue || tMin < minDate)
+                        minDate = tMin;
+                    if (!int.TryParse(dta[1], out tempTS))
+                        continue;
+                    var tMax = DateHelper.UnixTimestampToDate(tempTS);
+                    if (!maxDate.HasValue || tMax > maxDate)
+                        maxDate = tMax;
+                }
+            }
+
+            string viewport = null;
+            if (polygons.Count > 0)
+            {
+                viewport = polygons.CreateMultiRectangle().ToString();
+            }
+
             string query = Request.Params["keywords"];
             if (string.IsNullOrWhiteSpace(query) || query == "undefined")
                 query = null;
@@ -87,7 +140,10 @@ namespace EXPEDIT.Flow.Controllers {
                 query,
                 (pFound && psFound) ? (page * pageSize) + 1 : default(int?),
                 psFound ? pageSize : default(int?),
-                st
+                st,
+                minDate,
+                maxDate,
+                viewport
             );
             return new JsonHelper.JsonNetResult(new { search = results} , JsonRequestBehavior.AllowGet);
         }
