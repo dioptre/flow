@@ -598,7 +598,7 @@ namespace EXPEDIT.Flow.Services {
                         if (match.Success)
                             files.Add(Guid.Parse(match.Groups[1].Value));
                     }
-                    (from o in d.GraphDataFileDatas where !files.Contains(o.FileDataID.Value) select o).Delete(); //Delete redundant links
+                    (from o in d.GraphDataFileDatas where !files.Contains(o.FileDataID.Value) && o.GraphDataID==m.GraphDataID.Value select o).Delete(); //Delete redundant links
                     var fd = (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).AsEnumerable();
                     foreach (var file in files)
                     {
@@ -628,7 +628,7 @@ namespace EXPEDIT.Flow.Services {
                         if (match.Success)
                             locations.Add(Guid.Parse(match.Groups[1].Value));
                     }
-                    (from o in d.GraphDataLocations where !locations.Contains(o.LocationID.Value) select o).Delete(); //Delete redundant links
+                    (from o in d.GraphDataLocations where !locations.Contains(o.LocationID.Value) && o.GraphDataID==m.GraphDataID.Value select o).Delete(); //Delete redundant links
                     var ld = (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).AsEnumerable();
                     foreach (var location in locations)
                     {

@@ -176,8 +176,8 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Nodes")]
         public ActionResult CreateNode(FlowViewModel m)
         {
-            if (!User.Identity.IsAuthenticated)
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            //if (!User.Identity.IsAuthenticated)
+            //    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.node != null)
             {
                 if (m.GraphDataID.HasValue)
@@ -195,8 +195,8 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Nodes")]
         public ActionResult UpdateNode(FlowViewModel m)
         {
-            if (!User.Identity.IsAuthenticated)
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            //if (!User.Identity.IsAuthenticated)
+            //    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.node != null)
             {
                 if (m.GraphDataID.HasValue)
@@ -214,8 +214,8 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Nodes")]
         public ActionResult DeleteNode(FlowViewModel m)
         {
-            if (!User.Identity.IsAuthenticated)
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            //if (!User.Identity.IsAuthenticated)
+            //    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.node != null && m.node.id != null)
                 m = m.node;
             if (!m.GraphDataID.HasValue)
@@ -240,8 +240,8 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Edges")]
         public ActionResult CreateEdge(FlowEdgeViewModel m)
         {
-            if (!User.Identity.IsAuthenticated)
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            //if (!User.Identity.IsAuthenticated)
+            //    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.edge != null && m.edge.id != null)
                 m = m.edge;
             if (_Flow.CreateEdge(m))
@@ -255,8 +255,8 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Edges")]
         public ActionResult DeleteEdge(FlowEdgeViewModel m)
         {
-            if (!User.Identity.IsAuthenticated)
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            //if (!User.Identity.IsAuthenticated)
+            //    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.edge != null && m.edge.id != null)
                 m = m.edge;
             if (!m.GraphDataRelationID.HasValue)
@@ -299,8 +299,8 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Workflows")]
         public ActionResult CreateWorkflow(FlowEdgeWorkflowViewModel m)
         {
-            if (!User.Identity.IsAuthenticated)
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            //if (!User.Identity.IsAuthenticated)
+            //    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.workflow != null)
             {
                 if (m.GraphDataGroupID.HasValue)
@@ -318,8 +318,8 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Workflows")]
         public ActionResult UpdateWorkflow(FlowEdgeWorkflowViewModel m)
         {
-            if (!User.Identity.IsAuthenticated)
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            //if (!User.Identity.IsAuthenticated)
+            //    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
             if (m.workflow != null)
             {
                 if (m.GraphDataGroupID.HasValue)

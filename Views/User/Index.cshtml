@@ -357,20 +357,24 @@
         <div class="container-fluid">
         <div class="row">
             <div class="col-md-12 process-header">
-                   <h1>{{#if model}}{{humanReadableName}}{{else}}{{newName}}{{/if}}
-                     <small>
-                        &nbsp;&nbsp;<a {{action 'toggleWorkflowEditModal'}}><i class="glyphicon icon-pencil"></i></a>
+                   <h1>{{#if model}}{{humanReadableName}}{{else}}{{newName}}{{/if}}</h1>
+
+                        <small>
+                            <div {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
+                                <i class="icon-pencil"></i> Edit Process
+                            <div>
                         </small>
-                   </h1>
-                {{#if workflowName}}
+
                     <h3>
-                     <small>
-                        {{workflowName}} Workflow
+                        <small>
+                            {{#if workflowName}}
+                                {{workflowName}} Workflow
+                           {{else}}
+                                Current process has not workflow yet. Please choose a workflow name.
+                            {{/if}}
                         </small>
                     </h3>
-               {{else}}
-                    @*{{view Ember.Select content=model.node.workflows  optionValuePath="content.id" optionLabelPath="content.humanName" value=workflowID disabled='graphDataLte2'}}*@
-                {{/if}}
+
                    <hr>
             </div>
             </div>
@@ -446,7 +450,7 @@
             <div style="padding: 50px; text-align: center;">
                 {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}
                 <br><br />
-                <div id="mapmodalid" style="width: 80%; height: 65vh; margin: 0 auto;"></div>
+                <div id="mapmodalid" style="width: 80%; min-height: 320px;  height: auto !important; height: 65%; height: 65vh; margin: 0 auto;"></div>
                 <br><br>
                 {{eui-button label="Cancel" action="toggleMapModal" size='large'}}
                 {{eui-button label="Submit" action="addLocation" style='primary' size='large'}}
@@ -674,7 +678,7 @@
 
 
 <script type="text/x-handlebars" id="components/map-result">
-      <div {{bind-attr id='id'}} style="width: 100%; height: 75vh; padding:12px;" class="map-result"></div>
+      <div {{bind-attr id='id'}} style="width: 100%;  min-height: 600px;  height: auto !important; height: 600px; height: 75vh; padding:12px;" class="map-result"></div>
 </script>
 
 

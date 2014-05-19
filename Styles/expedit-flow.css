@@ -294,3 +294,18 @@ span.graph-manipulationUI:hover {
 }
 
 
+.vh-75 {
+  min-height: 480px;
+  height: auto !important;
+  height: 75%;
+  height: 75vh;
+}
+
+.vh-65 {
+  min-height: 320px;
+  height: auto !important;
+  height: 65%;
+  height: 65vh;
+}
+
+
