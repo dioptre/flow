@@ -160,7 +160,7 @@
 
                 {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
                 {{input valueBinding='password' type="password" class="form-control" placeholder="Your Password"}}
-                <!--<a href="#" class="forgot">Forgot password?</a>-->
+                <a href="/Users/account/RequestLostPassword" class="forgot">Forgot password?</a>
                 <div class="remember">
                     {{input valueBinding="rememberme" id="remember-me" type="checkbox"}}
                     <label for="remember-me">Remember me</label>
@@ -173,7 +173,7 @@
 
         <div class="no-account">
             <p>Do not have an account?</p>
-            <a href="">Sign up</a>
+            <a href="/Users/account/Register?ReturnUrl=%2flow">Sign up</a>
         </div>
     </div>
 </script>
@@ -189,7 +189,25 @@
     {{yield}}
 </script>
 
+<script type="text/x-handlebars" data-template-name="components/inactivity-warning-component">
+    <div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button  type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="tmModalLabel">Inactivity Warning</h4>
+          </div>
+          <div class="modal-body">
+            You will be logged out in 30 seconds.
+          </div>
+        </div>
+      </div>
+    </div>
+</script>
+
 <script type="text/x-handlebars" id="application">
+    {{inactivity-warning}}
+
      <!-- navbar -->
     <header class="navbar navbar-inverse" role="banner">
         <div class="navbar-header">

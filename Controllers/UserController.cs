@@ -31,12 +31,7 @@ namespace EXPEDIT.Flow.Controllers {
 
     [Themed]
     public class UserController : Controller
-    {
-
-        private IAuthenticationService _authenticationService { get; set; }
-        private IMembershipService _membershipService { get; set; }
-        private IUserService _userService { get;set;}
-        private IUserEventHandler _userEventHandler { get; set; }
+    {      
         public IOrchardServices Services { get; set; }
         private IFlowService _Flow { get; set; }
         public ILogger Logger { get; set; }
@@ -50,23 +45,16 @@ namespace EXPEDIT.Flow.Controllers {
             IContentManager contentManager,
             ISiteService siteService,
             IShapeFactory shapeFactory,
-            IMediaLibraryService mediaLibrary,
-            IUserService userService,
-            IMembershipService membershipService,
-            IAuthenticationService authenticationService,
-            IUserEventHandler userEventHandler
+            IMediaLibraryService mediaLibrary
             )
         {
             _Flow = Flow;
             Services = services;
             T = NullLocalizer.Instance;
-            _userService = userService;
-            _membershipService = membershipService;
-            _authenticationService = authenticationService;
+
             _contentManager = contentManager;
             _siteService = siteService;
             _mediaLibrary = mediaLibrary;
-            _userEventHandler = userEventHandler;
         }
 
         public Localizer T { get; set; }
@@ -440,41 +428,7 @@ namespace EXPEDIT.Flow.Controllers {
             return new JsonHelper.JsonNetResult(null, JsonRequestBehavior.AllowGet);
 
         }
-
-        [Themed(false)]
-        [HttpPost]
-        [ActionName("Login")]
-        public ActionResult Login(EXPEDIT.Flow.ViewModels.UserLoginViewModel u)
-        {
-            if (string.IsNullOrWhiteSpace(u.UserName) || string.IsNullOrWhiteSpace(u.Password))
-            {
-                return new JsonHelper.JsonNetResult(false, JsonRequestBehavior.AllowGet);
-            }
-            var user = _membershipService.ValidateUser(u.UserName, u.Password);
-            if (user != null)
-            {
-                _authenticationService.SignIn(user, u.RememberMe);
-                _userEventHandler.LoggedIn(user);
-                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
-            }
-            else
-            {
-                return new JsonHelper.JsonNetResult(false, JsonRequestBehavior.AllowGet);
-            }
-        }
-
-        [Themed(false)]
-        [HttpPost]
-        [ActionName("Logout")]
-        public ActionResult Logout()
-        {
-            var wasLoggedInUser = _authenticationService.GetAuthenticatedUser();
-            _authenticationService.SignOut();
-            if (wasLoggedInUser != null)
-                _userEventHandler.LoggedOut(wasLoggedInUser);
-            return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
-        }
-
+     
 
         [Authorize]
         [Themed(true)]

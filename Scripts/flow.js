@@ -34,14 +34,23 @@ App.LoginController = Ember.Controller.extend({
             var UserName = this.get('email');
             var Password = this.get('password');
             var RememberMe = this.get('rememberme');
+            var _this = this;
 
-            $.post('/flow/login', {
+            $.post('/share/login', {
                 UserName: UserName,
                 Password: Password,
                 RememberMe: RememberMe
-            }).then(function(){
+            }).then(function(data){
+                if (data === true) {
+                    alertify.log('Successfully login!')
+                    _this.transitionToRoute('search')
+                } else {
+                    alertify.error('Incorrect username and/or password. Please try again.')
+                }
 
-            })
+            }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+            });
             // debugger;
         }
     }
@@ -50,10 +59,83 @@ App.LoginController = Ember.Controller.extend({
 })
 
 
+App.inactivityWarningComponent = Ember.Component.extend({
+  active: false,
+  inactiveTimeout: 12000000, // Amount of time before we redirect to the sign in screen - the session should have expired by this point. (20 minutes)
+  warningTimeout: 30000,     // Amount of time the user has to perform an action before the last keep alive fires - 30 seconds
+  // timeout: 1170000,          // 19.5 minutes. We want to be less than the 20 minute timeout to be sure the session is renewed.
+  timeout: 6,          // 19.5 minutes. We want to be less than the 20 minute timeout to be sure the session is renewed.
+  didInsertElement: function(){
+    //if($('meta[name="in-development"]').attr('content')){ return; } // Uncomment and add a meta tag to your head if you want to avoid session timeout in development
+    var _this = this;
+
+    var keepActive = function(){
+      if(context.active){
+        // Keep the session alive
+
+        console.log('test')
+
+        $.ajax({
+          url: "/share/loggedin"
+        }).done(function(result){
+
+          // Go inactive until the user moves the mouse or presses a key
+          _this.active = false;
+
+          // The user now has another 20 minutes before the session times out
+          // Restart the timer to keep the user logged in
+          Ember.run.later(_this, keepActive, _this.timeout);
+
+          // Set a timer to show a modal indicating the user is about to be logged out.
+          Ember.run.debounce(_this, _this.show, _this.timeout - _this.warningTimeout);
+
+          // Set a timer that will send the user to the login screen
+          Ember.run.debounce(_this, _this.forceLogin, _this.inactiveTimeout);
+        });
+      }
+    };
+
+    $(window).mousemove(function(e){
+      _this.active = true;
+      // Make sure the modal is hidden. This will cause the modal to hide if the user moves the mouse or presses a key.
+      // Use debounce so we don't call it over and over again since this method is called from mousemove
+      Ember.run.debounce(_this, _this.hide, 1000);
+    });
+
+    $(window).keypress(function(e){
+      _this.active = true;
+      // Make sure the modal is hidden. This will cause the modal to hide if the user moves the mouse or presses a key.
+      _this.hide();
+    });
+
+    // The user has 5 minutes before they are logged out. We need to send a keep Active before then.
+    Ember.run.later(_this, keepActive, _this.timeout);
+
+  },
+
+  forceLogin: function(){
+    window.location.href = '/users/sign_out?timeout=true';
+  },
+
+  show: function(){
+    // Warn the user that they will be logged out if we are inactive
+    if(this.active === false){
+      // Start countdown timer
+      this.$('.modal').modal('show');
+    }
+  },
+
+  hide: function(){
+    this.$('.modal').modal('hide');
+  }
+
+});
+
+
 
 App.ApplicationView = Ember.View.extend({
     didInsertElement: function () {
-        // Ember.run.
+
 
 
 
@@ -221,7 +303,6 @@ App.ApplicationView = Ember.View.extend({
      loading: function() {
 
         // Remove menu link - mobile test
-        alert('test')
         Ember.run.scheduleOnce('afterRender', this, function(){
             $('body').removeClass('menu');
         });
@@ -243,114 +324,11 @@ App.ApplicationView = Ember.View.extend({
  });
 
 
-
-App.ApplicationRoute = Ember.Route.extend({
-      actions: {
-      //  openModal: function(viewName, param1, param2) {
-      //      // param1 - optional callback or data object
-      //      // param2 - optional callback, only if data object is used for param 1
-
-      //      // Names for modals should be made up in the following way
-      //      // ===>>> Controller Name + 'Modal' + Name for modal
-
-      //      // Step 1: Get Controller Name
-      //      var controllerName = viewName.match(/^(.*)Modal(.*)$/)[1]; // This gets controller Name from model
-
-
-      //      // Step 3: Update Query parmas
-      //      this.set('controller.m', viewName);  // Add to URL
-
-      //       // Check if param 1 is a function
-      //      if (typeof param1 === 'function') {
-      //          this.controllerFor(viewName).set('callbackData', param1);
-      //      } else if (param1 !== null) {
-      //          // Must be data if not function
-      //          this.controllerFor(viewName).set('model', param1)
-
-      //          // Check if param 2 is used
-      //          if (param2 !== null) {
-      //              this.controllerFor(viewName).set('callbackData', param2);
-      //          }
-      //      }
-
-
-      //      return this.render(viewName, {
-      //          into: 'application',
-      //          outlet: 'modal'
-      //      });
-      //  },
-
-      //  closeModal: function() {
-      //    this.set('controller.m', ""); // Clean up URL
-
-      //    return this.disconnectOutlet({
-      //      outlet: 'modal',
-      //      parentView: 'application'
-      //    }); // Remove from outlet
-      //  }
-      }
-});
-
-//App.ModalController = Ember.ObjectController.extend({
-//    actions: {
-//        close: function () {
-//            return this.send('closeModal');
-//        }
-//    }
-//});
-
-// A tiny bit more modal code
-//App.ModalDialogComponent = Ember.Component.extend({
-//    model: null,
-//    title: 'Modal Title',
-//    btnClose: "Close",
-//    btnSubmit: 'Submit',
-//    actions: {
-//        close: function () {
-//            return this.sendAction();
-//        },
-//        submit: function () {
-//            return this.sendAction('submit');
-//        }
-//    }
-//});
-
-
-//App.Modal = Ember.Mixin.create({
-//    callbackData: null,
-//    actions: {
-//        close: function () {
-//            return this.send('closeModal');
-//        },
-//        submit: function () {
-//            console.log(this.get('model.content'));
-//            if (this.callbackData) {
-//                this.callbackData(this.get('model'));
-//            }
-//            return this.send('closeModal');
-//        }
-//    }
-//});
-
-//App.GraphModalNewWorkflowController = Ember.ObjectController.extend(App.Modal, {
-
-//});
-
-
 App.ApplicationController = Ember.Controller.extend({
     currentPathDidChange: function () {
         window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
-
-        // Set path to the top
-        App.set('currentPath', this.get('currentPath'));
-
-        // Hide menu if route change - TODO this should really happen on any click on the sidepanel
-        Ember.run.scheduleOnce('afterRender', this, function(){
-            $('body').removeClass('menu');
-        });
+        App.set('currentPath', this.get('currentPath'));  // Set path to the top
     }.observes('currentPath'), // This set the current path App.get('currentPath');
-
-
 });
 
 
