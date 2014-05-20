@@ -59,18 +59,18 @@ App.LoginController = Ember.Controller.extend({
 })
 
 
-App.inactivityWarningComponent = Ember.Component.extend({
+App.InactivityWarningComponent = Ember.Component.extend({
   active: false,
   inactiveTimeout: 12000000, // Amount of time before we redirect to the sign in screen - the session should have expired by this point. (20 minutes)
   warningTimeout: 30000,     // Amount of time the user has to perform an action before the last keep alive fires - 30 seconds
   // timeout: 1170000,          // 19.5 minutes. We want to be less than the 20 minute timeout to be sure the session is renewed.
-  timeout: 6,          // 19.5 minutes. We want to be less than the 20 minute timeout to be sure the session is renewed.
+  timeout: 600,          // 19.5 minutes. We want to be less than the 20 minute timeout to be sure the session is renewed.
   didInsertElement: function(){
     //if($('meta[name="in-development"]').attr('content')){ return; } // Uncomment and add a meta tag to your head if you want to avoid session timeout in development
     var _this = this;
 
     var keepActive = function(){
-      if(context.active){
+      if(_this.active){
         // Keep the session alive
 
         console.log('test')
@@ -493,6 +493,7 @@ App.SearchController = Ember.ObjectController.extend({
                 n: location,
                 l: lastMapUpdates
             });
+            controller.set('searchLocation', ''); // Clean up the form
            return  this.toggleProperty('mapModal');
         }
     },
@@ -515,7 +516,10 @@ App.SearchController = Ember.ObjectController.extend({
     loadMap: function(){
         var controller = this;
         if (this.get('map') && this.get('componentURI').length > 0) {
-            controller.set('controllers.mapResults.loading', true);
+
+            var slowLoading = Ember.run.later(controller, function(){
+                controller.set('controllers.mapResults.loading', true);
+            }, 250)
             this.store.find('search', {
                 page: this.get('pageMap'),
                 keywords: this.get('keywords'),
@@ -524,6 +528,7 @@ App.SearchController = Ember.ObjectController.extend({
                 pagesize: this.get('pageSize')
             }).then(function (res) {
                 controller.set('controllers.mapResults.results', res.get('content'));
+                Ember.run.cancel(slowLoading);
                 controller.set('controllers.mapResults.loading', false);
             });
         }
@@ -549,7 +554,7 @@ App.SearchController = Ember.ObjectController.extend({
         this.loadGraph();
         this.loadMap();
         this.loadFile();
-    }.observes('pageSize').on('didInsertElement'), // the did insert element here doesn't actuall work that why the view is setup below to kickoff the initial search
+    }.observes('pageSize', 'tags'), // the did insert element here doesn't  work that's why the view is setup below to kickoff the initial search
     searchQuery: function () { // this builds the search query
         var controller = this;
         this.set('pageGraph', 0);
