@@ -10,14 +10,53 @@ App.Router.map(function () {
     this.route('graph', {path: 'process/:id'});
     this.route('wikipedia', { path: "/wikipedia/:id" });
     this.route('search');
-    this.route('userlist');
-    this.route('userprofile');
-    this.route('usernew');
+    this.route('myaccount');
+    this.route('file');
+    this.route('permission');
+    this.route('login');
+
+
+// Currently unused.
+// this.route('userlist');
+// this.route('userprofile');
+// this.route('usernew');
 });
+
+App.LoginController = Ember.Controller.extend({
+    email: "",
+    rememberme: false,
+    password: "",
+    bindingChercker: function(){
+        console.log('value changed')
+    }.observes('email', 'password', 'rememberme'),
+    actions: {
+        loginUser: function(){
+            var UserName = this.get('email');
+            var Password = this.get('password');
+            var RememberMe = this.get('rememberme');
+
+            $.post('/flow/login', {
+                UserName: UserName,
+                Password: Password,
+                RememberMe: RememberMe
+            }).then(function(){
+
+            })
+            // debugger;
+        }
+    }
+
+
+})
+
 
 
 App.ApplicationView = Ember.View.extend({
     didInsertElement: function () {
+        // Ember.run.
+
+
+
         Ember.run.scheduleOnce('afterRender', this, function () {
             // navbar notification popups
             $(".notification-dropdown").each(function (index, el) {
@@ -175,21 +214,18 @@ App.ApplicationView = Ember.View.extend({
     }
 })
 
- //App.LoadingRoute = Ember.Route.extend({
- //  activate: function() {
- //    this._super();
- //    return Pace.restart();
- //  },
- //  deactivate: function() {
- //    this._super();
- //    return Pace.stop();
- //  }
- //});
 
 
  App.ApplicationRoute = Ember.Route.extend({
    actions: {
      loading: function() {
+
+        // Remove menu link - mobile test
+        alert('test')
+        Ember.run.scheduleOnce('afterRender', this, function(){
+            $('body').removeClass('menu');
+        });
+
        Pace.restart();
        this.router.one('didTransition', function() {
          return setTimeout((function() {
@@ -303,16 +339,18 @@ App.ApplicationRoute = Ember.Route.extend({
 
 App.ApplicationController = Ember.Controller.extend({
     currentPathDidChange: function () {
+        window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
+
+        // Set path to the top
         App.set('currentPath', this.get('currentPath'));
-        window.scrollTo(0, 0);
+
+        // Hide menu if route change - TODO this should really happen on any click on the sidepanel
         Ember.run.scheduleOnce('afterRender', this, function(){
             $('body').removeClass('menu');
         });
     }.observes('currentPath'), // This set the current path App.get('currentPath');
-    m: '',
-    queryParams: ['m'],
-    needs: ['graph', 'wikipedia', 'search']
-    // Add some code here to watch for modals and open them if it happens
+
+
 });
 
 
@@ -1313,7 +1351,7 @@ App.VizEditorComponent = Ember.Component.extend({
                   deleteError:"The function for delete does not support two arguments (data, callback).",
                   deleteClusterError:"Clusters cannot be deleted."
             },
-            //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}}, 
+            //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}},
             smoothCurves: false,
             //hierarchicalLayout: {enabled:true},
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},

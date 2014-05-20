@@ -31,6 +31,8 @@
         <meta name="apple-mobile-web-app-capable" content="yes">
 
 
+
+
         <!-- bootstrap -->
         <link href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap.css")" rel="stylesheet" />
         <link href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap-overrides.css")" type="text/css" rel="stylesheet" />
@@ -46,6 +48,10 @@
 
         <!-- this page specific styles -->
         <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/compiled/index.css")" type="text/css" media="screen" />
+
+        <!-- more page specific styles -->
+        <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/compiled/personal-info.css")" type="text/css" media="screen" />
+        <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/compiled/signin.css")" type="text/css" media="screen" />
 
         <!-- open sans font -->
         <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
@@ -131,14 +137,56 @@
 <div id="emberapphere" name="application"></div>
 
 
-<script type="text/x-handlebars" data-template-name="home-nav">
-            {{#if view.activeTagzz}}
-    <div class="pointer">
-        <div class="arrow"></div>
-        <div class="arrow_border"></div>
+<script type="text/x-handlebars" id="permission">
+    <h1> My permissions </h1>
+
+</script>
+
+<script type="text/x-handlebars" id="file">
+    <h1> My files </h1>
+
+</script>
+
+
+<script type="text/x-handlebars" id="login">
+    <div class="login-wrapper login-bg">
+        <a href="#">
+            <img class="logo" src="@Url.Content("~/Modules/EXPEDIT.Flow/Images/logo-all-white-transparent.png")" alt="logo" />
+        </a>
+
+        <div class="box">
+            <div class="content-wrap">
+                <h6>Log in</h6>
+
+                {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
+                {{input valueBinding='password' type="password" class="form-control" placeholder="Your Password"}}
+                <!--<a href="#" class="forgot">Forgot password?</a>-->
+                <div class="remember">
+                    {{input valueBinding="rememberme" id="remember-me" type="checkbox"}}
+                    <label for="remember-me">Remember me</label>
+                </div>
+                <a {{action 'loginUser'}} class="btn-glow primary login">
+                    Log in
+                </a>
+            </div>
+        </div>
+
+        <div class="no-account">
+            <p>Do not have an account?</p>
+            <a href="">Sign up</a>
+        </div>
     </div>
-{{/if}}
-{{yield}}
+</script>
+
+
+<script type="text/x-handlebars" data-template-name="home-nav">
+    {{#if view.activeTagzz}}
+        <div class="pointer">
+            <div class="arrow"></div>
+            <div class="arrow_border"></div>
+        </div>
+    {{/if}}
+    {{yield}}
 </script>
 
 <script type="text/x-handlebars" id="application">
@@ -156,6 +204,22 @@
                 <img src="@Url.Content("~/Modules/EXPEDIT.Flow/Images/logo.png")" alt="logo" />
             </a>
         </div>
+
+        <ul class="nav navbar-nav pull-right hidden-xs">
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
+
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="personal-info.html">Personal info</a></li>
+                    <li><a href="#">Account settings</a></li>
+                    <li><a href="#">Billing</a></li>
+                    <li><a href="#">Export your data</a></li>
+                    <li><a href="#">Send feedback</a></li>
+                </ul>
+            </li>
+        </ul>
         {{!--
             <ul class="nav navbar-nav pull-right hidden-xs">
                 <li class="hidden-xs hidden-sm">
@@ -245,19 +309,7 @@
                         </div>
                     </div>
                 </li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
-                        Your account
-                        <b class="caret"></b>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a href="personal-info.html">Personal info</a></li>
-                        <li><a href="#">Account settings</a></li>
-                        <li><a href="#">Billing</a></li>
-                        <li><a href="#">Export your data</a></li>
-                        <li><a href="#">Send feedback</a></li>
-                    </ul>
-                </li>
+
                 <li class="settings hidden-xs hidden-sm">
                     <a href="personal-info.html" role="button">
                         <i class="icon-cog"></i>
@@ -294,24 +346,31 @@
                 </ul>
             {{/view}}
             {{#view App.HomeNavView}}
+                {{#link-to 'file'}}
+                    <i class="icon-file"></i>
+                    <span>My Files</span>
+                {{/link-to}}
+            {{/view}}
+            {{#view App.HomeNavView}}
                 {{#link-to 'wikipedia' 'Special:Random'}}
                     <i class="icon-book"></i>
                     <span>Wikipedia</span>
                 {{/link-to}}
             {{/view}}
-            {{!-- hidden for now
-                {{#view App.HomeNavView}}
-                    <a class="dropdown-toggle" href="#">
-                        <i class="icon-group"></i>
-                        <span>Users</span>
-                        <i class="icon-chevron-down"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li>{{#link-to 'userlist'}}Search user{{/link-to}}</li>
-                        <li>{{#link-to 'usernew'}}User permissions{{/link-to}}</li>
-                        <li>{{#link-to 'userprofile'}}My profile{{/link-to}}</li>
-                    </ul>
-                {{/view}}
+            {{#view App.HomeNavView}}
+                {{#link-to 'permission'}}
+                    <i class="icon-lock"></i>
+                    <span>Permissions</span>
+                {{/link-to}}
+            {{/view}}
+            {{#view App.HomeNavView}}
+                {{#link-to 'myaccount'}}
+                    <i class="icon-user"></i>
+                    <span>My Account</span>
+                {{/link-to}}
+            {{/view}}
+
+            {{!--
                 {{#view App.HomeNavView}}
                     {{#link-to 'userprofile'}}
                         <i class="icon-cog"></i>
@@ -985,135 +1044,88 @@
     </script>
 
 
-    <script type="text/x-handlebars" id="userprofile">
-        <div id="pad-wrapper" class="user-profile">
-            <!-- header -->
-            <div class="row header">
-                <div class="col-md-8">
-                    <img src="img/contact-profile.png" alt="contact" class="avatar img-circle" />
-                    <h3 class="name">Alejandra Galván Castillo</h3>
-                    <span class="area">Graphic Designer</span>
-                </div>
-                <a class="btn-flat icon pull-right delete-user" data-toggle="tooltip" title="Delete user" data-placement="top">
-                    <i class="icon-trash"></i>
-                </a>
-                 <a class="btn-flat icon large pull-right edit">
-                    Edit this person
-                </a>
-            </div>
+    <script type="text/x-handlebars" id="myaccount">
+        <div class="settings-wrapper" id="pad-wrapper">
+            <div class="row">
 
-            <div class="row profile">
-                <!-- bio, new note & orders column -->
-                <div class="col-md-9 bio">
-                    <div class="profile-box">
-                        <!-- biography -->
-                        <div class="col-md-12 section">
-                            <h6>Biography</h6>
-                            <p>There are many variations of passages of Lorem Ipsum available but the majority have humour suffered alteration in believable some formhumour , by injected humour, or randomised words which dont look even slightly believable. </p>
-                        </div>
+                <div class="col-md-3 col-md-offset-1 avatar-box">
+                    <div class="personal-image">
+                        <img src="img/personal-info.png" class="avatar img-circle" alt="avatar" />
+                        <p>Upload a different photo... (Recommended size 200px by 200px)</p>
 
-                        <h6>Recent orders</h6>
-                        <br>
-                        <!-- recent orders table -->
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th class="col-md-2">
-                                        Order ID
-                                    </th>
-                                    <th class="col-md-3">
-                                        <span class="line"></span>
-                                        Date
-                                    </th>
-                                    <th class="col-md-3">
-                                        <span class="line"></span>
-                                        Items
-                                    </th>
-                                    <th class="col-md-3">
-                                        <span class="line"></span>
-                                        Total amount
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- row -->
-                                <tr class="first">
-                                    <td>
-                                        <a href="#">#459</a>
-                                    </td>
-                                    <td>
-                                        Jan 03, 2013
-                                    </td>
-                                    <td>
-                                        3
-                                    </td>
-                                    <td>
-                                        $ 3,500.00
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <a href="#">#510</a>
-                                    </td>
-                                    <td>
-                                        Feb 22, 2013
-                                    </td>
-                                    <td>
-                                        5
-                                    </td>
-                                    <td>
-                                        $ 800.00
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <a href="#">#618</a>
-                                    </td>
-                                    <td>
-                                        Jan 03, 2013
-                                    </td>
-                                    <td>
-                                        8
-                                    </td>
-                                    <td>
-                                        $ 3,499.99
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <!-- new comment form -->
-                        <div class="col-md-12 section comment">
-                            <h6>Add a quick note</h6>
-                            <p>Add a note about this user to keep a history of your interactions.</p>
-                            <textarea></textarea>
-                            <a href="#">Attach files</a>
-                            <div class="col-md-12 submit-box pull-right">
-                                <input type="submit" class="btn-glow primary" value="Add Note">
-                                <span>OR</span>
-                                <input type="reset" value="Cancel" class="reset">
-                            </div>
-                        </div>
+                        <input type="file" />
                     </div>
                 </div>
 
-                <!-- side address column -->
-                <div class="col-md-3 col-xs-12 address pull-right">
-                    <h6>Address</h6>
-                    <iframe width="300" height="133" scrolling="no" src="https://maps.google.com.mx/?ie=UTF8&amp;t=m&amp;ll=19.715081,-155.071421&amp;spn=0.010746,0.025749&amp;z=14&amp;output=embed"></iframe>
-                    <ul>
-                        <li>2301 East Lamar Blvd. Suite 140. </li>
-                        <li>City, Arlington. United States,</li>
-                        <li>Zip Code, TX 76006.</li>
-                        <li class="ico-li">
-                            <i class="ico-phone"></i>
-                            1817 274 2933
-                        </li>
-                         <li class="ico-li">
-                            <i class="ico-mail"></i>
-                            <a href="#">alejandra@detail.com</a>
-                        </li>
-                    </ul>
+                <div class="col-md-7 personal-info">
+                    <h5 class="personal-title">Personal info</h5>
+
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">First name:</label>
+                            <div class="col-lg-8">
+                                <input class="form-control" type="text" value="Alejandra" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">Last name:</label>
+                            <div class="col-lg-8">
+                                <input class="form-control" type="text" value="Galvan" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">Company:</label>
+                            <div class="col-lg-8">
+                                <input class="form-control" type="text" value="Design Co." />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">Email:</label>
+                            <div class="col-lg-8">
+                                <input class="form-control" type="text" value="alejandra@design.com" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">Time Zone:</label>
+                            <div class="col-lg-8">
+                                <div class="ui-select">
+                                    <select id="user_time_zone" name="user[time_zone]">
+                                        <option value="Hawaii">(GMT-10:00) Hawaii</option>
+                                        <option value="Alaska">(GMT-09:00) Alaska</option>
+                                        <option value="Pacific Time (US &amp; Canada)">(GMT-08:00) Pacific Time (US &amp; Canada)</option>
+                                        <option value="Arizona">(GMT-07:00) Arizona</option>
+                                        <option value="Mountain Time (US &amp; Canada)">(GMT-07:00) Mountain Time (US &amp; Canada)</option>
+                                        <option value="Central Time (US &amp; Canada)" selected="selected">(GMT-06:00) Central Time (US &amp; Canada)</option>
+                                        <option value="Eastern Time (US &amp; Canada)">(GMT-05:00) Eastern Time (US &amp; Canada)</option>
+                                        <option value="Indiana (East)">(GMT-05:00) Indiana (East)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">Username:</label>
+                            <div class="col-lg-8">
+                                <input class="form-control" type="text" value="alegalvan" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">Password:</label>
+                            <div class="col-lg-8">
+                                <input class="form-control" type="password" value="blablablabla" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">Confirm password:</label>
+                            <div class="col-lg-8">
+                                <input class="form-control" type="password" value="blablablabla" />
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <input type="button" class="btn-glow primary" value="Save Changes">
+                            <span>OR</span>
+                            <input type="reset" value="Cancel" class="reset">
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

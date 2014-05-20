@@ -3,7 +3,7 @@
 #field { margin-left: .5em; }
 #field, label { font-family: Arial, Helvetica, sans-serif; font-size: small; }
 br { clear: both; }
-input { border: 1px solid black; margin-bottom: .5em;  }
+/*input { border: 1px solid black; margin-bottom: .5em;  }*/
 input.error { border: 1px solid red; }
 label.error {
 	background: url('images/unchecked.gif') no-repeat;
@@ -294,14 +294,25 @@ span.graph-manipulationUI:hover {
 }
 
 
+/* Userful helpers for vertical viewport height with fallback */
 .vh-75 {
   min-height: 480px;
   height: 75vh;
 }
-
 .vh-65 {
   min-height: 320px;
   height: 65vh;
+}
+
+/* A few fixes for login page */
+.login-wrapper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.login-wrapper .logo {
+  height: 32px;
+  margin-top: 75px;
 }
 
 

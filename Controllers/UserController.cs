@@ -23,11 +23,20 @@ using Orchard.Mvc;
 using Orchard.MediaLibrary.Services;
 using EXPEDIT.Flow.ViewModels;
 using System.Text.RegularExpressions;
+using Orchard.Security;
+using Orchard.Users.Services;
+using Orchard.Users.Events;
 
 namespace EXPEDIT.Flow.Controllers {
-    
+
     [Themed]
-    public class UserController : Controller {
+    public class UserController : Controller
+    {
+
+        private IAuthenticationService _authenticationService { get; set; }
+        private IMembershipService _membershipService { get; set; }
+        private IUserService _userService { get;set;}
+        private IUserEventHandler _userEventHandler { get; set; }
         public IOrchardServices Services { get; set; }
         private IFlowService _Flow { get; set; }
         public ILogger Logger { get; set; }
@@ -41,16 +50,23 @@ namespace EXPEDIT.Flow.Controllers {
             IContentManager contentManager,
             ISiteService siteService,
             IShapeFactory shapeFactory,
-            IMediaLibraryService mediaLibrary
+            IMediaLibraryService mediaLibrary,
+            IUserService userService,
+            IMembershipService membershipService,
+            IAuthenticationService authenticationService,
+            IUserEventHandler userEventHandler
             )
         {
             _Flow = Flow;
             Services = services;
             T = NullLocalizer.Instance;
-
+            _userService = userService;
+            _membershipService = membershipService;
+            _authenticationService = authenticationService;
             _contentManager = contentManager;
             _siteService = siteService;
             _mediaLibrary = mediaLibrary;
+            _userEventHandler = userEventHandler;
         }
 
         public Localizer T { get; set; }
@@ -95,7 +111,7 @@ namespace EXPEDIT.Flow.Controllers {
                     string dt = Request.Params[key];
                     if (string.IsNullOrWhiteSpace(dt))
                         continue;
-                    var dta = dt.Split(new [] {"-"}, StringSplitOptions.RemoveEmptyEntries);
+                    var dta = dt.Split(new[] { "-" }, StringSplitOptions.RemoveEmptyEntries);
                     if (dta.Length != 2)
                         continue;
                     int tempTS;
@@ -145,13 +161,13 @@ namespace EXPEDIT.Flow.Controllers {
                 maxDate,
                 viewport
             );
-            return new JsonHelper.JsonNetResult(new { search = results} , JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(new { search = results }, JsonRequestBehavior.AllowGet);
         }
 
 
         [Themed(true)]
         [HttpGet]
-        [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")] 
+        [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")]
         public ActionResult Wiki(string id)
         {
             WikiViewModel m;
@@ -164,7 +180,7 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpUnauthorizedResult("Unauthorized access to protected article.");
             return View(m);
         }
-     
+
         [ValidateInput(false)]
         [Themed(true)]
         [HttpPost]
@@ -243,7 +259,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (_Flow.CreateNode(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);    
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
         }
 
         [Themed(false)]
@@ -262,7 +278,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (_Flow.UpdateNode(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);    
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
         }
 
         [Themed(false)]
@@ -279,7 +295,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (_Flow.DeleteEdge(m.GraphDataID.Value))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
         }
 
 
@@ -290,7 +306,7 @@ namespace EXPEDIT.Flow.Controllers {
         {
             return new EmptyResult();
         }
-    
+
         [Themed(false)]
         [HttpPost]
         [ActionName("Edges")]
@@ -303,7 +319,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (_Flow.CreateEdge(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
         }
 
         [Themed(false)]
@@ -316,11 +332,11 @@ namespace EXPEDIT.Flow.Controllers {
             if (m.edge != null && m.edge.id != null)
                 m = m.edge;
             if (!m.GraphDataRelationID.HasValue)
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);   
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
             if (_Flow.DeleteEdge(m.GraphDataRelationID.Value))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);   
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
         }
 
         [Themed(false)]
@@ -332,6 +348,7 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
 
+
         [Themed(false)]
         [HttpGet]
         [ActionName("Workflows")]
@@ -340,9 +357,9 @@ namespace EXPEDIT.Flow.Controllers {
             FlowEdgeWorkflowViewModel m;
             Guid gid;
             if (Guid.TryParse(id, out gid))
-                 m = _Flow.GetWorkflow(gid); 
+                m = _Flow.GetWorkflow(gid);
             else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);  
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
             if (m == null)
                 return new HttpUnauthorizedResult("Unauthorized access to protected workflow.");
             else
@@ -388,6 +405,75 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
         }
 
+
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("MyWorkflows")]
+        public ActionResult GetMyWorkflows(string id)
+        {
+            return new JsonHelper.JsonNetResult(null, JsonRequestBehavior.AllowGet);
+        }
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("MyNodes")]
+        public ActionResult GetMyNodes(string id)
+        {
+            return new JsonHelper.JsonNetResult(null, JsonRequestBehavior.AllowGet);
+        }
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("MyFiles")]
+        public ActionResult GetMyFiles(string id)
+        {
+            return new JsonHelper.JsonNetResult(null, JsonRequestBehavior.AllowGet);
+
+        }
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("MySecurityLists")]
+        public ActionResult GetMySecurityLists(string id)
+        {
+            return new JsonHelper.JsonNetResult(null, JsonRequestBehavior.AllowGet);
+
+        }
+
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Login")]
+        public ActionResult Login(EXPEDIT.Flow.ViewModels.UserLoginViewModel u)
+        {
+            if (string.IsNullOrWhiteSpace(u.UserName) || string.IsNullOrWhiteSpace(u.Password))
+            {
+                return new JsonHelper.JsonNetResult(false, JsonRequestBehavior.AllowGet);
+            }
+            var user = _membershipService.ValidateUser(u.UserName, u.Password);
+            if (user != null)
+            {
+                _authenticationService.SignIn(user, u.RememberMe);
+                _userEventHandler.LoggedIn(user);
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                return new JsonHelper.JsonNetResult(false, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Logout")]
+        public ActionResult Logout()
+        {
+            var wasLoggedInUser = _authenticationService.GetAuthenticatedUser();
+            _authenticationService.SignOut();
+            if (wasLoggedInUser != null)
+                _userEventHandler.LoggedOut(wasLoggedInUser);
+            return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+        }
 
 
         [Authorize]
