@@ -1675,6 +1675,15 @@ App.Workflow = DS.Model.extend({
     }.property()
 });
 
+
+App.MyWorkflow = App.Workflow.extend({});
+App.MyNode = App.Node.extend({});
+App.MyFile = DS.Model.extend({});
+App.MySecurityList = DS.Model.extend({});
+App.MyWhiteList = App.SecurityList.extend({});
+App.MyBlackList = App.SecurityList.extend({});
+
+
 App.Wikipedia = DS.Model.extend({
     label: DS.attr('string'),
     content: DS.attr('string'),
@@ -2033,3 +2042,4 @@ App.TinymceEditorComponent = Ember.Component.extend({
         }
     }.observes('data')
 });
+

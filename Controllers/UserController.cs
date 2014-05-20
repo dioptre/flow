@@ -325,8 +325,8 @@ namespace EXPEDIT.Flow.Controllers {
 
         [Themed(false)]
         [HttpGet]
-        [ActionName("MyInfo")]
-        public ActionResult GetMyInfo(string id)
+        [ActionName("MyUserInfo")]
+        public ActionResult GetMyUserInfo(string id)
         {
             return new JsonHelper.JsonNetResult(_Flow.GetMyInfo(), JsonRequestBehavior.AllowGet);
         }
