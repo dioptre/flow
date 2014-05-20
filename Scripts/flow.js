@@ -1680,8 +1680,8 @@ App.MyWorkflow = App.Workflow.extend({});
 App.MyNode = App.Node.extend({});
 App.MyFile = DS.Model.extend({});
 App.MySecurityList = DS.Model.extend({});
-App.MyWhiteList = App.SecurityList.extend({});
-App.MyBlackList = App.SecurityList.extend({});
+App.MyWhiteList = App.MySecurityList.extend({});
+App.MyBlackList = App.MySecurityList.extend({});
 
 
 App.Wikipedia = DS.Model.extend({
