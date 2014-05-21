@@ -330,3 +330,10 @@ span.graph-manipulationUI:hover {
 .warning {
     color:rgb(167, 20, 20) !important;
 }
+
+
+.content {
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+  /*border-radius: 0 0 0 0;*/
+}

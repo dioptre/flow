@@ -151,7 +151,7 @@
 </script>
 
 <script type="text/x-handlebars" id="file">
-    <h1> My files </h1>
+    <h1> My Files </h1>
     <br><br>
     {{#if loading}}
       Loading...
@@ -189,7 +189,12 @@
         </div>
 
       {{else}}
-          Sorry no results could be found.
+            {{#if controllers.application.isLoggedIn}}
+                You have no files.
+            {{else}}
+                You are not logged in. Please {{link-to 'login' 'login'}} to see your files.
+            {{/if}}
+
       {{/if}}
     {{/if}}
 </script>
@@ -519,9 +524,9 @@
             <div class="col-md-12 process-header">
                    <h1>{{#if model}}{{humanReadableName}}{{else}}{{newName}}{{/if}}
 
-                            <div {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
+                            <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
                                 <i class="icon-pencil"></i> Edit Process
-                            </div>
+                            </span>
                     </h1>
 
                     <h3>
@@ -874,7 +879,7 @@
 
       <script type="text/x-handlebars" id="userlist">
 
-        <div id="pad-wrapper" class="users-list">
+        <div class="users-list">
             <div class="row header">
                 <h3>Users</h3>
                 <div class="col-md-10 col-sm-12 col-xs-12 pull-right">
@@ -1119,7 +1124,7 @@
 
 
     <script type="text/x-handlebars" id="myaccount">
-        <div class="settings-wrapper" id="pad-wrapper">
+        <div class="settings-wrapper">
             <div class="row">
 
                 <div class="col-md-3 col-md-offset-1 avatar-box">
@@ -1208,7 +1213,7 @@
 
 
       <script type="text/x-handlebars" id="usernew">
-          <div id="pad-wrapper" class="new-user">
+          <div class="new-user">
             <div class="row header">
                 <div class="col-md-12">
                     <h3>Create a new user</h3>
@@ -1335,6 +1340,9 @@
                 </div>
             </div>
         </div>
-        </script>
+        </script>       
     </body>
 </html>
+
+
+

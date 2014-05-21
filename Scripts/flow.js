@@ -104,11 +104,12 @@ App.ApplicationController = Ember.Controller.extend({
         logoutUser: function(){
             var _this = this;
             $.post('/share/logout').then(function(data){
-                _this.set('isLoggedIn', false);
-                _this.set('userProfile', '');
+                // _this.set('isLoggedIn', false); - not necessary as reloads
+                // _this.set('userProfile', '');
                 // App.reset(); - should reset
-                _this.transitionToRoute('login');
-                Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
+                // _this.transitionToRoute('login');
+                // Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
+                $.cookie('showLoggedOutModal', true);
                 location.reload();
             }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -123,6 +124,13 @@ App.ApplicationController = Ember.Controller.extend({
 App.ApplicationView = Ember.View.extend({
     didInsertElement: function () {
         var _this = this;
+
+        if ($.cookie('showLoggedOutModal')) {
+            $.cookie('showLoggedOutModal', false);
+            // _this.transitionToRoute('login');
+            Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
+        }
+
 
 
         // Start - Code to handle if user is logged in or not
@@ -1815,6 +1823,17 @@ App.WikipediaRoute = Ember.Route.extend({
         error: function (error, transition) {
             if (error && error.id && error.redirect)
                 this.transitionTo(error.redirect, error.id);
+        },
+        willTransition: function (transition) {
+            //this.set('controller.model.title', ''); //Doesnt work
+            //$(".filteredData")    .html(''); //HACK ?
+            //this.model.rollback();
+            //var model = this.modelFor('wikipedia');
+            //var controller = this.controllerFor('wikipedia');
+            //var route = this;
+            //var newModel = route.model();
+            //controller.set('model', newModel);
+            //$(".filteredData").remove();
         }
     }
 });
@@ -1964,6 +1983,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
 
 
 function filterData(data) {
+    debugger;
     if (typeof data == 'undefined' || !data) return '';
     // filter all the nasties out
     // no body tags
@@ -1982,6 +2002,28 @@ function filterData(data) {
     data = data.replace(/^null$/, '');
     //Fix Vids
     //data = $(data).fitVids().prop('outerHTML');
+    var tags = ['em', 'div', 'p', 'span']; //Attempt to fix eufeeds
+    for (var i = 0; i < tags.length; i++) {
+        var rxOpen = new RegExp("<"+ tags[i] +">", "ig");
+        var rxClose = new RegExp("<\/" + tags[i] + ">", "ig");
+        divOpen = data.match(rxOpen);
+        divClose = data.match(rxClose);
+        if (!divOpen)
+            divOpen = 0;
+        else
+            divOpen = divOpen.length;
+        if (!divClose)
+            divClose = 0;
+        else
+            divClose = divClose.length;
+        for (; divOpen < divClose; divOpen++) {
+            data = "<"+ tags[i] +">" + data;
+        }
+        for (; divClose < divOpen; divClose++) {
+            data = data + "</"+ tags[i] +">";
+        }
+    }
+
 
     return '<div class=\'filteredData\'>' + data + '</div>';
 }
