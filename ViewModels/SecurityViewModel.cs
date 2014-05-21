@@ -22,6 +22,7 @@ namespace EXPEDIT.Flow.ViewModels
         public SecurityType? securityType { get; set; }
         public SecurityViewModel security { get; set; }
         public Guid? id { get; set; }
+        public Guid? OwnerUserID { get; set; }
         public Guid? OwnerContactID { get; set; }
         public Guid? OwnerCompanyID { get; set; }
         public string OwnerTableType { get; set; }
@@ -29,6 +30,7 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? OwnerReferenceID { get; set; }
         public Guid? ReferenceID { get { return OwnerReferenceID; } set { OwnerReferenceID = value; } }
         public string ReferenceName { get; set; }
+        public Guid? AccessorUserID { get; set; }
         public Guid? AccessorCompanyID { get; set; }
         public string AccessorCompanyName { get; set; }
         public Guid? AccessorContactID { get; set; }

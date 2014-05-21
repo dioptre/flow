@@ -1099,6 +1099,24 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
+
+
+        public bool CreateSecurity(SecurityViewModel m)
+        {
+            return false;
+        }
+
+
+        public bool DeleteSecurity(Guid sid)
+        {
+            return false;
+        }
+
+        public bool AssignLicense(Guid userid, Guid licenseid)
+        {
+            return false;
+        }
+
         public void Creating(UserContext context) { }
 
         public void Created(UserContext context)  { }

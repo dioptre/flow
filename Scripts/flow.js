@@ -32,55 +32,90 @@ App.FileRoute = Ember.Route.extend({
 App.FileController = Ember.ObjectController.extend({
     needs: ['application'],
     permissionModal: false,
+    activeItem: null,
     actions: {
         editPermission: function(item){
-            console.log(item.id)
+
+            // So in the submit we know what file we should be diting
+            this.set('activeItem', item);
+
             this.set('permissionModal', true); // Show the modal before anything else
+
+            // Make selectbox work after it's been inserted to the view - jquery hackss
             Ember.run.scheduleOnce('afterRender', this, function(){
                 // debugger
-                $('#e9').select2({
+                $('#add-comp-perm').select2({
+                    placeholder: "Choose Companies to share with",
+                    minimumInputLength: 2,
+                    tags: true,
+                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                        url: "http://test.miningappstore.com/share/getcompanies",
+                        dataType: 'json',
+                        multiple: true,
+                        data: function (term, page) {
+                            return {id: term };
+                        },
+                        results: function (data, page) { // parse the results into the format expected by Select2.
+                            if (data.length === 0) {
+                                return { results: [] };
+                            }
+                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                            return { results: results, text: 'tag' };
+                        }
+                    },
+                    formatResult: function(state) {return state.tag; },
+                    formatSelection: function (state) {return state.tag; },
+                    escapeMarkup: function (m) { return m; }
+                });
+
+                $('#add-users-perm').select2({
                     placeholder: "Choose Users to share with",
                     minimumInputLength: 2,
-                    // maximumSelectionSize: 3,
                     tags: true,
-                    createSearchChoice : function (term) { return {id: term, text: term}; },
-                    // probably user query instead
-                    // query:
+                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
                     ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
                         url: "http://test.miningappstore.com/share/getusernames",
                         dataType: 'json',
                         multiple: true,
                         data: function (term, page) {
-                            return {
-                                id: term
-                            };
+                            return {id: term };
                         },
                         results: function (data, page) { // parse the results into the format expected by Select2.
-                            // since we are using custom formatting functions we do not need to alter remote JSON data
-                            debugger;
-                            // if (data[0] === undefined)
+                            if (data.length === 0) {
+                                return { results: [] };
+                            }
                             var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                            // debugger;
-                            console.log('TEST2', data, page)
-
-                            return {
-                                results: results
-                                , text: 'tag'
-                            };
+                            return { results: results, text: 'tag' };
                         }
                     },
-                    formatResult: function(state) {
-                        return '<p>'+ state.tag + '</p>';
-                    },
-                    formatSelection: function (state) {
-                        console.log("The state is: ", state)
-                        return '<p>'+ state.tag + '</p>';
-                    },
+                    formatResult: function(state) {return state.tag; },
+                    formatSelection: function (state) {return state.tag; },
                     escapeMarkup: function (m) { return m; }
                 })
             });
         },
         submitPermission: function(){
+            var _this = this;
+            var newusers = $('#add-users-perm').val()
+            var newcomp = $('#add-comp-perm').val()
+            var fileid = this.get('activeItem').id
+            Enumerable.From(newusers.split(',')).ForEach(function(f) {
+                _this.store.createRecord('MySecurityList', {
+                    ReferenceID: fileid,
+                    OwnerTableType: 'file',
+                    AccessorUserID: f,
+                    CanCreate: true,
+                    CanRead: true,
+                    CanUpdate: true,
+                    CanDelete: true
+                })
+            });
+
+
+
+
+            debugger
             alert('Do something with the submit!')
             this.set('permissionModal', false);
         },
@@ -1829,7 +1864,33 @@ App.MyNode = App.Node.extend({});
 App.MyFile = App.Search.extend({});
 
 
-App.MySecurityList = DS.Model.extend({});
+App.MySecurityList = DS.Model.extend({
+    securityTypeID: DS.attr(''),
+    securityType: DS.attr(''),
+    security: DS.attr(''),
+    OwnerUserID: DS.attr(''),
+    AccessorUserID: DS.attr(''),
+    OwnerContactID: DS.attr(''),
+    OwnerCompanyID: DS.attr(''),
+    OwnerTableType: DS.attr(''),
+    OwnerReferenceID: DS.attr(''),
+    ReferenceID: DS.attr(''),
+    ReferenceName: DS.attr(''),
+    AccessorCompanyID: DS.attr(''),
+    AccessorCompanyName: DS.attr(''),
+    AccessorContactID: DS.attr(''),
+    AccessorContactName: DS.attr(''),
+    AccessorRoleID: DS.attr(''),
+    AccessorRoleName: DS.attr(''),
+    AccessorProjectID: DS.attr(''),
+    AccessorProjectName: DS.attr(''),
+    Updated: DS.attr(''),
+    CanCreate: DS.attr(''),
+    CanRead: DS.attr(''),
+    CanUpdate: DS.attr(''),
+    CanDelete: DS.attr('')
+});
+
 App.MyWhiteList = App.MySecurityList.extend({});
 App.MyBlackList = App.MySecurityList.extend({});
 

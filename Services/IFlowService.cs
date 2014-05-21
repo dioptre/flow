@@ -75,6 +75,15 @@ namespace EXPEDIT.Flow.Services
          [OperationContract]
          IEnumerable<SecurityViewModel> GetMySecurityLists(string table);
 
+         [OperationContract]
+         bool CreateSecurity(SecurityViewModel m);
+
+         [OperationContract]
+         bool DeleteSecurity(Guid sid);
+
+         [OperationContract]
+         bool AssignLicense(Guid userid, Guid licenseid);
+
 
     }
 }

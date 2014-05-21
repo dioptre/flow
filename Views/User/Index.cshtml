@@ -165,30 +165,28 @@
       {{#if model}}
         {{#eui-modal openBinding="permissionModal"}}
             <div style="padding: 50px; text-align: center;">
-                <h4>Add user access</h4>
+                <h4>Edit Permissions</h4>
 
                 <br>
                 <p> You can grant access other users to your file. Just enter their email in the input box below. </p>
                 <br>
 
-                <input id="e9" style="width: 400px;" type='hidden'/>
-   {{!--              <select multiple="" name="e9" id="e9" style="width: 300px;">
-                  <optgroup label="Alaskan/Hawaiian Time Zone">
-                       <option value="AK">Alaska</option>
-                       <option value="HI">Hawaii</option>
-                   </optgroup>
-                   <optgroup label="Pacific Time Zone">
-                       <option value="CA">California</option>
-                       <option value="NV">Nevada</option>
-                       <option value="OR">Oregon</option>
-                       <option value="WA">Washington</option>
-                   </optgroup>
-                </select> --}}
+                Add specific users:<br>
+                <input id="add-users-perm" style="width: 330px;" class='select2' type='hidden'/>
+
+                <br>
+                <br>
+                <br>
+
+                Add company:<br>
+                <input id="add-comp-perm" style="width: 330px;" class='select2' type='hidden'/>
+
+
                 <br>
                 <br>
 
                 {{eui-button label="Cancel" action="cancelPermission" size='large'}}
-                {{eui-button label="Submit" action="submitPermission" style='primary' size='large'}}
+                {{eui-button label="Add" action="submitPermission" style='primary' size='large'}}
             </div>
         {{/eui-modal}}
         <div class="table-responsive">
@@ -214,7 +212,7 @@
                     <td>{{result.Updated}}</td>
                     <td><a {{bind-attr href=result.ResourcePath}}>Download File</a></td>
                     {{#if controllers.application.isLoggedIn}}
-                        <td><a {{action 'editPermission' result}}>Add User</a></td>
+                        <td><a {{action 'editPermission' result}}>Edit Permissions</a></td>
                     {{/if}}
                   </tr>
                 {{/each}}

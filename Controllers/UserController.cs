@@ -428,6 +428,25 @@ namespace EXPEDIT.Flow.Controllers {
             return new JsonHelper.JsonNetResult(new { mySecurityLists = _Flow.GetMySecurityLists(tabletype) }, JsonRequestBehavior.AllowGet);
 
         }
+
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("MySecurityLists")]
+        public ActionResult CreateMySecurityLists(SecurityViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+
+        }
+
+
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("MySecurityLists")]
+        public ActionResult DeleteMySecurityLists(SecurityViewModel m)
+        {
+            return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+
+        }
      
 
         [Authorize]
