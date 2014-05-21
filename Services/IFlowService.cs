@@ -61,6 +61,9 @@ namespace EXPEDIT.Flow.Services
          ContactViewModel GetMyInfo();
 
          [OperationContract]
+         IEnumerable<SearchViewModel> GetMyFiles();
+
+         [OperationContract]
          bool GetDuplicateWorkflow(string workflowName, Guid? id = default(Guid?));
 
 

@@ -972,6 +972,30 @@ namespace EXPEDIT.Flow.Services {
         }
 
 
+        public IEnumerable<SearchViewModel> GetMyFiles()
+        {
+            var contact = _users.ContactID;
+            if (contact == null)
+                return new SearchViewModel[] { };
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var wwwroot = System.Web.VirtualPathUtility.ToAbsolute("~/share/file/");
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var m = (from o in d.FileDatas
+                         where o.VersionOwnerContactID == contact && o.VersionDeletedBy == null && o.Version == 0
+                         select new SearchViewModel
+                         {
+                             id = o.FileDataID,
+                             Title = o.FileName,
+                             Description = o.Comment,
+                             Updated = o.VersionUpdated,
+                             ReferenceID = o.FileDataID
+                         });
+                return m;
+            }
+            
+        }
+
         public void Creating(UserContext context) { }
 
         public void Created(UserContext context)  { }

@@ -22,7 +22,29 @@ App.Router.map(function () {
 // this.route('usernew');
 });
 
+
+App.FileRoute = Ember.Route.extend({
+    model: function(){
+        return this.store.find('myFile');
+    }
+})
+
+App.FileController = Ember.ObjectController.extend({
+    needs: ['application'],
+    actions: {
+        editPermission: function(item){
+            console.log(item.id)
+        }
+    }
+})
+
+App.MyAccountController = Ember.ObjectController.extend({
+    needs: ['application']
+})
+
+
 App.LoginController = Ember.Controller.extend({
+    needs: ['application'],
     email: "",
     rememberme: false,
     password: "",
@@ -45,6 +67,17 @@ App.LoginController = Ember.Controller.extend({
             }).then(function(data){
                 if (data === true) {
                     Messenger().post({ type: 'success', message: 'Successfully logged in.', id: 'authenticate' });
+                    _this.set('controllers.application.isLoggedIn', true)
+                    // Duplicate code starts here, but works fine
+                    $.ajax({
+                      url: "http://test.miningappstore.com/flow/myuserinfo"
+                    }).then(function(data){
+                        data.UserName = ToTitleCase(data.UserName);
+                        _this.set('controllers.application.userProfile', data);
+                    }, function (jqXHR) {
+                      jqXHR.then = null; // tame jQuery's ill mannered promises
+                    });
+                    // end duplicate code
                     _this.transitionToRoute('search');
                 } else {
                     Messenger().post({type:'error', message:'Incorrect username and/or password. Please try again.', id:'authenticate'});
@@ -73,7 +106,10 @@ App.ApplicationController = Ember.Controller.extend({
             $.post('/share/logout').then(function(data){
                 _this.set('isLoggedIn', false);
                 _this.set('userProfile', '');
+                // App.reset(); - should reset
+                _this.transitionToRoute('login');
                 Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
+                location.reload();
             }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
             });
@@ -90,7 +126,7 @@ App.ApplicationView = Ember.View.extend({
 
 
         // Start - Code to handle if user is logged in or not
-        var timeoutDelay = 1000;
+        var timeoutDelay = 15000; // 15 seconds
 
         var keepActive = function(){
             if(_this.active){
@@ -108,9 +144,9 @@ App.ApplicationView = Ember.View.extend({
                     if (result === true) {
                         $.ajax({
                           url: "http://test.miningappstore.com/flow/myuserinfo"
-                        }).then(function(result){
-                            var name = ToTitleCase(result.UserName);
-                            _this.set('controller.userProfile', name);
+                        }).then(function(data){
+                            data.UserName = ToTitleCase(data.UserName);
+                            _this.set('controller.userProfile', data);
                         }, function (jqXHR) {
                           jqXHR.then = null; // tame jQuery's ill mannered promises
                         });
@@ -134,6 +170,30 @@ App.ApplicationView = Ember.View.extend({
         $(window).keypress(function(e){
           _this.active = true;
         });
+
+        var hidden, state, visibilityChange;
+        if (typeof document.hidden !== "undefined") {
+            hidden = "hidden";
+            visibilityChange = "visibilitychange";
+            state = "visibilityState";
+        } else if (typeof document.mozHidden !== "undefined") {
+            hidden = "mozHidden";
+            visibilityChange = "mozvisibilitychange";
+            state = "mozVisibilityState";
+        } else if (typeof document.msHidden !== "undefined") {
+            hidden = "msHidden";
+            visibilityChange = "msvisibilitychange";
+            state = "msVisibilityState";
+        } else if (typeof document.webkitHidden !== "undefined") {
+            hidden = "webkitHidden";
+            visibilityChange = "webkitvisibilitychange";
+            state = "webkitVisibilityState";
+        }
+        document.addEventListener(visibilityChange, function() {
+            console.log('visibilitychange')
+            _this.active = true;
+            keepActive()
+        }, false);
 
         _this.active = true;
         keepActive();
@@ -368,10 +428,13 @@ App.Search = DS.Model.extend({
     "Title": DS.attr(''),
     "Description": DS.attr(''),
     "SpatialJSON": DS.attr(''),
-    "InternalURL": DS.attr(''),
-    "ExternalURL": DS.attr(''),
+    "InternalUrl": DS.attr(''),
+    "ExternalUrl": DS.attr(''),
     "ResourcePath": function(){
         return '/share/file/' + this.get('ReferenceID');
+    }.property('ReferenceID'),
+     "ResourcePreviewPath": function(){
+        return '/share/preview/' + this.get('ReferenceID');
     }.property('ReferenceID'),
     "Author": DS.attr(''),
     "Updated": DS.attr(''),
@@ -1703,7 +1766,9 @@ App.Workflow = DS.Model.extend({
 
 App.MyWorkflow = App.Workflow.extend({});
 App.MyNode = App.Node.extend({});
-App.MyFile = DS.Model.extend({});
+App.MyFile = App.Search.extend({});
+
+
 App.MySecurityList = DS.Model.extend({});
 App.MyWhiteList = App.MySecurityList.extend({});
 App.MyBlackList = App.MySecurityList.extend({});

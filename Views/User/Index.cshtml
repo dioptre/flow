@@ -152,7 +152,46 @@
 
 <script type="text/x-handlebars" id="file">
     <h1> My files </h1>
+    <br><br>
+    {{#if loading}}
+      Loading...
+    {{else}}
+      {{#if model}}
+        <div class="table-responsive">
+          <table class="table table-condensed table-hover">
+              <thead>
+                <tr>
+                  <th>Preview</th>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Updated</th>
+                  <th>Link</th>
+                  {{#if controllers.application.isLoggedIn}}
+                    <th>Edit Permissions</th>
+                  {{/if}}
+                </tr>
+              </thead>
+              <tbody>
+                {{#each result in model}}
+                  <tr>
+                    <td><img {{bind-attr src=result.ResourcePreviewPath}} height="15"></td>
+                    <td>{{result.Title}}</td>
+                    <td>{{result.Description}}</td>
+                    <td>{{result.Updated}}</td>
+                    <td><a {{bind-attr href=result.ResourcePath}}>Download File</a></td>
+                    {{#if controllers.application.isLoggedIn}}
+                        <td><a {{action 'editPermission' result}}>Add User</a></td>
+                    {{/if}}
+                  </tr>
+                {{/each}}
+              </tbody>
+          </table>
+        </div>
 
+      {{else}}
+          Sorry no results could be found.
+      {{/if}}
+    {{/if}}
 </script>
 
 
@@ -237,7 +276,7 @@
             {{#if isLoggedIn}}
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        {{userProfile}} <b class="caret"></b>
+                        {{userProfile.UserName}} <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
                         <li>{{#link-to 'myaccount'}} Account settings {{/link-to}}</li>
@@ -1086,9 +1125,10 @@
                 <div class="col-md-3 col-md-offset-1 avatar-box">
                     <div class="personal-image">
                         <img src="img/personal-info.png" class="avatar img-circle" alt="avatar" />
-                        <p>Upload a different photo... (Recommended size 200px by 200px)</p>
-
-                        <input type="file" />
+                        {{!--
+                            <p>Upload a different photo... (Recommended size 200px by 200px)</p>
+                            <input type="file" />
+                        --}}
                     </div>
                 </div>
 

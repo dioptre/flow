@@ -416,7 +416,7 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("MyFiles")]
         public ActionResult GetMyFiles(string id)
         {
-            return new JsonHelper.JsonNetResult(null, JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(new { myFiles = _Flow.GetMyFiles() }, JsonRequestBehavior.AllowGet);
 
         }
 
