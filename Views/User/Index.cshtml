@@ -63,8 +63,14 @@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui-default-theme.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/pace.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/offline-theme-chrome.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/offline-language-english.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/colorbox.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/expedit-flow.css">
+@*        <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Share/Styles/alertify.core.css")" />
+        <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Share/Styles/alertify.bootstrap.css")" />*@
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger-theme-flat.css">
 
         <!--[if lt IE 9]>
           <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -87,12 +93,14 @@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/ember-list-view.min.js")"></script>
         @*<script src="http://builds.emberjs.com/list-view/list-view-latest.js"></script>*@
         <script src="@Url.Content("~/Modules/NKD/Scripts/NKD.utils.js")"></script>
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.cookie.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.validate.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.validate.unobtrusive.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.validate.additional-methods.js")"></script>
-        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/alertify.min.js")"></script>
-        <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Share/Styles/alertify.core.css")" />
-        <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Share/Styles/alertify.bootstrap.css")" />
+        @*<script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/alertify.min.js")"></script>*@
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/messenger.min.js")"></script>
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/messenger-theme-flat.js")"></script>
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/offline.min.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/lodash.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/linq.min.js")"></script>
         @*<script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/moment.js")"></script>*@
@@ -109,8 +117,8 @@
         @*<script src="https://s3.amazonaws.com/emberui/dist/main.js"></script>*@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/tinymce/tinymce.min.js")"></script>
         <script src="@Url.Content("~/Modules/Orchard.jQuery/Scripts/jquery.colorbox.js")"></script>
-        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/common.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/jquery.fitvids.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/common.js")"></script>
     </head>
     <body>
 
@@ -149,11 +157,12 @@
 
 
 <script type="text/x-handlebars" id="login">
+
     <div class="login-wrapper login-bg">
         <a href="#">
             <img class="logo" src="@Url.Content("~/Modules/EXPEDIT.Flow/Images/logo-all-white-transparent.png")" alt="logo" />
         </a>
-
+        <form {{action 'loginUser' onabort='submit'}} >
         <div class="box">
             <div class="content-wrap">
                 <h6>Log in</h6>
@@ -165,17 +174,18 @@
                     {{input valueBinding="rememberme" id="remember-me" type="checkbox"}}
                     <label for="remember-me">Remember me</label>
                 </div>
-                <a {{action 'loginUser'}} class="btn-glow primary login">
+                <button type="submit" class="btn-glow primary login">
                     Log in
-                </a>
+                </button>
             </div>
         </div>
-
+        </form>
         <div class="no-account">
             <p>Do not have an account?</p>
             <a href="/Users/account/Register?ReturnUrl=%2flow">Sign up</a>
         </div>
     </div>
+
 </script>
 
 
@@ -206,7 +216,7 @@
 </script>
 
 <script type="text/x-handlebars" id="application">
-    {{inactivity-warning}}
+    {{!inactivity-warning}}
 
      <!-- navbar -->
     <header class="navbar navbar-inverse" role="banner">
@@ -223,20 +233,27 @@
             </a>
         </div>
 
-        <ul class="nav navbar-nav pull-right hidden-xs">
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
-
-                    <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="personal-info.html">Personal info</a></li>
-                    <li><a href="#">Account settings</a></li>
-                    <li><a href="#">Billing</a></li>
-                    <li><a href="#">Export your data</a></li>
-                    <li><a href="#">Send feedback</a></li>
-                </ul>
-            </li>
+        <ul class="nav navbar-nav pull-right">
+            {{#if isLoggedIn}}
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        My Account <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>{{#link-to 'myaccount'}} Account settings {{/link-to}}</li>
+                        <li>
+                            <a {{action 'logoutUser'}}>Logout</a>
+                        </li>
+                    </ul>
+                </li>
+            {{else}}
+                <li class="settings">
+                    {{#link-to 'login'}}
+                        <i class="icon-unlock"></i> &nbsp;
+                         Not logged in!
+                    {{/link-to}}
+                </li>
+            {{/if}}
         </ul>
         {{!--
             <ul class="nav navbar-nav pull-right hidden-xs">
@@ -284,7 +301,7 @@
                         </div>
                     </div>
                 </li>
-                <li class="notification-dropdown hidden-xs hidden-sm">
+                <li class="notification-dropdown idden-xs hidden-sm">
                     <a href="#" class="trigger">
                         <i class="icon-envelope"></i>
                     </a>

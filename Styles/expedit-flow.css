@@ -13,9 +13,6 @@ label.error {
 label.valid {
 	background: none;
 }
-.navbar-brand img {
-    max-height: 30px;
-}
 
 .filteredData img {
     max-width: 100%;
@@ -25,9 +22,6 @@ label.valid {
     margin-bottom: 20px;
 }
 
-.alertify-logs {
-     z-index:1000000000000 !important;
-}
 
 .mce-container.mce-panel.mce-floatpanel.mce-window.mce-in {
      z-index:1000000000001 !important;
@@ -313,6 +307,24 @@ span.graph-manipulationUI:hover {
 .login-wrapper .logo {
   height: 32px;
   margin-top: 75px;
+}
+
+/* The float is turned off for mobile devices, thus the account info drops down on a second line. Readding float fixes that. */
+.navbar-header {
+  float: left;
+}
+
+/* Make logo look better */
+.navbar-brand img {
+    max-height: 27px;
+}
+.navbar-brand {
+  padding: 9px 20px !important;
+}
+
+
+.messenger-expedit {
+     z-index:1000000000000 !important;
 }
 
 

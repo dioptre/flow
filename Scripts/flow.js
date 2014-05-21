@@ -36,16 +36,18 @@ App.LoginController = Ember.Controller.extend({
             var RememberMe = this.get('rememberme');
             var _this = this;
 
+            this.set('password', '');
+
             $.post('/share/login', {
                 UserName: UserName,
                 Password: Password,
                 RememberMe: RememberMe
             }).then(function(data){
                 if (data === true) {
-                    alertify.log('Successfully login!')
-                    _this.transitionToRoute('search')
+                    Messenger().post({type:'info', message:'Successfully login!'});
+                    _this.transitionToRoute('search');
                 } else {
-                    alertify.error('Incorrect username and/or password. Please try again.')
+                    Messenger().post({type:'error', message:'Incorrect username and/or password. Please try again.'});
                 }
 
             }, function (jqXHR) {
@@ -58,85 +60,91 @@ App.LoginController = Ember.Controller.extend({
 
 })
 
-
-App.InactivityWarningComponent = Ember.Component.extend({
-  active: false,
-  inactiveTimeout: 12000000, // Amount of time before we redirect to the sign in screen - the session should have expired by this point. (20 minutes)
-  warningTimeout: 30000,     // Amount of time the user has to perform an action before the last keep alive fires - 30 seconds
-  // timeout: 1170000,          // 19.5 minutes. We want to be less than the 20 minute timeout to be sure the session is renewed.
-  timeout: 600,          // 19.5 minutes. We want to be less than the 20 minute timeout to be sure the session is renewed.
-  didInsertElement: function(){
-    //if($('meta[name="in-development"]').attr('content')){ return; } // Uncomment and add a meta tag to your head if you want to avoid session timeout in development
-    var _this = this;
-
-    var keepActive = function(){
-      if(_this.active){
-        // Keep the session alive
-
-        console.log('test')
-
-        $.ajax({
-          url: "/share/loggedin"
-        }).done(function(result){
-
-          // Go inactive until the user moves the mouse or presses a key
-          _this.active = false;
-
-          // The user now has another 20 minutes before the session times out
-          // Restart the timer to keep the user logged in
-          Ember.run.later(_this, keepActive, _this.timeout);
-
-          // Set a timer to show a modal indicating the user is about to be logged out.
-          Ember.run.debounce(_this, _this.show, _this.timeout - _this.warningTimeout);
-
-          // Set a timer that will send the user to the login screen
-          Ember.run.debounce(_this, _this.forceLogin, _this.inactiveTimeout);
-        });
-      }
-    };
-
-    $(window).mousemove(function(e){
-      _this.active = true;
-      // Make sure the modal is hidden. This will cause the modal to hide if the user moves the mouse or presses a key.
-      // Use debounce so we don't call it over and over again since this method is called from mousemove
-      Ember.run.debounce(_this, _this.hide, 1000);
-    });
-
-    $(window).keypress(function(e){
-      _this.active = true;
-      // Make sure the modal is hidden. This will cause the modal to hide if the user moves the mouse or presses a key.
-      _this.hide();
-    });
-
-    // The user has 5 minutes before they are logged out. We need to send a keep Active before then.
-    Ember.run.later(_this, keepActive, _this.timeout);
-
-  },
-
-  forceLogin: function(){
-    window.location.href = '/users/sign_out?timeout=true';
-  },
-
-  show: function(){
-    // Warn the user that they will be logged out if we are inactive
-    if(this.active === false){
-      // Start countdown timer
-      this.$('.modal').modal('show');
+App.ApplicationController = Ember.Controller.extend({
+    currentPathDidChange: function () {
+        window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
+        App.set('currentPath', this.get('currentPath'));  // Set path to the top
+    }.observes('currentPath'), // This set the current path App.get('currentPath');
+    isLoggedIn: false,
+    userProfile: '',
+    actions: {
+        logoutUser: function(){
+            $.post('/share/logout').then(function(data){
+                this.set('isLoggedIn', false);
+                this.set('userProfile', '');
+                Messenger().post({ type: 'success', message: 'You have successfully logged out.' });
+            }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+            });
+        }
     }
-  },
-
-  hide: function(){
-    this.$('.modal').modal('hide');
-  }
-
 });
+
 
 
 
 App.ApplicationView = Ember.View.extend({
     didInsertElement: function () {
+        var _this = this;
 
 
+        // Start - Code to handle if user is logged in or not
+        var timeoutDelay = 1000;
+
+        var keepActive = function(){
+            if(_this.active){
+                $.ajax({
+                  url: "/share/loggedin"
+                }).then(function(result){
+
+                    _this.active = false; // Set active to false until mouse is moved/keypress
+
+                    if (result === true || result === false){
+                        _this.set('controller.isLoggedIn', result)
+                    }
+
+                    // Pull in user information if it hasn't been set yet
+                    if (result === true) {
+                        $.ajax({
+                          url: "http://test.miningappstore.com/flow/myuserinfo"
+                        }).then(function(result){
+                            debugger;
+                        }, function (jqXHR) {
+                          jqXHR.then = null; // tame jQuery's ill mannered promises
+                        });
+                    }
+
+                    Ember.run.later(_this, keepActive, timeoutDelay);
+
+                }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+                });
+            } else {
+                Ember.run.later(_this, keepActive, timeoutDelay); // make sure this infinite loop never stops
+            }
+        }
+
+
+        // Making sure to set active
+        $(window).mousemove(function(e){
+          _this.active = true;
+        });
+        $(window).keypress(function(e){
+          _this.active = true;
+        });
+
+        _this.active = true;
+        keepActive();
+
+
+        // END - User logged in (yes/no)
+
+
+
+
+
+
+        // EVERYTHING FROM HERE IS COPIED FROM THE MAIN TEMPLATE JS FILE
 
 
         Ember.run.scheduleOnce('afterRender', this, function () {
@@ -324,12 +332,6 @@ App.ApplicationView = Ember.View.extend({
  });
 
 
-App.ApplicationController = Ember.Controller.extend({
-    currentPathDidChange: function () {
-        window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
-        App.set('currentPath', this.get('currentPath'));  // Set path to the top
-    }.observes('currentPath'), // This set the current path App.get('currentPath');
-});
 
 
 App.ApplicationAdapter = DS.RESTAdapter.extend({
@@ -1124,7 +1126,7 @@ App.GraphController = Ember.ObjectController.extend({
             }
 
             newWorkflow.save().then(function () {
-                alertify.log('Successfully Added Workflow');
+                Messenger().post({type:'info',message:'Successfully Added Workflow'});
                 var newNode = App.Node.store.getById('node', _this.get('selected'));
                 if (typeof newNode === 'undefined' || !newNode)
                     newNode = App.Node.store.createRecord('node', { id: _this.get('selected'), label: _this.get('newName'), content: _this.get('newContent'), VersionUpdated: Ember.Date.parse(new Date()) });
@@ -1134,7 +1136,7 @@ App.GraphController = Ember.ObjectController.extend({
                     newNode.set('content', model.content);
                 }
                 newNode.save().then(function (f) {
-                    alertify.log('Successfully Updated Process');
+                    Messenger().post({type:'info',message:'Successfully Updated Process'});
                     var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                     var duplicate = Enumerable.From(_this.get('graphData.nodes')).Where("g=>g.id=='" + f.get('id') + "'").FirstOrDefault();
                     if (duplicate)
@@ -1146,15 +1148,15 @@ App.GraphController = Ember.ObjectController.extend({
                     _this.set('workflowEditModal', false);
                 }, function () {
                     if (_this.get('model'))
-                        alertify.error('Error Updating Process');
+                        Messenger().post({ type: 'error', message: 'Error Updating Process' });
                     else
-                        alertify.error('Error Adding Process');
+                        Messenger().post({ type: 'error', message: 'Error Adding Process' });;
                 });
             }, function () {
                 if (_this.get('workflowID'))
-                    alertify.error('Error Updating Workflow');
+                    Messenger().post({type:'error', message:'Error Updating Workflow'});
                 else
-                    alertify.error('Error Adding Workflow');
+                    Messenger().post({type:'error', message:'Error Adding Workflow'});
             });
         },
         addNewNode: function () {
@@ -1164,7 +1166,7 @@ App.GraphController = Ember.ObjectController.extend({
             var id = NewGUID();
             var newNode = { id: id, label: n, content: c, VersionUpdated: Ember.Date.parse(new Date()) };
             App.Node.store.createRecord('node', newNode).save().then(function (f) {
-                alertify.log('Successfully Added Process');
+                Messenger().post({type:'info',message:'Successfully Added Process'});
                 var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                 _this.get('graphData').nodes.pushObject(a);
                 _this.set('newName', null);
@@ -1172,7 +1174,7 @@ App.GraphController = Ember.ObjectController.extend({
                 _this.toggleProperty('workflowNewModal');
                _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //HACK TODO
             }, function () {
-                alertify.error('Error Adding Process');
+                Messenger().post({type:'error', message:'Error Adding Process'});
             });
         },
         addNewEdge: function (data) {
@@ -1180,14 +1182,14 @@ App.GraphController = Ember.ObjectController.extend({
             data.id = NewGUID();
             data.GroupID = this.get('workflowID');
             App.Node.store.createRecord('edge', data).save().then(function () {
-                alertify.log('Successfully Added Connection');
+                Messenger().post({type:'info',message:'Successfully Added Connection'});
                 var f = App.Node.store.getById('edge', data.id);
                 var a = { id: f.get('id'), from: f.get('from'), to: f.get('to'), color: f.get('color'), width: f.get('width'), style: f.get('style') }
                 _this.get('graphData.edges').pushObject(a);
                 _this.set('graphData.edges', _this.get('graphData.edges').concat([]));
             }, function () {
-                alertify.error('Error Adding Connection');
-                alertify.log('No Workflow name set. Please try again.');
+                Messenger().post({type:'error', message:'Error Adding Connection'});
+                Messenger().post({type:'info', message:'No Workflow name set. Please try again.'});
                 _this.toggleProperty('workflowEditModal'); //Hack TODO can't save without wf
             });
         },
@@ -1206,7 +1208,7 @@ App.GraphController = Ember.ObjectController.extend({
             });
             Ember.RSVP.allSettled(promises).then(function (array) {
                 if (Enumerable.From(array).Any("f=>f.state=='rejected'"))
-                    alertify.error('Error Updating Workflow');
+                    Messenger().post({type:'error', message:'Error Updating Workflow'});
                 else {
                     _this = _this;
 
@@ -1226,7 +1228,7 @@ App.GraphController = Ember.ObjectController.extend({
                     _this.set('graphData.edges', _this.get('graphData.edges').concat([])); //TODO HACK
                     _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //TODO HACK
 
-                    alertify.log('Successfully Updated Workflow');
+                    Messenger().post({type:'info',message:'Successfully Updated Workflow'});
                     //Enumerable.From(data.edges).ForEach(function (f) {
                     //    var m = App.Node.store.getById('edge', f);
                     //    if (m)
