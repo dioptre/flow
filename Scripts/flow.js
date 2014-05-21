@@ -7,10 +7,12 @@ App = Ember.Application.create({
 });
 
 App.Router.map(function () {
-    this.route('graph', {path: 'process/:id'});
+    this.route('graph', { path: 'process/:id' });
+    this.route('workflow', { path: 'workflow/:id' });
     this.route('wikipedia', { path: "/wikipedia/:id" });
     this.route('search');
     this.route('myaccount');
+    this.route('myworkflows');
     this.route('file');
     this.route('permission');
     this.route('login');
@@ -23,13 +25,24 @@ App.Router.map(function () {
 });
 
 
-App.FileRoute = Ember.Route.extend({
+App.PermissionRoute = Ember.Route.extend({
     model: function(){
-        return this.store.find('myFile');
+        return this.store.findQuery('mySecurityList', {type: 'file'});
     }
 })
 
-App.FileController = Ember.ObjectController.extend({
+
+App.MyworkflowsRoute = Ember.Route.extend({
+    model: function(){
+        return Ember.RSVP.hash({
+            workflows: this.store.find('myWorkflow'),
+            processes: this.store.find('myNode')
+            ,test: 'asdasd'
+        });
+    }
+})
+
+App.MyworkflowsController = Ember.ObjectController.extend({
     needs: ['application'],
     permissionModal: false,
     activeItem: null,
@@ -43,9 +56,8 @@ App.FileController = Ember.ObjectController.extend({
 
             // Make selectbox work after it's been inserted to the view - jquery hackss
             Ember.run.scheduleOnce('afterRender', this, function(){
-                // debugger
                 $('#add-comp-perm').select2({
-                    placeholder: "Choose Companies to share with",
+                    placeholder: "Enter Companies...",
                     minimumInputLength: 2,
                     tags: true,
                     //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
@@ -70,7 +82,136 @@ App.FileController = Ember.ObjectController.extend({
                 });
 
                 $('#add-users-perm').select2({
-                    placeholder: "Choose Users to share with",
+                    placeholder: "Enter Username...",
+                    minimumInputLength: 2,
+                    tags: true,
+                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                        url: "http://test.miningappstore.com/share/getusernames",
+                        dataType: 'json',
+                        multiple: true,
+                        data: function (term, page) {
+                            return {id: term };
+                        },
+                        results: function (data, page) { // parse the results into the format expected by Select2.
+                            if (data.length === 0) {
+                                return { results: [] };
+                            }
+                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                            return { results: results, text: 'tag' };
+                        }
+                    },
+                    formatResult: function(state) {return state.tag; },
+                    formatSelection: function (state) {return state.tag; },
+                    escapeMarkup: function (m) { return m; }
+                })
+            });
+        },
+        submitPermission: function(){
+            var _this = this;
+            var newusers = $('#add-users-perm').val()
+            var newcomp = $('#add-comp-perm').val()
+            var fileid = this.get('activeItem').id;
+            var TableType = this.get('activeItem.TableType');
+            // console.log(this.get('activeItem'));
+            if (newusers !== '') {
+                Enumerable.From(newusers.split(',')).ForEach(function (f) {
+                    var a = _this.store.createRecord('MySecurityList', {
+                        ReferenceID: fileid,
+                        SecurityTypeID: 2,
+                        OwnerTableType: TableType,
+                        AccessorUserID: f,
+                        CanCreate: true,
+                        CanRead: true,
+                        CanUpdate: true,
+                        CanDelete: true
+                    })
+                    a.save().then(function () {
+                        Messenger().post({ type: 'success', message: "Successfully added user permissions", id: 'user-security' })
+                    }, function () {
+                        Messenger().post({ type: 'error', message: "Could not add user permissions", id: 'user-security' })
+
+                    });
+                });
+            }
+
+            if (newcomp !== '') {
+                Enumerable.From(newcomp.split(',')).ForEach(function (f) {
+                    var a = _this.store.createRecord('MySecurityList', {
+                        ReferenceID: fileid,
+                        SecurityTypeID: 2,
+                        OwnerTableType: TableType,
+                        AccessorCompanyID: f,
+                        CanCreate: true,
+                        CanRead: true,
+                        CanUpdate: true,
+                        CanDelete: true
+                    })
+                    a.save().then(function () {
+                        Messenger().post({ type: 'success', message: "Successfully added company permissions", id: 'company-security' })
+                    }, function () {
+                        Messenger().post({ type: 'error', message: "Could not add company permissions", id: 'company-permission' })
+
+                    });
+                });
+            }
+
+            this.set('permissionModal', false);
+        },
+        cancelPermission: function(){
+            this.set('permissionModal', false);
+        }
+    }
+})
+
+
+App.FileRoute = Ember.Route.extend({
+    model: function(){
+        return this.store.find('myFile');
+    }
+})
+
+App.FileController = Ember.ObjectController.extend({
+    needs: ['application'],
+    permissionModal: false,
+    activeItem: null,
+    actions: {
+        editPermission: function(item){
+
+            // So in the submit we know what file we should be diting
+            this.set('activeItem', item);
+
+            this.set('permissionModal', true); // Show the modal before anything else
+
+            // Make selectbox work after it's been inserted to the view - jquery hackss
+            Ember.run.scheduleOnce('afterRender', this, function(){
+                $('#add-comp-perm').select2({
+                    placeholder: "Enter Companies...",
+                    minimumInputLength: 2,
+                    tags: true,
+                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                        url: "http://test.miningappstore.com/share/getcompanies",
+                        dataType: 'json',
+                        multiple: true,
+                        data: function (term, page) {
+                            return {id: term };
+                        },
+                        results: function (data, page) { // parse the results into the format expected by Select2.
+                            if (data.length === 0) {
+                                return { results: [] };
+                            }
+                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                            return { results: results, text: 'tag' };
+                        }
+                    },
+                    formatResult: function(state) {return state.tag; },
+                    formatSelection: function (state) {return state.tag; },
+                    escapeMarkup: function (m) { return m; }
+                });
+
+                $('#add-users-perm').select2({
+                    placeholder: "Enter Username...",
                     minimumInputLength: 2,
                     tags: true,
                     //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
@@ -100,23 +241,50 @@ App.FileController = Ember.ObjectController.extend({
             var newusers = $('#add-users-perm').val()
             var newcomp = $('#add-comp-perm').val()
             var fileid = this.get('activeItem').id
-            Enumerable.From(newusers.split(',')).ForEach(function(f) {
-                _this.store.createRecord('MySecurityList', {
-                    ReferenceID: fileid,
-                    OwnerTableType: 'file',
-                    AccessorUserID: f,
-                    CanCreate: true,
-                    CanRead: true,
-                    CanUpdate: true,
-                    CanDelete: true
-                })
-            });
+
+            if (newusers !== '') {
+                Enumerable.From(newusers.split(',')).ForEach(function(f) {
+                    var a = _this.store.createRecord('MySecurityList', {
+                        ReferenceID: fileid,
+                        SecurityTypeID: 2,
+                        OwnerTableType: 'file',
+                        AccessorUserID: f,
+                        CanCreate: true,
+                        CanRead: true,
+                        CanUpdate: true,
+                        CanDelete: true
+                    })
+                    a.save().then(function(){
+                        Messenger().post({type: 'success', message: "Successfully added user permissions", id: 'user-security'})
+                    }, function() {
+                        Messenger().post({type: 'error', message: "Could not add user permissions", id: 'user-security'})
+
+                    });
+                });
+            }
+
+            if (newcomp !== '') {
+                Enumerable.From(newcomp.split(',')).ForEach(function(f) {
+                    var a = _this.store.createRecord('MySecurityList', {
+                        ReferenceID: fileid,
+                        SecurityTypeID: 2,
+                        OwnerTableType: 'file',
+                        AccessorCompanyID: f,
+                        CanCreate: true,
+                        CanRead: true,
+                        CanUpdate: true,
+                        CanDelete: true
+                    })
+                    a.save().then(function(){
+                        Messenger().post({type: 'success', message: "Successfully added company permissions", id: 'company-security'})
+                    }, function() {
+                        Messenger().post({type: 'error', message: "Could not add company permissions", id: 'company-permission'})
+
+                    });
+                });
+            }
 
 
-
-
-            debugger
-            alert('Do something with the submit!')
             this.set('permissionModal', false);
         },
         cancelPermission: function(){
@@ -1859,14 +2027,14 @@ App.Workflow = DS.Model.extend({
 });
 
 
-App.MyWorkflow = App.Workflow.extend({});
-App.MyNode = App.Node.extend({});
+App.MyWorkflow = App.Search.extend({});
+App.MyNode = App.Search.extend({});
 App.MyFile = App.Search.extend({});
 
 
 App.MySecurityList = DS.Model.extend({
-    securityTypeID: DS.attr(''),
-    securityType: DS.attr(''),
+    SecurityTypeID: DS.attr(''),
+    SecurityType: DS.attr(''),
     security: DS.attr(''),
     OwnerUserID: DS.attr(''),
     AccessorUserID: DS.attr(''),
@@ -1891,8 +2059,9 @@ App.MySecurityList = DS.Model.extend({
     CanDelete: DS.attr('')
 });
 
-App.MyWhiteList = App.MySecurityList.extend({});
-App.MyBlackList = App.MySecurityList.extend({});
+//  Don't need these
+// App.MyWhiteList = App.MySecurityList.extend({});
+// App.MyBlackList = App.MySecurityList.extend({});
 
 
 App.Wikipedia = DS.Model.extend({
@@ -2096,7 +2265,6 @@ App.WikipediaAdapter = DS.Adapter.extend({
 
 
 function filterData(data) {
-    debugger;
     if (typeof data == 'undefined' || !data) return '';
     // filter all the nasties out
     // no body tags

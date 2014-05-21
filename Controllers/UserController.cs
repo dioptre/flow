@@ -429,22 +429,39 @@ namespace EXPEDIT.Flow.Controllers {
 
         }
 
+        [Authorize]
         [Themed(false)]
-        [HttpPut]
+        [HttpPost]
         [ActionName("MySecurityLists")]
         public ActionResult CreateMySecurityLists(SecurityViewModel m)
         {
-            return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            if (m.mySecurityList != null)
+            {
+                if (m.SecurityID.HasValue)
+                    m.mySecurityList.SecurityID = m.SecurityID;
+                m = m.mySecurityList;
+            }
+            if (_Flow.CreateSecurity(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
 
         }
 
-
+        [Authorize]
         [Themed(false)]
         [HttpDelete]
         [ActionName("MySecurityLists")]
         public ActionResult DeleteMySecurityLists(SecurityViewModel m)
         {
-            return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            if (m.mySecurityList != null && m.mySecurityList.SecurityID != null)
+                m = m.mySecurityList;
+            if (!m.SecurityID.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.DeleteSecurity(m.SecurityID.Value, m.SecurityTypeID))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
 
         }
      

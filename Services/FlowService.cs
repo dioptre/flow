@@ -989,7 +989,8 @@ namespace EXPEDIT.Flow.Services {
                              Title = o.FileName,
                              Description = o.Comment,
                              Updated = o.VersionUpdated,
-                             ReferenceID = o.FileDataID
+                             ReferenceID = o.FileDataID,
+                             TableType = "file"
                          });
                 return m;
             }
@@ -1014,7 +1015,8 @@ namespace EXPEDIT.Flow.Services {
                              Title = o.GraphName,
                              Description = o.Comment,
                              Updated = o.VersionUpdated,
-                             ReferenceID = o.GraphDataID
+                             ReferenceID = o.GraphDataID,
+                             TableType = "node"
                          });
                 return m;
             }
@@ -1037,7 +1039,8 @@ namespace EXPEDIT.Flow.Services {
                              Title = o.GraphDataGroupName,
                              Description = o.Comment,
                              Updated = o.VersionUpdated,
-                             ReferenceID = o.GraphDataGroupID
+                             ReferenceID = o.GraphDataGroupID,
+                             TableType = "workflow"
                          });
                 return m;
             }
@@ -1077,7 +1080,7 @@ namespace EXPEDIT.Flow.Services {
                 var m = (from o in d.E_SP_GetSecurityList(application, contact, company, table)                         
                          select new SecurityViewModel
                          {
-                             securityType = SecurityType.BlackList,
+                             SecurityTypeID = o.SecurityTypeID,
                              id = o.SecurityID,
                              Updated = o.VersionUpdated,
                              OwnerReferenceID = o.OwnerReferenceID,
@@ -1103,12 +1106,169 @@ namespace EXPEDIT.Flow.Services {
 
         public bool CreateSecurity(SecurityViewModel m)
         {
-            return false;
+            if (m == null)
+                return false;
+            var company = _users.DefaultContactCompanyID;
+            var contact = _users.ContactID;
+            var application = _users.ApplicationID;
+            if (contact == null)
+                return false;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var tt = m.OwnerTableType.ToLowerInvariant();
+                string table;
+                switch (tt)
+                {
+                    case "node":
+                        table = d.GetTableName(typeof(GraphData));
+                        break;
+                    case "file":
+                        table = d.GetTableName(typeof(FileData));
+                        break;
+                    case "workflow":
+                        table = d.GetTableName(typeof(GraphDataGroup));
+                        break;
+                    default:
+                        return false;
+                }
+                if (m.AccessorUserID.HasValue && !m.AccessorContactID.HasValue)
+                    m.AccessorContactID = (from o in d.Contacts where o.AspNetUserID == m.AccessorUserID && o.Version == 0 && o.VersionDeletedBy == null select o.ContactID).Single();
+
+                if (m.SecurityTypeID.HasValue && m.SecurityTypeID == (uint)SecurityType.WhiteList)
+                {
+                    var delete = (from o in d.SecurityWhitelists where 
+                        o.OwnerApplicationID == application &&
+                        o.OwnerContactID == contact &&
+                        o.OwnerCompanyID == company &&
+                        o.OwnerTableType == table &&
+                        o.OwnerReferenceID == m.ReferenceID.Value &&
+                        o.AccessorApplicationID == application &&
+                        (!m.AccessorCompanyID.HasValue || o.AccessorCompanyID == m.AccessorCompanyID) &&
+                        (!m.AccessorProjectID.HasValue || o.AccessorProjectID == m.AccessorProjectID) &&
+                        (!m.AccessorContactID.HasValue || o.AccessorContactID == m.AccessorContactID) &&
+                        (!m.AccessorRoleID.HasValue || o.AccessorRoleID == m.AccessorRoleID)          
+                        select o).ToArray(); //Delete duplicates
+                    foreach (var del in delete)
+                        d.DeleteObject(del);
+                    var sec = new SecurityWhitelist 
+                    {
+                        SecurityWhitelistID = m.SecurityID.Value,
+                        OwnerApplicationID = application,
+                        OwnerContactID = contact,
+                        OwnerCompanyID = company,
+                        OwnerTableType = table,
+                        OwnerReferenceID = m.ReferenceID.Value,
+                        AccessorApplicationID = application,
+                        AccessorCompanyID = m.AccessorCompanyID,
+                        AccessorProjectID = m.AccessorProjectID,
+                        AccessorContactID = m.AccessorContactID,
+                        AccessorRoleID = m.AccessorRoleID,
+                        CanCreate = m.CanCreate.HasValue ? m.CanCreate.Value : true,
+                        CanRead = m.CanRead.HasValue ? m.CanRead.Value : true,
+                        CanUpdate = m.CanUpdate.HasValue ? m.CanUpdate.Value : true,
+                        CanDelete = m.CanDelete.HasValue ? m.CanDelete.Value : true,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionOwnerCompanyID = company,
+                        VersionOwnerContactID = contact,
+                        VersionUpdatedBy = contact,
+                        VersionAntecedentID = m.SecurityID.Value
+
+                    };
+                    d.SecurityWhitelists.AddObject(sec);
+                    d.SaveChanges();
+                    return true;
+                }
+                else
+                {
+                    var delete = (from o in d.SecurityBlacklists
+                                  where
+                                      o.OwnerApplicationID == application &&
+                                      o.OwnerContactID == contact &&
+                                      o.OwnerCompanyID == company &&
+                                      o.OwnerTableType == table &&
+                                      o.OwnerReferenceID == m.ReferenceID.Value &&
+                                      o.AccessorApplicationID == application &&
+                                      (!m.AccessorCompanyID.HasValue || o.AccessorCompanyID == m.AccessorCompanyID) &&
+                                      (!m.AccessorProjectID.HasValue || o.AccessorProjectID == m.AccessorProjectID) &&
+                                      (!m.AccessorContactID.HasValue || o.AccessorContactID == m.AccessorContactID) &&
+                                      (!m.AccessorRoleID.HasValue || o.AccessorRoleID == m.AccessorRoleID)
+                                  select o).ToArray(); //Delete duplicates
+                    foreach (var del in delete)
+                        d.DeleteObject(del);
+                    var sec = new SecurityBlacklist
+                    {
+                        SecurityBlacklistID = m.SecurityID.Value,
+                        OwnerApplicationID = application,
+                        OwnerContactID = contact,
+                        OwnerCompanyID = company,
+                        OwnerTableType = table,
+                        OwnerReferenceID = m.ReferenceID.Value,
+                        AccessorApplicationID = application,
+                        AccessorCompanyID = m.AccessorCompanyID,
+                        AccessorProjectID = m.AccessorProjectID,
+                        AccessorContactID = m.AccessorContactID,
+                        AccessorRoleID = m.AccessorRoleID,
+                        CanCreate = m.CanCreate.HasValue ? m.CanCreate.Value : false,
+                        CanRead = m.CanRead.HasValue ? m.CanRead.Value : false,
+                        CanUpdate = m.CanUpdate.HasValue ? m.CanUpdate.Value : false,
+                        CanDelete = m.CanDelete.HasValue ? m.CanDelete.Value : false,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionOwnerCompanyID = company,
+                        VersionOwnerContactID = contact,
+                        VersionUpdatedBy = contact,
+                        VersionAntecedentID = m.SecurityID.Value
+
+                    };
+                    d.SecurityBlacklists.AddObject(sec);
+                    d.SaveChanges();
+                    return true;
+                }
+
+            
+            }
         }
 
 
-        public bool DeleteSecurity(Guid sid)
+        public bool DeleteSecurity(Guid sid, int? securityTypeID)
         {
+            var company = _users.DefaultContactCompanyID;
+            var contact = _users.ContactID;
+            var application = _users.ApplicationID;
+            if (contact == null)
+                return false;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);            
+                if (securityTypeID.HasValue && securityTypeID == (int)SecurityType.WhiteList)
+                {
+                    var delete = (from o in d.SecurityWhitelists
+                                  where
+                                      o.SecurityWhitelistID == sid &&
+                                      o.OwnerApplicationID == application &&
+                                      o.OwnerContactID == contact &&
+                                      o.OwnerCompanyID == company                                   
+                                  select o).ToArray();
+                    foreach (var del in delete)
+                        d.DeleteObject(del);                 
+                    d.SaveChanges();
+                    return true;
+                }
+                else
+                {
+                    var delete = (from o in d.SecurityBlacklists
+                                  where
+                                      o.SecurityBlacklistID == sid &&
+                                      o.OwnerApplicationID == application &&
+                                      o.OwnerContactID == contact &&
+                                      o.OwnerCompanyID == company
+                                  select o).ToArray();
+                    foreach (var del in delete)
+                        d.DeleteObject(del);
+                    d.SaveChanges();
+                    return true;
+                }
+            }
             return false;
         }
 

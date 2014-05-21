@@ -79,7 +79,7 @@ namespace EXPEDIT.Flow.Services
          bool CreateSecurity(SecurityViewModel m);
 
          [OperationContract]
-         bool DeleteSecurity(Guid sid);
+         bool DeleteSecurity(Guid sid, int? SecurityTypeID);
 
          [OperationContract]
          bool AssignLicense(Guid userid, Guid licenseid);
