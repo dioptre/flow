@@ -996,6 +996,109 @@ namespace EXPEDIT.Flow.Services {
             
         }
 
+
+
+        public IEnumerable<SearchViewModel> GetMyNodes()
+        {
+            var contact = _users.ContactID;
+            if (contact == null)
+                return new SearchViewModel[] { };
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var m = (from o in d.GraphData
+                         where (o.VersionOwnerContactID == contact || o.CreatedBy == contact) && o.VersionDeletedBy == null && o.Version == 0
+                         select new SearchViewModel
+                         {
+                             id = o.GraphDataID,
+                             Title = o.GraphName,
+                             Description = o.Comment,
+                             Updated = o.VersionUpdated,
+                             ReferenceID = o.GraphDataID
+                         });
+                return m;
+            }
+        }
+
+
+        public IEnumerable<SearchViewModel> GetMyWorkflows()
+        {
+            var contact = _users.ContactID;
+            if (contact == null)
+                return new SearchViewModel[] { };
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var m = (from o in d.GraphDataGroups
+                         where (o.VersionOwnerContactID == contact || o.CreatedBy == contact) && o.VersionDeletedBy == null && o.Version == 0
+                         select new SearchViewModel
+                         {
+                             id = o.GraphDataGroupID,
+                             Title = o.GraphDataGroupName,
+                             Description = o.Comment,
+                             Updated = o.VersionUpdated,
+                             ReferenceID = o.GraphDataGroupID
+                         });
+                return m;
+            }
+        }
+
+
+        public IEnumerable<SecurityViewModel> GetMySecurityLists(string tt)
+        {
+            if (string.IsNullOrWhiteSpace(tt))
+                return new SecurityViewModel[] {};
+            var company = _users.DefaultContactCompanyID;
+            var contact = _users.ContactID;
+            var application = _users.ApplicationID;
+            if (contact == null)
+                return new SecurityViewModel[] { };
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                tt = tt.ToLowerInvariant();
+                string table;
+                switch (tt)
+                {
+                    case "node":
+                        table = d.GetTableName(typeof(GraphData));
+                        break;
+                    case "file":
+                        table = d.GetTableName(typeof(FileData));
+                        break;
+                    case "workflow":
+                        table = d.GetTableName(typeof(GraphDataGroup));
+                        break;
+                    default:
+                        return new SecurityViewModel[] { };
+
+                }
+                                
+                var m = (from o in d.E_SP_GetSecurityList(application, contact, company, table)                         
+                         select new SecurityViewModel
+                         {
+                             securityType = SecurityType.BlackList,
+                             id = o.SecurityID,
+                             Updated = o.VersionUpdated,
+                             OwnerReferenceID = o.OwnerReferenceID,
+                             ReferenceName = o.ReferenceName,
+                             AccessorCompanyID = o.AccessorCompanyID,
+                             AccessorCompanyName = o.AccessorCompanyName,
+                             AccessorContactID = o.AccessorContactID,
+                             AccessorContactName = o.AccessorContactName,
+                             AccessorRoleID = o.AccessorRoleID,
+                             AccessorRoleName = o.AccessorRoleName,
+                             AccessorProjectID = o.AccessorProjectID,
+                             AccessorProjectName = o.AccessorProjectName,
+                             CanCreate = o.CanCreate,
+                             CanRead = o.CanRead,
+                             CanUpdate = o.CanUpdate,
+                             CanDelete = o.CanDelete
+                         });
+                return m;
+            }
+        }
+
         public void Creating(UserContext context) { }
 
         public void Created(UserContext context)  { }

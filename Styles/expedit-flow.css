@@ -327,6 +327,10 @@ span.graph-manipulationUI:hover {
      z-index:1000000000000 !important;
 }
 
+.select2-drop {
+    z-index: 1000000000 !important;
+}
+
 .warning {
     color:rgb(167, 20, 20) !important;
 }

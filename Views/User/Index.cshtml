@@ -71,6 +71,10 @@
         <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Share/Styles/alertify.bootstrap.css")" />*@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger-theme-flat.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger-theme-flat.css">
+
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/select2.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/jquery.dataTables.css">
 
         <!--[if lt IE 9]>
           <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -118,6 +122,8 @@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/tinymce/tinymce.min.js")"></script>
         <script src="@Url.Content("~/Modules/Orchard.jQuery/Scripts/jquery.colorbox.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/jquery.fitvids.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/select2.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/jquery.dataTables.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/common.js")"></script>
     </head>
     <body>
@@ -131,11 +137,11 @@
 <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/bootstrap.min.js"></script>
 <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery-ui-1.10.2.custom.min.js"></script>
 <!-- knob -->
-<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.knob.js"></script>
+@*<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.knob.js"></script>*@
 <!-- flot charts -->
-<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.js"></script>
+@*<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.js"></script>
 <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.stack.js"></script>
-<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.resize.js"></script>
+<script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.resize.js"></script>*@
 <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/theme.js"></script>
 <script src="~/Modules/EXPEDIT.Flow/Scripts/flow.js"></script>
 
@@ -157,6 +163,34 @@
       Loading...
     {{else}}
       {{#if model}}
+        {{#eui-modal openBinding="permissionModal"}}
+            <div style="padding: 50px; text-align: center;">
+                <h4>Add user access</h4>
+
+                <br>
+                <p> You can grant access other users to your file. Just enter their email in the input box below. </p>
+                <br>
+
+                <input id="e9" style="width: 400px;" type='hidden'/>
+   {{!--              <select multiple="" name="e9" id="e9" style="width: 300px;">
+                  <optgroup label="Alaskan/Hawaiian Time Zone">
+                       <option value="AK">Alaska</option>
+                       <option value="HI">Hawaii</option>
+                   </optgroup>
+                   <optgroup label="Pacific Time Zone">
+                       <option value="CA">California</option>
+                       <option value="NV">Nevada</option>
+                       <option value="OR">Oregon</option>
+                       <option value="WA">Washington</option>
+                   </optgroup>
+                </select> --}}
+                <br>
+                <br>
+
+                {{eui-button label="Cancel" action="cancelPermission" size='large'}}
+                {{eui-button label="Submit" action="submitPermission" style='primary' size='large'}}
+            </div>
+        {{/eui-modal}}
         <div class="table-responsive">
           <table class="table table-condensed table-hover">
               <thead>
@@ -1340,7 +1374,7 @@
                 </div>
             </div>
         </div>
-        </script>       
+        </script>
     </body>
 </html>
 

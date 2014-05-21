@@ -37,46 +37,9 @@ App.FileController = Ember.ObjectController.extend({
             console.log(item.id)
             this.set('permissionModal', true); // Show the modal before anything else
             Ember.run.scheduleOnce('afterRender', this, function(){
-                // debugger
+                debugger
                 $('#e9').select2({
-                    placeholder: "Choose Users to share with",
-                    minimumInputLength: 2,
-                    // maximumSelectionSize: 3,
-                    tags: true,
-                    createSearchChoice : function (term) { return {id: term, text: term}; },
-                    // probably user query instead
-                    // query:
-                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "http://test.miningappstore.com/share/getusernames",
-                        dataType: 'json',
-                        multiple: true,
-                        data: function (term, page) {
-                            return {
-                                id: term
-                            };
-                        },
-                        results: function (data, page) { // parse the results into the format expected by Select2.
-                            // since we are using custom formatting functions we do not need to alter remote JSON data
-                            debugger;
-                            // if (data[0] === undefined)
-                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                            // debugger;
-                            console.log('TEST2', data, page)
-
-                            return {
-                                results: results
-                                , text: 'tag'
-                            };
-                        }
-                    },
-                    formatResult: function(state) {
-                        return '<p>'+ state.tag + '</p>';
-                    },
-                    formatSelection: function (state) {
-                        console.log("The state is: ", state)
-                        return '<p>'+ state.tag + '</p>';
-                    },
-                    escapeMarkup: function (m) { return m; }
+                    placeholder: "Choose Users to share with"
                 })
             });
         },

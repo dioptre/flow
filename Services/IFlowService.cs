@@ -66,6 +66,15 @@ namespace EXPEDIT.Flow.Services
          [OperationContract]
          bool GetDuplicateWorkflow(string workflowName, Guid? id = default(Guid?));
 
+         [OperationContract]
+         IEnumerable<SearchViewModel> GetMyNodes();
+
+         [OperationContract]
+         IEnumerable<SearchViewModel> GetMyWorkflows();
+
+         [OperationContract]
+         IEnumerable<SecurityViewModel> GetMySecurityLists(string table);
+
 
     }
 }

@@ -400,7 +400,7 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("MyWorkflows")]
         public ActionResult GetMyWorkflows(string id)
         {
-            return new JsonHelper.JsonNetResult(null, JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(new { myWorkflows = _Flow.GetMyWorkflows() }, JsonRequestBehavior.AllowGet);
         }
 
         [Themed(false)]
@@ -408,7 +408,7 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("MyNodes")]
         public ActionResult GetMyNodes(string id)
         {
-            return new JsonHelper.JsonNetResult(null, JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(new { myNodes = _Flow.GetMyNodes() }, JsonRequestBehavior.AllowGet);
         }
 
         [Themed(false)]
@@ -423,9 +423,9 @@ namespace EXPEDIT.Flow.Controllers {
         [Themed(false)]
         [HttpGet]
         [ActionName("MySecurityLists")]
-        public ActionResult GetMySecurityLists(string id)
+        public ActionResult GetMySecurityLists(string id, string tabletype)
         {
-            return new JsonHelper.JsonNetResult(null, JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(new { mySecurityLists = _Flow.GetMySecurityLists(tabletype) }, JsonRequestBehavior.AllowGet);
 
         }
      
