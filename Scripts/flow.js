@@ -44,10 +44,10 @@ App.LoginController = Ember.Controller.extend({
                 RememberMe: RememberMe
             }).then(function(data){
                 if (data === true) {
-                    Messenger().post({type:'info', message:'Successfully login!'});
+                    Messenger().post({ type: 'success', message: 'Successfully logged in.', id: 'authenticate' });
                     _this.transitionToRoute('search');
                 } else {
-                    Messenger().post({type:'error', message:'Incorrect username and/or password. Please try again.'});
+                    Messenger().post({type:'error', message:'Incorrect username and/or password. Please try again.', id:'authenticate'});
                 }
 
             }, function (jqXHR) {
@@ -69,10 +69,11 @@ App.ApplicationController = Ember.Controller.extend({
     userProfile: '',
     actions: {
         logoutUser: function(){
+            var _this = this;
             $.post('/share/logout').then(function(data){
-                this.set('isLoggedIn', false);
-                this.set('userProfile', '');
-                Messenger().post({ type: 'success', message: 'You have successfully logged out.' });
+                _this.set('isLoggedIn', false);
+                _this.set('userProfile', '');
+                Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
             }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
             });
@@ -108,7 +109,8 @@ App.ApplicationView = Ember.View.extend({
                         $.ajax({
                           url: "http://test.miningappstore.com/flow/myuserinfo"
                         }).then(function(result){
-                            debugger;
+                            var name = ToTitleCase(result.UserName);
+                            _this.set('controller.userProfile', name);
                         }, function (jqXHR) {
                           jqXHR.then = null; // tame jQuery's ill mannered promises
                         });
@@ -1126,7 +1128,7 @@ App.GraphController = Ember.ObjectController.extend({
             }
 
             newWorkflow.save().then(function () {
-                Messenger().post({type:'info',message:'Successfully Added Workflow'});
+                Messenger().post({ type: 'success', message: 'Successfully Added Workflow' });
                 var newNode = App.Node.store.getById('node', _this.get('selected'));
                 if (typeof newNode === 'undefined' || !newNode)
                     newNode = App.Node.store.createRecord('node', { id: _this.get('selected'), label: _this.get('newName'), content: _this.get('newContent'), VersionUpdated: Ember.Date.parse(new Date()) });
@@ -1136,7 +1138,7 @@ App.GraphController = Ember.ObjectController.extend({
                     newNode.set('content', model.content);
                 }
                 newNode.save().then(function (f) {
-                    Messenger().post({type:'info',message:'Successfully Updated Process'});
+                    Messenger().post({ type: 'success', message: 'Successfully Updated Process' });
                     var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                     var duplicate = Enumerable.From(_this.get('graphData.nodes')).Where("g=>g.id=='" + f.get('id') + "'").FirstOrDefault();
                     if (duplicate)
@@ -1166,7 +1168,7 @@ App.GraphController = Ember.ObjectController.extend({
             var id = NewGUID();
             var newNode = { id: id, label: n, content: c, VersionUpdated: Ember.Date.parse(new Date()) };
             App.Node.store.createRecord('node', newNode).save().then(function (f) {
-                Messenger().post({type:'info',message:'Successfully Added Process'});
+                Messenger().post({ type: 'success', message: 'Successfully Added Process' });
                 var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                 _this.get('graphData').nodes.pushObject(a);
                 _this.set('newName', null);
@@ -1182,7 +1184,7 @@ App.GraphController = Ember.ObjectController.extend({
             data.id = NewGUID();
             data.GroupID = this.get('workflowID');
             App.Node.store.createRecord('edge', data).save().then(function () {
-                Messenger().post({type:'info',message:'Successfully Added Connection'});
+                Messenger().post({ type: 'success', message: 'Successfully Added Connection' });
                 var f = App.Node.store.getById('edge', data.id);
                 var a = { id: f.get('id'), from: f.get('from'), to: f.get('to'), color: f.get('color'), width: f.get('width'), style: f.get('style') }
                 _this.get('graphData.edges').pushObject(a);
@@ -1228,7 +1230,7 @@ App.GraphController = Ember.ObjectController.extend({
                     _this.set('graphData.edges', _this.get('graphData.edges').concat([])); //TODO HACK
                     _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //TODO HACK
 
-                    Messenger().post({type:'info',message:'Successfully Updated Workflow'});
+                    Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
                     //Enumerable.From(data.edges).ForEach(function (f) {
                     //    var m = App.Node.store.getById('edge', f);
                     //    if (m)
