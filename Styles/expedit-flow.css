@@ -335,9 +335,24 @@ span.graph-manipulationUI:hover {
     color:rgb(167, 20, 20) !important;
 }
 
+.success-lock {
+    color:rgb(167, 20, 20) !important;
+}
+
 
 .content {
   margin-bottom: 0px;
   padding-bottom: 0px;
   /*border-radius: 0 0 0 0;*/
+}
+
+
+/* Hack fix if only one item in menubar */
+.navbar-inverse .nav > li > a {
+    border-left: none;
+    padding-top: 13px; /*maybe*/
+    padding-bottom: 9px;
+}
+.navbar-inverse .navbar-toggle {
+  margin-top: 5px;
 }

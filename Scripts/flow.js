@@ -1280,7 +1280,7 @@ App.GraphRoute = Ember.Route.extend({
     },
     afterModel: function (m) {
         Em.run.sync();
-        if (m.data) {
+        if (m.data && m.data.content && m.data.content.length > 0) {
             //Get the selected item from m.data 
             m.selected = Enumerable.From(m.data.content).Where("f=>f.id==='" + m.selectedID + "'").Single();
 
@@ -1313,7 +1313,7 @@ App.GraphRoute = Ember.Route.extend({
             var getWorkflow = function (workflows) {
                 if (workflows.get('length') > 0) {
                     workflows.forEach(function (workflow) {
-                        prime.workflows.push({ id: workflow.get('id'), name: workflow.get('name'), humanName: workflow.get('humanName') });
+                        prime.workflows.push({ id: workflow.get('id'), name: workflow.get('name'), humanName: workflow.get('humanName'), firstNode: workflow.get('firstNode') });
                     });
                 }
             };
@@ -1341,10 +1341,10 @@ App.GraphRoute = Ember.Route.extend({
                     prime.nodes = Em.A(prime.nodes.concat(sessionNodes));
                     //debugger;
                     prime = Ember.Object.create(prime);
-                    m.workflows = Enumerable.From(prime.workflows)
-                        .GroupBy("$.id", "", "key,e=>{id: key, name: e.source[0].name, humanName: e.source[0].humanName}")
-                      .ToArray();
-                    m.workflow = Enumerable.From(m.workflows).Where("f=>f.id==='" + m.params.workflowID + "'").Single();
+                    m.workflows = Em.A(Enumerable.From(prime.workflows)
+                        .GroupBy("$.id", "", "key,e=>{id: key, name: e.source[0].name, humanName: e.source[0].humanName, firstNode: e.source[0].firstNode}")
+                      .ToArray());
+                    m.workflow =  Ember.Object.create(Enumerable.From(m.workflows).Where("f=>f.id==='" + m.params.workflowID + "'").SingleOrDefault());
                     delete prime.workflows;
                     m.graphData = prime;
                 });
@@ -1355,7 +1355,11 @@ App.GraphRoute = Ember.Route.extend({
             m.label = '';
             m.editing = false;
             m.humanName = '';
-            m.workflows = 'TODO';
+            //TODO WORKFLOW
+            m.graphData = { nodes: [], edges: [] };
+            m.workflow = this.store.find('workflow', m.params.workflowID);
+            m.workflows = Em.A([m.workflow]);
+
         }
      
 
@@ -1710,9 +1714,9 @@ App.VizEditorComponent = Ember.Component.extend({
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
             //physics: {barnesHut: {enabled: false}},
             //physics: { barnesHut: { gravitationalConstant: -8425, centralGravity: 0.1, springLength: 150, springConstant: 0.058, damping: 0.3 } },
-            ////physics: {barnesHut: {gravitationalConstant: -12425, centralGravity: 0.1, springLength: 150, springConstant: 0.05, damping: 0.5}},
-            ////stabilize: true,
-            ////stabilizationIterations: 100,
+            physics: {barnesHut: {gravitationalConstant: -12425, centralGravity: 0.1, springLength: 150, springConstant: 0.05, damping: 0.5}},
+            stabilize: true,
+            stabilizationIterations: 100,
             dataManipulation: this.get('editing'),
             onAdd: function (data, callback) {
                 _this.sendAction('toggleWorkflowNewModal', data, callback);

@@ -484,8 +484,9 @@
 
         <ul class="nav navbar-nav pull-right">
             {{#if isLoggedIn}}
-                <li class="dropdown">
+                <li class="dropdown hidden-xs">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="icon-lock success-lock"></i> &nbsp;
                         {{userProfile.UserName}} <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
@@ -496,7 +497,7 @@
                     </ul>
                 </li>
             {{else}}
-                <li class="settings">
+                <li class="settings hidden-xs">
                     {{#link-to 'login'}}
                         <i class="icon-unlock warning"></i> &nbsp;
                          Login
@@ -736,8 +737,8 @@
 
                     <h3>
                         <small>
-                            {{#if model.workflowName}}
-                                {{model.workflowName}} Workflow
+                            {{#if model.workflow}}
+                                {{model.workflow.name}} Workflow
                            {{else}}
                                 Current process has not workflow yet. Please choose a workflow name.
                             {{/if}}
