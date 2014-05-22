@@ -1277,7 +1277,19 @@ namespace EXPEDIT.Flow.Services {
 
         public bool AssignLicense(Guid userid, Guid licenseid)
         {
-            return false;
+            var contact = _users.ContactID;
+            var application = _users.ApplicationID;
+            if (contact == null)
+                return false;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var license = (from o in d.Licenses where o.LicenseID == licenseid select o).SingleOrDefault();
+                if (license == null)
+                    return false;
+
+            }
+            return true;
         }
 
         public void Creating(UserContext context) { }
