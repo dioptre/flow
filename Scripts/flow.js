@@ -1,5 +1,9 @@
 Ember.FEATURES["query-params"] = true;
 
+function RedirectToLogin() {
+    window.location.hash = '#/login'
+    location.reload();
+}
 
 App = Ember.Application.create({
     // LOG_TRANSITIONS: true,
@@ -26,6 +30,12 @@ App.Router.map(function () {
 
 
 App.WorkflowRoute = Ember.Route.extend({
+    actions: {
+        error: function () {
+            Messenger().post({ type: 'error', message: 'Could not find workflow. Ensure you have permission and are logged in.' });
+            Ember.run.later(null, RedirectToLogin, 3000);
+        }
+    },
     model: function (params) {
         if (params.id === 'undefined') {
             return null;
@@ -426,8 +436,7 @@ App.ApplicationController = Ember.Controller.extend({
                 // _this.transitionToRoute('login');
                 // Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
                 $.cookie('showLoggedOutModal', true);
-                window.location.hash = '#/login'
-                location.reload();
+                RedirectToLogin();
             }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
             });
@@ -1269,6 +1278,12 @@ App.GraphRoute = Ember.Route.extend({
     queryParams: {
         workflowID: {
             refreshModel: true
+        }
+    },
+    actions: {
+        error: function(){
+            Messenger().post({ type: 'error', message: 'Could not find process. Ensure you have permission and are logged in.' });
+            Ember.run.later(null, RedirectToLogin, 3000);
         }
     },
     model: function (params) {
