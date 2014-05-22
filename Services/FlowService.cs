@@ -913,7 +913,7 @@ namespace EXPEDIT.Flow.Services {
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 if (d.GraphDataGroups.Any(f => f.GraphDataGroupID == m.GraphDataGroupID))
-                    return false;
+                    return UpdateWorkflow(m);
                 var table = d.GetTableName(typeof(GraphDataGroup));
                 var verified = _users.CheckPermission(new SecuredBasic
                 {

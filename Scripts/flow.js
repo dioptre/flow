@@ -1344,7 +1344,11 @@ App.GraphRoute = Ember.Route.extend({
                     m.workflows = Em.A(Enumerable.From(prime.workflows)
                         .GroupBy("$.id", "", "key,e=>{id: key, name: e.source[0].name, humanName: e.source[0].humanName, firstNode: e.source[0].firstNode}")
                       .ToArray());
-                    m.workflow =  Ember.Object.create(Enumerable.From(m.workflows).Where("f=>f.id==='" + m.params.workflowID + "'").SingleOrDefault());
+                    m.workflow = Ember.Object.create(Enumerable.From(m.workflows).Where("f=>f.id==='" + m.params.workflowID + "'").SingleOrDefault());
+                    if (typeof m.workflow.get('name') === 'undefined') {
+                        m.workflow.set('content').name = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
+                        m.workflow.set('id', m.params.workflowID);
+                    }
                     delete prime.workflows;
                     m.graphData = prime;
                 });
@@ -1514,7 +1518,7 @@ App.GraphController = Ember.ObjectController.extend({
             //new name - model.workflow.name
             var _this = this;
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
-            if (typeof newWorkflow.get('workflowID') == 'undefined') {
+            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
                 newWorkflow = App.Node.store.createRecord('workflow', {id: this.get('workflowID'), name: this.get('model.workflow.name') });
                 this.set('model.workflow', newWorkflow);
             }
@@ -1541,7 +1545,7 @@ App.GraphController = Ember.ObjectController.extend({
         updateWorkflow: function () {
             var _this = this;
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
-            if (typeof newWorkflow.get('workflowID') == 'undefined') {
+            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
                 newWorkflow = App.Node.store.createRecord('workflow', { id: this.get('workflowID'), name: this.get('model.workflow.name') });
                 this.set('model.workflow', newWorkflow);
             }
@@ -1578,6 +1582,10 @@ App.GraphController = Ember.ObjectController.extend({
         },
         addNewNode: function () {
             var _this = this;
+            newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
+            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
+                this.send('updateWorkflowNameNow');
+            }
             var c = this.get('newContent')
             var n = this.get('newName')
             var id = NewGUID();

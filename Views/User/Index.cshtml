@@ -491,7 +491,7 @@
                         {{userProfile.UserName}} <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
-                        <li>{{#link-to 'myaccount'}} Account settings {{/link-to}}</li>
+                        <!--<li>{{#link-to 'myaccount'}} Account settings {{/link-to}}</li>-->
                         <li>
                             <a {{action 'logoutUser'}}>Logout</a>
                         </li>
@@ -649,14 +649,14 @@
                     <span>Permissions</span>
                 {{/link-to}}
             {{/view}}
-            {{#view App.HomeNavView}}
+
+            {{!--      {{#view App.HomeNavView}}
                 {{#link-to 'myaccount'}}
                     <i class="icon-user"></i>
                     <span>My Account</span>
                 {{/link-to}}
             {{/view}}
 
-            {{!--
                 {{#view App.HomeNavView}}
                     {{#link-to 'userprofile'}}
                         <i class="icon-cog"></i>
@@ -763,16 +763,16 @@
                      <br />
                 Choose a new name below:<br />
                 {{eui-input valueBinding="model.workflow.name" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
-                    
+
                 {{eui-button label="Cancel" action="toggleworkflowEditNameModal" size='large'}}
                     {{eui-button label="Submit" action="updateWorkflowNameNow" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
                      </div>
             {{/eui-modal}}
-                
+
                  {{#eui-modal openBinding="workflowEditModal" style="full"}}
                     <div style="padding: 50px; text-align: center;">
 
-                    
+
                     <p>
                         The process name:
                     </p>
