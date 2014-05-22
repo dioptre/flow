@@ -19,6 +19,7 @@ namespace EXPEDIT.Flow.ViewModels
     public class SecurityViewModel 
     {
         public int? SecurityTypeID { get; set; }
+        [JsonIgnore]
         public SecurityType? SecurityType { get; set; }
         public SecurityViewModel mySecurityList { get; set; }
         [JsonIgnore]

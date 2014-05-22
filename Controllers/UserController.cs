@@ -423,9 +423,9 @@ namespace EXPEDIT.Flow.Controllers {
         [Themed(false)]
         [HttpGet]
         [ActionName("MySecurityLists")]
-        public ActionResult GetMySecurityLists(string id, string tabletype)
+        public ActionResult GetMySecurityLists(string id, string type)
         {
-            return new JsonHelper.JsonNetResult(new { mySecurityLists = _Flow.GetMySecurityLists(tabletype) }, JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(new { mySecurityLists = _Flow.GetMySecurityLists(type) }, JsonRequestBehavior.AllowGet);
 
         }
 

@@ -1240,7 +1240,7 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);            
-                if (securityTypeID.HasValue && securityTypeID == (int)SecurityType.WhiteList)
+                if (!securityTypeID.HasValue || securityTypeID == (int)SecurityType.WhiteList)
                 {
                     var delete = (from o in d.SecurityWhitelists
                                   where
@@ -1254,7 +1254,7 @@ namespace EXPEDIT.Flow.Services {
                     d.SaveChanges();
                     return true;
                 }
-                else
+                if (!securityTypeID.HasValue || securityTypeID == (int)SecurityType.BlackList)
                 {
                     var delete = (from o in d.SecurityBlacklists
                                   where

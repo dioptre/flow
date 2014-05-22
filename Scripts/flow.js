@@ -26,9 +26,35 @@ App.Router.map(function () {
 
 
 App.PermissionRoute = Ember.Route.extend({
-    model: function(){
-        return this.store.findQuery('mySecurityList', {type: 'file'});
+    queryParams: {
+        type: { refreshModel: true }  // this ensure that new data is loaded if the dropdown is changed
+    },
+    model: function (params) {
+        return this.store.findQuery('mySecurityList', {type: params.type});
     }
+})
+
+
+App.PermissionController = Ember.ObjectController.extend({
+    needs: ['application'],
+    queryParams: ['type'],
+    types: [{ id: 'node', text: 'Processes' }, { id: 'workflow', text: 'Workflows' }, { id: 'file', text: 'Files' }],
+    type: 'node',
+    actions: {
+        deletePermission: function (item) {
+            var _this = this;
+            item.deleteRecord();
+            item.save().then(function () {
+                Messenger().post({ type: 'success', message: "Successfully deleted user permission", id: 'user-security' })
+                _this.set('model', _this.store.findQuery('mySecurityList', { type: _this.get('type') }));
+            }, function () {
+                Messenger().post({ type: 'error', message: "Could not delete user permission", id: 'user-security' })
+
+            });
+                
+        }
+    }
+
 })
 
 
@@ -37,7 +63,6 @@ App.MyworkflowsRoute = Ember.Route.extend({
         return Ember.RSVP.hash({
             workflows: this.store.find('myWorkflow'),
             processes: this.store.find('myNode')
-            ,test: 'asdasd'
         });
     }
 })
@@ -2285,8 +2310,8 @@ function filterData(data) {
     //data = $(data).fitVids().prop('outerHTML');
     var tags = ['em', 'div', 'p', 'span']; //Attempt to fix eufeeds
     for (var i = 0; i < tags.length; i++) {
-        var rxOpen = new RegExp("<"+ tags[i] +">", "ig");
-        var rxClose = new RegExp("<\/" + tags[i] + ">", "ig");
+        var rxOpen = new RegExp("<"+ tags[i], "ig");
+        var rxClose = new RegExp("<\/" + tags[i], "ig");
         divOpen = data.match(rxOpen);
         divClose = data.match(rxClose);
         if (!divOpen)

@@ -152,8 +152,59 @@
 
 
 <script type="text/x-handlebars" id="permission">
-    <h1> My permissions </h1>
+    <h1> My Permissions </h1>
+    <br />
+    {{view Ember.Select content=types optionValuePath="content.id"  optionLabelPath="content.text"  value=type}}
+    <br /><br />
+    <div class='container-fluid'>
+        <div class="row">
+            <div class="col-md-12">
+                <b>{{test}}</b>
 
+                {{#if model}}
+                    <div class="table-responsive">
+                        <table class="table table-condensed table-hover">
+                            <thead>
+                            <tr>
+                                {{!--<th>Preview</th>--}}
+                                <th>Name</th>
+                                <th>Updated</th>
+                                <th>Company</th>
+                                <th>Assignee</th>
+                                {{#if controllers.application.isLoggedIn}}
+                                <th>Permissions</th>
+                                {{/if}}
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {{#each item in model}}
+                                <tr>
+                                {{!--<td><img {{bind-attr src=result.ResourcePreviewPath}} height="15"></td>--}}
+                                <td>{{item.ReferenceName}}</td>
+                                <td>{{item.Updated}}</td>
+                                <td>
+                                        {{item.AccessorCompanyName}}
+                                </td>
+                                <td>
+
+                                        {{item.AccessorContactName}}
+
+                                </td>
+                                {{#if controllers.application.isLoggedIn}}
+                                    <td><a {{action 'deletePermission' item}} class="hlink">Delete</a></td>
+                                {{/if}}
+                                </tr>
+                            {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+                {{else}}
+                    <br />
+                    None.
+                {{/if}}
+            </div>
+        </div>
+     </div>
 </script>
 
 <script type="text/x-handlebars" id="myworkflows">
@@ -214,9 +265,9 @@
                                     {{!--<td><img {{bind-attr src=result.ResourcePreviewPath}} height="15"></td>--}}
                                     <td>{{workf.humanName}}</td>
                                     <td>{{workf.Updated}}</td>
-                                    <td><a {{bind-attr href=workf.ResourcePath}}>View</a></td>
+                                    <td><a {{bind-attr href=workf.ResourcePath}} class="hlink">View</a></td>
                                     {{#if controllers.application.isLoggedIn}}
-                                        <td><a {{action 'editPermission' workf}}>Edit</a></td>
+                                        <td><a {{action 'editPermission' workf}} class="hlink">Edit</a></td>
                                     {{/if}}
                                   </tr>
                                 {{/each}}
@@ -251,9 +302,9 @@
                                     {{!--<td><img {{bind-attr src=proc.ResourcePreviewPath}} height="15"></td>--}}
                                     <td>{{proc.Title}}</td>
                                     <td>{{proc.Updated}}</td>
-                                    <td><a {{bind-attr href=proc.Title}}>View</a></td>
+                                    <td><a {{bind-attr href=proc.Title}} class="hlink">View</a></td>
                                     {{#if controllers.application.isLoggedIn}}
-                                        <td><a {{action 'editPermission' proc}}>Edit</a></td>
+                                        <td><a {{action 'editPermission' proc}} class="hlink">Edit</a></td>
                                     {{/if}}
                                   </tr>
                                 {{/each}}
@@ -321,7 +372,7 @@
                   <th>Updated</th>
                   <th>Link</th>
                   {{#if controllers.application.isLoggedIn}}
-                    <th>Edit Permissions</th>
+                    <th>Permissions</th>
                   {{/if}}
                 </tr>
               </thead>
@@ -334,7 +385,7 @@
                     <td>{{result.Updated}}</td>
                     <td><a {{bind-attr href=result.ResourcePath}}>Download File</a></td>
                     {{#if controllers.application.isLoggedIn}}
-                        <td><a {{action 'editPermission' result}}>Edit Permissions</a></td>
+                        <td><a {{action 'editPermission' result}} class="hlink">Edit</a></td>
                     {{/if}}
                   </tr>
                 {{/each}}
@@ -1495,6 +1546,7 @@
             </div>
         </div>
         </script>
+
     </body>
 </html>
 
