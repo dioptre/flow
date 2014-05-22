@@ -351,7 +351,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (m == null)
                 return new HttpUnauthorizedResult("Unauthorized access to protected workflow.");
             else
-                return new JsonHelper.JsonNetResult(m, JsonRequestBehavior.AllowGet);
+                return new JsonHelper.JsonNetResult(new { workflow = m}, JsonRequestBehavior.AllowGet);
 
         }
 

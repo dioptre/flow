@@ -107,8 +107,8 @@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/offline.min.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/lodash.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/linq.min.js")"></script>
-        @*<script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/moment.js")"></script>*@
-        <script src="http://momentjs.com/downloads/moment.js"></script>
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/moment.js")"></script>
+        @*<script src="http://momentjs.com/downloads/moment.js"></script>*@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/twix.min.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.velocity.min.js")"></script>
         @*<script src="https://s3.amazonaws.com/emberui/dist/jquery.velocity.min.js"></script>*@
@@ -265,7 +265,7 @@
                                     {{!--<td><img {{bind-attr src=result.ResourcePreviewPath}} height="15"></td>--}}
                                     <td>{{workf.humanName}}</td>
                                     <td>{{workf.Updated}}</td>
-                                    <td><a {{bind-attr href=workf.ResourcePath}} class="hlink">View</a></td>
+                                    <td>{{link-to 'View' 'workflow' workf.id}}</td>
                                     {{#if controllers.application.isLoggedIn}}
                                         <td><a {{action 'editPermission' workf}} class="hlink">Edit</a></td>
                                     {{/if}}
@@ -302,7 +302,7 @@
                                     {{!--<td><img {{bind-attr src=proc.ResourcePreviewPath}} height="15"></td>--}}
                                     <td>{{proc.Title}}</td>
                                     <td>{{proc.Updated}}</td>
-                                    <td><a {{bind-attr href=proc.Title}} class="hlink">View</a></td>
+                                    <td>{{link-to 'View' 'graph' proc.id}}</td>
                                     {{#if controllers.application.isLoggedIn}}
                                         <td><a {{action 'editPermission' proc}} class="hlink">Edit</a></td>
                                     {{/if}}
@@ -1546,7 +1546,7 @@
             </div>
         </div>
         </script>
-
+        <script type="text/x-handlebars" id="workflow">&nbsp;</script>
     </body>
 </html>
 

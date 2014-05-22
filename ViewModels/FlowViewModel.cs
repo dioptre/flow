@@ -79,6 +79,7 @@ namespace EXPEDIT.Flow.ViewModels
         public FlowEdgeWorkflowViewModel workflow { get; set; }
         public Guid? id { get { return GraphDataGroupID; } set { GraphDataGroupID = value; } }
         public string name { get { return GraphDataGroupName; } set { GraphDataGroupName = value; } }
+        public Guid? firstNode { get; set; }
         [JsonIgnore]
         public string GraphDataGroupName { get; set; }
         [JsonIgnore]

@@ -879,12 +879,22 @@ namespace EXPEDIT.Flow.Services {
                 }, ActionPermission.Read);
                 if (!verified)
                     return null;
+                var firstNodes = (from o in d.GraphDataRelation where o.GraphDataGroupID == id orderby o.Sequence ascending, o.VersionUpdated descending select new { o.ToGraphDataID, o.FromGraphDataID }).FirstOrDefault();
+                Guid? firstNode = default(Guid?);
+                if (firstNodes != null)
+                {
+                    if (firstNodes.ToGraphDataID.HasValue)
+                        firstNode = firstNodes.ToGraphDataID;
+                    else
+                        firstNode = firstNodes.FromGraphDataID;
+                }
                 return (from o in d.GraphDataGroups
                         where o.GraphDataGroupID == id
                         select new FlowEdgeWorkflowViewModel
                             {
                                 GraphDataGroupID = o.GraphDataGroupID,
                                 GraphDataGroupName = o.GraphDataGroupName,
+                                firstNode = firstNode,
                                 Comment = o.Comment                                
                             }).FirstOrDefault();
             }

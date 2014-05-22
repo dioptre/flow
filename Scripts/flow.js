@@ -25,6 +25,24 @@ App.Router.map(function () {
 });
 
 
+App.WorkflowRoute = Ember.Route.extend({
+    model: function (params) {
+        return this.store.find('workflow', params.id); 
+    },
+    afterModel: function (m) {
+        var _this = this;
+        var fn = m.get('firstNode');
+        var id = m.get('id');
+        var name = m.get('name');
+        if (typeof fn !== 'undefined' && fn) {
+            _this.transitionTo('graph', fn);
+        }
+        else {
+            _this.transitionTo('graph', NewGUID());
+        }
+    }
+});
+
 App.PermissionRoute = Ember.Route.extend({
     queryParams: {
         type: { refreshModel: true }  // this ensure that new data is loaded if the dropdown is changed
@@ -1229,8 +1247,9 @@ App.GraphRoute = Ember.Route.extend({
     model: function (params) {
         var id = params.id;
         if (id) {
-            if (id == 'undefined')
+            if (id == 'undefined') {
                 this.replaceWith('graph', NewGUID());
+            }
             id = id.toLowerCase(); // just in case
             return Ember.RSVP.hash({
                 data: this.store.find('node', { id: id }),
@@ -1239,14 +1258,7 @@ App.GraphRoute = Ember.Route.extend({
                 label: '',
                 editing: false  // This gets passed to visjs to enable/disable editing dependig on context
             });
-        } else {
-            return Ember.RSVP.hash({
-                data: this.store.find('node'),
-                content: '',
-                label: 'Create new Workflow!',
-                editing: true
-            });
-        }
+        } 
     },
     afterModel: function (m) {
         var sel = m.selected;
@@ -1257,24 +1269,30 @@ App.GraphRoute = Ember.Route.extend({
                 m.label = m.node.get('label');
                 m.humanName = m.node.get('humanName');
             }
-        } else {
-            var nodes = Enumerable.From(m.data.content).Select("$._data").ToArray(); // this is to clean up ember data
-            m.data = { nodes: nodes, edges: [] };
-            m.selected = '';
-        }
-    },
-    actions: {
-        toggleWorkflowEditModal : function (save) {
-            alert('todo')
-            this.toggleProperty('controller.workflowEditModal ');
-
-            if (!this.get('controller.workflowEditModal ')) {
-                // must have been just closed - save results
-                console.log('save it');
+            else { //NEW NODE
+                var controller = this.controllerFor('graph');
+                controller.set("workflowID", null); //Force the graph to create a new workflow
             }
-
         }
+        //else {
+        //    var nodes = Enumerable.From(m.data.content).Select("$._data").ToArray(); // this is to clean up ember data
+        //    m.data = { nodes: nodes, edges: [] };
+        //    m.selected = '';
+        //}
     }
+    //,
+    //actions: {
+    //    toggleWorkflowEditModal : function (save) {
+    //        alert('todo')
+    //        this.toggleProperty('controller.workflowEditModal ');
+
+    //        if (!this.get('controller.workflowEditModal ')) {
+    //            // must have been just closed - save results
+    //            console.log('save it');
+    //        }
+
+    //    }
+    //}
     //,setupController: function (controller, model) {
     //    controller.set('model', model);
     //    // Check if workflow name is defined, otherwise popup
@@ -1370,9 +1388,9 @@ App.GraphController = Ember.ObjectController.extend({
                         _this.set("workflowName", newwf.humanName);
                     }
                     else {
-                        _this.set("workflowID", null);
-                        _this.set("workflowName", null);
-                        Ember.run.scheduleOnce('afterRender', _this, 'send', 'toggleWorkflowEditModal');
+                        //Ember.run.scheduleOnce('afterRender', _this, 'send', 'toggleWorkflowEditModal');
+                        if (!_this.get("workflowID"))
+                            _this.set("workflowName", 'Untitled Workflow - ' + new Date());
                     }
                 }
                 //Enumerable.From(data.get('workflows')).Where("f=>f.get('
@@ -1695,9 +1713,9 @@ App.VizEditorComponent = Ember.Component.extend({
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
             //physics: {barnesHut: {enabled: false}},
             //physics: { barnesHut: { gravitationalConstant: -8425, centralGravity: 0.1, springLength: 150, springConstant: 0.058, damping: 0.3 } },
-            physics: {barnesHut: {gravitationalConstant: -12425, centralGravity: 0.1, springLength: 150, springConstant: 0.05, damping: 0.5}},
-            stabilize: true,
-            stabilizationIterations: 100,
+            ////physics: {barnesHut: {gravitationalConstant: -12425, centralGravity: 0.1, springLength: 150, springConstant: 0.05, damping: 0.5}},
+            ////stabilize: true,
+            ////stabilizationIterations: 100,
             dataManipulation: this.get('editing'),
             onAdd: function (data, callback) {
                 _this.sendAction('toggleWorkflowNewModal', data, callback);
@@ -1747,7 +1765,7 @@ App.VizEditorComponent = Ember.Component.extend({
     },
     dataUpdates: function () {
 
-        console.log('updated')
+        //console.log('updated')
 
         if (this.graph === null) {
             this.setup(); // graph hasn't been initialised yet
@@ -2006,7 +2024,7 @@ App.Node = DS.Model.extend({
         return 'ellipse'; // can also us circle
     }.property(),
     group: function () {
-        return 'x';
+        //return 'x';
         return Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
     }.property(),
     humanName: function () {
@@ -2042,6 +2060,7 @@ App.Edge = DS.Model.extend({
 App.Workflow = DS.Model.extend({
     name: DS.attr('string'),
     comment: DS.attr('string'),
+    firstNode: DS.attr('string'),
     humanName: function () {
         var temp = this.get('name');
         if (temp)
