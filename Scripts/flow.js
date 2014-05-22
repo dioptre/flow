@@ -30,7 +30,7 @@ App.WorkflowRoute = Ember.Route.extend({
         if (params.id === 'undefined') {
             return null;
         }
-        return this.store.find('workflow', params.id); 
+        return this.store.find('workflow', params.id);
     },
     afterModel: function (m) {
         if (m === null) {
@@ -79,7 +79,7 @@ App.PermissionController = Ember.ObjectController.extend({
                 Messenger().post({ type: 'error', message: "Could not delete user permission", id: 'user-security' })
 
             });
-                
+
         }
     }
 
@@ -414,6 +414,7 @@ App.ApplicationController = Ember.Controller.extend({
         App.set('currentPath', currentPath);  // Set path to the top
     }.observes('currentPath'), // This set the current path App.get('currentPath');
     isLoggedIn: false,
+    logoutModal: false,
     userProfile: '',
     actions: {
         logoutUser: function(){
@@ -429,6 +430,9 @@ App.ApplicationController = Ember.Controller.extend({
             }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
             });
+        },
+        togglelogoutModal: function(){
+            this.toggleProperty('logoutModal');
         }
     }
 });
@@ -1279,9 +1283,8 @@ App.GraphRoute = Ember.Route.extend({
         });
     },
     afterModel: function (m) {
-        Em.run.sync();
         if (m.data && m.data.content && m.data.content.length > 0) {
-            //Get the selected item from m.data 
+            //Get the selected item from m.data
             m.selected = Enumerable.From(m.data.content).Where("f=>f.id==='" + m.selectedID + "'").Single();
 
 
@@ -1335,7 +1338,7 @@ App.GraphRoute = Ember.Route.extend({
                         var newwf = Enumerable.From(prime.workflows).FirstOrDefault();
                         if (typeof newwf !== 'undefined' && newwf) {
 
-                            _this.transitionTo('graph', m.id, { queryParams: { workflowID: newwf }})
+                            _this.transitionTo('graph', m.selectedID, { queryParams: { workflowID: newwf.id }})
                         }
                     }
                     prime.nodes = Em.A(prime.nodes.concat(sessionNodes));
@@ -1344,6 +1347,7 @@ App.GraphRoute = Ember.Route.extend({
                     m.workflows = Em.A(Enumerable.From(prime.workflows)
                         .GroupBy("$.id", "", "key,e=>{id: key, name: e.source[0].name, humanName: e.source[0].humanName, firstNode: e.source[0].firstNode}")
                       .ToArray());
+                    
                     m.workflow = Ember.Object.create(Enumerable.From(m.workflows).Where("f=>f.id==='" + m.params.workflowID + "'").SingleOrDefault());
                     if (typeof m.workflow.get('name') === 'undefined') {
                         m.workflow.set('content').name = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
@@ -1371,14 +1375,14 @@ App.GraphRoute = Ember.Route.extend({
                 m.workflows = Em.A([m.workflow]);
             });
             m.selected = App.Node.store.createRecord('node', { id: m.selectedID, label: 'Untitled Process - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), content: '', VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss')) });
-            
+
 
         }
-     
+
 
 
     }
-  
+
 });
 
 
@@ -1389,7 +1393,7 @@ App.GraphController = Ember.ObjectController.extend({
     workflowEditNameModal: false,
     workflowNewModal: false, // up to here is for new ones
     editing: true,
-    workflowID: null, // available ids will be in model 
+    workflowID: null, // available ids will be in model
     workflowEditModal : false,
     validateWorkflowName: false,
     validateNewName: false,
@@ -1415,11 +1419,11 @@ App.GraphController = Ember.ObjectController.extend({
 
     // Do something if the s
     graphDataTrigger : function () {
-      
+
     }.observes('model', 'model.selected', 'model.@each.workflows'),
     changeSelected: function () {
         //alert('')
-     
+
      this.transitionToRoute('graph', this.get('model.selectedID'));
     }.observes('model.selectedID'),
 

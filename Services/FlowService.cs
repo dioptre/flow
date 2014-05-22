@@ -1087,7 +1087,7 @@ namespace EXPEDIT.Flow.Services {
 
                 }
                                 
-                var m = (from o in d.E_SP_GetSecurityList(application, contact, company, table)                         
+                var m = (from o in d.E_SP_GetSecurityList(application, contact, null, table)                         
                          select new SecurityViewModel
                          {
                              SecurityTypeID = o.SecurityTypeID,
@@ -1150,7 +1150,6 @@ namespace EXPEDIT.Flow.Services {
                     var delete = (from o in d.SecurityWhitelists where 
                         o.OwnerApplicationID == application &&
                         o.OwnerContactID == contact &&
-                        o.OwnerCompanyID == company &&
                         o.OwnerTableType == table &&
                         o.OwnerReferenceID == m.ReferenceID.Value &&
                         o.AccessorApplicationID == application &&
@@ -1166,7 +1165,6 @@ namespace EXPEDIT.Flow.Services {
                         SecurityWhitelistID = m.SecurityID.Value,
                         OwnerApplicationID = application,
                         OwnerContactID = contact,
-                        OwnerCompanyID = company,
                         OwnerTableType = table,
                         OwnerReferenceID = m.ReferenceID.Value,
                         AccessorApplicationID = application,
@@ -1195,7 +1193,6 @@ namespace EXPEDIT.Flow.Services {
                                   where
                                       o.OwnerApplicationID == application &&
                                       o.OwnerContactID == contact &&
-                                      o.OwnerCompanyID == company &&
                                       o.OwnerTableType == table &&
                                       o.OwnerReferenceID == m.ReferenceID.Value &&
                                       o.AccessorApplicationID == application &&
@@ -1211,7 +1208,6 @@ namespace EXPEDIT.Flow.Services {
                         SecurityBlacklistID = m.SecurityID.Value,
                         OwnerApplicationID = application,
                         OwnerContactID = contact,
-                        OwnerCompanyID = company,
                         OwnerTableType = table,
                         OwnerReferenceID = m.ReferenceID.Value,
                         AccessorApplicationID = application,
@@ -1242,7 +1238,6 @@ namespace EXPEDIT.Flow.Services {
 
         public bool DeleteSecurity(Guid sid, int? securityTypeID)
         {
-            var company = _users.DefaultContactCompanyID;
             var contact = _users.ContactID;
             var application = _users.ApplicationID;
             if (contact == null)
@@ -1256,8 +1251,7 @@ namespace EXPEDIT.Flow.Services {
                                   where
                                       o.SecurityWhitelistID == sid &&
                                       o.OwnerApplicationID == application &&
-                                      o.OwnerContactID == contact &&
-                                      o.OwnerCompanyID == company                                   
+                                      o.OwnerContactID == contact                                   
                                   select o).ToArray();
                     foreach (var del in delete)
                         d.DeleteObject(del);                 
@@ -1270,8 +1264,7 @@ namespace EXPEDIT.Flow.Services {
                                   where
                                       o.SecurityBlacklistID == sid &&
                                       o.OwnerApplicationID == application &&
-                                      o.OwnerContactID == contact &&
-                                      o.OwnerCompanyID == company
+                                      o.OwnerContactID == contact 
                                   select o).ToArray();
                     foreach (var del in delete)
                         d.DeleteObject(del);

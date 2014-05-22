@@ -465,7 +465,15 @@
 </script>
 
 <script type="text/x-handlebars" id="application">
-    {{!inactivity-warning}}
+        {{#eui-modal openBinding="logoutModal"}}
+            <div style="padding: 50px; text-align: center;">
+                <h4> Do you really want to logout?</h4>
+
+                <br>
+                {{eui-button label="Cancel" action="togglelogoutModal" size='large'}}
+                {{eui-button label="Logout" action="logoutUser" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+             </div>
+        {{/eui-modal}}
 
      <!-- navbar -->
     <header class="navbar navbar-inverse" role="banner">
@@ -486,16 +494,12 @@
             {{#if isLoggedIn}}
                 <!-- This is for desktop -->
                 <li class="settings dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <span><i class="icon-lock success-lock"></i></span> &nbsp;
-                        {{userProfile.UserName}} <b class="caret"></b>
+                    <a {{action 'togglelogoutModal'}}>
+                        <i class="icon-lock success-lock"></i>&nbsp;
+                        Logout
                     </a>
-                    <ul class="dropdown-menu">
-                        <!--<li>{{#link-to 'myaccount'}} Account settings {{/link-to}}</li>-->
-                        <li>
-                            <a {{action 'logoutUser'}}>Logout</a>
-                        </li>
-                    </ul>
+
+
                 </li>
             {{else}}
                 <li class="settings ">
