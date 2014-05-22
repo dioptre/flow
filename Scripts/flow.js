@@ -1340,7 +1340,12 @@ App.GraphRoute = Ember.Route.extend({
                     }
                     prime.nodes = Em.A(prime.nodes.concat(sessionNodes));
                     //debugger;
-                    prime = Ember.Object.create(prime)
+                    prime = Ember.Object.create(prime);
+                    m.workflows = Enumerable.From(prime.workflows)
+                        .GroupBy("$.id", "", "key,e=>{id: key, name: e.source[0].name, humanName: e.source[0].humanName}")
+                      .ToArray();
+                    m.workflow = Enumerable.From(m.workflows).Where("f=>f.id==='" + m.params.workflowID + "'").Single();
+                    delete prime.workflows;
                     m.graphData = prime;
                 });
 
@@ -1382,12 +1387,12 @@ App.GraphController = Ember.ObjectController.extend({
         })
     }.observes('model.content'),
     humanReadableName: function () {
-        var temp = this.get('model.label');
+        var temp = this.get('model.selected.label');
         if (temp)
             return ToTitleCase(temp.replace(/_/g, ' '));
         else
             return null;
-    }.property('model.label'),
+    }.property('model.selected.label'),
 
     // Do something if the s
     graphDataTrigger : function () {

@@ -727,7 +727,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-12 process-header">
-                   <h1>{{#if model}}{{humanReadableName}}{{else}}{{newName}}{{/if}}
+                   <h1>{{#if model.selected}}{{humanReadableName}}{{else}}{{newName}}{{/if}}
 
                             <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
                                 <i class="icon-pencil"></i> Edit Process
@@ -736,8 +736,8 @@
 
                     <h3>
                         <small>
-                            {{#if workflowName}}
-                                {{workflowName}} Workflow
+                            {{#if model.workflowName}}
+                                {{model.workflowName}} Workflow
                            {{else}}
                                 Current process has not workflow yet. Please choose a workflow name.
                             {{/if}}
