@@ -2428,6 +2428,32 @@ Ember.Handlebars.helper('safehtml', function (item, options) {
     return '';
 });
 
+
+Ember.Handlebars.helper('prettyDate', function (item, options) {
+    var escaped = '';
+    if (this.results && this.results.length) {
+        var obj = Enumerable.From(options.contexts[0].results).Where("$.get('id')=='" + options.data.keywords.result.id + "'").FirstOrDefault();
+        if (obj) {
+            escaped = moment('' + obj.get(options.data.properties[0].split('.')[1])).format('YYYY-MM-DD @ HH:mm');
+            console.log(escaped);
+            if (escaped === 'Invalid date') {
+                return ''
+            }
+            return new Handlebars.SafeString(escaped);
+        }
+    }
+    else {
+        escaped = moment('' + options.contexts[0].get(options.data.properties[0])).format('YYYY-MM-DD @ HH:mm');
+        if (escaped === 'Invalid date') {
+            return ''
+        }
+        return new Handlebars.SafeString(escaped);
+    }
+    return '';
+});
+
+
+
 Ember.Handlebars.helper('wikiurl', function (item, options) {
 
 });
