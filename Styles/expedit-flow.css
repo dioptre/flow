@@ -349,6 +349,9 @@ span.graph-manipulationUI:hover {
   .navbar-brand {
     margin-top: 7px;
   }
+  .navbar-inverse .nav > li > a {
+    padding-top: 14px !important;
+  }
 }
 
 

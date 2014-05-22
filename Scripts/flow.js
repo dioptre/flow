@@ -1363,10 +1363,10 @@ App.GraphRoute = Ember.Route.extend({
                 m.workflows = Em.A([{ id: item.get('id'), name: item.get('name'), humanName: item.get('humanName'), firstNode: item.get('firstNode') }]);
             }, function (item) {
                 //m.workflow = App.Workflow.store.createRecord('workflow', { id: NewGUID(), name: 'Untitled Workflow - ' + new Date() });
-                m.workflow.set('content').name = 'Untitled Workflow - ' + new Date();
+                m.workflow.set('content').name = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
                 m.workflows = Em.A([m.workflow]);
             });
-            m.selected = App.Node.store.createRecord('node', { id: m.selectedID, label: 'Untitled Process - ' + new Date(), content: '', VersionUpdated: Ember.Date.parse(new Date()) });
+            m.selected = App.Node.store.createRecord('node', { id: m.selectedID, label: 'Untitled Process - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), content: '', VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss')) });
             
 
         }
@@ -1382,17 +1382,15 @@ App.GraphController = Ember.ObjectController.extend({
     queryParams: ['workflowID'],
     newName: null,
     newContent: null,
+    workflowEditNameModal: false,
     workflowNewModal: false, // up to here is for new ones
     editing: true,
-    workflowName: function () {
-        if (typeof this.get('model.workflow.name') === 'undefined')
-            return 'Untitled - ' + new Date();
-        return this.get('model.workflow.name');
-    }.property('model.workflow'),
     workflowID: null, // available ids will be in model 
     workflowEditModal : false,
     validateWorkflowName: false,
     validateNewName: false,
+    validateNewNewName: false,
+    loadingNewNewName: false,
     validateExistingName: false,
     loadingWorkflowName: false,
     loadingNewName: false,
@@ -1423,13 +1421,13 @@ App.GraphController = Ember.ObjectController.extend({
 
     checkWorkflowName: function () {
         var _this = this;
-        if (!_this.get('workflowName') || typeof _this.get('workflowName') !== 'string' || _this.get('workflowName').trim().length < 1) {
+        if (!_this.get('model.workflow.name') || typeof _this.get('model.workflow.name') !== 'string' || _this.get('model.workflow.name').trim().length < 1) {
             _this.set('validateWorkflowName', 'Name required.');
             return;
         }
         _this.set('loadingWorkflowName', true);
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            jQuery.getJSON('/Flow/User/WorkflowDuplicate/' + encodeURIComponent(_this.get('workflowName').trim()) + '?guid=' + _this.get('workflowID')
+            jQuery.getJSON('/Flow/User/WorkflowDuplicate/' + encodeURIComponent(_this.get('model.workflow.name').trim()) + '?guid=' + _this.get('workflowID')
               ).then(function (data) {
                   _this.set('loadingWorkflowName', false);
                  Ember.run(null, resolve, data);
@@ -1441,16 +1439,16 @@ App.GraphController = Ember.ObjectController.extend({
             _this.set('validateWorkflowName', value ? 'Name already in use.' : false);
         });
 
-    }.observes('workflowName'),
+    }.observes('model.workflow.name'),
     checkNewNodeName: function () {
         var _this = this;
-        if (!_this.get('model.selected.name') || typeof _this.get('model.selected.name') !== 'string' || _this.get('model.selected.name').trim().length < 1) {
+        if (!_this.get('model.selected.label') || typeof _this.get('model.selected.label') !== 'string' || _this.get('model.selected.label').trim().length < 1) {
             _this.set('validateNewName', 'Name required.');
             return;
         }
         _this.set('loadingNewName', true);
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('model.selected.name').trim()) + '?guid=' + _this.get('selectedID')
+            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('model.selected.label').trim()) + '?guid=' + _this.get('selectedID')
               ).then(function (data) {
                   _this.set('loadingNewName', false);
                   Ember.run(null, resolve, data);
@@ -1462,7 +1460,28 @@ App.GraphController = Ember.ObjectController.extend({
             _this.set('validateNewName', value ? 'Name already in use.' : false);
         });
 
-    }.observes('model.selected.name'),
+    }.observes('model.selected.label'),
+    checkNewNewNodeName: function () {
+        var _this = this;
+        if (!_this.get('newName') || typeof _this.get('newName') !== 'string' || _this.get('newName').trim().length < 1) {
+            _this.set('validateNewNewName', 'Name required.');
+            return;
+        }
+        _this.set('loadingNewNewName', true);
+        return new Ember.RSVP.Promise(function (resolve, reject) {
+            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('newName').trim()) + '?guid=' + _this.get('selectedID')
+              ).then(function (data) {
+                  _this.set('loadingNewNewName', false);
+                  Ember.run(null, resolve, data);
+              }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+                  Ember.run(null, reject, jqXHR);
+              });
+        }).then(function (value) {
+            _this.set('validateNewNewName', value ? 'Name already in use.' : false);
+        });
+
+    }.observes('newName'),
     checkExistingNodeName: function () {
         var _this = this;
         if (!_this.get('model.label') || typeof _this.get('model.label') !== 'string' || _this.get('model.label').trim().length < 1) {
@@ -1491,6 +1510,28 @@ App.GraphController = Ember.ObjectController.extend({
     }.property('validateWorkflowName', 'validateNewName', 'validateExistingName'),
 
     actions: {
+        updateWorkflowNameNow: function(){
+            //new name - model.workflow.name
+            var _this = this;
+            newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
+            if (typeof newWorkflow.get('workflowID') == 'undefined') {
+                newWorkflow = App.Node.store.createRecord('workflow', {id: this.get('workflowID'), name: this.get('model.workflow.name') });
+                this.set('model.workflow', newWorkflow);
+            }
+            else
+                newWorkflow.set('name', this.get('model.workflow.name'));
+            newWorkflow.save().then(function (data) {
+                Messenger().post({ type: 'success', message: "Workflow successfully renamed." })
+                _this.set('workflowEditNameModal', false);
+            }, function () {
+                Messenger().post({ type: 'error', message: "Rename failed. Try again please." })
+
+            })
+
+        },
+        toggleworkflowEditNameModal: function() {
+            this.toggleProperty('workflowEditNameModal');
+        },
         toggleWorkflowNewModal: function (data, callback) {
             this.toggleProperty('workflowNewModal');
         },
@@ -1499,37 +1540,28 @@ App.GraphController = Ember.ObjectController.extend({
         },
         updateWorkflow: function () {
             var _this = this;
-            var newWorkflow;
-            if (this.get('model.params.workflowID') != null) {
-                newWorkflow = App.Node.store.getById('workflow', _this.get('model.params.workflowID'));
-                newWorkflow.set('model.workflow.name', this.get('workflowName'));
+            newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
+            if (typeof newWorkflow.get('workflowID') == 'undefined') {
+                newWorkflow = App.Node.store.createRecord('workflow', { id: this.get('workflowID'), name: this.get('model.workflow.name') });
+                this.set('model.workflow', newWorkflow);
             }
-            else {
-                var wfid = NewGUID();
-                newWorkflow = App.Workflow.store.createRecord('workflow', { id: wfid, name: this.get('workflowName') });
-                _this.set('workflowID', wfid);
-            }
-
-            newWorkflow.save().then(function () {
-                Messenger().post({ type: 'success', message: 'Successfully Added Workflow' });
+            else
+                newWorkflow.set('name', this.get('model.workflow.name'));
+            newWorkflow.save().then(function (data) {
+                Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
                 var newNode = App.Node.store.getById('node', _this.get('selectedID'));
-                if (typeof newNode === 'undefined' || !newNode)
-                    newNode = App.Node.store.createRecord('node', { id: _this.get('selectedID'), label: _this.get('newName'), content: _this.get('newContent'), VersionUpdated: Ember.Date.parse(new Date()) });
-                var model = _this.get('model');
-                if (model) {
-                    newNode.set('label', model.label);
-                    newNode.set('content', model.content);
+                if (typeof newNode === 'undefined' || !newNode) {
+                    newNode = App.Node.store.createRecord('node', { id: _this.get('model.selectedID'), label: _this.get('model.selected.label'), content: _this.get('model.selected.content'), VersionUpdated: Ember.Date.parse(new Date()) });
+                    this.set('model.selected', newNode);
                 }
                 newNode.save().then(function (f) {
                     Messenger().post({ type: 'success', message: 'Successfully Updated Process' });
                     var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                     var duplicate = Enumerable.From(_this.get('graphData.nodes')).Where("g=>g.id=='" + f.get('id') + "'").FirstOrDefault();
                     if (duplicate)
-                        _this.get('graphData.nodes').removeObject(duplicate);
-                    _this.get('graphData.nodes').pushObject(a);
-                    _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //HACK TODO
-                    _this.set('newName', null);
-                    _this.set('newContent', null);
+                        _this.get('model.graphData.nodes').removeObject(duplicate);
+                    _this.get('model.graphData.nodes').pushObject(a);
+                    _this.set('model.graphData.nodes', _this.get('model.graphData.nodes').concat([])); //HACK TODO
                     _this.set('workflowEditModal', false);
                 }, function () {
                     if (_this.get('model'))
