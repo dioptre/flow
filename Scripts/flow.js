@@ -26,19 +26,27 @@ App.Router.map(function () {
 
 
 App.WorkflowRoute = Ember.Route.extend({
+    needs: ['application'],
     model: function (params) {
+        if (params.id === 'undefined') {
+            return null;
+        }
         return this.store.find('workflow', params.id); 
     },
     afterModel: function (m) {
+        if (m === null) {
+            //_this.set('controllers.application.workflowID', NewGUID());
+            return this.transitionTo('graph', NewGUID());
+             
+        }
+
         var _this = this;
         var fn = m.get('firstNode');
         var id = m.get('id');
-        var name = m.get('name');
+
         if (typeof fn !== 'undefined' && fn) {
+            //_this.set('controllers.application.workflowID', id);
             _this.transitionTo('graph', fn);
-        }
-        else {
-            _this.transitionTo('graph', NewGUID());
         }
     }
 });
@@ -392,9 +400,16 @@ App.LoginController = Ember.Controller.extend({
 })
 
 App.ApplicationController = Ember.Controller.extend({
+    queryParams: ['workflowID'],
+    workflowID: null,
     currentPathDidChange: function () {
         window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
-        App.set('currentPath', this.get('currentPath'));  // Set path to the top
+        var currentPath = this.get('currentPath');
+
+        if (currentPath !== "graph" && currentPath !== "workflow") { // remove workflow id query param unless on graph/wk route
+            this.set('workflowID', null)
+        }
+        App.set('currentPath', currentPath);  // Set path to the top
     }.observes('currentPath'), // This set the current path App.get('currentPath');
     isLoggedIn: false,
     userProfile: '',
@@ -1247,9 +1262,6 @@ App.GraphRoute = Ember.Route.extend({
     model: function (params) {
         var id = params.id;
         if (id) {
-            if (id == 'undefined') {
-                this.replaceWith('graph', NewGUID());
-            }
             id = id.toLowerCase(); // just in case
             return Ember.RSVP.hash({
                 data: this.store.find('node', { id: id }),
@@ -1262,18 +1274,24 @@ App.GraphRoute = Ember.Route.extend({
     },
     afterModel: function (m) {
         var sel = m.selected;
-        if (sel) { // this means it's probably a wiki article
-            m.node = this.store.getById('node', sel);
+        //if (sel) { // this means it's probably a wiki article
+            m.node = this.store.getById('node', m.selected);
             if (m.node) {
                 m.content = m.node.get('content');
                 m.label = m.node.get('label');
                 m.humanName = m.node.get('humanName');
             }
             else { //NEW NODE
-                var controller = this.controllerFor('graph');
-                controller.set("workflowID", null); //Force the graph to create a new workflow
+                m.content = '';
+                m.label = '';
+                m.editing = false;
+                m.humanName = '';
+                //controller.set('graphData', { nodes: [], edges: [] });
+                //m.node = null;
+                //if (!_this.get("workflowID"))
+                  //  _this.set("workflowName", 'Untitled Workflow - ' + new Date());
             }
-        }
+        //}
         //else {
         //    var nodes = Enumerable.From(m.data.content).Select("$._data").ToArray(); // this is to clean up ember data
         //    m.data = { nodes: nodes, edges: [] };
@@ -1386,12 +1404,7 @@ App.GraphController = Ember.ObjectController.extend({
                     if (typeof newwf !== 'undefined' && newwf) {
                         _this.set("workflowID", newwf.id);
                         _this.set("workflowName", newwf.humanName);
-                    }
-                    else {
-                        //Ember.run.scheduleOnce('afterRender', _this, 'send', 'toggleWorkflowEditModal');
-                        if (!_this.get("workflowID"))
-                            _this.set("workflowName", 'Untitled Workflow - ' + new Date());
-                    }
+                    }                  
                 }
                 //Enumerable.From(data.get('workflows')).Where("f=>f.get('
                 //var data = recurseGraphData(sel, array, this, 1, depthMax, nodeMax, 'node');
