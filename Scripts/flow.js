@@ -1358,7 +1358,10 @@ App.GraphRoute = Ember.Route.extend({
             //TODO WORKFLOW
             m.graphData = { nodes: [], edges: [] };
             m.workflow = this.store.find('workflow', m.params.workflowID);
-            m.workflows = Em.A([m.workflow]);
+            m.workflow.then(function (item) {
+                m.workflows = Em.A([{ id: item.get('id'), name: item.get('name'), humanName: item.get('humanName'), firstNode: item.get('firstNode') }]);
+            });
+            
 
         }
      
