@@ -1271,7 +1271,7 @@ App.GraphRoute = Ember.Route.extend({
         id = id.toLowerCase(); // just in case
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id }),
-            selectedid: id,
+            selectedID: id,
             content: '',
             label: '',
             editing: false,  // This gets passed to visjs to enable/disable editing dependig on context
@@ -1282,10 +1282,8 @@ App.GraphRoute = Ember.Route.extend({
         Em.run.sync();
         if (m.data) {
             //Get the selected item from m.data 
-            var selected = Enumerable.From(m.data.content).Where("f=>f.id==='" + m.selectedid + "'").Single();
-            m.content = selected.get('content');
-            m.label = selected.get('label');
-            m.humanName = selected.get('humanName');
+            m.selected = Enumerable.From(m.data.content).Where("f=>f.id==='" + m.selectedID + "'").Single();
+
 
             // get data bitch equiv
             var _this = this;
@@ -1396,8 +1394,10 @@ App.GraphController = Ember.ObjectController.extend({
       
     }.observes('model', 'selected', 'node.@each.workflows'),
     changeSelected: function () {
-        this.transitionToRoute('graph', this.get('model.selectedid'));
-    }.observes('model.selectedid'),
+        //alert('')
+     
+     this.transitionToRoute('graph', this.get('model.selectedID'));
+    }.observes('model.selectedID'),
 
     checkWorkflowName: function () {
         var _this = this;
@@ -1428,7 +1428,7 @@ App.GraphController = Ember.ObjectController.extend({
         }
         _this.set('loadingNewName', true);
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('newName').trim()) + '?guid=' + _this.get('selectedid')
+            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('newName').trim()) + '?guid=' + _this.get('selectedID')
               ).then(function (data) {
                   _this.set('loadingNewName', false);
                   Ember.run(null, resolve, data);
@@ -1449,7 +1449,7 @@ App.GraphController = Ember.ObjectController.extend({
         }
         _this.set('loadingExistingName', true);
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('model.label').trim()) + '?guid=' + _this.get('selectedid')
+            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('model.label').trim()) + '?guid=' + _this.get('selectedID')
               ).then(function (data) {
                   _this.set('loadingExistingName', false);
                   Ember.run(null, resolve, data);
@@ -1490,9 +1490,9 @@ App.GraphController = Ember.ObjectController.extend({
 
             newWorkflow.save().then(function () {
                 Messenger().post({ type: 'success', message: 'Successfully Added Workflow' });
-                var newNode = App.Node.store.getById('node', _this.get('selectedid'));
+                var newNode = App.Node.store.getById('node', _this.get('selectedID'));
                 if (typeof newNode === 'undefined' || !newNode)
-                    newNode = App.Node.store.createRecord('node', { id: _this.get('selectedid'), label: _this.get('newName'), content: _this.get('newContent'), VersionUpdated: Ember.Date.parse(new Date()) });
+                    newNode = App.Node.store.createRecord('node', { id: _this.get('selectedID'), label: _this.get('newName'), content: _this.get('newContent'), VersionUpdated: Ember.Date.parse(new Date()) });
                 var model = _this.get('model');
                 if (model) {
                     newNode.set('label', model.label);

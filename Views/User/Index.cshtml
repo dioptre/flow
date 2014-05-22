@@ -760,7 +760,7 @@
                         The process name:
                     </p>
                         {{#if model}}
-                            {{eui-input valueBinding="model.label" placeholder='Enter a process name' error=validateExistingName forceErrorCheck=true}}
+                            {{eui-input valueBinding="model.selected.label" placeholder='Enter a process name' error=validateExistingName forceErrorCheck=true}}
                         {{else}}
                             {{eui-input valueBinding="newName" placeholder='Enter a process name' error=validateNewName forceErrorCheck=true}}
                         {{/if}}
@@ -769,8 +769,9 @@
                         The process detail:
                     </p>
                         {{#if model}}
-                            {{tinymce-editor data=model.content}}
+                            {{tinymce-editor data=model.selected.content}}
                         {{else}}
+                            {{! WHAT"S GPOING ON HERE TODO}}
                             {{tinymce-editor data=newContent}}
                         {{/if}}
                     {{eui-button label="Cancel" action="toggleWorkflowEditModal" size='large'}}
@@ -793,11 +794,11 @@
                 {{/eui-modal}}
 
 
-                        {{safehtml model.content}}
+                        {{safehtml model.selected.content}}
 
             </div>
               <div class="col-md-6">
-                  {{viz-editor data=graphData selected=selected editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
+                  {{viz-editor data=graphData selected=selectedID editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
               </div>
            </div>
         </div>
