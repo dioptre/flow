@@ -34,20 +34,20 @@ App.WorkflowRoute = Ember.Route.extend({
     },
     afterModel: function (m) {
         if (m === null) {
-            this.controllerFor('application').set('workflowID', NewGUID());
-            return this.transitionTo('graph', NewGUID());
+            //this.controllerFor('application').set('workflowID', NewGUID());
+            return this.transitionTo('graph', NewGUID(), { queryParams: {workflowID: NewGUID()}});
         }
         var fn = m.get('firstNode');
         var id = m.get('id');
         if (typeof fn !== 'undefined' && fn) {
-            this.controllerFor('application').set('workflowID', id);
-            return this.transitionTo('graph', fn);
+            //this.controllerFor('application').set('workflowID', id);
+            return this.transitionTo('graph', fn, { queryParams: {workflowID: id }});
         }
         else {
             if (!id)
                 id = NewGUID();
-            this.controllerFor('application').set('workflowID', id);
-            return this.transitionTo('graph', NewGUID());
+            //this.controllerFor('application').set('workflowID', id);
+            return this.transitionTo('graph', NewGUID(), { queryParams: { workflowID: id } });
 
         }
     }
@@ -402,15 +402,15 @@ App.LoginController = Ember.Controller.extend({
 })
 
 App.ApplicationController = Ember.Controller.extend({
-    queryParams: ['workflowID'],
-    workflowID: null,
+    ////queryParams: ['workflowID'],
+    //workflowID: null,
     currentPathDidChange: function () {
         window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
         var currentPath = this.get('currentPath');
 
-        if (currentPath !== "graph" && currentPath !== "workflow") { // remove workflow id query param unless on graph/wk route
-            this.set('workflowID', null)
-        }
+        //if (currentPath !== "graph" && currentPath !== "workflow") { // remove workflow id query param unless on graph/wk route
+        //    this.set('workflowID', null)
+        //}
         App.set('currentPath', currentPath);  // Set path to the top
     }.observes('currentPath'), // This set the current path App.get('currentPath');
     isLoggedIn: false,
@@ -1326,6 +1326,7 @@ App.GraphRoute = Ember.Route.extend({
 
 
 App.GraphController = Ember.ObjectController.extend({
+    queryParams: ['workflowID'],
     newName: null,
     newContent: null,
     workflowNewModal: false, // up to here is for new ones
