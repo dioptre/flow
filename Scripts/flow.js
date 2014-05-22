@@ -426,6 +426,7 @@ App.ApplicationController = Ember.Controller.extend({
                 // _this.transitionToRoute('login');
                 // Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
                 $.cookie('showLoggedOutModal', true);
+                window.location.hash = '#/login'
                 location.reload();
             }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -446,8 +447,8 @@ App.ApplicationView = Ember.View.extend({
 
         if ($.cookie('showLoggedOutModal') === true) {
             $.cookie('showLoggedOutModal', false);
-            // _this.transitionToRoute('login');
             Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
+            //_this.transitionToRoute('login');
         }
 
 
