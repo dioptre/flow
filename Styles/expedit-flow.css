@@ -314,13 +314,7 @@ span.graph-manipulationUI:hover {
   float: left;
 }
 
-/* Make logo look better */
-.navbar-brand img {
-    max-height: 27px;
-}
-.navbar-brand {
-  padding: 9px 20px !important;
-}
+
 
 
 .messenger-expedit {
@@ -331,13 +325,8 @@ span.graph-manipulationUI:hover {
     z-index: 1000000000 !important;
 }
 
-.warning {
-    color:rgb(167, 20, 20) !important;
-}
 
-.success-lock {
-    color:rgb(167, 20, 20) !important;
-}
+
 
 
 .content {
@@ -347,11 +336,31 @@ span.graph-manipulationUI:hover {
 }
 
 
+/* Navbar stuff from here !!! */
+
+/* Make logo look better */
+.navbar-brand img {
+    max-height: 27px;
+}
+.navbar-brand {
+  padding: 9px 20px !important;
+}
+@media all and (max-width: 769px) {
+  .navbar-brand {
+    margin-top: 7px;
+  }
+}
+
+
+.warning { color:rgb(167, 20, 20) !important; } /* FOr nav icons */
+.success-lock { color: rgb(53, 158, 61) !important; }
+
+
 /* Hack fix if only one item in menubar */
 .navbar-inverse .nav > li > a {
     border-left: none;
     padding-top: 9px; /*maybe*/
 }
 .navbar-inverse .navbar-toggle {
-  margin-top: 5px;
+  margin-top: 14px;
 }

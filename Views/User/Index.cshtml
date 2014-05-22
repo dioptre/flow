@@ -482,11 +482,12 @@
             </a>
         </div>
 
-        <ul class="nav navbar-nav pull-right">
+        <ul class="nav navbar-nav pull-right"> <!--hidden-xs-->
             {{#if isLoggedIn}}
-                <li class="dropdown hidden-xs">
+                <!-- This is for desktop -->
+                <li class="settings dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <i class="icon-lock success-lock"></i> &nbsp;
+                        <span><i class="icon-lock success-lock"></i></span> &nbsp;
                         {{userProfile.UserName}} <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
@@ -497,7 +498,7 @@
                     </ul>
                 </li>
             {{else}}
-                <li class="settings hidden-xs">
+                <li class="settings ">
                     {{#link-to 'login'}}
                         <i class="icon-unlock warning"></i> &nbsp;
                          Login
@@ -728,7 +729,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-12 process-header">
-                   <h1>{{#if model.selected}}{{humanReadableName}}{{else}}{{newName}}{{/if}}
+                   <h1>{{#if model.selected}}{{humanReadableName}}{{/if}}
 
                             <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
                                 <i class="icon-pencil"></i> Edit Process
@@ -737,10 +738,10 @@
 
                     <h3>
                         <small>
-                            {{#if model.workflow}}
+                            {{#if model.workflow.name}}
                                 {{model.workflow.name}} Workflow
                            {{else}}
-                                Current process has not workflow yet. Please choose a workflow name.
+                                Current process has no workflow yet. Please choose a workflow name.
                             {{/if}}
                         </small>
                     </h3>
@@ -763,7 +764,7 @@
                         {{#if model}}
                             {{eui-input valueBinding="model.selected.label" placeholder='Enter a process name' error=validateExistingName forceErrorCheck=true}}
                         {{else}}
-                            {{eui-input valueBinding="newName" placeholder='Enter a process name' error=validateNewName forceErrorCheck=true}}
+                            {{eui-input valueBinding="model.selected.name" placeholder='Enter a process name' error=validateNewName forceErrorCheck=true}}
                         {{/if}}
                      <br /><br />
                     <p>
@@ -784,7 +785,7 @@
                     <p>
                         The new process name:
                     </p>
-                    {{eui-input valueBinding="newName" placeholder='Enter a new process name' error=validateNewName forceErrorCheck=true}} <br /><br />
+                    {{eui-input valueBinding="model.selected.name" placeholder='Enter a new process name' error=validateNewName forceErrorCheck=true}} <br /><br />
                     <p>
                         The new process detail:
                     </p>
