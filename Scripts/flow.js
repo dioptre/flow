@@ -26,7 +26,6 @@ App.Router.map(function () {
 
 
 App.WorkflowRoute = Ember.Route.extend({
-    needs: ['application'],
     model: function (params) {
         if (params.id === 'undefined') {
             return null;
@@ -35,18 +34,21 @@ App.WorkflowRoute = Ember.Route.extend({
     },
     afterModel: function (m) {
         if (m === null) {
-            //_this.set('controllers.application.workflowID', NewGUID());
+            this.controllerFor('application').set('workflowID', NewGUID());
             return this.transitionTo('graph', NewGUID());
-             
         }
-
-        var _this = this;
         var fn = m.get('firstNode');
         var id = m.get('id');
-
         if (typeof fn !== 'undefined' && fn) {
-            //_this.set('controllers.application.workflowID', id);
-            _this.transitionTo('graph', fn);
+            this.controllerFor('application').set('workflowID', id);
+            return this.transitionTo('graph', fn);
+        }
+        else {
+            if (!id)
+                id = NewGUID();
+            this.controllerFor('application').set('workflowID', id);
+            return this.transitionTo('graph', NewGUID());
+
         }
     }
 });
@@ -1286,7 +1288,7 @@ App.GraphRoute = Ember.Route.extend({
                 m.label = '';
                 m.editing = false;
                 m.humanName = '';
-                //controller.set('graphData', { nodes: [], edges: [] });
+                //this.controllerFor('graph').set('graphData', { nodes: [], edges: [] });
                 //m.node = null;
                 //if (!_this.get("workflowID"))
                   //  _this.set("workflowName", 'Untitled Workflow - ' + new Date());
