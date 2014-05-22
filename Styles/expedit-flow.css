@@ -298,6 +298,16 @@ span.graph-manipulationUI:hover {
   height: 65vh;
 }
 
+.vis-component > div {
+    height: 100%;
+    width: 100%;
+    display: block;
+    padding-bottom: 35px;
+    max-height: 720px;
+}
+
+
+
 /* A few fixes for login page */
 .login-wrapper {
   position: absolute;
