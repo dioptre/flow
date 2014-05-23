@@ -765,7 +765,7 @@
                         <small>
                             {{#if model.workflow.name }}
                                 {{#if workflowGte2}}
-                                {{eui-select options=model.workflows valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='small'}}
+                                {{eui-select optionsBinding=model.workflows valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='small'}}
                                 {{else}}
                                     {{model.workflow.name}}
                                 {{/if}}

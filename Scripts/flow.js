@@ -1537,6 +1537,8 @@ App.GraphController = Ember.ObjectController.extend({
     actions: {
         updateWorkflowNameNow: function(){
             //new name - model.workflow.name
+            //debugger;
+
             var _this = this;
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
             if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
@@ -1548,9 +1550,12 @@ App.GraphController = Ember.ObjectController.extend({
             newWorkflow.save().then(function (data) {
                 Messenger().post({ type: 'success', message: "Workflow successfully renamed." })
 
-                if (this.get('workflowGte2')) {
-                    var workflowzzz = _this.get('model.workflows')
-                    debugger
+                if (_this.get('workflowGte2')) {
+                    Enumerable.From(_this.get('model.workflows')).Where("f=>f.id==='" + _this.get('workflowID') + "'").Single().name = _this.get('model.workflow.name');
+                    // _this.refresh();
+                    location.reload();
+
+                    // this.get('model.workflows').findProperty('id', this.get('workflowID')) - don't need linq.zzz
                 }
 
                 _this.set('workflowEditNameModal', false);

@@ -1345,12 +1345,134 @@ namespace EXPEDIT.Flow.Services {
 
         public UserProfileViewModel GetMyProfile()
         {
-            return null;
+            var contact = _users.ContactID;
+            if (contact == null)
+                return null;
+            var application = _users.ApplicationID;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var r = (from o in d.Contacts
+                         where o.ContactID == contact.Value && o.Version == 0 && o.VersionDeletedBy == null
+                         select o).Single();
+                var c = new UserProfileViewModel
+                {
+                    ContactID = r.ContactID,
+                    ContactName = r.ContactName,
+                    Title = r.Title,
+                    Surname = r.Surname,
+                    Firstname = r.Firstname,
+                    Username = r.Username,
+                    Hash = r.Hash,
+                    DefaultEmail = r.DefaultEmail,
+                    DefaultEmailValidated = r.DefaultEmailValidated,
+                    DefaultMobile = r.DefaultMobile,
+                    DefaultMobileValidated = r.DefaultMobileValidated,
+                    MiddleNames = r.MiddleNames,
+                    Initials = r.Initials,
+                    DOB = r.DOB,
+                    BirthCountryID = r.BirthCountryID,
+                    BirthCity = r.BirthCity,
+                    AspNetUserID = r.AspNetUserID,
+                    XafUserID = r.XafUserID,
+                    OAuthID = r.OAuthID,
+                    Photo = r.Photo,
+                    ShortBiography = r.ShortBiography
+                };
+
+                var address = (from o in d.ContactAddresses where o.ContactID == contact && o.Version == 0 && o.VersionDeletedBy == null && o.Address.Version == 0 && o.Address.VersionDeletedBy == null orderby o.VersionUpdated descending select o.Address).FirstOrDefault();
+                if (address != null)
+                {
+                    c.AddressID = address.AddressID;
+                    c.AddressTypeID = address.AddressTypeID;
+                    c.AddressName = address.AddressName;
+                    c.Sequence = address.Sequence;
+                    c.Street = address.Street;
+                    c.Extended = address.Extended;
+                    c.City = address.City;
+                    c.State = address.State;
+                    c.Country = address.Country;
+                    c.Postcode = address.Postcode;
+                    c.IsHQ = address.IsHQ;
+                    c.IsPostBox = address.IsPostBox;
+                    c.IsBusiness = address.IsBusiness;
+                    c.IsHome = address.IsHome;
+                    c.Phone = address.Phone;
+                    c.Fax = address.Fax;
+                    c.Email = address.Email;
+                    c.Mobile = address.Mobile;
+                    c.LocationID = address.LocationID;
+
+                }
+                return c;
+            }
         }
 
-        public bool UpdateProfile(UserProfileViewModel user)
+        public bool UpdateProfile(UserProfileViewModel m)
         {
-            return false;
+            var contact = _users.ContactID;
+            var application = _users.ApplicationID;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                //Ensure only owner can change details
+                if (m.ContactID.HasValue && m.ContactID.Value != contact)
+                    return false;
+                var c = (from o in d.Contacts where o.Version == 0 && o.VersionDeletedBy == null && o.ContactID == contact select o).Single();
+                var a = (from o in d.ContactAddresses where o.ContactID == contact && o.Version == 0 && o.VersionDeletedBy == null && o.Address.Version == 0 && o.Address.VersionDeletedBy == null orderby o.VersionUpdated descending select o.Address).FirstOrDefault();
+                if (a == null)
+                {
+                    a = new Address
+                    {
+                        AddressID = Guid.NewGuid(),
+                        VersionUpdated = DateTime.UtcNow
+                    };
+                    var ca = new ContactAddress
+                    {
+                        ContactAddressID = Guid.NewGuid(),
+                        AddressID = a.AddressID,
+                        ContactID = contact,
+                        VersionUpdated = DateTime.UtcNow
+                    };
+                    a.ContactAddresses.Add(ca);
+                    d.Addresses.AddObject(a);
+                }
+                if (!string.IsNullOrWhiteSpace(m.Title) && c.Title != m.Title)
+                    c.Title = m.Title;
+                if (!string.IsNullOrWhiteSpace(m.Firstname) && c.Firstname != m.Firstname)
+                    c.Firstname = m.Firstname;
+                if (!string.IsNullOrWhiteSpace(m.Surname) && c.Surname != m.Surname)
+                    c.Surname = m.Surname;
+                if (!string.IsNullOrWhiteSpace(m.DefaultEmail) && c.DefaultEmail != m.DefaultEmail)
+                {
+                    if (!_users.UpdateUserEmail(m.DefaultEmail))
+                        return false;
+                    c.DefaultEmail = m.DefaultEmail;
+                }
+                if (!string.IsNullOrWhiteSpace(m.DefaultEmail) && a.Email != m.DefaultEmail)
+                    a.Email = m.DefaultEmail; //Use the same email
+                if (!string.IsNullOrWhiteSpace(m.DefaultMobile) && c.DefaultMobile != m.DefaultMobile)
+                    c.DefaultMobile = m.DefaultMobile;
+                if (!string.IsNullOrWhiteSpace(m.DefaultMobile) && a.Mobile != m.DefaultMobile)
+                    a.Mobile = m.DefaultMobile; //Use the same mobile
+                if (a.AddressName != m.AddressName)
+                    a.AddressName = m.AddressName; //Company Name
+                if (!string.IsNullOrWhiteSpace(m.Street) && a.Street != m.Street)
+                    a.Street = m.Street;
+                if (a.Extended != m.Extended)
+                    a.Extended = m.Extended;
+                if (!string.IsNullOrWhiteSpace(m.City) && a.City != m.City)
+                    a.City = m.City;
+                if (!string.IsNullOrWhiteSpace(m.State) && a.State != m.State)
+                    a.State = m.State;
+                if (!string.IsNullOrWhiteSpace(m.Country) && a.Country != m.Country)
+                    a.Country = m.Country;
+                if (!string.IsNullOrWhiteSpace(m.Postcode) && a.Postcode != m.Postcode)
+                    a.Postcode = m.Postcode;
+
+                d.SaveChanges();
+                return true;
+            }           
         }
 
         public void Creating(UserContext context) { }
