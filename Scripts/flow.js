@@ -2197,7 +2197,20 @@ App.Node = DS.Model.extend({
     }.property(),
     group: function () {
         //return 'x';
-        return Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
+        //TODO: Show diff colours for start and end
+        var gid = '';
+        var found = false;
+        var _this = this;
+        this.store.filter(App.Edge, {}, function (x) { if (_this.id == x.get('to')) found = true; })
+        console.log(this.get('id'))
+        if (!found)
+            gid = '__BEGIN';
+        else
+            gid = Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
+        if (!gid || gid.trim() === '')
+            gid = 'ZZZZEND';
+        console.log(gid);
+        return gid;
     }.property(),
     humanName: function () {
         var temp = this.get('label');
