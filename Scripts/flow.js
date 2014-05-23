@@ -1547,6 +1547,12 @@ App.GraphController = Ember.ObjectController.extend({
                 newWorkflow.set('name', this.get('model.workflow.name'));
             newWorkflow.save().then(function (data) {
                 Messenger().post({ type: 'success', message: "Workflow successfully renamed." })
+
+                if (this.get('workflowGte2')) {
+                    var workflowzzz = _this.get('model.workflows')
+                    debugger
+                }
+
                 _this.set('workflowEditNameModal', false);
             }, function () {
                 Messenger().post({ type: 'error', message: "Rename failed. Try again please." })

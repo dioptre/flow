@@ -429,6 +429,45 @@ namespace EXPEDIT.Flow.Controllers {
 
         }
 
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("MyLicenses")]
+        public ActionResult GetMyLicenses(string id)
+        {
+            return new JsonHelper.JsonNetResult(new { myLicenses = _Flow.GetMyLicenses() }, JsonRequestBehavior.AllowGet);
+
+        }
+
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("MyProfile")]
+        public ActionResult GetMyProfile(string id)
+        {
+            return new JsonHelper.JsonNetResult(new { myProfile = _Flow.GetMyProfile() }, JsonRequestBehavior.AllowGet);
+
+        }
+
+
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("MyProfile")]
+        public ActionResult UpdateMyProfile(UserProfileViewModel m)
+        {
+            if (!User.Identity.IsAuthenticated)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            if (m.myProfile != null)
+            {
+                if (m.ContactID.HasValue)
+                    m.myProfile.ContactID = m.ContactID;
+                m = m.myProfile;
+            }
+            if (_Flow.UpdateProfile(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+        }
+
         [Authorize]
         [Themed(false)]
         [HttpPost]

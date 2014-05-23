@@ -58,6 +58,12 @@ namespace EXPEDIT.Flow.Services
          bool CheckPayment();
 
          [OperationContract]
+         UserProfileViewModel GetMyProfile();
+
+         [OperationContract]
+         bool UpdateProfile(UserProfileViewModel user);
+
+         [OperationContract]
          ContactViewModel GetMyInfo();
 
          [OperationContract]
@@ -83,6 +89,9 @@ namespace EXPEDIT.Flow.Services
 
          [OperationContract]
          bool AssignLicense(Guid userid, Guid licenseid);
+
+         [OperationContract]
+         IEnumerable<EXPEDIT.Flow.ViewModels.LicenseViewModel> GetMyLicenses();
 
 
     }

@@ -763,8 +763,12 @@
 
                     <h4>
                         <small>
-                            {{#if model.workflow.name}}
+                            {{#if model.workflow.name }}
+                                {{#if workflowGte2}}
                                 {{eui-select options=model.workflows valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='small'}}
+                                {{else}}
+                                    {{model.workflow.name}}
+                                {{/if}}
                            {{else}}
                                 Current process has no workflow yet. Please choose a workflow name.
                             {{/if}}

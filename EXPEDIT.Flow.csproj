@@ -3116,7 +3116,7 @@
     <Compile Include="Services\IFlowService.cs" />
     <Compile Include="Services\FlowService.cs" />
     <Compile Include="Services\XmlRpcHandler.cs" />
-    <Compile Include="ViewModels\ContactViewModel.cs" />
+    <Compile Include="ViewModels\UserProfileViewModel.cs" />
     <Compile Include="ViewModels\LicenseViewModel.cs" />
     <Compile Include="ViewModels\SecurityViewModel.cs" />
     <Compile Include="ViewModels\WikiViewModel.cs" />

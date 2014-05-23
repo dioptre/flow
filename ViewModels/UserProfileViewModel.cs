@@ -8,6 +8,7 @@ namespace EXPEDIT.Flow.ViewModels
 {
     public class UserProfileViewModel
     {
+        public UserProfileViewModel myProfile { get; set; }
         [HiddenInput, Required, DisplayName("Contact ID:")]
         public Guid? ContactID { get; set; }
         public string ContactName { get; set; }

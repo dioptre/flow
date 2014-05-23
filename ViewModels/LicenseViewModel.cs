@@ -11,6 +11,7 @@ namespace EXPEDIT.Flow.ViewModels
     [JsonObject]
     public class LicenseViewModel 
     {
+        public LicenseViewModel myLicense { get; set; }
         [HiddenInput, Required, DisplayName("License ID:")]
         public Guid? LicenseID { get; set; }
         public Guid? CompanyID { get; set; }
@@ -39,7 +40,7 @@ namespace EXPEDIT.Flow.ViewModels
         public decimal? ValidForDuration { get; set; }
         public Guid? ValidForUnitID { get; set; }
         public string ValidForUnitName { get; set; }
-        public decimal ProRataCost { get; set; }
+        public decimal? ProRataCost { get; set; }
         public Guid? ModelID { get; set; }
         public string ModelName { get; set; }
         public string ModelRestrictions { get; set; }

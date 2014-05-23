@@ -39,7 +39,7 @@ using Orchard.Users.Events;
 using NKD.ViewModels;
 
 namespace EXPEDIT.Flow.Services {
-    
+
     [UsedImplicitly]
     public class FlowService : IFlowService, Orchard.Users.Events.IUserEventHandler
     {
@@ -57,11 +57,11 @@ namespace EXPEDIT.Flow.Services {
         public ILogger Logger { get; set; }
 
         public FlowService(
-            IContentManager contentManager, 
-            IOrchardServices orchardServices, 
-            IMessageManager messageManager, 
-            IScheduledTaskManager taskManager, 
-            IUsersService users, 
+            IContentManager contentManager,
+            IOrchardServices orchardServices,
+            IMessageManager messageManager,
+            IScheduledTaskManager taskManager,
+            IUsersService users,
             IMediaService media)
         {
             _orchardServices = orchardServices;
@@ -77,11 +77,11 @@ namespace EXPEDIT.Flow.Services {
         public Localizer T { get; set; }
 
 
-        public IEnumerable<SearchViewModel> Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow,  DateTime? dateFrom = default(DateTime?), DateTime? dateUntil = default(DateTime?), string viewport = null)
+        public IEnumerable<SearchViewModel> Search(string query, int? start = 0, int? pageSize = 20, SearchType? st = SearchType.Flow, DateTime? dateFrom = default(DateTime?), DateTime? dateUntil = default(DateTime?), string viewport = null)
         {
             //if no results show wikipedia
             var application = _users.ApplicationID;
-            var contact = _users.ContactID;                
+            var contact = _users.ContactID;
             var company = _users.ApplicationCompanyID;
             //var server = _users.ServerID;
 
@@ -107,110 +107,110 @@ namespace EXPEDIT.Flow.Services {
                         break;
                 }
 
-                    using (var con = new SqlConnection(_users.ApplicationConnectionString))
-                    using (var cmd = new SqlCommand("E_SP_GetSecuredSearch", con))
+                using (var con = new SqlConnection(_users.ApplicationConnectionString))
+                using (var cmd = new SqlCommand("E_SP_GetSecuredSearch", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    //query, contact, application, s, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, start, pageSize, verified, found
+                    var qP = cmd.CreateParameter();
+                    qP.ParameterName = "@text";
+                    qP.DbType = DbType.String;
+                    qP.Value = query;
+                    cmd.Parameters.Add(qP);
+
+                    var qC = cmd.CreateParameter();
+                    qC.ParameterName = "@contactid";
+                    qC.DbType = DbType.Guid;
+                    qC.Value = contact;
+                    cmd.Parameters.Add(qC);
+
+                    var qA = cmd.CreateParameter();
+                    qA.ParameterName = "@applicationid";
+                    qA.DbType = DbType.Guid;
+                    qA.Value = application;
+                    cmd.Parameters.Add(qA);
+
+                    var qT = cmd.CreateParameter();
+                    qT.ParameterName = "@table";
+                    qT.DbType = DbType.String;
+                    qT.Value = table;
+                    cmd.Parameters.Add(qT);
+
+                    var qPS = cmd.CreateParameter();
+                    qPS.ParameterName = "@pageSize";
+                    qPS.DbType = DbType.Int32;
+                    qPS.Value = pageSize;
+                    cmd.Parameters.Add(qPS);
+
+                    var qPI = cmd.CreateParameter();
+                    qPI.ParameterName = "@startRowIndex";
+                    qPI.DbType = DbType.Int32;
+                    qPI.Value = start;
+                    cmd.Parameters.Add(qPI);
+
+                    if (dateFrom.HasValue)
                     {
-                        cmd.CommandType = CommandType.StoredProcedure;
+                        var qdF = cmd.CreateParameter();
+                        qdF.ParameterName = "@dateFrom";
+                        qdF.DbType = DbType.DateTime;
+                        qdF.Value = dateFrom;
+                        cmd.Parameters.Add(qdF);
+                    }
 
-                        //query, contact, application, s, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, start, pageSize, verified, found
-                        var qP = cmd.CreateParameter();
-                        qP.ParameterName = "@text";
-                        qP.DbType = DbType.String;
-                        qP.Value = query;
-                        cmd.Parameters.Add(qP);
+                    if (dateUntil.HasValue)
+                    {
+                        var qdT = cmd.CreateParameter();
+                        qdT.ParameterName = "@dateTo";
+                        qdT.DbType = DbType.DateTime;
+                        qdT.Value = dateUntil;
+                        cmd.Parameters.Add(qdT);
+                    }
 
-                        var qC = cmd.CreateParameter();
-                        qC.ParameterName = "@contactid";
-                        qC.DbType = DbType.Guid;
-                        qC.Value = contact;
-                        cmd.Parameters.Add(qC);
+                    if (!string.IsNullOrWhiteSpace(viewport))
+                    {
+                        var qV = cmd.CreateParameter();
+                        qV.ParameterName = "@viewport";
+                        //qV.DbType =  DbType.String;
+                        //qV.UdtTypeName = "geography";
+                        qV.Value = viewport;
+                        cmd.Parameters.Add(qV);
+                    }
 
-                        var qA = cmd.CreateParameter();
-                        qA.ParameterName = "@applicationid";
-                        qA.DbType = DbType.Guid;
-                        qA.Value = application;
-                        cmd.Parameters.Add(qA);
-
-                        var qT = cmd.CreateParameter();
-                        qT.ParameterName = "@table";
-                        qT.DbType = DbType.String;
-                        qT.Value = table;
-                        cmd.Parameters.Add(qT);
-
-                        var qPS = cmd.CreateParameter();
-                        qPS.ParameterName = "@pageSize";
-                        qPS.DbType = DbType.Int32;
-                        qPS.Value = pageSize;
-                        cmd.Parameters.Add(qPS);
-
-                        var qPI = cmd.CreateParameter();
-                        qPI.ParameterName = "@startRowIndex";
-                        qPI.DbType = DbType.Int32;
-                        qPI.Value = start;
-                        cmd.Parameters.Add(qPI);
-
-                        if (dateFrom.HasValue)
+                    con.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.HasRows)
                         {
-                            var qdF = cmd.CreateParameter();
-                            qdF.ParameterName = "@dateFrom";
-                            qdF.DbType = DbType.DateTime;
-                            qdF.Value = dateFrom;
-                            cmd.Parameters.Add(qdF);
-                        }
-
-                        if (dateUntil.HasValue)
-                        {
-                            var qdT = cmd.CreateParameter();
-                            qdT.ParameterName = "@dateTo";
-                            qdT.DbType = DbType.DateTime;
-                            qdT.Value = dateUntil;
-                            cmd.Parameters.Add(qdT);
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(viewport))
-                        {
-                            var qV = cmd.CreateParameter();
-                            qV.ParameterName = "@viewport";
-                            //qV.DbType =  DbType.String;
-                            //qV.UdtTypeName = "geography";
-                            qV.Value = viewport;
-                            cmd.Parameters.Add(qV);
-                        }
-
-                        con.Open();
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            if (reader.HasRows)
+                            while (reader.Read())
                             {
-                                while (reader.Read())
+                                results.Add(new SearchViewModel
                                 {
-                                     results.Add(new SearchViewModel
-                                     {
-                                         Row = reader[0] as long?,
-                                         TotalRows = reader[1] as int?,
-                                         Score = (reader[2] != null ? decimal.Parse(reader[2].ToString()) : default(decimal?)),
-                                         id = reader[3] as Guid?,
-                                         ReferenceID = reader[4] as Guid?,
-                                         TableType = reader[5] as string,
-                                         Title = reader[6] as string,
-                                         Description = reader[7] as string,
-                                         SpatialJSON = reader[8] as string,
-                                         InternalUrl = reader[9] as string,
-                                         ExternalUrl = reader[10] as string,
-                                         Author = reader[11] as string,                        
-                                         Updated = reader[12] as DateTime?
-                                     });
-                                   
-                                }
+                                    Row = reader[0] as long?,
+                                    TotalRows = reader[1] as int?,
+                                    Score = (reader[2] != null ? decimal.Parse(reader[2].ToString()) : default(decimal?)),
+                                    id = reader[3] as Guid?,
+                                    ReferenceID = reader[4] as Guid?,
+                                    TableType = reader[5] as string,
+                                    Title = reader[6] as string,
+                                    Description = reader[7] as string,
+                                    SpatialJSON = reader[8] as string,
+                                    InternalUrl = reader[9] as string,
+                                    ExternalUrl = reader[10] as string,
+                                    Author = reader[11] as string,
+                                    Updated = reader[12] as DateTime?
+                                });
+
                             }
                         }
-                        con.Close();
-                        
                     }
+                    con.Close();
+
+                }
 
             }
             return results;
-      
+
         }
 
         public WikiViewModel GetWiki(string wikiName, Guid? nid)
@@ -232,11 +232,14 @@ namespace EXPEDIT.Flow.Services {
                 if (id == null)
                     return null;
                 if (isNew)
-                    m = new WikiViewModel { GraphDataID = id.Value, IsNew = true, GraphName = wikiName};
+                    m = new WikiViewModel { GraphDataID = id.Value, IsNew = true, GraphName = wikiName };
                 else
                 {
-                    m = (from o in d.GraphData where o.GraphDataID == id select 
-                             new WikiViewModel {
+                    m = (from o in d.GraphData
+                         where o.GraphDataID == id
+                         select
+                             new WikiViewModel
+                             {
                                  GraphName = o.GraphName,
                                  GraphDataID = o.GraphDataID,
                                  IsNew = false,
@@ -272,7 +275,7 @@ namespace EXPEDIT.Flow.Services {
                     return false; //Can't create blank wiki
                 GraphData g;
                 Guid? creatorContact, creatorCompany;
-                _users.GetCreator(contact, company, out creatorContact, out creatorCompany); 
+                _users.GetCreator(contact, company, out creatorContact, out creatorCompany);
                 if (isNew)
                 {
                     g = new GraphData
@@ -311,12 +314,12 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                if (id.HasValue && d.GraphData.Where(f=>f.GraphDataID==id.Value && f.GraphName == wikiName).Any())
+                if (id.HasValue && d.GraphData.Where(f => f.GraphDataID == id.Value && f.GraphName == wikiName).Any())
                     return false;
                 if (!creatorCompany.HasValue)
                     return d.GraphData.Any(f => (f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null)));
                 else
-                    return d.GraphData.Any(f => (f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany))); 
+                    return d.GraphData.Any(f => (f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany)));
 
             }
         }
@@ -378,14 +381,14 @@ namespace EXPEDIT.Flow.Services {
             isNew = false;
 
             var possibleNodes = (from o in d.GraphData
-                    where ((((!nodeID.HasValue && o.GraphName == nodeName) || (nodeID.HasValue && o.GraphDataID == nodeID.Value)))) && o.Version == 0 && o.VersionDeletedBy == null
-                    select new LinqModels.MinimumGraphData
-                    {
-                        GraphDataID = o.GraphDataID,
-                        VersionAntecedentID = o.VersionAntecedentID,
-                        VersionOwnerCompanyID = o.VersionOwnerCompanyID,
-                        VersionOwnerContactID = o.VersionOwnerContactID
-                    }
+                                 where ((((!nodeID.HasValue && o.GraphName == nodeName) || (nodeID.HasValue && o.GraphDataID == nodeID.Value)))) && o.Version == 0 && o.VersionDeletedBy == null
+                                 select new LinqModels.MinimumGraphData
+                                 {
+                                     GraphDataID = o.GraphDataID,
+                                     VersionAntecedentID = o.VersionAntecedentID,
+                                     VersionOwnerCompanyID = o.VersionOwnerCompanyID,
+                                     VersionOwnerContactID = o.VersionOwnerContactID
+                                 }
                     ).AsEnumerable();
             var bestNode = possibleNodes.FirstOrDefault(f => f.VersionOwnerCompanyID == currentCompany);
             if (bestNode != null)
@@ -397,14 +400,14 @@ namespace EXPEDIT.Flow.Services {
                     root = bestNode;
                 else
                 {
-                    bestNode = possibleNodes.FirstOrDefault(f=> f.VersionOwnerCompanyID != null);
+                    bestNode = possibleNodes.FirstOrDefault(f => f.VersionOwnerCompanyID != null);
                     if (bestNode != null)
                         root = bestNode;
                     else
                         root = possibleNodes.FirstOrDefault();
-                }                        
+                }
             }
-            
+
             if (root != null && permission == ActionPermission.Create)
                 return null;
             var verified = false;
@@ -455,9 +458,9 @@ namespace EXPEDIT.Flow.Services {
             if (!isNew)
             {
                 stat = (from o in d.StatisticDatas
-                            where o.ReferenceID == id && o.TableType == table
-                            && o.StatisticDataName == STAT_NAME_FLOW_ACCESS
-                            select o).FirstOrDefault();
+                        where o.ReferenceID == id && o.TableType == table
+                        && o.StatisticDataName == STAT_NAME_FLOW_ACCESS
+                        select o).FirstOrDefault();
                 if (stat == null)
                 {
                     stat = new StatisticData { StatisticDataID = Guid.NewGuid(), TableType = table, ReferenceID = id, StatisticDataName = STAT_NAME_FLOW_ACCESS, Count = 0 };
@@ -482,8 +485,8 @@ namespace EXPEDIT.Flow.Services {
             name = name.ToSlug();
             var application = _users.ApplicationID;
             var contact = _users.ContactID;
-            var now = DateTime.UtcNow;    
-            var result = new FlowGroupViewModel { };  
+            var now = DateTime.UtcNow;
+            var result = new FlowGroupViewModel { };
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 using (var con = new SqlConnection(_users.ApplicationConnectionString))
@@ -539,12 +542,13 @@ namespace EXPEDIT.Flow.Services {
 
                     int graphs = 0, edges = 1, groups = 2, files = 3, locations = 4, experiences = 5, worktypes = 6;
 
-                    result.Nodes =  (from o in dataset.Tables[graphs].AsEnumerable() 
-                                     select new FlowViewModelDetailed {
-                                         GraphDataID = o[0] as Guid?,
-                                         GraphName = o[1] as string,
-                                         GraphData = o[5] as string
-                                     });
+                    result.Nodes = (from o in dataset.Tables[graphs].AsEnumerable()
+                                    select new FlowViewModelDetailed
+                                    {
+                                        GraphDataID = o[0] as Guid?,
+                                        GraphName = o[1] as string,
+                                        GraphData = o[5] as string
+                                    });
                     result.Edges = (from o in dataset.Tables[edges].AsEnumerable()
                                     select new FlowEdgeViewModel
                                     {
@@ -558,42 +562,42 @@ namespace EXPEDIT.Flow.Services {
                                         Sequence = o[7] as int?
                                     });
                     result.Workflows = (from o in dataset.Tables[groups].AsEnumerable()
-                                    select new FlowEdgeWorkflowViewModel
-                                    {
-                                        GraphDataGroupID = o[0] as Guid?,
-                                        GraphDataGroupName = o[1] as string,
-                                        Comment = o[2] as string
-                                    });
+                                        select new FlowEdgeWorkflowViewModel
+                                        {
+                                            GraphDataGroupID = o[0] as Guid?,
+                                            GraphDataGroupName = o[1] as string,
+                                            Comment = o[2] as string
+                                        });
                     result.Files = (from o in dataset.Tables[files].AsEnumerable()
-                                        select new FlowFileViewModel
-                                        {
-                                            GraphDataFileDataID = o[0] as Guid?,
-                                            GraphDataID = o[1] as Guid?,
-                                            FileDataID = o[2] as Guid?,
-                                            FileName = o[3] as string
-                                        });
-                    result.Locations = (from o in dataset.Tables[locations].AsEnumerable()
-                                    select new FlowLocationViewModel
+                                    select new FlowFileViewModel
                                     {
-                                        GraphDataLocationID = o[0] as Guid?,
+                                        GraphDataFileDataID = o[0] as Guid?,
                                         GraphDataID = o[1] as Guid?,
-                                        LocationID = o[2] as Guid?,
-                                        LocationName = o[3] as string
+                                        FileDataID = o[2] as Guid?,
+                                        FileName = o[3] as string
                                     });
-                    result.Contexts = (from o in dataset.Tables[experiences].AsEnumerable()
-                                        select new FlowContextViewModel
+                    result.Locations = (from o in dataset.Tables[locations].AsEnumerable()
+                                        select new FlowLocationViewModel
                                         {
-                                            GraphDataContextID = o[0] as Guid?,
+                                            GraphDataLocationID = o[0] as Guid?,
                                             GraphDataID = o[1] as Guid?,
-                                            ExperienceID = o[2] as Guid?,
-                                            ExperienceName = o[3] as string
+                                            LocationID = o[2] as Guid?,
+                                            LocationName = o[3] as string
                                         });
-                    result.WorkTypes = (from o in dataset.Tables[worktypes].AsEnumerable()
-                                       select new FlowWorkTypeViewModel
+                    result.Contexts = (from o in dataset.Tables[experiences].AsEnumerable()
+                                       select new FlowContextViewModel
                                        {
-                                           WorkTypeID = o[0] as Guid?,
-                                           WorkTypeName = o[3] as string
+                                           GraphDataContextID = o[0] as Guid?,
+                                           GraphDataID = o[1] as Guid?,
+                                           ExperienceID = o[2] as Guid?,
+                                           ExperienceName = o[3] as string
                                        });
+                    result.WorkTypes = (from o in dataset.Tables[worktypes].AsEnumerable()
+                                        select new FlowWorkTypeViewModel
+                                        {
+                                            WorkTypeID = o[0] as Guid?,
+                                            WorkTypeName = o[3] as string
+                                        });
 
                 }
             }
@@ -625,7 +629,7 @@ namespace EXPEDIT.Flow.Services {
                         if (match.Success)
                             files.Add(Guid.Parse(match.Groups[1].Value));
                     }
-                    (from o in d.GraphDataFileDatas where !files.Contains(o.FileDataID.Value) && o.GraphDataID==m.GraphDataID.Value select o).Delete(); //Delete redundant links
+                    (from o in d.GraphDataFileDatas where !files.Contains(o.FileDataID.Value) && o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
                     var fd = (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).AsEnumerable();
                     foreach (var file in files)
                     {
@@ -655,7 +659,7 @@ namespace EXPEDIT.Flow.Services {
                         if (match.Success)
                             locations.Add(Guid.Parse(match.Groups[1].Value));
                     }
-                    (from o in d.GraphDataLocations where !locations.Contains(o.LocationID.Value) && o.GraphDataID==m.GraphDataID.Value select o).Delete(); //Delete redundant links
+                    (from o in d.GraphDataLocations where !locations.Contains(o.LocationID.Value) && o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
                     var ld = (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).AsEnumerable();
                     foreach (var location in locations)
                     {
@@ -693,7 +697,7 @@ namespace EXPEDIT.Flow.Services {
                 (from o in d.GraphDataContexts where o.GraphDataID == m.GraphDataID select o).Delete();
             }
         }
-        
+
         public bool CreateNode(FlowViewModel m)
         {
             m.GraphName = m.GraphName.ToSlug();
@@ -763,12 +767,12 @@ namespace EXPEDIT.Flow.Services {
                 }
                 ProcessNode(m, d, ref g, creatorContact, creatorCompany, contact, now);
                 g.VersionUpdated = now;
-                g.VersionUpdatedBy = contact;                
+                g.VersionUpdatedBy = contact;
                 d.SaveChanges();
                 return true;
             }
         }
-        
+
         public bool DeleteNode(Guid mid)
         {
             var company = _users.DefaultContactCompanyID;
@@ -792,7 +796,7 @@ namespace EXPEDIT.Flow.Services {
         }
 
         public bool CreateEdge(FlowEdgeViewModel m)
-        {            
+        {
             if (!m.GraphDataRelationID.HasValue || !m.FromID.HasValue || !m.ToID.HasValue || !m.GroupID.HasValue)
                 return false;
             var company = _users.DefaultContactCompanyID;
@@ -894,7 +898,7 @@ namespace EXPEDIT.Flow.Services {
                                 GraphDataGroupID = o.GraphDataGroupID,
                                 GraphDataGroupName = o.GraphDataGroupName,
                                 firstNode = firstNode,
-                                Comment = o.Comment                                
+                                Comment = o.Comment
                             }).FirstOrDefault();
             }
         }
@@ -1003,7 +1007,7 @@ namespace EXPEDIT.Flow.Services {
                          });
                 return m;
             }
-            
+
         }
 
 
@@ -1059,7 +1063,7 @@ namespace EXPEDIT.Flow.Services {
         public IEnumerable<SecurityViewModel> GetMySecurityLists(string tt)
         {
             if (string.IsNullOrWhiteSpace(tt))
-                return new SecurityViewModel[] {};
+                return new SecurityViewModel[] { };
             var company = _users.DefaultContactCompanyID;
             var contact = _users.ContactID;
             var application = _users.ApplicationID;
@@ -1085,8 +1089,8 @@ namespace EXPEDIT.Flow.Services {
                         return new SecurityViewModel[] { };
 
                 }
-                                
-                var m = (from o in d.E_SP_GetSecurityList(application, contact, null, table)                         
+
+                var m = (from o in d.E_SP_GetSecurityList(application, contact, null, table)
                          select new SecurityViewModel
                          {
                              SecurityTypeID = o.SecurityTypeID,
@@ -1146,20 +1150,21 @@ namespace EXPEDIT.Flow.Services {
 
                 if (m.SecurityTypeID.HasValue && m.SecurityTypeID == (uint)SecurityType.WhiteList)
                 {
-                    var delete = (from o in d.SecurityWhitelists where 
-                        o.OwnerApplicationID == application &&
-                        o.OwnerContactID == contact &&
-                        o.OwnerTableType == table &&
-                        o.OwnerReferenceID == m.ReferenceID.Value &&
-                        o.AccessorApplicationID == application &&
-                        (!m.AccessorCompanyID.HasValue || o.AccessorCompanyID == m.AccessorCompanyID) &&
-                        (!m.AccessorProjectID.HasValue || o.AccessorProjectID == m.AccessorProjectID) &&
-                        (!m.AccessorContactID.HasValue || o.AccessorContactID == m.AccessorContactID) &&
-                        (!m.AccessorRoleID.HasValue || o.AccessorRoleID == m.AccessorRoleID)          
-                        select o).ToArray(); //Delete duplicates
+                    var delete = (from o in d.SecurityWhitelists
+                                  where
+                                      o.OwnerApplicationID == application &&
+                                      o.OwnerContactID == contact &&
+                                      o.OwnerTableType == table &&
+                                      o.OwnerReferenceID == m.ReferenceID.Value &&
+                                      o.AccessorApplicationID == application &&
+                                      (!m.AccessorCompanyID.HasValue || o.AccessorCompanyID == m.AccessorCompanyID) &&
+                                      (!m.AccessorProjectID.HasValue || o.AccessorProjectID == m.AccessorProjectID) &&
+                                      (!m.AccessorContactID.HasValue || o.AccessorContactID == m.AccessorContactID) &&
+                                      (!m.AccessorRoleID.HasValue || o.AccessorRoleID == m.AccessorRoleID)
+                                  select o).ToArray(); //Delete duplicates
                     foreach (var del in delete)
                         d.DeleteObject(del);
-                    var sec = new SecurityWhitelist 
+                    var sec = new SecurityWhitelist
                     {
                         SecurityWhitelistID = m.SecurityID.Value,
                         OwnerApplicationID = application,
@@ -1230,7 +1235,7 @@ namespace EXPEDIT.Flow.Services {
                     return true;
                 }
 
-            
+
             }
         }
 
@@ -1243,17 +1248,17 @@ namespace EXPEDIT.Flow.Services {
                 return false;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
-                var d = new NKDC(_users.ApplicationConnectionString, null);            
+                var d = new NKDC(_users.ApplicationConnectionString, null);
                 if (!securityTypeID.HasValue || securityTypeID == (int)SecurityType.WhiteList)
                 {
                     var delete = (from o in d.SecurityWhitelists
                                   where
                                       o.SecurityWhitelistID == sid &&
                                       o.OwnerApplicationID == application &&
-                                      o.OwnerContactID == contact                                   
+                                      o.OwnerContactID == contact
                                   select o).ToArray();
                     foreach (var del in delete)
-                        d.DeleteObject(del);                 
+                        d.DeleteObject(del);
                     d.SaveChanges();
                     return true;
                 }
@@ -1263,7 +1268,7 @@ namespace EXPEDIT.Flow.Services {
                                   where
                                       o.SecurityBlacklistID == sid &&
                                       o.OwnerApplicationID == application &&
-                                      o.OwnerContactID == contact 
+                                      o.OwnerContactID == contact
                                   select o).ToArray();
                     foreach (var del in delete)
                         d.DeleteObject(del);
@@ -1283,7 +1288,7 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                var license = (from o in d.E_SP_GetLicenses(null,null,null,null,null,null,licenseid,null,null,null,null)
+                var license = (from o in d.E_SP_GetLicenses(null, null, null, null, null, null, licenseid, null, null, null, null)
                                select o).FirstOrDefault();
                 if (license == null)
                     return false;
@@ -1293,7 +1298,7 @@ namespace EXPEDIT.Flow.Services {
                 if (c == null)
                     return false;
                 license.LicenseeGUID = c.ContactID;
-                license.LicenseeUsername =c.Username;
+                license.LicenseeUsername = c.Username;
                 d.SaveChanges();
             }
             return true;
@@ -1305,53 +1310,84 @@ namespace EXPEDIT.Flow.Services {
             var contact = _users.ContactID;
             var application = _users.ApplicationID;
             if (contact == null)
-                return new EXPEDIT.Flow.ViewModels.LicenseViewModel[] {};
+                return new EXPEDIT.Flow.ViewModels.LicenseViewModel[] { };
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 return (from o in d.E_SP_GetLicenses(application, contact, null, null, null, null, null, null, null, null, 9999999)
                         select new EXPEDIT.Flow.ViewModels.LicenseViewModel
                         {
-                            LicenseID = o.LicenseID
+                            LicenseID = o.LicenseID,
+                            CompanyID = o.CompanyID,
+                            ContactID = o.ContactID,
+                            LicenseeGUID = o.LicenseeGUID,
+                            LicenseeName = o.LicenseeName,
+                            LicenseeUsername = o.LicenseeUsername,
+                            ApplicationID = o.ApplicationID,
+                            ValidFrom = o.ValidFrom,
+                            Expiry = o.Expiry,
+                            SupportExpiry = o.SupportExpiry,
+                            ValidForDuration = o.ValidForDuration,
+                            ValidForUnitID = o.ValidForUnitID,
+                            ValidForUnitName = o.ValidForUnitName,
+                            ProRataCost = o.ProRataCost,
+                            ModelID = o.ModelID,
+                            ModelName = o.StandardModelName,
+                            ModelRestrictions = o.ModelRestrictions,
+                            ModelPartID = o.ModelPartID,
+                            PartName = o.StandardPartName,
+                            PartRestrictions = o.PartRestrictions,
+                            AssetID = o.AssetID
                         }).AsEnumerable();
             }
         }
 
+
+        public UserProfileViewModel GetMyProfile()
+        {
+            return null;
+        }
+
+        public bool UpdateProfile(UserProfileViewModel user)
+        {
+            return false;
+        }
+
         public void Creating(UserContext context) { }
 
-        public void Created(UserContext context)  { }
+        public void Created(UserContext context) { }
 
         public void LoggedIn(IUser user)
         {
             CacheHelper.Cache.Remove(string.Format(FS_FLOW_CONTACT_ID, _users.ContactID));
             if (_users.ContactID.HasValue && CheckPayment() && !_users.HasPrivateCompanyID)
-            using (new TransactionScope(TransactionScopeOption.Suppress))
-            {
-                var d = new NKDC(_users.ApplicationConnectionString, null);
-                var cid = Guid.NewGuid();
-                var now = DateTime.UtcNow;
-                var c = new Company
+                using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
-                    CompanyID = cid,
-                    CompanyName = cid.ToString(),
-                    PrimaryContactID = _users.ContactID,
-                    VersionUpdated = now,
-                    Comment = "Generated Private Company"
-                };
-                d.Companies.AddObject(c);
-                var e = new Experience
-                {
-                    ExperienceID = Guid.NewGuid(),
-                    ExperienceName = "Private Company - " + _users.Username,
-                    CompanyID = cid,
-                    ContactID = _users.ContactID,
-                    DateStart = now,
-                    IsApproved = true,
-                    VersionUpdated = now
-                };
-                d.Experiences.AddObject(e);
-                d.SaveChanges();
-            }
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var cid = Guid.NewGuid();
+                    var now = DateTime.UtcNow;
+                    var c = new Company
+                    {
+                        CompanyID = cid,
+                        CompanyName = cid.ToString(),
+                        PrimaryContactID = _users.ContactID,
+                        VersionUpdated = now,
+                        Comment = "Generated Private Company"
+                    };
+                    d.Companies.AddObject(c);
+                    var e = new Experience
+                    {
+                        ExperienceID = Guid.NewGuid(),
+                        ExperienceName = "Private Company - " + _users.Username,
+                        CompanyID = cid,
+                        ContactID = _users.ContactID,
+                        DateStart = now,
+                        IsApproved = true,
+                        VersionUpdated = now
+                    };
+                    d.Experiences.AddObject(e);
+                    d.SaveChanges();
+                }
         }
 
         public void LoggedOut(IUser user) { }
@@ -1366,6 +1402,6 @@ namespace EXPEDIT.Flow.Services {
 
         public void Approved(IUser user) { }
 
-       
+
     }
 }
