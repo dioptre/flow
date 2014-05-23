@@ -779,7 +779,8 @@
                         </small>
                     </h4>
 
-
+                    <br>
+                    <a {{action 'showExistingNodeModal'}}> Add existing Node </a>
 
                     {{!--{{#each lworkflow in model.workflows}}
                         <li>
@@ -796,6 +797,33 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-6">
+
+
+
+
+                {{#eui-modal openBinding="existingNodeModal"}}
+                    <div style="padding: 50px; text-align: center;">
+                        <h4>Add existing Process</h4>
+
+                        <br>
+                        <p> You can add an existing process by using the input box below: </p>
+                        <br>
+
+                        <b>Add Process:</b><br>
+                        <input id="existingNodesel" style="width: 275px;" class='select2' type='hidden'/>
+
+                        <br>
+                        <br>
+
+                        {{eui-button label="Cancel" action="cancelExistingNodeModal" size='medium'}}
+                        {{eui-button label="Add" action="submitExistingNodeModal" style='primary' size='medium'}}
+                    </div>
+                {{/eui-modal}}
+
+
+
+
+
 
                 {{#eui-modal openBinding="workflowEditNameModal"}}
                  <div style="padding: 50px; text-align: center;">

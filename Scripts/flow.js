@@ -1406,6 +1406,7 @@ App.GraphController = Ember.ObjectController.extend({
     queryParams: ['workflowID'],
     newName: null,
     newContent: null,
+    existingNodeModal: false,
     workflowEditNameModal: false,
     workflowNewModal: false, // up to here is for new ones
     editing: true,
@@ -1452,7 +1453,7 @@ App.GraphController = Ember.ObjectController.extend({
         }
         _this.set('loadingWorkflowName', true);
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            jQuery.getJSON('/Flow/User/WorkflowDuplicate/' + encodeURIComponent(_this.get('model.workflow.name').trim()) + '?guid=' + _this.get('workflowID')
+            jQuery.getJSON('/Flow/WorkflowDuplicate?id=' + encodeURIComponent(_this.get('model.workflow.name').trim()) + '&guid=' + _this.get('workflowID')
               ).then(function (data) {
                   _this.set('loadingWorkflowName', false);
                  Ember.run(null, resolve, data);
@@ -1473,7 +1474,7 @@ App.GraphController = Ember.ObjectController.extend({
         }
         _this.set('loadingNewName', true);
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('model.selected.label').trim()) + '?guid=' + _this.get('selectedID')
+            jQuery.getJSON('/Flow/NodeDuplicate?id=' + encodeURIComponent(_this.get('model.selected.label').trim()) + '&guid=' + _this.get('selectedID')
               ).then(function (data) {
                   _this.set('loadingNewName', false);
                   Ember.run(null, resolve, data);
@@ -1494,7 +1495,7 @@ App.GraphController = Ember.ObjectController.extend({
         }
         _this.set('loadingNewNewName', true);
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('newName').trim()) + '?guid=' + _this.get('selectedID')
+            jQuery.getJSON('/Flow/NodeDuplicate?id=' + encodeURIComponent(_this.get('newName').trim()) + '&guid=' + _this.get('selectedID')
               ).then(function (data) {
                   _this.set('loadingNewNewName', false);
                   Ember.run(null, resolve, data);
@@ -1515,7 +1516,7 @@ App.GraphController = Ember.ObjectController.extend({
         }
         _this.set('loadingExistingName', true);
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            jQuery.getJSON('/Flow/User/NodeDuplicate/' + encodeURIComponent(_this.get('model.label').trim()) + '?guid=' + _this.get('selectedID')
+            jQuery.getJSON('/Flow/NodeDuplicate?id=' + encodeURIComponent(_this.get('model.label').trim()) + '&guid=' + _this.get('selectedID')
               ).then(function (data) {
                   _this.set('loadingExistingName', false);
                   Ember.run(null, resolve, data);
@@ -1535,6 +1536,91 @@ App.GraphController = Ember.ObjectController.extend({
     }.property('validateWorkflowName', 'validateNewName', 'validateExistingName'),
 
     actions: {
+        showExistingNodeModal: function(item){
+
+
+            this.set('existingNodeModal', true); // Show the modal before anything else
+
+            // Make selectbox work after it's been inserted to the view - jquery hackss
+            Ember.run.scheduleOnce('afterRender', this, function(){
+                $('#existingNodesel').select2({
+                    placeholder: "Enter Process...",
+                    minimumInputLength: 2,
+                    tags: true,
+                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                        url: "http://test.miningappstore.com/flow/searches",
+                        dataType: 'json',
+                        multiple: true,
+                        data: function (term, page) {
+                            return {keywords: term, type: 'flow', pageSize: 8, page: page - 1 };
+                        },
+                        results: function (data, page) { // parse the results into the format expected by Select2.
+                            // debugger;
+                            if (data.search.length === 0) {
+                                return { results: [] };
+                            }
+                            var total = data.search[0].TotalRows;
+                            var more = (page * 8) < total;
+                            var results = Enumerable.From(data.search).Select("f=>{id:f.id + f.Title,tag:f.Title}").ToArray();
+                            return { results: results, text: 'tag', more: more };
+                        }
+                    },
+                    formatResult: function(state) {return state.tag; },
+                    formatSelection: function (state) {return state.tag; },
+                    escapeMarkup: function (m) { return m; }
+                });
+            });
+        },
+        submitExistingNodeModal: function(){
+            var _this = this;
+
+            var existingNodes = $('#existingNodesel').val()
+
+
+
+            if (existingNodes !== '') {
+                Enumerable.From(existingNodes.split(',')).ForEach(function (f) {
+                    // check if node already in store???
+                    var id = f.substring(0,36)
+                    var name = f.substring(36)
+
+
+
+                    var result = _this.store.getById('node', id);
+                    if (result === null) {
+                        // need to push record into store
+                        _this.store.push('node', {
+                            id: id,
+                            label: name
+                        });
+                    }
+
+                    // check if already in graph
+                    var currentNodesonScreen = _this.get('model').graphData;
+
+                    var found = false
+                    if (currentNodesonScreen) {
+                         found = (Enumerable.From(currentNodesonScreen.nodes).Any("f=>f.id==='" + f + "'"));
+                    }
+                    if (!found) {
+                        var newNode = _this.store.getById('node', id);
+                        var a = { id: newNode.get('id'), label: newNode.get('label'), shape: newNode.get('shape'), group: newNode.get('group') };
+                        currentNodesonScreen.nodes.push(a);
+                        _this.set('model.graphData.nodes', currentNodesonScreen.nodes.concat([]));
+
+                    } else {
+                        alert('Node already on screen.')
+                    }
+                    debugger;
+                });
+            }
+
+            this.set('existingNodeModal', false);
+        },
+        cancelExistingNodeModal: function(){
+            this.set('existingNodeModal', false);
+        },
         updateWorkflowNameNow: function(){
             //new name - model.workflow.name
             //debugger;
