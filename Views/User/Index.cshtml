@@ -740,18 +740,51 @@
                             </span>
                     </h1>
 
-                    <h3>
+                    {{!--<h4>
                         <small>
                             {{#if model.workflow.name}}
                                 {{model.workflow.name}}
                            {{else}}
                                 Current process has no workflow yet. Please choose a workflow name.
                             {{/if}}
-                        </small>
+
                               <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray'>
                                 <i class="icon-pencil"></i> Edit Workflow name
                             </span>
-                    </h3>
+
+                             - this process is available in {{model.workflows.length}} Workflows. Change current:
+                    {{#if workflowGte2}}
+                        {{view Ember.Select content=model.workflows optionValuePath="content.id" optionLabelPath="content.name" valueBinding="workflowID"}}
+                    {{/if}}
+
+                        </small>
+                    </h4>--}}
+
+
+                    <h4>
+                        <small>
+                            {{#if model.workflow.name}}
+                                {{eui-select options=model.workflows valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='small'}}
+                           {{else}}
+                                Current process has no workflow yet. Please choose a workflow name.
+                            {{/if}}
+
+                              <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray'>
+                                <i class="icon-pencil"></i> Edit Workflow name
+                            </span>
+                        </small>
+                    </h4>
+
+
+
+                    {{!--{{#each lworkflow in model.workflows}}
+                        <li>
+                            {{lworkflow.name}}
+                            {{lworkflow.id}}
+                        </li>
+                    {{/each}}--}}
+
+
                    <hr>
               </div>
             </div>

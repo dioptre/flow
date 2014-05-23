@@ -859,7 +859,6 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
-
         public ContactViewModel GetMyInfo()
         {
             return _users.GetMyInfo();
@@ -1284,12 +1283,38 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                var license = (from o in d.Licenses where o.LicenseID == licenseid select o).SingleOrDefault();
+                var license = (from o in d.E_SP_GetLicenses(null,null,null,null,null,null,licenseid,null,null,null,null)
+                               select o).FirstOrDefault();
                 if (license == null)
                     return false;
-
+                if (license.ContactID != contact)
+                    return false;
+                var c = (from o in d.Contacts where o.AspNetUserID == userid && o.Version == 0 && o.VersionDeletedBy == null select new { o.ContactID, o.Username }).FirstOrDefault();
+                if (c == null)
+                    return false;
+                license.LicenseeGUID = c.ContactID;
+                license.LicenseeUsername =c.Username;
+                d.SaveChanges();
             }
             return true;
+        }
+
+
+        public IEnumerable<EXPEDIT.Flow.ViewModels.LicenseViewModel> GetMyLicenses()
+        {
+            var contact = _users.ContactID;
+            var application = _users.ApplicationID;
+            if (contact == null)
+                return new EXPEDIT.Flow.ViewModels.LicenseViewModel[] {};
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                return (from o in d.E_SP_GetLicenses(application, contact, null, null, null, null, null, null, null, null, 9999999)
+                        select new EXPEDIT.Flow.ViewModels.LicenseViewModel
+                        {
+                            LicenseID = o.LicenseID
+                        }).AsEnumerable();
+            }
         }
 
         public void Creating(UserContext context) { }

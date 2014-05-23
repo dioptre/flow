@@ -33,7 +33,7 @@ App.WorkflowRoute = Ember.Route.extend({
     actions: {
         error: function () {
             Messenger().post({ type: 'error', message: 'Could not find workflow. Ensure you have permission and are logged in.' });
-            Ember.run.later(null, RedirectToLogin, 3000);
+            //Ember.run.later(null, RedirectToLogin, 3000);
         }
     },
     model: function (params) {
@@ -1283,14 +1283,14 @@ App.GraphRoute = Ember.Route.extend({
     actions: {
         error: function(){
             Messenger().post({ type: 'error', message: 'Could not find process. Ensure you have permission and are logged in.' });
-            Ember.run.later(null, RedirectToLogin, 3000);
+            // Ember.run.later(null, RedirectToLogin, 3000); maybe not do a refresh
         }
     },
     model: function (params) {
         var id = params.id;
         id = id.toLowerCase(); // just in case
         return Ember.RSVP.hash({
-            data: this.store.find('node', { id: id }),
+            data: this.store.find('node', { id: id, groupid: params.workflowID }),
             selectedID: id,
             content: '',
             label: '',
@@ -1361,9 +1361,9 @@ App.GraphRoute = Ember.Route.extend({
                     //debugger;
                     prime = Ember.Object.create(prime);
                     m.workflows = Em.A(Enumerable.From(prime.workflows)
-                        .GroupBy("$.id", "", "key,e=>{id: key, name: e.source[0].name, humanName: e.source[0].humanName, firstNode: e.source[0].firstNode}")
+                        .GroupBy("$.id", "", "key,e=>Ember.Object.create({id: key, name: e.source[0].name, humanName: e.source[0].humanName, firstNode: e.source[0].firstNode})")
                       .ToArray());
-                    
+
                     m.workflow = Ember.Object.create(Enumerable.From(m.workflows).Where("f=>f.id==='" + m.params.workflowID + "'").SingleOrDefault());
                     if (typeof m.workflow.get('name') === 'undefined') {
                         m.workflow.set('content').name = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
@@ -1419,6 +1419,7 @@ App.GraphController = Ember.ObjectController.extend({
     loadingWorkflowName: false,
     loadingNewName: false,
     loadingExistingName: false,
+    workflowGte2: Ember.computed.gte('model.workflows.length', 2),
     graphDataLte2: Ember.computed.lte('model.graphData.length', 2),
     fitVis: function(){
         Ember.run.scheduleOnce('afterRender', this, function(){
