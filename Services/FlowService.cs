@@ -50,8 +50,6 @@ namespace EXPEDIT.Flow.Services {
 
         private readonly IOrchardServices _orchardServices;
         private readonly IContentManager _contentManager;
-        private readonly IMessageManager _messageManager;
-        private readonly IScheduledTaskManager _taskManager;
         private readonly IUsersService _users;
         private readonly IMediaService _media;
         public ILogger Logger { get; set; }
@@ -59,15 +57,11 @@ namespace EXPEDIT.Flow.Services {
         public FlowService(
             IContentManager contentManager,
             IOrchardServices orchardServices,
-            IMessageManager messageManager,
-            IScheduledTaskManager taskManager,
             IUsersService users,
             IMediaService media)
         {
             _orchardServices = orchardServices;
             _contentManager = contentManager;
-            _messageManager = messageManager;
-            _taskManager = taskManager;
             _media = media;
             _users = users;
             T = NullLocalizer.Instance;

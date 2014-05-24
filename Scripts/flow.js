@@ -2195,6 +2195,7 @@ App.Node = DS.Model.extend({
     shape: function() {
         return 'ellipse'; // can also us circle
     }.property(),
+    _group : null,
     group: function () {
         //return 'x';
         //TODO: Show diff colours for start and end
@@ -2204,11 +2205,15 @@ App.Node = DS.Model.extend({
         this.store.filter(App.Edge, {}, function (x) { if (_this.id == x.get('to')) found = true; })
         console.log(this.get('id'))
         if (!found)
-            gid = '__BEGIN';
-        else
+            gid = '_BEGIN';
+        else {
             gid = Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
-        if (!gid || gid.trim() === '')
-            gid = 'ZZZZEND';
+            if (!gid || gid.trim() === '')
+                gid = '_END';
+            else if (gid.indexOf(',') < 0)
+                gid = '_COMMON'
+        }
+
         console.log(gid);
         return gid;
     }.property(),
