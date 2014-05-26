@@ -125,7 +125,7 @@ App.MyworkflowsController = Ember.ObjectController.extend({
                     tags: true,
                     //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
                     ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "http://test.miningappstore.com/share/getcompanies",
+                        url: "/share/getcompanies",
                         dataType: 'json',
                         multiple: true,
                         data: function (term, page) {
@@ -150,7 +150,7 @@ App.MyworkflowsController = Ember.ObjectController.extend({
                     tags: true,
                     //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
                     ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "http://test.miningappstore.com/share/getusernames",
+                        url: "/share/getusernames",
                         dataType: 'json',
                         multiple: true,
                         data: function (term, page) {
@@ -254,7 +254,7 @@ App.FileController = Ember.ObjectController.extend({
                     tags: true,
                     //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
                     ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "http://test.miningappstore.com/share/getcompanies",
+                        url: "/share/getcompanies",
                         dataType: 'json',
                         multiple: true,
                         data: function (term, page) {
@@ -279,7 +279,7 @@ App.FileController = Ember.ObjectController.extend({
                     tags: true,
                     //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
                     ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "http://test.miningappstore.com/share/getusernames",
+                        url: "/share/getusernames",
                         dataType: 'json',
                         multiple: true,
                         data: function (term, page) {
@@ -367,7 +367,7 @@ App.LoginController = Ember.Controller.extend({
     rememberme: false,
     password: "",
     bindingChercker: function(){
-        console.log('value changed')
+        //console.log('value changed')
     }.observes('email', 'password', 'rememberme'),
     actions: {
         loginUser: function(){
@@ -388,7 +388,7 @@ App.LoginController = Ember.Controller.extend({
                     _this.set('controllers.application.isLoggedIn', true)
                     // Duplicate code starts here, but works fine
                     $.ajax({
-                      url: "http://test.miningappstore.com/flow/myuserinfo"
+                      url: "/flow/myuserinfo"
                     }).then(function(data){
                         data.UserName = ToTitleCase(data.UserName);
                         _this.set('controllers.application.userProfile', data);
@@ -480,7 +480,7 @@ App.ApplicationView = Ember.View.extend({
                     // Pull in user information if it hasn't been set yet
                     if (result === true) {
                         $.ajax({
-                          url: "http://test.miningappstore.com/flow/myuserinfo"
+                          url: "/flow/myuserinfo"
                         }).then(function(data){
                             data.UserName = ToTitleCase(data.UserName);
                             _this.set('controller.userProfile', data);
@@ -527,7 +527,7 @@ App.ApplicationView = Ember.View.extend({
             state = "webkitVisibilityState";
         }
         document.addEventListener(visibilityChange, function() {
-            console.log('visibilitychange')
+            //console.log('visibilitychange')
             _this.active = true;
             keepActive()
         }, false);
@@ -1549,7 +1549,7 @@ App.GraphController = Ember.ObjectController.extend({
                     tags: true,
                     //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
                     ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "http://test.miningappstore.com/flow/searches",
+                        url: "/flow/searches",
                         dataType: 'json',
                         multiple: true,
                         data: function (term, page) {
@@ -1612,7 +1612,7 @@ App.GraphController = Ember.ObjectController.extend({
                     } else {
                         alert('Node already on screen.')
                     }
-                    debugger;
+                    //debugger;
                 });
             }
 
@@ -1693,7 +1693,7 @@ App.GraphController = Ember.ObjectController.extend({
                 });
             }, function () {
                 if (_this.get('workflowID'))
-                    Messenger().post({type:'error', message:'Error Updating Workflow'});
+                    Messenger().post({type:'error', message:'Error Updating Workflow.'});
                 else
                     Messenger().post({type:'error', message:'Error Adding Workflow'});
             });
@@ -2203,7 +2203,7 @@ App.Node = DS.Model.extend({
         var found = false;
         var _this = this;
         this.store.filter(App.Edge, {}, function (x) { if (_this.id == x.get('to')) found = true; })
-        console.log(this.get('id'))
+        //console.log(this.get('id'))
         if (!found)
             gid = '_BEGIN';
         else {
@@ -2213,8 +2213,7 @@ App.Node = DS.Model.extend({
             else if (gid.indexOf(',') < 0)
                 gid = '_COMMON'
         }
-
-        console.log(gid);
+        //console.log(gid);
         return gid;
     }.property(),
     humanName: function () {
@@ -2567,7 +2566,7 @@ Ember.Handlebars.helper('prettyDate', function (item, options) {
         var obj = Enumerable.From(options.contexts[0].results).Where("$.get('id')=='" + options.data.keywords.result.id + "'").FirstOrDefault();
         if (obj) {
             escaped = moment('' + obj.get(options.data.properties[0].split('.')[1])).format('YYYY-MM-DD @ HH:mm');
-            console.log(escaped);
+            //console.log(escaped);
             if (escaped === 'Invalid date') {
                 return ''
             }

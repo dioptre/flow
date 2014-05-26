@@ -20,7 +20,6 @@ using Orchard.Tasks.Scheduling;
 using Orchard.Data;
 using NKD.Module.BusinessObjects;
 using NKD.Services;
-using Orchard.Media.Services;
 using EXPEDIT.Flow.ViewModels;
 
 using Orchard.DisplayManagement;
@@ -48,21 +47,14 @@ namespace EXPEDIT.Flow.Services {
         public static Guid FLOW_MODEL_ID = new Guid("1DB0B648-D8A7-4FB9-8F3F-B2846822258C");
         public const string FS_FLOW_CONTACT_ID = "{0}:ValidFlowUser";
 
-        private readonly IOrchardServices _orchardServices;
-        private readonly IContentManager _contentManager;
         private readonly IUsersService _users;
-        private readonly IMediaService _media;
         public ILogger Logger { get; set; }
 
         public FlowService(
-            IContentManager contentManager,
             IOrchardServices orchardServices,
-            IUsersService users,
-            IMediaService media)
+            IUsersService users
+            )
         {
-            _orchardServices = orchardServices;
-            _contentManager = contentManager;
-            _media = media;
             _users = users;
             T = NullLocalizer.Instance;
             Logger = NullLogger.Instance;

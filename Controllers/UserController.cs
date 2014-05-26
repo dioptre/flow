@@ -20,7 +20,6 @@ using Orchard.ContentManagement;
 using System.Collections.Generic;
 using System.Linq;
 using Orchard.Mvc;
-using Orchard.MediaLibrary.Services;
 using EXPEDIT.Flow.ViewModels;
 using System.Text.RegularExpressions;
 using Orchard.Security;
@@ -37,24 +36,20 @@ namespace EXPEDIT.Flow.Controllers {
         public ILogger Logger { get; set; }
         private readonly IContentManager _contentManager;
         private readonly ISiteService _siteService;
-        private readonly IMediaLibraryService _mediaLibrary;
 
         public UserController(
             IOrchardServices services,
             IFlowService Flow,
             IContentManager contentManager,
             ISiteService siteService,
-            IShapeFactory shapeFactory,
-            IMediaLibraryService mediaLibrary
+            IShapeFactory shapeFactory
             )
         {
             _Flow = Flow;
             Services = services;
             T = NullLocalizer.Instance;
-
             _contentManager = contentManager;
             _siteService = siteService;
-            _mediaLibrary = mediaLibrary;
         }
 
         public Localizer T { get; set; }
