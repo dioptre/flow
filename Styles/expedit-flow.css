@@ -2,6 +2,7 @@
     margin-top:0px !important;
 }
 #username {display: block !important;}
+#username-email {display: block !important;}
 #email {display: block !important;}
 #password {display: block !important;}
 #confirmPassword {display: block !important;}
