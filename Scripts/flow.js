@@ -2327,6 +2327,7 @@ App.WikipediaRoute = Ember.Route.extend({
     model: function (params) {
         if (typeof params !== 'undefined' && params.id && params.id.indexOf(' ') > 0) {
             this.transitionTo('wikipedia', params.id.replace(/ /ig, "_"));
+            return null;
         }
         //console.log(params.id);
         return Ember.RSVP.hash({
@@ -2377,7 +2378,7 @@ App.WikipediaController = Ember.ObjectController.extend({
     }.observes('model.selected'),
     watchSearch: function () {
         
-        var title = encodeURIComponent(this.get('model.title').trim().replace(/ /ig, "_"));
+        var title = encodeURIComponent(this.get('model.title').replace(/ /ig, "_"));
         if (encodeURIComponent(this.get('selected').replace(/ /ig, "_")) !== title || title !== this.get('model.encodedTitle')) {
             this.transitionToRoute('wikipedia', title);
         }
