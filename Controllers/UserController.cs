@@ -436,17 +436,17 @@ namespace EXPEDIT.Flow.Controllers {
 
         [Themed(false)]
         [HttpGet]
-        [ActionName("MyProfile")]
-        public ActionResult GetMyProfile(string id)
+        [ActionName("MyProfiles")]
+        public ActionResult GetMyProfiles(string id)
         {
-            return new JsonHelper.JsonNetResult(new { myProfile = _Flow.GetMyProfile() }, JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(new { myProfiles = _Flow.GetMyProfile() }, JsonRequestBehavior.AllowGet);
 
         }
 
 
         [Themed(false)]
         [HttpPut]
-        [ActionName("MyProfile")]
+        [ActionName("MyProfiles")]
         public ActionResult UpdateMyProfile(UserProfileViewModel m)
         {
             if (!User.Identity.IsAuthenticated)

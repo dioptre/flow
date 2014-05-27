@@ -29,6 +29,20 @@ App.Router.map(function () {
 });
 
 
+//App.MyAccountRoute = Ember.Route.extend({
+//    model: function () {
+            
+//    }
+//});
+
+
+//App.MyAccountController = Ember.ObjectController.extend({
+//    needs: ['application']
+//})
+
+
+
+
 App.WorkflowRoute = Ember.Route.extend({
     actions: {
         error: function () {
@@ -356,9 +370,7 @@ App.FileController = Ember.ObjectController.extend({
     }
 })
 
-App.MyAccountController = Ember.ObjectController.extend({
-    needs: ['application']
-})
+
 
 
 App.LoginController = Ember.Controller.extend({
@@ -2318,7 +2330,8 @@ App.WikipediaRoute = Ember.Route.extend({
             graphData: this.store.findQuery('wikipedia', params.id),
             selected: params.id,
             content: '',
-            title: ((typeof params.id === 'string' && params.id !== null && params.id.length > 0) ? params.id.replace(/_/g, ' ') : params.id)
+            title: ((typeof params.id === 'string' && params.id !== null && params.id.length > 0) ? decodeURIComponent(params.id).replace(/_/ig, " ") : params.id),
+            encodedTitle: encodeURIComponent(params.id.replace(/ /ig, "_"))
         });
     },
     afterModel: function (m) {
@@ -2360,7 +2373,11 @@ App.WikipediaController = Ember.ObjectController.extend({
         this.transitionToRoute('wikipedia', this.get('model.selected'));
     }.observes('model.selected'),
     watchSearch: function () {
-        this.transitionToRoute('wikipedia', this.get('model.title'));
+        
+        var title = encodeURIComponent(this.get('model.title').trim().replace(/ /ig, "_"));
+        if (encodeURIComponent(this.get('selected').replace(/ /ig, "_")) !== title || title !== this.get('model.encodedTitle')) {
+            this.transitionToRoute('wikipedia', title);
+        }
     }.observes('model.title')
 });
 
