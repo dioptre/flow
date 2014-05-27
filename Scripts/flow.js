@@ -2325,6 +2325,9 @@ App.Wikipedia = DS.Model.extend({
 
 App.WikipediaRoute = Ember.Route.extend({
     model: function (params) {
+        if (typeof params !== 'undefined' && params.id && params.id.indexOf(' ') > 0) {
+            this.transitionTo('wikipedia', params.id.replace(/ /ig, "_"));
+        }
         //console.log(params.id);
         return Ember.RSVP.hash({
             graphData: this.store.findQuery('wikipedia', params.id),
