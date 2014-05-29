@@ -910,6 +910,8 @@ namespace EXPEDIT.Flow.Services {
                     AccessorContactID = _users.ContactID,
                     OwnerTableType = table
                 }, ActionPermission.Create);
+                //if (!verified) //Allow everyone to create, commenting out verification
+                //    return false;
                 if (_users.HasPrivateCompanyID && !CheckPayment())
                 {
                     return false;
@@ -937,6 +939,7 @@ namespace EXPEDIT.Flow.Services {
         {
             if (!m.GraphDataGroupID.HasValue)
                 return false;
+            var applicationCompany = _users.ApplicationCompanyID;
             var company = _users.DefaultContactCompanyID;
             var companies = _users.ContactCompanies;
             var contact = _users.ContactID;
@@ -955,6 +958,10 @@ namespace EXPEDIT.Flow.Services {
                     OwnerReferenceID = m.GraphDataGroupID,
                     OwnerTableType = table
                 }, ActionPermission.Update);
+                if (!verified && obj.VersionOwnerCompanyID.HasValue && obj.VersionOwnerCompanyID != applicationCompany)
+                {
+                    return false;
+                }
                 if (_users.HasPrivateCompanyID && !CheckPayment())
                 {
                     return false;

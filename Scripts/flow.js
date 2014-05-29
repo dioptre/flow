@@ -1313,10 +1313,20 @@ App.GraphRoute = Ember.Route.extend({
     afterModel: function (m) {
         if (m.data && m.data.content && m.data.content.length > 0) {
             //Get the selected item from m.data
-            m.selected = Enumerable.From(m.data.content).Where("f=>f.id==='" + m.selectedID + "'").Single();
-
-
-            // get data bitch equiv
+            m.selected = Enumerable.From(m.data.content).Where("f=>f.id==='" + m.selectedID + "'").FirstOrDefault();
+            if (typeof m.selected === 'undefined') {
+                m.selected = Enumerable.From(m.data.content).FirstOrDefault();
+                if (typeof m.selected === 'undefined') {
+                    if (m.params)
+                        this.transitionTo('graph', NewGUID(), { queryParams: { workflowID: m.params.workflowID } });
+                    else 
+                        this.transitionTo('graph', NewGUID());
+                }
+                else {
+                    this.transitionTo('graph', m.selected.id);
+                }
+                return;
+            }
             var _this = this;
             var array = { nodes: [], edges: [] };
             var depthMax = 15; // currently depthMax is limited to 1 unless the data is already in ember store
@@ -1352,12 +1362,13 @@ App.GraphRoute = Ember.Route.extend({
             var residents = App.Node.store.filter('node', function (record) {
                 return (record.get('edges').content == null || record.get('edges').content.loadingRecordsCount == 0) && typeof record.get('VersionUpdated') !== 'undefined';
             }).then(function (val) {
-                sessionNodes = Enumerable.From(val.content).Select(
-                    function (f) {
-                        return {
-                            id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group')
-                        }
-                    }).ToArray();
+                //Don't show orphans anymore
+                //sessionNodes = Enumerable.From(val.content).Select(
+                //    function (f) {
+                //        return {
+                //            id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group')
+                //        }
+                //    }).ToArray();
             });
 
             Ember.RSVP.allSettled([Ember.RSVP.map(edgePromises, addEdge), Ember.RSVP.map(workflowPromises, getWorkflow), residents])
@@ -1770,18 +1781,35 @@ App.GraphController = Ember.ObjectController.extend({
                     var currentSelected = _this.get('selected');
 
                     var graphData = _this.get('graphData');
-
+                    var removedNode = false;
                     Enumerable.From(graphData.nodes).Where(function (f) {
                         if (data.nodes.indexOf(f.id) > -1)
                             return true;
                         else
                             return false;
                     }).ForEach(function (f) {
+                        removedNode = true;
                         graphData.nodes.removeObject(f);
                     });
-
-                    _this.set('graphData.edges', _this.get('graphData.edges').concat([])); //TODO HACK
+                    if (removedNode) {
+                        var nodeRedirect = Enumerable.From(graphData.nodes).FirstOrDefault();
+                        if (nodeRedirect)
+                            _this.transitionToRoute('graph', nodeRedirect.id);
+                        else
+                            _this.transitionToRoute('graph', data.nodes[0].id);
+                    }
                     _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //TODO HACK
+
+                    Enumerable.From(graphData.edges).Where(function (f) {
+                        if (data.edges.indexOf(f.id) > -1)
+                            return true;
+                        else
+                            return false;
+                    }).ForEach(function (f) {
+                        graphData.edges.removeObject(f);
+                    });
+                    _this.set('graphData.edges', _this.get('graphData.edges').concat([])); //TODO HACK
+
 
                     Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
                     //Enumerable.From(data.edges).ForEach(function (f) {
@@ -2222,8 +2250,8 @@ App.Node = DS.Model.extend({
             gid = Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
             if (!gid || gid.trim() === '')
                 gid = '_END';
-            else if (gid.indexOf(',') < 0)
-                gid = '_COMMON'
+            //else if (gid.indexOf(',') < 0)
+            //    gid = '_COMMON'
         }
         //console.log(gid);
         return gid;
