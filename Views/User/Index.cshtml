@@ -59,7 +59,7 @@
         <!-- lato font -->
         <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css' />
 
-        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/vis.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui-default-theme.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/pace.css">
@@ -781,8 +781,7 @@
                     </h4>
 
                     <br>
-                    <div style="text-align:right"><a {{action 'showExistingNodeModal'}}> Add existing Node </a></div>
-
+                    <div style="text-align:right"><a {{action 'showExistingNodeModal'}}>Add existing Node </a>|<a id="exportWorkflow" onclick="javascript:this.href = $('.graph-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';">Export Workflow</a></div>
                     {{!--{{#each lworkflow in model.workflows}}
                         <li>
                             {{lworkflow.name}}
@@ -1630,6 +1629,7 @@
         </div>
         </script>
         <script type="text/x-handlebars" id="workflow">&nbsp;</script>
+
     </body>
 </html>
 

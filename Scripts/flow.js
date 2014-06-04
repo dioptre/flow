@@ -1344,10 +1344,11 @@ App.GraphRoute = Ember.Route.extend({
                         id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group')
                     }
                 }).ToArray();
-            var addEdge = function (edges) {
+            var addEdge = function (edges) {                
                 if (edges.get('length') > 0) {
                     edges.forEach(function (edge) {
-                        prime.edges.push({ id: edge.get('id'), from: edge.get('from'), to: edge.get('to'), color: edge.get('color'), width: edge.get('width'), style: edge.get('style') });
+                        if (m.params.workflowID == edge.get('GroupID'))
+                            prime.edges.push({ id: edge.get('id'), from: edge.get('from'), to: edge.get('to'), color: edge.get('color'), width: edge.get('width'), style: edge.get('style') });
                     });
                 }
             };
@@ -1394,6 +1395,7 @@ App.GraphRoute = Ember.Route.extend({
                     }
                     delete prime.workflows;
                     m.graphData = prime;
+                    m.graphData.workflowID = m.params.workflowID;
                 });
 
         }
@@ -1763,7 +1765,7 @@ App.GraphController = Ember.ObjectController.extend({
             var _this = this;
             var promises = [];
             Enumerable.From(data.edges).ForEach(function (f) {
-                var m = App.Node.store.getById('edge', f);
+                var m = App.Node.store.getById('edge', f);                
                 if (m)
                     promises.push(m.destroyRecord());
             });
@@ -1899,10 +1901,19 @@ App.VizEditorComponent = Ember.Component.extend({
     setup: function () {
 
         var _this = this;
-
+        var centralGravity = 0.015; //TODO HACK, AG, Less gravity for known graphs
+        if (!IsGUID(this.selected)) {
+            centralGravity = 0.5;
+        }
         var container = $('<div>').appendTo(this.$())[0];
         var data = this.get('vizDataSet');
         var options = {
+            navigation: true,
+            //freezeForStabilization: true,
+            //minVelocity: 5,
+            //clustering: {
+            //    enabled: true
+            //},
             labels:{
                   add:"Add Process",
                   edit:"Edit",
@@ -1920,14 +1931,14 @@ App.VizEditorComponent = Ember.Component.extend({
                   deleteClusterError:"Clusters cannot be deleted."
             },
             //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}},
-            smoothCurves: false,
+            smoothCurves: true,
             //hierarchicalLayout: {enabled:true},
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
             //physics: {barnesHut: {enabled: false}},
             //physics: { barnesHut: { gravitationalConstant: -8425, centralGravity: 0.1, springLength: 150, springConstant: 0.058, damping: 0.3 } },
-            physics: {barnesHut: {gravitationalConstant: -12425, centralGravity: 0.1, springLength: 150, springConstant: 0.05, damping: 0.5}},
+            physics: { barnesHut: { centralGravity: centralGravity, springConstant: 0.01, damping: 0.1, springLength: 170 } },
             stabilize: true,
-            stabilizationIterations: 100,
+            stabilizationIterations: 200,
             dataManipulation: this.get('editing'),
             onAdd: function (data, callback) {
                 _this.sendAction('toggleWorkflowNewModal', data, callback);
@@ -1971,14 +1982,20 @@ App.VizEditorComponent = Ember.Component.extend({
             }
         });
 
+        //this.graph.on('stabilized', function (iterations) {
+        //    _this.graph.zoomExtent(); //Not working?!
+        //});
+        this.graph.scale = 0.82; //Zoom out a little
+
         $(window).resize(function () {
+            _this.graph.zoomExtent(); //Not working?!
             _this.graph.redraw(); // This makes the graph responsive!!!
         });
     },
     dataUpdates: function () {
 
         //console.log('updated')
-
+        //var _this = this;
         if (this.graph === null) {
             this.setup(); // graph hasn't been initialised yet
         }
@@ -2004,12 +2021,12 @@ App.VizEditorComponent = Ember.Component.extend({
             function (value, index) {
                 if (typeof value !== 'undefined' && typeof value.label === 'string')
                     value.label = value.label.replace(/_/g, ' ');
+                value.mass = 1.2;
                 return value;
             }).ToArray();
 
         // Step 2: add all the new nodes & update nodes
         d.nodes.update(md.nodes);
-
 
         // Now same thing for edges
         var delEdges = d.edges.get({
@@ -2024,15 +2041,16 @@ App.VizEditorComponent = Ember.Component.extend({
         d.edges.remove(delEdges);
 
 
-        // This is longer than Step 2 for nodes, as edges with no exisiting nodes need to be filtered out first
         var newEdges = md.edges.filter(function (edge) {
             return (d.nodes.get(edge.from) !== null && d.nodes.get(edge.to) !== null);
         });
-        d.edges.update(newEdges);
 
 
-        // Make sure all items are displayed in view
-        //this.graph.zoomExtent();
+        //Enumerable.From(md.nodes).ForEach(function (f) {
+        //    //Add similar group if in workflow
+        //    //debugger;
+        //});
+        d.edges.update(newEdges);      
 
 
     }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement')
@@ -2763,4 +2781,3 @@ App.TinymceEditorComponent = Ember.Component.extend({
         }
     }.observes('data')
 });
-
