@@ -1332,6 +1332,7 @@ App.GraphRoute = Ember.Route.extend({
                 }
                 return;
             }
+            //document.title = m.selected.get('humanName') + ' - FlowPro';
             var _this = this;
             var array = { nodes: [], edges: [] };
             var depthMax = 15; // currently depthMax is limited to 1 unless the data is already in ember store
@@ -2063,7 +2064,7 @@ App.VizEditorComponent = Ember.Component.extend({
                 value.mass = 1.2;
                 if (IsGUID(value.id)) {
                     if (firstNode) {
-                        value.x = 150;
+                        //value.x = 150; //TODO Shake the sedentary nodes out
                         firstNode = false;
                     }
                     delete value.color;
