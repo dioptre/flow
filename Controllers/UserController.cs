@@ -464,7 +464,11 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("MyProfiles")]
         public ActionResult GetMyProfiles(string id)
         {
-            return new JsonHelper.JsonNetResult(new { myProfiles = new[] {_Flow.GetMyProfile()} }, JsonRequestBehavior.AllowGet);
+            var profile = _Flow.GetMyProfile();
+            if (profile != null)
+                return new JsonHelper.JsonNetResult(new { myProfiles = new[] {profile} }, JsonRequestBehavior.AllowGet);
+            else
+                return new JsonHelper.JsonNetResult(new { myProfiles = new object[] { } }, JsonRequestBehavior.AllowGet);
         }
 
 

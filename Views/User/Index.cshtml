@@ -157,59 +157,68 @@
 
 
 <script type="text/x-handlebars" id="permission">
-    <h1> My Permissions </h1>
-    <br />
-    {{view Ember.Select content=types optionValuePath="content.id"  optionLabelPath="content.text"  value=type}}
-    <br /><br />
-    <div class='container-fluid'>
-        <div class="row">
-            <div class="col-md-12">
-                <b>{{test}}</b>
+     {{#if loading}}
+        Loading...
+     {{else}}
+        {{#if controllers.application.isLoggedIn}}
+            <h3> My Permissions </h3>
+            <br />
+            {{view Ember.Select content=types optionValuePath="content.id"  optionLabelPath="content.text"  value=type}}
+            <br /><br />
+            <div class='container-fluid'>
+                <div class="row">
+                    <div class="col-md-12">
+                        <b>{{test}}</b>
 
-                {{#if model}}
-                    <div class="table-responsive">
-                        <table class="table table-condensed table-hover">
-                            <thead>
-                            <tr>
-                                {{!--<th>Preview</th>--}}
-                                <th>Name</th>
-                                <th>Updated</th>
-                                <th>Company</th>
-                                <th>Assignee</th>
-                                {{#if controllers.application.isLoggedIn}}
-                                <th>Permissions</th>
-                                {{/if}}
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {{#each item in model}}
-                                <tr>
-                                {{!--<td><img {{bind-attr src=result.ResourcePreviewPath}} height="15"></td>--}}
-                                <td>{{item.ReferenceName}}</td>
-                                <td>{{item.Updated}}</td>
-                                <td>
-                                        {{item.AccessorCompanyName}}
-                                </td>
-                                <td>
+                        {{#if model}}
+                            <div class="table-responsive">
+                                <table class="table table-condensed table-hover">
+                                    <thead>
+                                    <tr>
+                                        {{!--<th>Preview</th>--}}
+                                        <th>Name</th>
+                                        <th>Updated</th>
+                                        <th>Company</th>
+                                        <th>Assignee</th>
+                                        {{#if controllers.application.isLoggedIn}}
+                                        <th>Permissions</th>
+                                        {{/if}}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {{#each item in model}}
+                                        <tr>
+                                        {{!--<td><img {{bind-attr src=result.ResourcePreviewPath}} height="15"></td>--}}
+                                        <td>{{item.ReferenceName}}</td>
+                                        <td>{{item.Updated}}</td>
+                                        <td>
+                                                {{item.AccessorCompanyName}}
+                                        </td>
+                                        <td>
 
-                                        {{item.AccessorContactName}}
+                                                {{item.AccessorContactName}}
 
-                                </td>
-                                {{#if controllers.application.isLoggedIn}}
-                                    <td><a {{action 'deletePermission' item}} class="hlink">Delete</a></td>
-                                {{/if}}
-                                </tr>
-                            {{/each}}
-                            </tbody>
-                        </table>
+                                        </td>
+                                        {{#if controllers.application.isLoggedIn}}
+                                            <td><a {{action 'deletePermission' item}} class="hlink">Delete</a></td>
+                                        {{/if}}
+                                        </tr>
+                                    {{/each}}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {{else}}
+                            <br />
+                            None.
+                        {{/if}}
                     </div>
-                {{else}}
-                    <br />
-                    None.
-                {{/if}}
-            </div>
-        </div>
-     </div>
+                </div>
+             </div>
+            {{else}}
+            <h3>My Permissions</h3>
+            <br /><br /><p>You are not logged in. Please {{link-to 'login' 'login'}} to see your profile.</p>
+        {{/if}}
+    {{/if}}
 </script>
 
 <script type="text/x-handlebars" id="myworkflows">
@@ -218,6 +227,7 @@
     {{#if loading}}
       Loading...
     {{else}}
+     {{#if controllers.application.isLoggedIn}}
       {{#if model}}
         {{#eui-modal openBinding="permissionModal"}}
             <div style="padding: 50px; text-align: center;">
@@ -322,21 +332,18 @@
                 </div>
             </div>
         </div>
-
+        {{else}}
+         You have no files.
+      {{/if}}
       {{else}}
-            {{#if controllers.application.isLoggedIn}}
-                You have no files.
-            {{else}}
-                You are not logged in. Please {{link-to 'login' 'login'}} to see your files.
-            {{/if}}
-
+           You are not logged in. Please {{link-to 'login' 'login'}} to see your workflows and processes.
       {{/if}}
     {{/if}}
 </script>
 
 
 <script type="text/x-handlebars" id="file">
-    <h1> My Files </h1>
+    <h3> My Files </h3>
     <br><br>
     {{#if loading}}
       Loading...
@@ -1419,60 +1426,70 @@
 
 
     <script type="text/x-handlebars" id="myprofiles">
-        <div class="settings-wrapper">
-            <div class="row">
-                <div class="col-md-3 col-md-offset-1 avatar-box">
-                    <div class="personal-image">
-                        <img id="profileImageThumb" {{bind-attr src="profile.Thumb"}} class="avatar img-circle" alt="avatar" style="max-height:150px;max-width:150px;" />
-                            <p>Upload a different photo... <br />(Recommended size 200px by 200px)</p>
-                            <input type="file" onchange="javascript:uploadPhoto(this);" />
+        {{#if loading}}
+            Loading...
+        {{else}}
+            {{#if controllers.application.isLoggedIn}}
+                     <div class="settings-wrapper">
+                    <div class="row">
+                        <div class="col-md-3 col-md-offset-1 avatar-box">
+                            <div class="personal-image">
+                                <img id="profileImageThumb" {{bind-attr src="profile.Thumb"}} class="avatar img-circle" alt="avatar" style="max-height:150px;max-width:150px;" />
+                                    <p>Upload a different photo... <br />(Recommended size 200px by 200px)</p>
+                                    <input type="file" onchange="javascript:uploadPhoto(this);" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-7 personal-info">
+                            <h5 class="personal-title">Personal info</h5>
+
+                            <form class="form-horizontal" role="form">
+                                <div class="form-group">
+                                    <label class="col-lg-2 control-label">Username:</label>
+                                    <div class="col-lg-8">
+                                        {{eui-input value=profile.Username size='medium' width='100%' disabled=true}}          
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-lg-2 control-label">First name:</label>
+                                    <div class="col-lg-8">                                
+                                        {{eui-input value=profile.Firstname size='medium' width='100%'}}          
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-lg-2 control-label">Last name:</label>
+                                    <div class="col-lg-8">
+                                        {{eui-input value=profile.Surname size='medium' width='100%'}}          
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-lg-2 control-label">Company:</label>
+                                    <div class="col-lg-8">
+                                        {{eui-input value=profile.AddressName size='medium' width='100%'}}                                
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-lg-2 control-label">Email:</label>
+                                    <div class="col-lg-8">
+                                        {{eui-input value=profile.DefaultEmail size='medium' width='100%' error=emailValid forceErrorCheck=true}}          
+                                    </div>
+                                </div>                       
+                                <div class="actions">
+                                    <input type="button" class="btn-glow primary" value="Save Changes" {{action "updateProfile" profile}}>
+                                   @* <span>OR</span>
+                                    <input type="reset" value="Cancel" class="reset">*@
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-
-                <div class="col-md-7 personal-info">
-                    <h5 class="personal-title">Personal info</h5>
-
-                    <form class="form-horizontal" role="form">
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">Username:</label>
-                            <div class="col-lg-8">
-                                {{eui-input value=profile.Username size='medium' width='100%' disabled=true}}          
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">First name:</label>
-                            <div class="col-lg-8">                                
-                                {{eui-input value=profile.Firstname size='medium' width='100%'}}          
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">Last name:</label>
-                            <div class="col-lg-8">
-                                {{eui-input value=profile.Surname size='medium' width='100%'}}          
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">Company:</label>
-                            <div class="col-lg-8">
-                                {{eui-input value=profile.AddressName size='medium' width='100%'}}                                
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">Email:</label>
-                            <div class="col-lg-8">
-                                {{eui-input value=profile.DefaultEmail size='medium' width='100%' error=emailValid forceErrorCheck=true}}          
-                            </div>
-                        </div>                       
-                        <div class="actions">
-                            <input type="button" class="btn-glow primary" value="Save Changes" {{action "updateProfile" profile}}>
-                           @* <span>OR</span>
-                            <input type="reset" value="Cancel" class="reset">*@
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+                </div>              
+                {{else}}
+                    <h3>My Profile</h3>
+                    <br /><br /><p>You are not logged in. Please {{link-to 'login' 'login'}} to see your profile.</p>
+                {{/if}}
+        {{/if}}
+            
         </script>
 
 
@@ -1614,6 +1631,7 @@
             {{#if loading}}
               Loading...
             {{else}}
+             {{#if controllers.application.isLoggedIn}}
               {{#if model}}
                 {{#eui-modal openBinding="userModal"}}
                     <div style="padding: 50px; text-align: center;">
@@ -1677,17 +1695,14 @@
                         </div>                        
                     </div>
                 </div>
-
-              {{else}}
-                    {{#if controllers.application.isLoggedIn}}
-                        You have no licenses.
-                    {{else}}
-                        You are not logged in. Please {{link-to 'login' 'login'}} to see your licenses.
-                    {{/if}}
-
+                {{else}}
+                 You have no licenses.
               {{/if}}
+            {{else}}
+                You are not logged in. Please {{link-to 'login' 'login'}} to see your licenses.
             {{/if}}
-        </script>
+          {{/if}}
+       </script>
 
 
 

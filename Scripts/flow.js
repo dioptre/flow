@@ -2999,11 +2999,13 @@ App.MyprofilesRoute = Ember.Route.extend({
         });
     },
     afterModel: function (m) {
-        m.profile = m.profiles.get('firstObject');
+        if (m.profiles.content && m.profiles.content.length > 0)
+            m.profile = m.profiles.get('firstObject');
     }
 });
 
 App.MyprofilesController = Ember.ObjectController.extend({
+    needs: ['application'],
     emailValid: function() {
         var emailpat = /^[^@]+@[^@]+\.[^@\.]{2,}$/;
         var email = this.get('profile.DefaultEmail');
