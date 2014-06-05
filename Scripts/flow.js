@@ -1901,7 +1901,7 @@ App.VizEditorComponent = Ember.Component.extend({
     setup: function () {
 
         var _this = this;
-        var centralGravity = 0.015; //TODO HACK, AG, Less gravity for known graphs
+        var centralGravity = 0.02; //TODO HACK, AG, Less gravity for known graphs
         if (!IsGUID(this.selected)) {
             centralGravity = 0.5;
         }
@@ -1937,7 +1937,7 @@ App.VizEditorComponent = Ember.Component.extend({
             //physics: {barnesHut: {enabled: false}},
             //physics: { barnesHut: { gravitationalConstant: -8425, centralGravity: 0.1, springLength: 150, springConstant: 0.058, damping: 0.3 } },
             physics: { barnesHut: { centralGravity: centralGravity, springConstant: 0.01, damping: 0.1, springLength: 170 } },
-            stabilize: true,
+            stabilize: false,
             stabilizationIterations: 200,
             dataManipulation: this.get('editing'),
             onAdd: function (data, callback) {
@@ -2046,12 +2046,16 @@ App.VizEditorComponent = Ember.Component.extend({
         });
         d.nodes.remove(delNodes);
 
-
+        var firstNode = true;
         //Step 1a: Clean Nodes for Presentation
         md.nodes = Enumerable.From(md.nodes).Select(
             function (value, index) {
                 if (typeof value !== 'undefined' && typeof value.label === 'string')
                     value.label = value.label.replace(/_/g, ' ');
+                if (firstNode) {
+                    value.x = 150;
+                    firstNode = false;
+                }
                 value.mass = 1.2;
                 if (IsGUID(value.id)) {
                     if (!Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
