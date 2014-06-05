@@ -658,14 +658,18 @@
                     <span>Permissions</span>
                 {{/link-to}}
             {{/view}}
-            {{!--
-           {{#view App.HomeNavView}}
-                {{#link-to 'myaccount'}}
-                    <i class="icon-user"></i>
-                    <span>My Account</span>
+            {{#view App.HomeNavView}}
+                {{#link-to 'mylicenses'}}
+                    <i class="icon-tags"></i>
+                    <span>Licenses</span>
                 {{/link-to}}
             {{/view}}
-            --}}
+           {{#view App.HomeNavView}}
+                {{#link-to 'myprofiles'}}
+                    <i class="icon-user"></i>
+                    <span>{{#if isLoggedIn}}{{userProfile.UserName}}{{else}}My Profile{{/if}}</span>
+                {{/link-to}}
+            {{/view}}
             {{!--   
                 {{#view App.HomeNavView}}
                     {{#link-to 'userprofile'}}
@@ -1414,17 +1418,14 @@
     </script>
 
 
-    <script type="text/x-handlebars" id="myaccount">
+    <script type="text/x-handlebars" id="myprofiles">
         <div class="settings-wrapper">
             <div class="row">
-
                 <div class="col-md-3 col-md-offset-1 avatar-box">
                     <div class="personal-image">
-                        <img src="img/personal-info.png" class="avatar img-circle" alt="avatar" />
-                        {{!--
-                            <p>Upload a different photo... (Recommended size 200px by 200px)</p>
-                            <input type="file" />
-                        --}}
+                        <img id="profileImageThumb" {{bind-attr src="profile.Thumb"}} class="avatar img-circle" alt="avatar" style="max-height:150px;max-width:150px;" />
+                            <p>Upload a different photo... <br />(Recommended size 200px by 200px)</p>
+                            <input type="file" onchange="javascript:uploadPhoto(this);" />
                     </div>
                 </div>
 
@@ -1433,68 +1434,40 @@
 
                     <form class="form-horizontal" role="form">
                         <div class="form-group">
-                            <label class="col-lg-2 control-label">First name:</label>
+                            <label class="col-lg-2 control-label">Username:</label>
                             <div class="col-lg-8">
-                                <input class="form-control" type="text" value="Alejandra" />
+                                {{eui-input value=profile.Username size='medium' width='100%' disabled=true}}          
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">First name:</label>
+                            <div class="col-lg-8">                                
+                                {{eui-input value=profile.Firstname size='medium' width='100%'}}          
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Last name:</label>
                             <div class="col-lg-8">
-                                <input class="form-control" type="text" value="Galvan" />
+                                {{eui-input value=profile.Surname size='medium' width='100%'}}          
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Company:</label>
                             <div class="col-lg-8">
-                                <input class="form-control" type="text" value="Design Co." />
+                                {{eui-input value=profile.AddressName size='medium' width='100%'}}                                
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Email:</label>
                             <div class="col-lg-8">
-                                <input class="form-control" type="text" value="alejandra@design.com" />
+                                {{eui-input value=profile.DefaultEmail size='medium' width='100%' error=emailValid forceErrorCheck=true}}          
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">Time Zone:</label>
-                            <div class="col-lg-8">
-                                <div class="ui-select">
-                                    <select id="user_time_zone" name="user[time_zone]">
-                                        <option value="Hawaii">(GMT-10:00) Hawaii</option>
-                                        <option value="Alaska">(GMT-09:00) Alaska</option>
-                                        <option value="Pacific Time (US &amp; Canada)">(GMT-08:00) Pacific Time (US &amp; Canada)</option>
-                                        <option value="Arizona">(GMT-07:00) Arizona</option>
-                                        <option value="Mountain Time (US &amp; Canada)">(GMT-07:00) Mountain Time (US &amp; Canada)</option>
-                                        <option value="Central Time (US &amp; Canada)" selected="selected">(GMT-06:00) Central Time (US &amp; Canada)</option>
-                                        <option value="Eastern Time (US &amp; Canada)">(GMT-05:00) Eastern Time (US &amp; Canada)</option>
-                                        <option value="Indiana (East)">(GMT-05:00) Indiana (East)</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">Username:</label>
-                            <div class="col-lg-8">
-                                <input class="form-control" type="text" value="alegalvan" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">Password:</label>
-                            <div class="col-lg-8">
-                                <input class="form-control" type="password" value="blablablabla" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">Confirm password:</label>
-                            <div class="col-lg-8">
-                                <input class="form-control" type="password" value="blablablabla" />
-                            </div>
-                        </div>
+                        </div>                       
                         <div class="actions">
-                            <input type="button" class="btn-glow primary" value="Save Changes">
-                            <span>OR</span>
-                            <input type="reset" value="Cancel" class="reset">
+                            <input type="button" class="btn-glow primary" value="Save Changes" {{action "updateProfile" profile}}>
+                           @* <span>OR</span>
+                            <input type="reset" value="Cancel" class="reset">*@
                         </div>
                     </form>
                 </div>
@@ -1632,7 +1605,91 @@
             </div>
         </div>
         </script>
+        
         <script type="text/x-handlebars" id="workflow">&nbsp;</script>
+
+        <script type="text/x-handlebars" id="mylicenses">
+            <h3> My Licenses</h3>
+            <br><br>
+            {{#if loading}}
+              Loading...
+            {{else}}
+              {{#if model}}
+                {{#eui-modal openBinding="userModal"}}
+                    <div style="padding: 50px; text-align: center;">
+                        <h4>Reassign License</h4>
+
+                        <br>
+                        <p> You can reassign the selected license to a different user. <br>Update it using the input box below. </p>
+                        <br>
+
+                        <b>Assign to user:</b><br>
+                        <input id="add-user-perm" style="width: 275px;" class='select2' type='hidden'/>
+
+                        <br>
+                        <br>
+
+                        {{eui-button label="Cancel" action="cancelPermission" size='medium'}}
+                        {{eui-button label="Update" action="submitPermission" style='primary' size='medium'}}
+                    </div>
+                {{/eui-modal}}
+
+                <div class='container-fluid'>
+                    <div class="row">
+                        <div class="col-md-12">
+                            {{model.licenses.length}} <b>Licenses</b>
+
+                            {{#if model.licenses}}
+                                <div class="table-responsive">
+                                  <table class="table table-condensed table-hover">
+                                      <thead>
+                                        <tr>
+                                          {{!--<th>Preview</th>--}}
+                                          <th>Product Name</th>
+                                          <th>License ID</th>
+                                          <th>Assignee</th>
+                                          <th>Valid From</th>
+                                          <th>Expiry</th>
+                                          {{#if controllers.application.isLoggedIn}}
+                                            <th>Reassign</th>
+                                          {{/if}}
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {{#each lic in model.licenses}}
+                                          <tr {{bind-attr class="lic.IsExpired:warning"}}>  
+                                            <td>{{lic.ModelName}}</td>
+                                            <td>{{lic.id}}</td>
+                                            <td>{{lic.LicenseeUsername}}</td>
+                                            <td>{{lic.ValidFrom}}</td>
+                                            <td>{{lic.Expiry}}</td>
+                                            {{#if controllers.application.isLoggedIn}}
+                                                <td><a {{action 'editPermission' lic}} class="hlink">Edit</a></td>
+                                            {{/if}}
+                                          </tr>
+                                        {{/each}}
+                                      </tbody>
+                                  </table>
+                                </div>
+                            {{else}}
+                                You have not purchased any licenses yet.
+                            {{/if}}
+                        </div>                        
+                    </div>
+                </div>
+
+              {{else}}
+                    {{#if controllers.application.isLoggedIn}}
+                        You have no licenses.
+                    {{else}}
+                        You are not logged in. Please {{link-to 'login' 'login'}} to see your licenses.
+                    {{/if}}
+
+              {{/if}}
+            {{/if}}
+        </script>
+
+
 
     </body>
 </html>

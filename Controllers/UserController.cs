@@ -429,8 +429,33 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("MyLicenses")]
         public ActionResult GetMyLicenses(string id)
         {
-            return new JsonHelper.JsonNetResult(new { myLicenses = _Flow.GetMyLicenses() }, JsonRequestBehavior.AllowGet);
+            Guid? gid = null;
+            Guid temp;
+            if (Guid.TryParse(id, out temp))
+                gid = temp;
+            return new JsonHelper.JsonNetResult(new { myLicenses = _Flow.GetMyLicenses(gid) }, JsonRequestBehavior.AllowGet);
+        }
 
+
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("MyLicenses")]
+        public ActionResult AssignLicense(LicenseViewModel m)
+        {
+            if (!User.Identity.IsAuthenticated)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
+            if (m.myLicense != null)
+            {
+                if (m.LicenseID.HasValue)
+                    m.myLicense.LicenseID = m.LicenseID;
+                m = m.myLicense;
+            }
+            if (!m.LicenseeGUID.HasValue || !m.LicenseID.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.AssignLicense(m.LicenseeGUID.Value, m.LicenseID.Value))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
         }
 
 
@@ -439,8 +464,7 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("MyProfiles")]
         public ActionResult GetMyProfiles(string id)
         {
-            return new JsonHelper.JsonNetResult(new { myProfiles = _Flow.GetMyProfile() }, JsonRequestBehavior.AllowGet);
-
+            return new JsonHelper.JsonNetResult(new { myProfiles = new[] {_Flow.GetMyProfile()} }, JsonRequestBehavior.AllowGet);
         }
 
 

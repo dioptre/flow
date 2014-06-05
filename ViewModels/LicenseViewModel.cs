@@ -12,6 +12,8 @@ namespace EXPEDIT.Flow.ViewModels
     public class LicenseViewModel 
     {
         public LicenseViewModel myLicense { get; set; }
+        public Guid? id { get { return LicenseID; } set { LicenseID = value; } }
+        [JsonIgnore]
         [HiddenInput, Required, DisplayName("License ID:")]
         public Guid? LicenseID { get; set; }
         public Guid? CompanyID { get; set; }

@@ -791,7 +791,15 @@ namespace EXPEDIT.Flow.Services {
             var now = DateTime.UtcNow;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
-                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var d = new NKDC(_users.ApplicationConnectionString, null);                
+                if (d.GraphDataGroups.Any(f=>f.GraphDataGroupID == m.GroupID && f.VersionOwnerContactID.HasValue) && !_users.CheckPermission(new SecuredBasic
+                {
+                    AccessorApplicationID = _users.ApplicationID,
+                    AccessorContactID = _users.ContactID,
+                    OwnerReferenceID = m.GroupID,
+                    OwnerTableType = d.GetTableName(typeof(GraphDataGroup))
+                }, ActionPermission.Update))
+                    return false;
                 bool isNew;
                 var id = CheckNodePrivileges(d, null, m.FromID, companies, company, ActionPermission.Update, out isNew);
                 if (id == null || isNew)
@@ -1281,7 +1289,7 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                var license = (from o in d.E_SP_GetLicenses(null, null, null, null, null, null, licenseid, null, null, null, null)
+                var license = (from o in d.Licenses where o.LicenseID == licenseid && o.Version == 0 && o.VersionDeletedBy == null
                                select o).FirstOrDefault();
                 if (license == null)
                     return false;
@@ -1290,15 +1298,20 @@ namespace EXPEDIT.Flow.Services {
                 var c = (from o in d.Contacts where o.AspNetUserID == userid && o.Version == 0 && o.VersionDeletedBy == null select new { o.ContactID, o.Username }).FirstOrDefault();
                 if (c == null)
                     return false;
-                license.LicenseeGUID = c.ContactID;
-                license.LicenseeUsername = c.Username;
-                d.SaveChanges();
+                if (license.LicenseeGUID != c.ContactID)
+                {
+                    license.LicenseeGUID = c.ContactID;
+                    license.LicenseeUsername = c.Username;
+                    license.VersionUpdated = DateTime.UtcNow;
+                    license.VersionUpdatedBy = contact;
+                    d.SaveChanges();
+                }
             }
             return true;
         }
 
 
-        public IEnumerable<EXPEDIT.Flow.ViewModels.LicenseViewModel> GetMyLicenses()
+        public IEnumerable<EXPEDIT.Flow.ViewModels.LicenseViewModel> GetMyLicenses(Guid? licenseID = default(Guid?))
         {
             var contact = _users.ContactID;
             var application = _users.ApplicationID;
@@ -1307,7 +1320,7 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                return (from o in d.E_SP_GetLicenses(application, contact, null, null, null, null, null, null, null, null, 9999999)
+                return (from o in d.E_SP_GetLicenses(application, contact, null, null, null, null, licenseID, null, null, null, 9999999)
                         select new EXPEDIT.Flow.ViewModels.LicenseViewModel
                         {
                             LicenseID = o.LicenseID,

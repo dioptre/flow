@@ -91,7 +91,7 @@ namespace EXPEDIT.Flow.Services
          bool AssignLicense(Guid userid, Guid licenseid);
 
          [OperationContract]
-         IEnumerable<EXPEDIT.Flow.ViewModels.LicenseViewModel> GetMyLicenses();
+         IEnumerable<EXPEDIT.Flow.ViewModels.LicenseViewModel> GetMyLicenses(Guid? licenseID = default(Guid?));
 
 
     }

@@ -3,12 +3,15 @@ using System.ComponentModel.DataAnnotations;
 using System.Web.Mvc;
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace EXPEDIT.Flow.ViewModels
 {
     public class UserProfileViewModel
     {
         public UserProfileViewModel myProfile { get; set; }
+        public Guid? id { get { return ContactID; } set { ContactID = value; } }
+        [JsonIgnore]
         [HiddenInput, Required, DisplayName("Contact ID:")]
         public Guid? ContactID { get; set; }
         public string ContactName { get; set; }
@@ -17,6 +20,8 @@ namespace EXPEDIT.Flow.ViewModels
         public string Firstname { get; set; }
         public string Username { get; set; }
         public string Hash { get; set; }
+        public string OldPassword { get; set; }
+        public string Password { get; set; }
         [DisplayName("Default Email")]
         public string DefaultEmail { get; set; }
         public DateTime? DefaultEmailValidated { get; set; }

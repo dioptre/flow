@@ -15,11 +15,13 @@ App.Router.map(function () {
     this.route('workflow', { path: 'workflow/:id' });
     this.route('wikipedia', { path: "/wikipedia/:id" });
     this.route('search');
-    this.route('myaccount');
     this.route('myworkflows');
+    this.route('mylicenses');
     this.route('file');
     this.route('permission');
     this.route('login');
+    this.route('myprofiles');
+
 
 
 // Currently unused.
@@ -27,21 +29,6 @@ App.Router.map(function () {
 // this.route('userprofile');
 // this.route('usernew');
 });
-
-
-//App.MyAccountRoute = Ember.Route.extend({
-//    model: function () {
-            
-//    }
-//});
-
-
-//App.MyAccountController = Ember.ObjectController.extend({
-//    needs: ['application']
-//})
-
-
-
 
 App.WorkflowRoute = Ember.Route.extend({
     actions: {
@@ -193,7 +180,7 @@ App.MyworkflowsController = Ember.ObjectController.extend({
             // console.log(this.get('activeItem'));
             if (newusers !== '') {
                 Enumerable.From(newusers.split(',')).ForEach(function (f) {
-                    var a = _this.store.createRecord('MySecurityList', {
+                    var a = _this.store.createRecord('mySecurityList', {
                         ReferenceID: fileid,
                         SecurityTypeID: 2,
                         OwnerTableType: TableType,
@@ -214,7 +201,7 @@ App.MyworkflowsController = Ember.ObjectController.extend({
 
             if (newcomp !== '') {
                 Enumerable.From(newcomp.split(',')).ForEach(function (f) {
-                    var a = _this.store.createRecord('MySecurityList', {
+                    var a = _this.store.createRecord('mySecurityList', {
                         ReferenceID: fileid,
                         SecurityTypeID: 2,
                         OwnerTableType: TableType,
@@ -321,7 +308,7 @@ App.FileController = Ember.ObjectController.extend({
 
             if (newusers !== '') {
                 Enumerable.From(newusers.split(',')).ForEach(function(f) {
-                    var a = _this.store.createRecord('MySecurityList', {
+                    var a = _this.store.createRecord('mySecurityList', {
                         ReferenceID: fileid,
                         SecurityTypeID: 2,
                         OwnerTableType: 'file',
@@ -342,7 +329,7 @@ App.FileController = Ember.ObjectController.extend({
 
             if (newcomp !== '') {
                 Enumerable.From(newcomp.split(',')).ForEach(function(f) {
-                    var a = _this.store.createRecord('MySecurityList', {
+                    var a = _this.store.createRecord('mySecurityList', {
                         ReferenceID: fileid,
                         SecurityTypeID: 2,
                         OwnerTableType: 'file',
@@ -2404,6 +2391,99 @@ App.MySecurityList = DS.Model.extend({
 // App.MyBlackList = App.MySecurityList.extend({});
 
 
+App.MyLicense = DS.Model.extend({
+    LicenseID: DS.attr(''),
+    CompanyID: DS.attr(''),
+    ContactID: DS.attr(''),
+    LicenseeGUID: DS.attr(''),
+    LicenseeName: DS.attr(''),
+    LicenseeUsername: DS.attr(''),
+    LicenseeUniqueMachineCode1: DS.attr(''),
+    LicenseeUniqueMachineCode2: DS.attr(''),
+    LicenseeGroupID: DS.attr(''),
+    LicensorIP: DS.attr(''),
+    LicensorName: DS.attr(''),
+    LicenseTypeID: DS.attr(''),
+    LicenseType: DS.attr(''),
+    LicenseURL: DS.attr(''),
+    RootServerName: DS.attr(''),
+    RootServerID: DS.attr(''),
+    ServerName: DS.attr(''),
+    ServerID: DS.attr(''),
+    ApplicationID: DS.attr(''),
+    ServiceAuthenticationMethod: DS.attr(''),
+    ServiceAuthorisationMethod: DS.attr(''),
+    ValidFrom: DS.attr(''),
+    Expiry: DS.attr(''),
+    SupportExpiry: DS.attr(''),
+    ValidForDuration: DS.attr(''),
+    ValidForUnitID: DS.attr(''),
+    ValidForUnitName: DS.attr(''),
+    ProRataCost: DS.attr(''),
+    ModelID: DS.attr(''),
+    ModelName: DS.attr(''),
+    ModelRestrictions: DS.attr(''),
+    ModelPartID: DS.attr(''),
+    PartName: DS.attr(''),
+    PartRestrictions: DS.attr(''),
+    AssetID: DS.attr(''),
+    IsExpired: function () {
+        var d = new Date(this.get('Expiry'));
+        if (d < new Date())
+            return true;
+        else
+            return false;
+    }.property()
+});
+
+App.MyProfile = DS.Model.extend({
+    ContactID: DS.attr(''),
+    ContactName: DS.attr(''),
+    Title: DS.attr(''),
+    Surname: DS.attr(''),
+    Firstname: DS.attr(''),
+    Username: DS.attr(''),
+    OldPassword: DS.attr(''),
+    Password: DS.attr(''),
+    Hash: DS.attr(''),
+    DefaultEmail: DS.attr(''),
+    DefaultEmailValidated: DS.attr(''),
+    DefaultMobile: DS.attr(''),
+    DefaultMobileValidated: DS.attr(''),
+    MiddleNames: DS.attr(''),
+    Initials: DS.attr(''),
+    DOB: DS.attr(''),
+    BirthCountryID: DS.attr(''),
+    BirthCity: DS.attr(''),
+    AspNetUserID: DS.attr(''),
+    XafUserID: DS.attr(''),
+    OAuthID: DS.attr(''),
+    Photo: DS.attr(''),
+    ShortBiography: DS.attr(''),
+    AddressID: DS.attr(''),
+    AddressTypeID: DS.attr(''),
+    AddressName: DS.attr(''),
+    Sequence: DS.attr(''),
+    Street: DS.attr(''),
+    Extended: DS.attr(''),
+    City: DS.attr(''),
+    State: DS.attr(''),
+    Country: DS.attr(''),
+    Postcode: DS.attr(''),
+    IsHQ: DS.attr(''),
+    IsPostBox: DS.attr(''),
+    IsBusiness: DS.attr(''),
+    IsHome: DS.attr(''),
+    Phone: DS.attr(''),
+    Fax: DS.attr(''),
+    Email: DS.attr(''),
+    Mobile: DS.attr(''),
+    LocationID: DS.attr(''),
+    Thumb: function () {
+        return "/share/photo/" + this.get('AspNetUserID');
+    }.property()
+});
+
 App.Wikipedia = DS.Model.extend({
     label: DS.attr('string'),
     content: DS.attr('string'),
@@ -2834,3 +2914,173 @@ App.TinymceEditorComponent = Ember.Component.extend({
         }
     }.observes('data')
 });
+
+
+
+App.MylicensesRoute = Ember.Route.extend({
+    model: function () {
+        return Ember.RSVP.hash({
+            licenses: this.store.find('myLicense'),
+        });
+    }
+})
+
+App.MylicensesController = Ember.ObjectController.extend({
+    needs: ['application'],
+    userModal: false,
+    activeItem: null,
+    actions: {
+        editPermission: function (item) {
+
+            // So in the submit we know what file we should be diting
+            this.set('activeItem', item);
+
+            this.set('userModal', true); // Show the modal before anything else
+
+            // Make selectbox work after it's been inserted to the view - jquery hackss
+            Ember.run.scheduleOnce('afterRender', this, function () {
+                $('#add-user-perm').select2({
+                    placeholder: "Enter Username...",
+                    minimumInputLength: 2,
+                    multiple: false,
+                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                        url: "/share/getusernames",
+                        dataType: 'json',
+                        multiple: false,
+                        data: function (term, page) {
+                            return { id: term };
+                        },
+                        results: function (data, page) { // parse the results into the format expected by Select2.
+                            if (data.length === 0) {
+                                return { results: [] };
+                            }
+                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                            return { results: results, text: 'tag' };
+                        }
+                    },
+                    formatResult: function (state) { return state.tag; },
+                    formatSelection: function (state) { return state.tag; },
+                    escapeMarkup: function (m) { return m; }
+                })
+            });
+        },
+        submitPermission: function () {
+            var _this = this;
+            var newusers = $('#add-user-perm').val()
+            var id = this.get('activeItem').id;
+            // console.log(this.get('activeItem'));
+            if (newusers !== '') {
+                Enumerable.From(newusers.split(',')).ForEach(function (f) {
+                    var a = _this.store.getById('myLicense', id);
+                    a.set('LicenseeGUID', f);
+                    a.save().then(function (lic) {
+                        Messenger().post({ type: 'success', message: "Successfully updated license.", id: 'user-security' })
+                        _this.store.find('myLicense', { id: id });
+                    }, function () {
+                        Messenger().post({ type: 'error', message: "Could not update license.", id: 'user-security' })
+
+                    });
+                });
+            }
+            this.set('userModal', false);
+        },
+        cancelPermission: function () {
+            this.set('userModal', false);
+        }
+    }
+});
+
+App.MyprofilesRoute = Ember.Route.extend({
+    model: function () {
+        var _this = this;
+        return Ember.RSVP.hash({
+            profiles: this.store.find('myProfile')
+        });
+    },
+    afterModel: function (m) {
+        m.profile = m.profiles.get('firstObject');
+    }
+});
+
+App.MyprofilesController = Ember.ObjectController.extend({
+    emailValid: function() {
+        var emailpat = /^[^@]+@[^@]+\.[^@\.]{2,}$/;
+        var email = this.get('profile.DefaultEmail');
+        if (email.match(emailpat)) {
+            return false;
+        } else {
+            return 'Please use a valid email address.';
+        }
+    }.property('profile.DefaultEmail'),
+    actions: {
+        updateProfile: function (profile) {
+            if (this.get('emailValid'))
+                return;
+            var _this = this;
+            //Let's be strict what we can save
+            var firstname = profile.get('Firstname');
+            var surname = profile.get('Surname');
+            var company = profile.get('AddressName');
+            var email = profile.get('DefaultEmail');
+            //profile.rollback();
+            var m = this.store.getById('myProfile', profile.id);
+            m.set('Firstname', firstname);
+            m.set('Surname', surname);
+            m.set('AddressName', company);
+            m.set('DefaultEmail', email);
+            m.save().then(function (pro) {
+                Messenger().post({ type: 'success', message: "Successfully updated profile.", id: 'user-security' })
+                _this.store.find('myProfile', { id: profile.id });
+            }, function () {
+                Messenger().post({ type: 'error', message: "Could not update profile.", id: 'user-security' })
+            });
+
+        }
+    }
+});
+
+function uploadPhoto(event) {
+    var files = event.files;
+    var iSize = files[0].size / 1024;
+    if (iSize > 2000) {
+        Messenger().post({ type: 'error', message: "File is too large to upload.", id: 'file-security' });
+        return;
+    }
+
+    // START A LOADING SPINNER HERE
+
+    // Create a formdata object and add the files
+    var data = new FormData();
+    $.each(files, function (key, value) {
+        data.append(key, value);
+    });
+
+    $.ajax({
+        url: '/share/uploadphoto',
+        type: 'POST',
+        data: data,
+        cache: false,
+        dataType: 'json',
+        processData: false, // Don't process the files
+        contentType: false, // Set content type to false as jQuery will tell the server its a query string request
+        success: function (data, textStatus, jqXHR) {
+            if (typeof data.error === 'undefined') {
+                // Success so call function to process the form
+                //submitForm(event, data);
+                d = new Date();
+                var old = $("#profileImageThumb").attr("src").replace(/(\?.*)/ig, '');
+                $("#profileImageThumb").attr("src",  old + "?" + d.getTime());
+            }
+            else {
+                // Handle errors here
+                console.log('ERRORS: ' + data.error);
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            // Handle errors here
+            console.log('ERRORS: ' + textStatus);
+            // STOP LOADING SPINNER
+        }
+    });
+}

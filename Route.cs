@@ -286,11 +286,11 @@ namespace EXPEDIT.Flow
                 new RouteDescriptor {
                         Priority = 5,
                         Route = new Route(
-                            "Flow/MyProfile",
+                            "Flow/MyProfiles",
                             new RouteValueDictionary {
                                 {"area", "EXPEDIT.Flow"},
                                 {"controller", "User"},
-                                {"action", "MyProfile"}
+                                {"action", "MyProfiles"}
                             },
                             null,
                             new RouteValueDictionary {
