@@ -1061,7 +1061,7 @@
             </thead>
             <tbody>
               {{#each result in results}}
-                {{#link-to 'graph' result.ReferenceID tagName='tr'}}
+                {{#link-to 'graph' result.ReferenceID (query-params workflowID="undefined") tagName='tr'}}
 
                   <td>{{safehtml result.humanName}}</td>
                   <td>{{safehtml result.Author}}</td>

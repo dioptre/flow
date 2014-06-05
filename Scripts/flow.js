@@ -1979,31 +1979,32 @@ App.VizEditorComponent = Ember.Component.extend({
         this.graph.on('click', function (data) {
             if (data.nodes.length > 0) {
                 _this.set('selected', data.nodes[0]);
-                var md = _this.get('data'); // has to be synched with data
-                var d = _this.get('vizDataSet');
-                var edges = d.edges.get();
-                var nodes = d.nodes.get();
-                var n = d.nodes.get(data.nodes[0]);
-                Enumerable.From(nodes).ForEach(
-                    function (value) {
-                        delete value.color;
-                        if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
-                            value.color = "#FFFFFF"; //BEGIN                   
-                        }
-                        if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
-                                && (value.group.indexOf(md.workflowID) > -1
-                       || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
-                            value.color = "#000000"; //END
-                            value.fontColor = "#FFFFFF";
-                        }
-                        else {
-                            value.fontColor = "#000000";
-                        }
+                if (IsGUID(data.nodes[0])) {
+                    var md = _this.get('data'); // has to be synched with data
+                    var d = _this.get('vizDataSet');
+                    var edges = d.edges.get();
+                    var nodes = d.nodes.get();
+                    var n = d.nodes.get(data.nodes[0]);
+                    Enumerable.From(nodes).ForEach(
+                        function (value) {
+                            delete value.color;
+                            if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
+                                value.color = "#FFFFFF"; //BEGIN                   
+                            }
+                            if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
+                                    && (value.group.indexOf(md.workflowID) > -1
+                           || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
+                                value.color = "#000000"; //END
+                                value.fontColor = "#FFFFFF";
+                            }
+                            else {
+                                value.fontColor = "#000000";
+                            }
 
-                        return value;
-                    });
-
-                d.nodes.update(nodes);
+                            return value;
+                        });
+                    d.nodes.update(nodes);
+                }
                 //TODO: check for node workflow currency and update color
                 //if (value.group.indexOf(md.workflowID) < 0)
                 //    value.color = "#00FF00";
@@ -2052,17 +2053,19 @@ App.VizEditorComponent = Ember.Component.extend({
                 if (typeof value !== 'undefined' && typeof value.label === 'string')
                     value.label = value.label.replace(/_/g, ' ');
                 value.mass = 1.2;
-                if (!Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
-                    value.color = "#FFFFFF"; //BEGIN                   
-                }
-                if (!Enumerable.From(md.edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
-                    && (value.group.indexOf(md.workflowID) > -1 
-                        || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
-                    value.color = "#000000"; //END
-                    value.fontColor = "#FFFFFF";
-                }
-                else {
-                    value.fontColor = "#000000";
+                if (IsGUID(value.id)) {
+                    if (!Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
+                        value.color = "#FFFFFF"; //BEGIN                   
+                    }
+                    if (!Enumerable.From(md.edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
+                        && (value.group.indexOf(md.workflowID) > -1
+                            || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
+                        value.color = "#000000"; //END
+                        value.fontColor = "#FFFFFF";
+                    }
+                    else {
+                        value.fontColor = "#000000";
+                    }
                 }
                 return value;
             }).ToArray();
