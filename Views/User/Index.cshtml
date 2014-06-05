@@ -76,7 +76,6 @@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/select2.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/jquery.dataTables.css">
 
-        <!--[if IE]><!--><html class="ie"> <!--<![endif]-->
         <!--[if lt IE 9]>
           <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
@@ -133,6 +132,11 @@
 <script src="~/Modules/EXPEDIT.Share/Scripts/pace.min.js"></script>
 <script type="text/javascript">
     var mapHelper = '@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")';
+    $(document).ready(function () {
+        if (GetExplorerVersion() > 0) {
+            $("html").addClass("ie");
+        }
+    });
 </script>
 
 <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/bootstrap.min.js"></script>
