@@ -1901,7 +1901,7 @@ App.VizEditorComponent = Ember.Component.extend({
     setup: function () {
 
         var _this = this;
-        var centralGravity = 0.02; //TODO HACK, AG, Less gravity for known graphs
+        var centralGravity = 0.0175; //TODO HACK, AG, Less gravity for known graphs
         if (!IsGUID(this.selected)) {
             centralGravity = 0.5;
         }

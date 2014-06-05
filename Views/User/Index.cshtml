@@ -307,7 +307,7 @@
                                     {{!--<td><img {{bind-attr src=proc.ResourcePreviewPath}} height="15"></td>--}}
                                     <td>{{proc.Title}}</td>
                                     <td>{{proc.Updated}}</td>
-                                    <td>{{link-to 'View' 'graph' proc.id}}</td>
+                                    <td>{{link-to 'View' 'graph' proc.id (query-params workflowID="undefined")}}</td>
                                     {{#if controllers.application.isLoggedIn}}
                                         <td><a {{action 'editPermission' proc}} class="hlink">Edit</a></td>
                                     {{/if}}
