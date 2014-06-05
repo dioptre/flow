@@ -1906,10 +1906,11 @@ App.VizEditorComponent = Ember.Component.extend({
     setup: function () {
 
         var _this = this;
+        var groups = {};
         var centralGravity = 0.0175; //TODO HACK, AG, Less gravity for known graphs
         if (!IsGUID(this.selected)) {
             centralGravity = 0.5;
-        }
+        }        
         var container = $('<div>').appendTo(this.$())[0];
         var data = this.get('vizDataSet');
         var options = {
@@ -1918,7 +1919,7 @@ App.VizEditorComponent = Ember.Component.extend({
             //minVelocity: 5,
             //clustering: {
             //    enabled: true
-            //},
+            //},           
             labels:{
                   add:"Add Process",
                   edit:"Edit",
@@ -1993,19 +1994,21 @@ App.VizEditorComponent = Ember.Component.extend({
                     Enumerable.From(nodes).ForEach(
                         function (value) {
                             delete value.color;
+                            delete value.fontColor;
                             if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
                                 value.color = "#FFFFFF"; //BEGIN                   
-                            }
-                            if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
-                                    && (value.group.indexOf(md.workflowID) > -1
-                           || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
-                                value.color = "#000000"; //END
-                                value.fontColor = "#FFFFFF";
-                            }
-                            else {
                                 value.fontColor = "#000000";
                             }
-
+                            else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
+                                    && (value.group.indexOf(md.workflowID) > -1
+                           || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
+                                value.color = "#333333"; //END
+                                value.fontColor = "#FFFFFF";
+                            }
+                            else if (value.group.indexOf(md.workflowID) > -1) {
+                                value.color = "#6fa5d7"; //Current
+                                value.fontColor = "#000000";
+                            }
                             return value;
                         });
                     d.nodes.update(nodes);
@@ -2057,24 +2060,32 @@ App.VizEditorComponent = Ember.Component.extend({
             function (value, index) {
                 if (typeof value !== 'undefined' && typeof value.label === 'string')
                     value.label = value.label.replace(/_/g, ' ');
-                if (firstNode) {
-                    value.x = 150;
-                    firstNode = false;
-                }
                 value.mass = 1.2;
                 if (IsGUID(value.id)) {
+                    if (firstNode) {
+                        value.x = 150;
+                        firstNode = false;
+                    }
+                    delete value.color;
+                    delete value.fontColor;
                     if (!Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
-                        value.color = "#FFFFFF"; //BEGIN                   
-                    }
-                    if (!Enumerable.From(md.edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
-                        && (value.group.indexOf(md.workflowID) > -1
-                            || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
-                        value.color = "#000000"; //END
-                        value.fontColor = "#FFFFFF";
-                    }
-                    else {
+                        value.color = "#FFFFFF"; //BEGIN     
                         value.fontColor = "#000000";
                     }
+                    else if (!Enumerable.From(md.edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
+                        && (value.group.indexOf(md.workflowID) > -1
+                            || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
+                        value.color = "#333333"; //END
+                        value.fontColor = "#FFFFFF";
+                    }
+                    else if (value.group.indexOf(md.workflowID) > -1) {
+                        value.color = "#6fa5d7"; //Current
+                        value.fontColor = "#000000";
+                    }
+                }
+                else if (typeof value.group === 'undefined') {
+                    value.color = "#6fa5d7"; //Current
+                    value.fontColor = "#000000";
                 }
                 return value;
             }).ToArray();
@@ -2396,6 +2407,9 @@ App.Wikipedia = DS.Model.extend({
     label: DS.attr('string'),
     content: DS.attr('string'),
     edges: DS.hasMany('edge'),
+    group: function() {
+        return 'wikipedia';
+    },
     humanName: function () {
         var temp = this.get('label');
         if (temp)
@@ -2427,6 +2441,7 @@ App.WikipediaRoute = Ember.Route.extend({
         var depthMax = 1; // currently depthMax is limited to 1 unless the data is already in ember store
         var nodeMax = 25;
         var data = recurseGraphData(sel, array, this, 1, depthMax, nodeMax, 'wikipedia');
+        data.origin = 'wikipedia';
         m.graphData = data;
         var article = this.store.getById('wikipedia', sel);
         if (article)
