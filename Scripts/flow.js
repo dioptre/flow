@@ -59,19 +59,19 @@ App.WorkflowRoute = Ember.Route.extend({
     afterModel: function (m) {
         if (m === null) {
             //this.controllerFor('application').set('workflowID', NewGUID());
-            return this.transitionTo('graph', NewGUID(), { queryParams: {workflowID: NewGUID()}});
+            return this.replaceWith('graph', NewGUID(), { queryParams: {workflowID: NewGUID()}});
         }
         var fn = m.get('firstNode');
         var id = m.get('id');
         if (typeof fn !== 'undefined' && fn) {
             //this.controllerFor('application').set('workflowID', id);
-            return this.transitionTo('graph', fn, { queryParams: {workflowID: id }});
+            return this.replaceWith('graph', fn, { queryParams: { workflowID: id } });
         }
         else {
             if (!id)
                 id = NewGUID();
             //this.controllerFor('application').set('workflowID', id);
-            return this.transitionTo('graph', NewGUID(), { queryParams: { workflowID: id } });
+            return this.replaceWith('graph', NewGUID(), { queryParams: { workflowID: id } });
 
         }
     }
@@ -1298,6 +1298,11 @@ App.GraphRoute = Ember.Route.extend({
             // Ember.run.later(null, RedirectToLogin, 3000); maybe not do a refresh
         }
     },
+    beforeModel: function (params) {
+        if (params.queryParams.workflowID === 'undefined') {
+            this.replaceWith('graph', params.params.graph.id, { queryParams: { workflowID: NewGUID() } });
+        }
+    },
     model: function (params) {
         var id = params.id;
         id = id.toLowerCase(); // just in case
@@ -1318,12 +1323,12 @@ App.GraphRoute = Ember.Route.extend({
                 m.selected = Enumerable.From(m.data.content).FirstOrDefault();
                 if (typeof m.selected === 'undefined') {
                     if (m.params)
-                        this.transitionTo('graph', NewGUID(), { queryParams: { workflowID: m.params.workflowID } });
+                        this.replaceWith('graph', NewGUID(), { queryParams: { workflowID: m.params.workflowID } });
                     else 
-                        this.transitionTo('graph', NewGUID());
+                        this.replaceWith('graph', NewGUID());
                 }
                 else {
-                    this.transitionTo('graph', m.selected.id);
+                    this.replaceWith('graph', m.selected.id);
                 }
                 return;
             }
