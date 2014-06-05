@@ -76,6 +76,7 @@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/select2.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/jquery.dataTables.css">
 
+        <!--[if IE]><!--><html class="ie"> <!--<![endif]-->
         <!--[if lt IE 9]>
           <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
@@ -779,9 +780,8 @@
                             </span>
                         </small>
                     </h4>
-
                     <br>
-                    <div style="text-align:right"><a {{action 'showExistingNodeModal'}}>Add existing Node </a>|<a id="exportWorkflow" onclick="javascript:this.href = $('.graph-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';">Export Workflow</a></div>
+                    <div style="text-align:right"><a {{action 'showExistingNodeModal'}}>Add existing Node</a><div class="exportWF" style="display:inline-block">&nbsp;|&nbsp;<a id="exportWorkflow" onclick="javascript:this.href = $('.graph-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';">Export Workflow</a></div></div>
                     {{!--{{#each lworkflow in model.workflows}}
                         <li>
                             {{lworkflow.name}}

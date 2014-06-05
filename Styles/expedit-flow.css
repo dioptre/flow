@@ -386,3 +386,7 @@ span.graph-manipulationUI:hover {
 .navbar-inverse .navbar-toggle {
   margin-top: 14px;
 }
+
+.ie .exportWF {
+    display: none !important;
+}

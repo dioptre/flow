@@ -1347,8 +1347,8 @@ App.GraphRoute = Ember.Route.extend({
             var addEdge = function (edges) {                
                 if (edges.get('length') > 0) {
                     edges.forEach(function (edge) {
-                        if (m.params.workflowID == edge.get('GroupID'))
-                            prime.edges.push({ id: edge.get('id'), from: edge.get('from'), to: edge.get('to'), color: edge.get('color'), width: edge.get('width'), style: edge.get('style') });
+                        //if (m.params.workflowID == edge.get('GroupID')) //Hide connected wf edges
+                        prime.edges.push({ id: edge.get('id'), from: edge.get('from'), to: edge.get('to'), color: edge.get('color'), width: edge.get('width'), style: edge.get('style'), group: edge.get('GroupID') });
                     });
                 }
             };
@@ -1979,6 +1979,35 @@ App.VizEditorComponent = Ember.Component.extend({
         this.graph.on('click', function (data) {
             if (data.nodes.length > 0) {
                 _this.set('selected', data.nodes[0]);
+                var md = _this.get('data'); // has to be synched with data
+                var d = _this.get('vizDataSet');
+                var edges = d.edges.get();
+                var nodes = d.nodes.get();
+                var n = d.nodes.get(data.nodes[0]);
+                Enumerable.From(nodes).ForEach(
+                    function (value) {
+                        delete value.color;
+                        if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
+                            value.color = "#FFFFFF"; //BEGIN                   
+                        }
+                        if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
+                                && (value.group.indexOf(md.workflowID) > -1
+                       || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
+                            value.color = "#000000"; //END
+                            value.fontColor = "#FFFFFF";
+                        }
+                        else {
+                            value.fontColor = "#000000";
+                        }
+
+                        return value;
+                    });
+
+                d.nodes.update(nodes);
+                //TODO: check for node workflow currency and update color
+                //if (value.group.indexOf(md.workflowID) < 0)
+                //    value.color = "#00FF00";
+
             }
         });
 
@@ -2016,12 +2045,25 @@ App.VizEditorComponent = Ember.Component.extend({
         });
         d.nodes.remove(delNodes);
 
+
         //Step 1a: Clean Nodes for Presentation
         md.nodes = Enumerable.From(md.nodes).Select(
             function (value, index) {
                 if (typeof value !== 'undefined' && typeof value.label === 'string')
                     value.label = value.label.replace(/_/g, ' ');
                 value.mass = 1.2;
+                if (!Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
+                    value.color = "#FFFFFF"; //BEGIN                   
+                }
+                if (!Enumerable.From(md.edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
+                    && (value.group.indexOf(md.workflowID) > -1 
+                        || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
+                    value.color = "#000000"; //END
+                    value.fontColor = "#FFFFFF";
+                }
+                else {
+                    value.fontColor = "#000000";
+                }
                 return value;
             }).ToArray();
 
@@ -2255,24 +2297,7 @@ App.Node = DS.Model.extend({
     }.property(),
     _group : null,
     group: function () {
-        //return 'x';
-        //TODO: Show diff colours for start and end
-        var gid = '';
-        var found = false;
-        var _this = this;
-        this.store.filter(App.Edge, {}, function (x) { if (_this.id == x.get('to')) found = true; })
-        //console.log(this.get('id'))
-        if (!found)
-            gid = '_BEGIN';
-        else {
-            gid = Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
-            if (!gid || gid.trim() === '')
-                gid = '_END';
-            //else if (gid.indexOf(',') < 0)
-            //    gid = '_COMMON'
-        }
-        //console.log(gid);
-        return gid;
+        return Enumerable.From(this._data.edges).Select("f=>f.get('GroupID')").Distinct().ToArray().toString(); // any string, will be grouped - random color
     }.property(),
     humanName: function () {
         var temp = this.get('label');
