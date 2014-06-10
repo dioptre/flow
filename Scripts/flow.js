@@ -1619,7 +1619,7 @@ App.GraphController = Ember.ObjectController.extend({
 
                     var found = false
                     if (currentNodesonScreen) {
-                         found = (Enumerable.From(currentNodesonScreen.nodes).Any("f=>f.id==='" + f + "'"));
+                         found = (Enumerable.From(currentNodesonScreen.nodes).Any("f=>f.id==='" + id + "'"));
                     }
                     if (!found) {
                         var newNode = _this.store.getById('node', id);
@@ -1628,7 +1628,7 @@ App.GraphController = Ember.ObjectController.extend({
                         _this.set('model.graphData.nodes', currentNodesonScreen.nodes.concat([]));
 
                     } else {
-                        alert('Node already on screen.')
+                        alert('Process already in workflow.')
                     }
                     //debugger;
                 });
@@ -1652,7 +1652,7 @@ App.GraphController = Ember.ObjectController.extend({
             else
                 newWorkflow.set('name', this.get('model.workflow.name'));
             newWorkflow.save().then(function (data) {
-                Messenger().post({ type: 'success', message: "Workflow successfully renamed." })
+                Messenger().post({ type: 'success', message: "Workflow successfully updated." })
 
                 if (_this.get('workflowGte2')) {
                     Enumerable.From(_this.get('model.workflows')).Where("f=>f.id==='" + _this.get('workflowID') + "'").Single().name = _this.get('model.workflow.name');
@@ -1664,7 +1664,7 @@ App.GraphController = Ember.ObjectController.extend({
 
                 _this.set('workflowEditNameModal', false);
             }, function () {
-                Messenger().post({ type: 'error', message: "Rename failed. Try again please." })
+                Messenger().post({ type: 'error', message: "Workflow update failed. Try again please." })
 
             })
 
@@ -1740,6 +1740,10 @@ App.GraphController = Ember.ObjectController.extend({
         },
         addNewEdge: function (data) {
             var _this = this;
+            newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
+            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
+                this.send('updateWorkflowNameNow');
+            }
             data.id = NewGUID();
             data.GroupID = this.get('workflowID');
             App.Node.store.createRecord('edge', data).save().then(function () {
