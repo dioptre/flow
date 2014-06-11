@@ -413,3 +413,7 @@ span.graph-manipulationUI:hover {
 .graph-manipulation-editMode {
     display: none !important;
 }
+
+.graphResultRow {
+    cursor: pointer;
+}
