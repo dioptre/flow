@@ -21,14 +21,19 @@ App.Router.map(function () {
     this.route('permission');
     this.route('login');
     this.route('myprofiles');
-
-
-
+    this.route('help');
 // Currently unused.
 // this.route('userlist');
 // this.route('userprofile');
 // this.route('usernew');
 });
+
+App.HelpRoute = Ember.Route.extend({
+    beforeModel: function (m) {
+        return this.replaceWith('graph', '76be503d-4689-47f8-99fe-2f512f81d4d5', { queryParams: { workflowID: 'c65d9b93-d986-4f70-bc0a-3eb2c6c0ecdd' } });
+    }
+});
+
 
 App.WorkflowRoute = Ember.Route.extend({
     actions: {
@@ -1298,7 +1303,7 @@ App.GraphRoute = Ember.Route.extend({
             selectedID: id,
             content: '',
             label: '',
-            editing: false,  // This gets passed to visjs to enable/disable editing dependig on context
+            editing: true,  // This gets passed to visjs to enable/disable editing dependig on context
             params: params
         });
     },
@@ -1395,7 +1400,7 @@ App.GraphRoute = Ember.Route.extend({
         else { //NEW NODE
             m.content = '';
             m.label = '';
-            m.editing = false;
+            m.editing = true;
             m.humanName = '';
             //TODO WORKFLOW
             this.store.create
@@ -1424,7 +1429,6 @@ App.GraphController = Ember.ObjectController.extend({
     queryParams: ['workflowID'],
     newName: null,
     newContent: null,
-    existingNodeModal: false,
     workflowEditNameModal: false,
     workflowNewModal: false, // up to here is for new ones
     editing: true,
@@ -1553,92 +1557,7 @@ App.GraphController = Ember.ObjectController.extend({
             return (typeof this.get('validateExistingName') === 'string') || (typeof this.get('validateWorkflowName') === 'string');
     }.property('validateWorkflowName', 'validateNewName', 'validateExistingName'),
 
-    actions: {
-        showExistingNodeModal: function(item){
-
-
-            this.set('existingNodeModal', true); // Show the modal before anything else
-
-            // Make selectbox work after it's been inserted to the view - jquery hackss
-            Ember.run.scheduleOnce('afterRender', this, function(){
-                $('#existingNodesel').select2({
-                    placeholder: "Enter Process...",
-                    minimumInputLength: 2,
-                    tags: true,
-                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
-                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "/flow/searches",
-                        dataType: 'json',
-                        multiple: true,
-                        data: function (term, page) {
-                            return {keywords: term, type: 'flow', pageSize: 8, page: page - 1 };
-                        },
-                        results: function (data, page) { // parse the results into the format expected by Select2.
-                            // debugger;
-                            if (data.search.length === 0) {
-                                return { results: [] };
-                            }
-                            var total = data.search[0].TotalRows;
-                            var more = (page * 8) < total;
-                            var results = Enumerable.From(data.search).Select("f=>{id:f.id + f.Title,tag:f.Title}").ToArray();
-                            return { results: results, text: 'tag', more: more };
-                        }
-                    },
-                    formatResult: function(state) {return state.tag; },
-                    formatSelection: function (state) {return state.tag; },
-                    escapeMarkup: function (m) { return m; }
-                });
-            });
-        },
-        submitExistingNodeModal: function(){
-            var _this = this;
-
-            var existingNodes = $('#existingNodesel').val()
-
-
-
-            if (existingNodes !== '') {
-                Enumerable.From(existingNodes.split(',')).ForEach(function (f) {
-                    // check if node already in store???
-                    var id = f.substring(0,36)
-                    var name = f.substring(36)
-
-
-
-                    var result = _this.store.getById('node', id);
-                    if (result === null) {
-                        // need to push record into store
-                        _this.store.push('node', {
-                            id: id,
-                            label: name
-                        });
-                    }
-
-                    // check if already in graph
-                    var currentNodesonScreen = _this.get('model').graphData;
-
-                    var found = false
-                    if (currentNodesonScreen) {
-                         found = (Enumerable.From(currentNodesonScreen.nodes).Any("f=>f.id==='" + id + "'"));
-                    }
-                    if (!found) {
-                        var newNode = _this.store.getById('node', id);
-                        var a = { id: newNode.get('id'), label: newNode.get('label'), shape: newNode.get('shape'), group: newNode.get('group') };
-                        currentNodesonScreen.nodes.push(a);
-                        _this.set('model.graphData.nodes', currentNodesonScreen.nodes.concat([]));
-
-                    } else {
-                        alert('Process already in workflow.')
-                    }
-                    //debugger;
-                });
-            }
-
-            this.set('existingNodeModal', false);
-        },
-        cancelExistingNodeModal: function(){
-            this.set('existingNodeModal', false);
-        },
+    actions: {      
         updateWorkflowNameNow: function(){
             //new name - model.workflow.name
             //debugger;
@@ -1879,14 +1798,16 @@ function recurseGraphData(id, array, _this, depth, depthMax, nodeMax, store) {
     return array;
 }
 
-
 App.VizEditorComponent = Ember.Component.extend({
     needs: ['graph'],
-    editing: false,
+    editing: true,
     toggleEditing: function () {
         if (this.graph !== null) {
             this.graph.setOptions({
-                dataManipulation: this.get('editing')
+                dataManipulation: {
+                    enabled: this.get('editing'),
+                    initiallyVisible: true
+                }
             });
         }
     }.observes('editing'),
@@ -1894,13 +1815,18 @@ App.VizEditorComponent = Ember.Component.extend({
     vizDataSet: { nodes: new vis.DataSet(), edges: new vis.DataSet() },
     classNames: ['vis-component'],
     selected: '',
+    isSelected: false,
+    isWorkflow: function () {
+        return IsGUID(this.get('selected'));
+    }.property(),
     graph: null,
+    existingNodeModal: false,
     setup: function () {
 
         var _this = this;
         var groups = {};
-        var centralGravity = 0.0175; //TODO HACK, AG, Less gravity for known graphs
-        if (!IsGUID(this.selected)) {
+        var centralGravity = 0.0155; //TODO HACK, AG, Less gravity for known graphs
+        if (!this.get('isWorflow')) {
             centralGravity = 0.5;
         }        
         var container = $('<div>').appendTo(this.$())[0];
@@ -1937,9 +1863,13 @@ App.VizEditorComponent = Ember.Component.extend({
             physics: { barnesHut: { centralGravity: centralGravity, springConstant: 0.01, damping: 0.1, springLength: 170 } },
             stabilize: false,
             stabilizationIterations: 200,
-            dataManipulation: this.get('editing'),
+            dataManipulation: {
+                enabled: this.get('editing'),
+                initiallyVisible: true
+            },
             onAdd: function (data, callback) {
                 _this.sendAction('toggleWorkflowNewModal', data, callback);
+                _this.set('isSelected', false);
             },
             onDelete: function (data, callback) {
                 if (data.nodes.length > 0) {
@@ -1949,11 +1879,16 @@ App.VizEditorComponent = Ember.Component.extend({
                     }
                 }
                 _this.sendAction('deleteGraphItems', data, callback);
+                _this.set('isSelected', false);
             },
             onEdit: function (data, callback) {
-                _this.sendAction('toggleWorkflowEditModal', data, callback);
+                _this.sendAction('toggleWorkflowEditModal', data, callback);                
             },
             onConnect: function (data, callback) {
+                if (typeof _this.graph.connection !== 'undefined') {
+                    data.RelationTypeID = _this.graph.connection.RelationTypeID;
+                    _this.graph.connection.RelationTypeID = null;
+                }
                 function saveLink() {
                     _this.sendAction('addNewEdge', data, callback);
                 }
@@ -1967,15 +1902,15 @@ App.VizEditorComponent = Ember.Component.extend({
                 else {
                     saveLink()
                 }
+                _this.set('isSelected', false);
             }
         };
 
         // Initialise vis.js
         this.graph = new vis.Graph(container, data, options);
-
         // This sets the new selected item on click
         this.graph.on('click', function (data) {
-            if (data.nodes.length > 0) {
+            if (data.nodes.length > 0) {                
                 _this.set('selected', data.nodes[0]);
                 if (IsGUID(data.nodes[0])) {
                     var md = _this.get('data'); // has to be synched with data
@@ -2010,6 +1945,10 @@ App.VizEditorComponent = Ember.Component.extend({
                 //    value.color = "#00FF00";
 
             }
+            if (data.nodes.length > 0 || data.edges.length > 0)
+                _this.set('isSelected',true);
+            else
+                _this.set('isSelected', false);
         });
 
         //this.graph.on('stabilized', function (iterations) {
@@ -2052,7 +1991,7 @@ App.VizEditorComponent = Ember.Component.extend({
             function (value, index) {
                 if (typeof value !== 'undefined' && typeof value.label === 'string')
                     value.label = value.label.replace(/_/g, ' ');
-                value.mass = 1.2;
+                value.mass = 1.8;
                 if (IsGUID(value.id)) {
                     if (firstNode) {
                         //value.x = 150; //TODO Shake the sedentary nodes out
@@ -2110,7 +2049,150 @@ App.VizEditorComponent = Ember.Component.extend({
         d.edges.update(newEdges);      
 
 
-    }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement')
+    }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement'),
+    actions: {
+        edgeCreateY: function () {
+            if (typeof this.graph.connection === 'undefined')
+                this.graph.connection = {};
+            this.graph.connection.RelationTypeID = 'bc4f2c1f-e25e-4849-a7f9-878c41aa6847';
+            if (!this.graph.editMode)
+                this.graph._toggleEditMode();
+            else {
+                this.graph._toggleEditMode();
+                this.graph._toggleEditMode();
+            }
+            this.graph._createAddEdgeToolbar();
+        },
+        edgeCreateN: function () {
+            if (typeof this.graph.connection === 'undefined')
+                this.graph.connection = {};
+            this.graph.connection.RelationTypeID = '4d6a4003-2dd7-404e-a3cc-8d96d8237aa7';
+            if (!this.graph.editMode)
+                this.graph._toggleEditMode();
+            else {
+                this.graph._toggleEditMode();
+                this.graph._toggleEditMode();
+            }
+            this.graph._createAddEdgeToolbar();
+        },
+        edgeCreate: function () {
+            if (typeof this.graph.connection === 'undefined')
+                this.graph.connection = {};
+            this.graph.connection.RelationTypeID = null;
+            if (!this.graph.editMode)
+                this.graph._toggleEditMode();
+            else {
+                this.graph._toggleEditMode();
+                this.graph._toggleEditMode();
+            }
+            this.graph._createAddEdgeToolbar();
+        },
+        processCreate: function () {
+            this.graph._unselectAll();
+            if (!this.graph.editMode)
+                this.graph._toggleEditMode();
+            else {
+                this.graph._toggleEditMode();
+                this.graph._toggleEditMode();
+            }
+            this.graph._createAddNodeToolbar();
+            this.graph._addNode();
+        },
+        selectionDelete: function () {
+            if (!this.graph.editMode)
+                this.graph._toggleEditMode();
+            else {
+                this.graph._toggleEditMode();
+                this.graph._toggleEditMode();
+            }
+            this.graph._deleteSelected();
+        },
+        showExistingNodeModal: function (item) {
+
+
+            this.set('existingNodeModal', true); // Show the modal before anything else
+
+            // Make selectbox work after it's been inserted to the view - jquery hackss
+            Ember.run.scheduleOnce('afterRender', this, function () {
+                $('#existingNodesel').select2({
+                    placeholder: "Enter Process...",
+                    minimumInputLength: 2,
+                    tags: true,
+                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                        url: "/flow/searches",
+                        dataType: 'json',
+                        multiple: true,
+                        data: function (term, page) {
+                            return { keywords: term, type: 'flow', pageSize: 8, page: page - 1 };
+                        },
+                        results: function (data, page) { // parse the results into the format expected by Select2.
+                            // debugger;
+                            if (data.search.length === 0) {
+                                return { results: [] };
+                            }
+                            var total = data.search[0].TotalRows;
+                            var more = (page * 8) < total;
+                            var results = Enumerable.From(data.search).Select("f=>{id:f.id + f.Title,tag:f.Title}").ToArray();
+                            return { results: results, text: 'tag', more: more };
+                        }
+                    },
+                    formatResult: function (state) { return state.tag; },
+                    formatSelection: function (state) { return state.tag; },
+                    escapeMarkup: function (m) { return m; }
+                });
+            });
+        },
+        submitExistingNodeModal: function () {
+            var _this = this;
+
+            var existingNodes = $('#existingNodesel').val()
+
+
+
+            if (existingNodes !== '') {
+                Enumerable.From(existingNodes.split(',')).ForEach(function (f) {
+                    // check if node already in store???
+                    var id = f.substring(0, 36)
+                    var name = f.substring(36)
+
+
+
+                    var result = App.Node.store.getById('node', id);
+                    if (result === null) {
+                        // need to push record into store
+                        App.Node.store.push('node', {
+                            id: id,
+                            label: name
+                        });
+                    }
+
+                    // check if already in graph
+                    var currentNodesonScreen = _this.get('vizDataSet');
+
+                    var found = false
+                    if (currentNodesonScreen) {
+                        found = (Enumerable.From(currentNodesonScreen.nodes.getIds()).Any("f=>f==='" + id + "'"));
+                    }
+                    if (!found) {
+                        var newNode = App.Node.store.getById('node', id);
+                        var a = { id: newNode.get('id'), label: newNode.get('label'), shape: newNode.get('shape'), group: newNode.get('group') };
+                        currentNodesonScreen.nodes.add(a);
+                        _this.get('data').nodes.push(a); //, currentNodesonScreen.nodes.concat([]));
+
+                    } else {
+                        alert('Process already in workflow.')
+                    }
+                    //debugger;
+                });
+            }
+
+            this.set('existingNodeModal', false);
+        },
+        cancelExistingNodeModal: function () {
+            this.set('existingNodeModal', false);
+        }
+    }
 });
 
     // didInsertElement: function () {
@@ -2334,8 +2416,14 @@ App.Edge = DS.Model.extend({
     width: function(){
         return 1;
     }.property(),
-    color: function(){
-        return 'gray';
+    color: function () {
+        var rt = this.get('RelationTypeID');
+        if (rt && rt.toLowerCase() == 'bc4f2c1f-e25e-4849-a7f9-878c41aa6847')
+            return 'green';
+        else if (rt && rt.toLowerCase() == '4d6a4003-2dd7-404e-a3cc-8d96d8237aa7')
+            return 'red';
+        else
+            return 'grey';
     }.property(),
     GroupID: DS.attr(),
     Related: DS.attr('date'),
@@ -2517,7 +2605,8 @@ App.WikipediaRoute = Ember.Route.extend({
             selected: params.id,
             content: '',
             title: ((typeof params.id === 'string' && params.id !== null && params.id.length > 0) ? decodeURIComponent(params.id).replace(/_/ig, " ") : params.id),
-            encodedTitle: encodeURIComponent(params.id.replace(/ /ig, "_"))
+            encodedTitle: encodeURIComponent(params.id.replace(/ /ig, "_")),
+            humanName: ((typeof params.id === 'string' && params.id !== null && params.id.length > 0) ? ToTitleCase(decodeURIComponent(params.id).replace(/_/ig, " ")) : params.id)
         });
     },
     afterModel: function (m) {

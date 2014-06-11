@@ -390,3 +390,26 @@ span.graph-manipulationUI:hover {
 .ie .exportWF {
     display: none !important;
 }
+
+.graphButtons {
+    text-align:right;
+}
+
+.graphButton {
+    padding-left:5px;
+    text-decoration: none !important;
+    cursor: pointer;
+    font-size: small;
+}
+
+.graph-manipulationDiv {
+    display: none !important;
+}
+
+.graph-manipulation-closeDiv {
+    display: none !important;
+}
+
+.graph-manipulation-editMode {
+    display: none !important;
+}

@@ -677,6 +677,12 @@
                     <span>{{#if isLoggedIn}}{{userProfile.UserName}}{{else}}My Profile{{/if}}</span>
                 {{/link-to}}
             {{/view}}
+            {{#view App.HomeNavView}}
+                {{#link-to 'help'}}
+                    <i class="icon-question"></i>
+                    <span>Help</span>
+                {{/link-to}}
+            {{/view}}
             {{!--   
                 {{#view App.HomeNavView}}
                     {{#link-to 'userprofile'}}
@@ -713,7 +719,26 @@
 
 
 
-  <script type="text/x-handlebars" id="components/viz-editor"><p>hi</p></script>
+  <script type="text/x-handlebars" id="components/viz-editor">
+                {{#eui-modal openBinding="existingNodeModal"}}
+                    <div style="padding: 50px; text-align: center;">
+                        <h4>Add existing Process</h4>
+
+                        <br>
+                        <p> You can add an existing process by using the input box below: </p>
+                        <br>
+
+                        <b>Add Process:</b><br>
+                        <input id="existingNodesel" style="width: 275px;" class='select2' type='hidden'/>
+
+                        <br>
+                        <br>
+
+                        {{eui-button label="Cancel" action="cancelExistingNodeModal" size='medium'}}
+                        {{eui-button label="Add" action="submitExistingNodeModal" style='primary' size='medium'}}
+                    </div>
+                {{/eui-modal}}
+      <p class="graphButtons">{{#if isWorkflow}}<a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign" style="color:grey;"></i>&nbsp;Add Process&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down" style="color:grey;"></i>&nbsp;Add Existing Process&nbsp;</a>&nbsp;|&nbsp;<a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small" style="color:grey;"></i>&nbsp;Add Connection&nbsp;</a><a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a>{{#if isSelected}}<a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash" style="color:grey;"></i>&nbsp;Delete Selected&nbsp;</a>{{/if}}&nbsp;|&nbsp;{{/if}}<a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.graph-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share" style="color:grey;"></i>&nbsp;Export Workflow&nbsp;</a></p></script>
 
 
   <script type="text/x-handlebars" id="wikipedia">
@@ -731,7 +756,7 @@
 
         <div class="row">
             <div class="col-md-6">
-                <h2><b>{{title}}</b></h2>
+                <h2><b>{{humanName}}</b></h2>
                 {{#if model.content}}
                   {{safehtml model.content}}
                 {{/if}}
@@ -782,7 +807,7 @@
                         <small>
                             {{#if model.workflow.name }}
                                 {{#if workflowGte2}}
-                                {{eui-select optionsBinding=model.workflows valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='small' width='250px'}}
+                                {{eui-select optionsBinding='model.workflows' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='small' width='230px'}}
                                 {{else}}
                                     {{model.workflow.name}}
                                 {{/if}}
@@ -795,16 +820,6 @@
                             </span>
                         </small>
                     </h4>
-                    <br>
-                    <div style="text-align:right"><a {{action 'showExistingNodeModal'}}>Add existing Node</a><div class="exportWF" style="display:inline-block">&nbsp;|&nbsp;<a id="exportWorkflow" onclick="javascript:this.href = $('.graph-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';">Export Workflow</a></div></div>
-                    {{!--{{#each lworkflow in model.workflows}}
-                        <li>
-                            {{lworkflow.name}}
-                            {{lworkflow.id}}
-                        </li>
-                    {{/each}}--}}
-
-
                    <hr>
               </div>
             </div>
@@ -812,46 +827,18 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-6">
-
-
-
-
-                {{#eui-modal openBinding="existingNodeModal"}}
-                    <div style="padding: 50px; text-align: center;">
-                        <h4>Add existing Process</h4>
-
-                        <br>
-                        <p> You can add an existing process by using the input box below: </p>
-                        <br>
-
-                        <b>Add Process:</b><br>
-                        <input id="existingNodesel" style="width: 275px;" class='select2' type='hidden'/>
-
-                        <br>
-                        <br>
-
-                        {{eui-button label="Cancel" action="cancelExistingNodeModal" size='medium'}}
-                        {{eui-button label="Add" action="submitExistingNodeModal" style='primary' size='medium'}}
-                    </div>
-                {{/eui-modal}}
-
-
-
-
-
-
                 {{#eui-modal openBinding="workflowEditNameModal"}}
-                 <div style="padding: 50px; text-align: center;">
-                     <h4> Update Workflow name</h4>
-                     <br />
-                     <br />
-                Choose a new name below:<br />
-                {{eui-input valueBinding="model.workflow.name" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+                     <div style="padding: 50px; text-align: center;">
+                         <h4> Update Workflow name</h4>
+                         <br />
+                         <br />
+                    Choose a new name below:<br />
+                    {{eui-input valueBinding="model.workflow.name" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
 
-                {{eui-button label="Cancel" action="toggleworkflowEditNameModal" size='large'}}
-                    {{eui-button label="Submit" action="updateWorkflowNameNow" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
-                     </div>
-            {{/eui-modal}}
+                    {{eui-button label="Cancel" action="toggleworkflowEditNameModal" size='large'}}
+                        {{eui-button label="Submit" action="updateWorkflowNameNow" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                         </div>
+                {{/eui-modal}}
 
                  {{#eui-modal openBinding="workflowEditModal" style="full"}}
                     <div style="padding: 50px; text-align: center;">
