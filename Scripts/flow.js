@@ -1090,10 +1090,10 @@ App.MapResultsController = Ember.Controller.extend({
         $.each(results, function (i, a) {
             var geo = JSON.parse(a.get('SpatialJSON'));
             if (!geos[geo.id]) {
-                geos[geo.id] = { name: '<a href="/flow/#/process/' + a.get('ReferenceID') + '">' + a.get('Title') + '</a>', id: geo.id, geo: geo.data };
+                geos[geo.id] = { name: '<a href="/flow/#/process/' + a.get('ReferenceID') + '">' + a.get('humanName') + '</a>', id: geo.id, geo: geo.data };
             }
             else {
-                geos[geo.id].name += '<br/><a href="/flow/#/process/' + a.get('ReferenceID') + '">' + a.get('Title') + '</a>';
+                geos[geo.id].name += '<br/><a href="/flow/#/process/' + a.get('ReferenceID') + '">' + a.get('humanName') + '</a>';
             }
         });
 
@@ -1172,7 +1172,7 @@ function LoadMap() {
     if (!isMapLoaded) {
         isMapLoaded = true;
         // LoadScript('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&callback=MapInitialize');
-        LoadScript('http://maps.googleapis.com/maps/api/js?libraries=drawing&sensor=true&callback=MapInitialize');
+        LoadScript('https://maps.googleapis.com/maps/api/js?libraries=drawing&sensor=true&callback=MapInitialize');
 
     }
 }
@@ -1868,8 +1868,14 @@ App.VizEditorComponent = Ember.Component.extend({
                 initiallyVisible: true
             },
             onAdd: function (data, callback) {
-                _this.sendAction('toggleWorkflowNewModal', data, callback);
-                _this.set('isSelected', false);
+                var cb = function (finalData) {
+                    this.graph._toggleEditMode();
+                    callback(finalData);
+                };
+                _this.sendAction('toggleWorkflowNewModal', data, cb);
+                if (this.graph.editMode)
+                    _this.graph._toggleEditMode();
+                _this.set('isSelected', false);                
             },
             onDelete: function (data, callback) {
                 if (data.nodes.length > 0) {
@@ -2088,7 +2094,8 @@ App.VizEditorComponent = Ember.Component.extend({
             this.graph._createAddEdgeToolbar();
         },
         processCreate: function () {
-            this.graph._unselectAll();
+            if (!this.graph._selectionIsEmpty())
+                this.graph._unselectAll();
             if (!this.graph.editMode)
                 this.graph._toggleEditMode();
             else {
@@ -2682,7 +2689,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
         if (id == 'Special:Random') {
             return new Ember.RSVP.Promise(function (resolve, reject) {
                 var randomURL = 'http://en.wikipedia.org/w/api.php?format=json&action=query&list=random&prop=revisions&rvprop=content&rnnamespace=0';
-                jQuery.getJSON("http://query.yahooapis.com/v1/public/yql?" +
+                jQuery.getJSON("https://query.yahooapis.com/v1/public/yql?" +
                    "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
                    encodeURIComponent(randomURL) +
                    "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
@@ -2697,7 +2704,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
         else
         return new Ember.RSVP.Promise(function (resolve, reject) {
             var url = 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=' + encodeURIComponent(id) + '&prop=revisions&rvprop=content';
-            jQuery.getJSON("http://query.yahooapis.com/v1/public/yql?" +
+            jQuery.getJSON("https://query.yahooapis.com/v1/public/yql?" +
                 "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
                 encodeURIComponent(url) +
                 "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
@@ -2968,8 +2975,8 @@ App.TinymceEditorComponent = Ember.Component.extend({
         //});
 
         // Setup plugins and toolbar
-        config.plugins = ["locationpicker myfilepicker code"];
-        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent code | locationpicker | myfilepicker"];
+        config.plugins = ["locationpicker myfilepicker code link unlink"];
+        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent code link unlink | locationpicker | myfilepicker"];
         config.schema = "html5";
         config.menubar = false;
         config.valid_elements = "*[*]";
