@@ -1,3 +1,12 @@
+// Analytics using segment
+window.analytics = window.analytics || [], window.analytics.methods = ["identify", "group", "track", "page", "pageview", "alias", "ready", "on", "once", "off", "trackLink", "trackForm", "trackClick", "trackSubmit"], window.analytics.factory = function (t) { return function () { var a = Array.prototype.slice.call(arguments); return a.unshift(t), window.analytics.push(a), window.analytics } }; for (var i = 0; i < window.analytics.methods.length; i++) { var key = window.analytics.methods[i]; window.analytics[key] = window.analytics.factory(key) } window.analytics.load = function (t) { if (!document.getElementById("analytics-js")) { var a = document.createElement("script"); a.type = "text/javascript", a.id = "analytics-js", a.async = !0, a.src = ("https:" === document.location.protocol ? "https://" : "http://") + "cdn.segment.io/analytics.js/v1/" + t + "/analytics.min.js"; var n = document.getElementsByTagName("script")[0]; n.parentNode.insertBefore(a, n) } }, window.analytics.SNIPPET_VERSION = "2.0.9";
+
+if (window.location.host === "app.flowpro.io") {
+    analytics.load("mt4vl39sxg"); // PRODUCTION
+} else {
+    analytics.load("b24wxbyi89"); // DEV
+}
+
 Ember.FEATURES["query-params"] = true;
 
 function RedirectToLogin() {
@@ -5,10 +14,13 @@ function RedirectToLogin() {
     location.reload();
 }
 
+
 App = Ember.Application.create({
     // LOG_TRANSITIONS: true,
     rootElement: '#emberapphere'
 });
+
+
 
 App.Router.map(function () {
     this.route('graph', { path: 'process/:id' });
@@ -395,6 +407,9 @@ App.LoginController = Ember.Controller.extend({
                       url: "/flow/myuserinfo"
                     }).then(function(data){
                         data.UserName = ToTitleCase(data.UserName);
+                        analytics.identify(data.id, {
+                            name: data.UserName
+                        });
                         _this.set('controllers.application.userProfile', data);
                     }, function (jqXHR) {
                       jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -439,6 +454,7 @@ App.ApplicationController = Ember.Controller.extend({
                 // App.reset(); - should reset
                 // _this.transitionToRoute('login');
                 // Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
+                analytics.track('Manual logout');
                 $.cookie('showLoggedOutModal', true);
                 RedirectToLogin();
             }, function (jqXHR) {
@@ -708,8 +724,27 @@ App.ApplicationView = Ember.View.extend({
 })
 
 
+var oldURL = '';
+App.Router.reopen({
+    notifyGoogleAnalytics: function () {
+        var url = this.get('url');
 
- App.ApplicationRoute = Ember.Route.extend({
+        // Duplicate search results shouldn't be tracked
+        if (/^\/search/.test(url)) {
+            url = '/search'
+        }
+        
+        // Only send event if actually on new page
+        if (oldURL != url) {
+            console.log('Tracking URL:', url);
+            analytics.page(url);
+        }
+
+        oldURL = url; // create copy
+    }.on('didTransition'),
+});
+
+App.ApplicationRoute = Ember.Route.extend({
    actions: {
      loading: function() {
 
@@ -854,6 +889,10 @@ App.SearchController = Ember.ObjectController.extend({
         },
         search: function () {
             this.loadAll();
+            analytics.track('Manual search', {
+                keywords: this.get('keywords'),
+                tags: this.get('tags')
+            });
             // On button click. Transition node.
             // this.transitionToRoute('search', 0, temp)
         },
