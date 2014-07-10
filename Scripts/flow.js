@@ -423,7 +423,6 @@ App.LoginController = Ember.Controller.extend({
             }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
             });
-            // debugger;
         }
     }
 
@@ -1419,7 +1418,6 @@ App.GraphRoute = Ember.Route.extend({
                         }
                     }
                     prime.nodes = Em.A(prime.nodes.concat(sessionNodes));
-                    //debugger;
                     prime = Ember.Object.create(prime);
                     m.workflows = Em.A(Enumerable.From(prime.workflows)
                         .GroupBy("$.id", "", "key,e=>Ember.Object.create({id: key, name: e.source[0].name, humanName: e.source[0].humanName, firstNode: e.source[0].firstNode})")
@@ -1599,8 +1597,6 @@ App.GraphController = Ember.ObjectController.extend({
     actions: {      
         updateWorkflowNameNow: function(){
             //new name - model.workflow.name
-            //debugger;
-
             var _this = this;
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
             if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
@@ -2089,7 +2085,6 @@ App.VizEditorComponent = Ember.Component.extend({
 
         //Enumerable.From(md.nodes).ForEach(function (f) {
         //    //Add similar group if in workflow
-        //    //debugger;
         //});
         d.edges.update(newEdges);      
 
@@ -2173,7 +2168,6 @@ App.VizEditorComponent = Ember.Component.extend({
                             return { keywords: term, type: 'flow', pageSize: 8, page: page - 1 };
                         },
                         results: function (data, page) { // parse the results into the format expected by Select2.
-                            // debugger;
                             if (data.search.length === 0) {
                                 return { results: [] };
                             }
@@ -2229,7 +2223,6 @@ App.VizEditorComponent = Ember.Component.extend({
                     } else {
                         alert('Process already in workflow.')
                     }
-                    //debugger;
                 });
             }
 
@@ -3014,23 +3007,39 @@ App.TinymceEditorComponent = Ember.Component.extend({
         //});
 
         // Setup plugins and toolbar
-        config.plugins = ["locationpicker myfilepicker code link unlink"];
-        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent code link unlink | locationpicker | myfilepicker"];
+        config.plugins = ["locationpicker myfilepicker code link noneditable"];
+        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent code link | locationpicker | myfilepicker"];
         config.schema = "html5";
         config.menubar = false;
         config.valid_elements = "*[*]";
-        config.extended_valid_elements = "script[type|defer|src|language]";
+        //config.extended_valid_elements = "script[type|defer|src|language]";
+        config.extended_valid_elements = "div[data-json|id|class|type]";
         // Choose selector
         config.selector = "#" + _this.get("elementId");
         config.convert_urls = false;
-        config.extended_valid_elements = "script[type|defer|src|language]";
-
+        config.content_css = ["/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap.css", "/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap-overrides.css", "/Modules/EXPEDIT.Flow/Styles/expedit-flow.css", "/Modules/EXPEDIT.Share/Styles/expedit-share.css", "/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/font-awesome.css"];
+        config.object_resizing = "table";
         // Setup what happens on data changes
         config.setup = function (editor) {
             editor.on('change', function (e) {
                 var newData = e.level.content;
+
+                // clean new data 
+                var cleanData = '';
+                $(newData).each(function (i, d) {
+                    var temp = $(d)
+                    var temp = window.cleanFunctions(temp);
+                    window.renderFunctions(temp);
+
+                    if (typeof temp[0] !== 'undefined') {
+                        cleanData += temp[0].outerHTML;
+                    }
+                    
+                })
+
+                console.log(cleanData, ' clean-new ',newData);
                 _this.set('watchData', false);
-                if (newData) _this.set('data', newData);
+                if (newData) _this.set('data', cleanData);
                 _this.set('watchData', true);
             });
         }
@@ -3048,7 +3057,13 @@ App.TinymceEditorComponent = Ember.Component.extend({
         if (this.get('watchData')) {
             var content = this.get('data');
             if (content && tinyMCE.activeEditor !== null) {
-                tinyMCE.activeEditor.setContent(content);
+                //content = $(content);
+                //var tinyFrame = $(tinyMCE.activeEditor.contentDocument.firstElementChild);
+                //window.renderFunctions(content);
+                //tinyFrame.html(content);
+                //tinyMCE.activeEditor.setContent(content);
+                tinyMCE.execCommand('mceSetContent', false, content);
+                
             }
         }
     }.observes('data')
