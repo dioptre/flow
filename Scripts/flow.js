@@ -3026,9 +3026,10 @@ App.TinymceEditorComponent = Ember.Component.extend({
 
                 // clean new data 
                 var cleanData = '';
+                window.cleanFunctions($(newData));
                 $(newData).each(function (i, d) {
                     var temp = $(d)
-                    var temp = window.cleanFunctions(temp);
+                    temp = window.cleanFunctions(temp);
                     window.renderFunctions(temp);
 
                     if (typeof temp[0] !== 'undefined') {
