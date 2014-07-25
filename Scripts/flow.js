@@ -1500,11 +1500,8 @@ App.GraphController = Ember.ObjectController.extend({
 
     }.observes('model', 'model.selected', 'model.@each.workflows'),
     changeSelected: function () {
-        //alert('')
-
-     this.transitionToRoute('graph', this.get('model.selectedID'));
+        this.transitionToRoute('graph', this.get('model.selectedID'));
     }.observes('model.selectedID'),
-
     checkWorkflowName: function () {
         var _this = this;
         if (!_this.get('model.workflow.name') || typeof _this.get('model.workflow.name') !== 'string' || _this.get('model.workflow.name').trim().length < 1) {
@@ -1624,7 +1621,8 @@ App.GraphController = Ember.ObjectController.extend({
             })
 
         },
-        toggleworkflowEditNameModal: function() {
+        toggleworkflowEditNameModal: function () {
+            
             this.toggleProperty('workflowEditNameModal');
         },
         toggleWorkflowNewModal: function (data, callback) {
@@ -1635,6 +1633,9 @@ App.GraphController = Ember.ObjectController.extend({
         },
         updateWorkflow: function () {
             var _this = this;
+
+            tinyMCE.triggerSave();
+
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
             if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
                 newWorkflow = App.Node.store.createRecord('workflow', { id: this.get('workflowID'), name: this.get('model.workflow.name') });
@@ -1787,11 +1788,14 @@ App.GraphController = Ember.ObjectController.extend({
 App.GraphView = Ember.View.extend({
     didInsertElement : function(){
         this._super();
+        this.selectedContentChanges();
+    },
+    selectedContentChanges: function () {
         Ember.run.scheduleOnce('afterRender', this, function () {
-            window.cleanFunctions(this.$());
+            window.cleanAlternative(this.$());
             window.renderFunctions(this.$());
         });
-    }
+    }.observes('controller.model.selected.content'),
 });
 
 function recurseGraphData(id, array, _this, depth, depthMax, nodeMax, store) {
@@ -3049,7 +3053,7 @@ App.TinymceEditorComponent = Ember.Component.extend({
                     
                 })
 
-                console.log(cleanData, ' clean-new ',newData);
+                //console.log(cleanData, ' clean-new ',newData);
                 _this.set('watchData', false);
                 if (newData) _this.set('data', cleanData);
                 _this.set('watchData', true);

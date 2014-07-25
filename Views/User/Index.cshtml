@@ -142,7 +142,9 @@
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/jquery.dataTables.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/common.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/bootstrapvalidator/dist/js/bootstrapValidator.min.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/tiny-mce-custom-render-helper.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myformeditor/client.min.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myfilepicker/client.min.js")"></script>
     </head>
     <body>
 
@@ -318,7 +320,7 @@
 <script id="temp-text" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
     <label for="{{cid}}">{{label}}</label>
-    <input type="text" class="form-control {{form-size}}" name="{{label}}" id="{{cid}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
+    <input type="text" class="form-control {{form-size}}" name="{{label}}" id="{{cid}}" {{#if required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
   </div> 
 </script>
