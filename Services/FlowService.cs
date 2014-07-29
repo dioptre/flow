@@ -48,6 +48,7 @@ namespace EXPEDIT.Flow.Services {
         public const string FS_FLOW_CONTACT_ID = "{0}:ValidFlowUser";
 
         private readonly IUsersService _users;
+        private readonly IOrchardServices _services;
         public ILogger Logger { get; set; }
 
         public FlowService(
@@ -56,6 +57,7 @@ namespace EXPEDIT.Flow.Services {
             )
         {
             _users = users;
+            _services = orchardServices;
             T = NullLocalizer.Instance;
             Logger = NullLogger.Instance;
         }
@@ -87,6 +89,9 @@ namespace EXPEDIT.Flow.Services {
                         break;
                     case SearchType.FlowLocation:
                         table = d.GetTableName(typeof(GraphDataLocation));
+                        break;
+                    case SearchType.FlowGroup:
+                        table = d.GetTableName(typeof(GraphDataGroup));
                         break;
                     default:
                         table = d.GetTableName(typeof(GraphData));
@@ -330,7 +335,9 @@ namespace EXPEDIT.Flow.Services {
         }
 
         public bool CheckPayment()
-        {
+        {            
+            if (_services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                return true;
             if (!_users.ContactID.HasValue)
                 return false;
             var contactID = _users.ContactID;

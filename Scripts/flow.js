@@ -953,7 +953,7 @@ App.SearchController = Ember.ObjectController.extend({
                 page: this.get('pageGraph'),
                 keywords: this.get('keywords'),
                 tags: this.get('tags'),
-                type: 'flow',
+                type: 'process',
                 pagesize: this.get('pageSize')
             }).then(function (res) {
                 controller.set('controllers.graphResults.results', res.get('content'));
@@ -2180,7 +2180,7 @@ App.VizEditorComponent = Ember.Component.extend({
                         dataType: 'json',
                         multiple: true,
                         data: function (term, page) {
-                            return { keywords: term, type: 'flow', pageSize: 8, page: page - 1 };
+                            return { keywords: term, type: 'process', pageSize: 8, page: page - 1 };
                         },
                         results: function (data, page) { // parse the results into the format expected by Select2.
                             if (data.search.length === 0) {

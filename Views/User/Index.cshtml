@@ -182,20 +182,20 @@
 <script id="temp-address" type="text/x-handlebars-template">
   <div>
 	<div class="form-group {{#if required}}required{{/if}}">
-		<label for="{{cid}}">{{label}}</label>
-		<input type="text"  class="form-control {{form-size}}" id="address-street-{{cid}}" placeholder="Street" name="address-street-{{label}}" {{#if required}}data-bv-notempty="true" required{{/if}}>
+		<label for="{{cid}}-{{label}}">{{label}}</label>
+		<input type="text"  class="form-control {{form-size}}" id="address-street-{{cid}}-{{label}}" placeholder="Street" name="address-street-{{cid}}-{{label}}" {{#if required}}data-bv-notempty="true" required{{/if}}>
 	</div>
 	<div class="form-group">
-		<input type="text"  class="form-control {{form-size}}" id="address-city-{{cid}}" placeholder="City" name="address-city-{{label}}" {{#if required}}data-bv-notempty="true" required{{/if}}>
+		<input type="text"  class="form-control {{form-size}}" id="address-city-{{cid}}-{{label}}" placeholder="City" name="address-city-{{cid}}-{{label}}" {{#if required}}data-bv-notempty="true" required{{/if}}>
 	</div>
 	<div class="form-group">
-		<input type="text"  class="form-control {{form-size}}" id="address-state-{{cid}}" placeholder="State" name="address-state-{{label}}" {{#if required}}data-bv-notempty="true" required{{/if}}>
+		<input type="text"  class="form-control {{form-size}}" id="address-state-{{cid}}-{{label}}" placeholder="State" name="address-state-{{cid}}-{{label}}" {{#if required}}data-bv-notempty="true" required{{/if}}>
 	</div>
 	<div class="form-group">
-		<input type="text"  class="form-control {{form-size}}" id="address-postcode-{{cid}}" placeholder="Postcode" name="address-postcode-{{label}}" {{#if required}}data-bv-notempty="true" required{{/if}}>
+		<input type="text"  class="form-control {{form-size}}" id="address-postcode-{{cid}}-{{label}}" placeholder="Postcode" name="address-postcode-{{cid}}-{{label}}" {{#if required}}data-bv-notempty="true" required{{/if}}>
 	</div>
 	<div class="form-group">
-		<input type="text"  class="form-control {{form-size}}" id="address-country-{{cid}}" placeholder="Country" name="address-country-{{label}}" {{#if required}}data-bv-notempty="true" required{{/if}}>
+		<input type="text"  class="form-control {{form-size}}" id="address-country-{{cid}}-{{label}}" placeholder="Country" name="address-country-{{cid}}-{{label}}" {{#if required}}data-bv-notempty="true" required{{/if}}>
 	</div>
     <span class="help-block">{{field_options.description}}</span>
   </div>
@@ -203,32 +203,32 @@
 
 <script id="temp-time" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}}">{{label}}</label>
-    <input type="text" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" placeholder="hh:mm" data-bv-regexp-message="Please enter a time in the correct format (Ex. 13:52)" class="form-control {{form-size}}" id="{{cid}}" name="{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
+    <label for="{{cid}}-{{label}}">{{label}}</label>
+    <input type="text" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" placeholder="hh:mm" data-bv-regexp-message="Please enter a time in the correct format (Ex. 13:52)" class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
   </div>  
 </script> 
 
 <script id="temp-date" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}}">{{label}}</label>
-    <input type="text" data-bv-date="true" data-bv-date-format="DD/MM/YYYY" placeholder="DD/MM/YYYY" class="form-control {{form-size}}" id="{{cid}}" name="{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
+    <label for="{{cid}}-{{label}}">{{label}}</label>
+    <input type="text" data-bv-date="true" data-bv-date-format="DD/MM/YYYY" placeholder="DD/MM/YYYY" class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
   </div> 
 </script> 
  
 <script id="temp-website" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}}">{{label}}</label>
-    <input type="text" data-bv-uri="true" data-bv-uri-message="Please enter a valid URL starting with http://" class="form-control {{form-size}}" id="{{cid}}" name="{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
+    <label for="{{cid}}-{{label}}">{{label}}</label>
+    <input type="text" data-bv-uri="true" data-bv-uri-message="Please enter a valid URL starting with http://" class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
   </div> 
 </script>
 
 <script id="temp-number" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}}">{{label}}</label>
-    <input type="text"class="form-control {{form-size}}" id="{{cid}}" name="{{label}}" min="{{field_options.min}}" max="{{field_options.max}}" {{#if field_options.integer_only}}data-bv-integer="true" data-bv-integer-message="Number needs to be an integer. '1' is okay, '1.1' not!"{{/if}} {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
+    <label for="{{cid}}-{{label}}">{{label}}</label>
+    <input type="text"class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" min="{{field_options.min}}" max="{{field_options.max}}" {{#if field_options.integer_only}}data-bv-integer="true" data-bv-integer-message="Number needs to be an integer. '1' is okay, '1.1' not!"{{/if}} {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
 	{{field_options.units}}
     <span class="help-block">{{field_options.description}}</span>
   </div> 
@@ -236,23 +236,23 @@
 
 <script id="temp-price" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}}">{{label}}</label>
-    $<input type="text" data-bv-greaterthan="true" data-bv-greaterthan-value="0" data-bv-greaterthan-inclusive='false' class="form-control {{form-size}}" id="{{cid}}" name="{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
+    <label for="{{cid}}-{{label}}">{{label}}</label>
+    $<input type="text" data-bv-greaterthan="true" data-bv-greaterthan-value="0" data-bv-greaterthan-inclusive='false' class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
   </div> 
 </script>
   
 <script id="temp-email" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}} control-label">{{label}}</label>
-    <input type="email" class="form-control {{form-size}}" id="{{cid}}" name="{{label}}" data-bv-emailaddress="true" data-bv-emailaddress-message="Please enter a valid email in the form of name@mail.com" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
+    <label for="{{cid}}-{{label}} control-label">{{label}}</label>
+    <input type="email" class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" data-bv-emailaddress="true" data-bv-emailaddress-message="Please enter a valid email in the form of name@mail.com" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
   </div> 
 </script>
 
 <script id="temp-radio" type="text/x-handlebars-template"> 
 <div class="form-group {{#if field_options.required}}required{{/if}}">
- <label for="{{cid}}">{{label}}</label>
+ <label for="{{cid}}-{{label}}">{{label}}</label>
    
    {{#each field_options.options}}
      <div class="radio">
@@ -271,7 +271,7 @@
   
 <script id="temp-checkboxes" type="text/x-handlebars-template"> 
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}}">{{label}}</label>
+    <label for="{{cid}}-{{label}}">{{label}}</label>
 
       {{#each field_options.options}}
         <div class="checkbox">
@@ -288,8 +288,8 @@
   
 <script id="temp-dropdown" type="text/x-handlebars-template"> 
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}}">{{label}}</label>
-    <select class="form-control" name="{{label}}" id="{{cid}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
+    <label for="{{cid}}-{{label}}">{{label}}</label>
+    <select class="form-control" name="{{cid}}-{{label}}" id="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
       {{#each field_options.options}}
         <option {{#if checked}} selected="selected"{{/if}}>
           {{label}}
@@ -303,24 +303,24 @@
   
 <script id="temp-paragraph" type="text/x-handlebars-template"> 
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}}">{{label}}</label>
-    <textarea class="form-control" rows="3" id="{{cid}}" name="{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}></textarea>
+    <label for="{{cid}}-{{label}}">{{label}}</label>
+    <textarea class="form-control" rows="3" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}></textarea>
     <span class="help-block">{{field_options.description}}</span>
   </div>
 </script>
   
 <script id="temp-file" type="text/x-handlebars-template"> 
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}}">{{label}}</label>
-    <input type="file" class="form-control" name="{{label}}" id="{{cid}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
+    <label for="{{cid}}-{{label}}">{{label}}</label>
+    <input type="file" class="form-control" name="{{cid}}-{{label}}" id="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
   </div>
 </script>
   
 <script id="temp-text" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
-    <label for="{{cid}}">{{label}}</label>
-    <input type="text" class="form-control {{form-size}}" name="{{label}}" id="{{cid}}" {{#if required}}data-bv-notempty="true"{{/if}}>
+    <label for="{{cid}}-{{label}}">{{label}}</label>
+    <input type="text" class="form-control {{form-size}}" name="{{cid}}-{{label}}" id="{{cid}}-{{label}}" {{#if required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
   </div> 
 </script>

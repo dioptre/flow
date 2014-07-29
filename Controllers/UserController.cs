@@ -124,7 +124,7 @@ namespace EXPEDIT.Flow.Controllers {
                 query = null;
             string type = Request.Params["type"];
             SearchType st = SearchType.Flow;
-            if (string.IsNullOrWhiteSpace(type) || type == "undefined")
+            if (string.IsNullOrWhiteSpace(type) || type == "undefined" || type == "process")
                 st = SearchType.Flow;
             else if (type == "file")
                 st = SearchType.File;
@@ -132,6 +132,8 @@ namespace EXPEDIT.Flow.Controllers {
                 st = SearchType.Model;
             else if (type == "flowlocation")
                 st = SearchType.FlowLocation;
+            else if (type == "workflow")
+                st = SearchType.FlowGroup;
 
             bool pFound = int.TryParse(Request.Params["page"], out page);
             bool psFound = int.TryParse(Request.Params["pageSize"], out pageSize);
