@@ -1500,7 +1500,10 @@ App.GraphController = Ember.ObjectController.extend({
 
     }.observes('model', 'model.selected', 'model.@each.workflows'),
     changeSelected: function () {
-        this.transitionToRoute('graph', this.get('model.selectedID'));
+        var found = false;
+        var edges = Enumerable.From(this.get('graphData').edges);
+        if (edges.Any("f=>f.from=='" + this.get('model.selectedID') + "'") || edges.Any("f=>f.to=='" + this.get('model.selectedID') + "'"))
+            this.transitionToRoute('graph', this.get('model.selectedID'));
     }.observes('model.selectedID'),
     checkWorkflowName: function () {
         var _this = this;
@@ -1919,11 +1922,11 @@ App.VizEditorComponent = Ember.Component.extend({
             },
             onAdd: function (data, callback) {
                 var cb = function (finalData) {
-                    this.graph._toggleEditMode();
+                    _this.graph._toggleEditMode();
                     callback(finalData);
                 };
                 _this.sendAction('toggleWorkflowNewModal', data, cb);
-                if (this.graph.editMode)
+                if (_this.graph.editMode)
                     _this.graph._toggleEditMode();
                 _this.set('isSelected', false);                
             },
