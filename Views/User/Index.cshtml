@@ -55,8 +55,6 @@
 
         <!-- open sans font -->
         <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
-
-        <!-- lato font -->
         <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css' />
 
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/vis.css">
@@ -67,16 +65,15 @@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/offline-language-english.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/colorbox.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/expedit-flow.css">
-@*        <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Share/Styles/alertify.core.css")" />
-        <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Share/Styles/alertify.bootstrap.css")" />*@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger-theme-flat.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger-theme-flat.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Scripts/bootstrapvalidator/dist/css/bootstrapValidator.min.css">
 
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/select2.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/jquery.dataTables.css">
 
-        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Scripts/bootstrapvalidator/dist/css/bootstrapValidator.min.css">
+       
 
 
         <script>
@@ -124,6 +121,8 @@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/lodash.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/linq.min.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/moment.js")"></script>
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.dataTables.min.js")"></script>
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/dataTables.bootstrap.js")"></script>
         @*<script src="http://momentjs.com/downloads/moment.js"></script>*@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/twix.min.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.velocity.min.js")"></script>
@@ -139,7 +138,6 @@
         <script src="@Url.Content("~/Modules/Orchard.jQuery/Scripts/jquery.colorbox.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/jquery.fitvids.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/select2.js")"></script>
-        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/jquery.dataTables.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/common.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/bootstrapvalidator/dist/js/bootstrapValidator.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/tiny-mce-custom-render-helper.js")"></script>
@@ -177,6 +175,40 @@
 <div id="emberapphere" name="application"></div>
 
 
+<script id="form-table-setup" type="text/x-handlebars-template">
+    <table id="{{id}}">
+        <thead>
+            <tr>
+                {{#each array}}
+                    <td>{{this}}</td>
+                {{/each}}
+            </tr>
+        </thead>
+
+        <!--<tfoot>
+            <tr>
+                {{#each array}}
+                    <td>{{this}}</td>
+                {{/each}}
+            </tr>
+        </tfoot>-->
+    </table>
+</script>
+
+<script id="form-tabs" type="text/x-handlebars-template">
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="active"><a href="#form-{{id}}">Form</a></li>
+        <li><a href="#results-{{id}}" class="results">Results</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="form-{{id}}">
+                {{{outlet}}}
+        </div>
+        <div class="tab-pane" id="results-{{id}}">
+            <div id="resultstable-{{id}}" class="form-results" data-id="{{id}}"></div>
+        </div>
+    </div>
+</script>
 
 <!-- start of the form temlates (this is just for the form builder // not used inside Ember.js) -->
 <script id="temp-address" type="text/x-handlebars-template">
