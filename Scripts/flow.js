@@ -3025,8 +3025,8 @@ App.TinymceEditorComponent = Ember.Component.extend({
         //});
 
         // Setup plugins and toolbar
-        config.plugins = ["locationpicker myfilepicker code link noneditable myformeditor"];
-        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent code link | locationpicker | myfilepicker | myformeditor"];
+        config.plugins = ["locationpicker myfilepicker code link noneditable myformeditor myworkflow"];
+        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent code link | locationpicker | myfilepicker | myformeditor | myworkflow"];
         config.schema = "html5";
         config.menubar = false;
         config.valid_elements = "*[*]";
@@ -3036,9 +3036,11 @@ App.TinymceEditorComponent = Ember.Component.extend({
         config.selector = "#" + _this.get("elementId");
         config.convert_urls = false;
         config.content_css = ["/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap.css", "/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap-overrides.css", "/Modules/EXPEDIT.Flow/Styles/expedit-flow.css", "/Modules/EXPEDIT.Share/Styles/expedit-share.css", "/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/font-awesome.css"];
-        config.object_resizing = "table";
+        config.object_resizing = false; //'table' should have worked
         // Setup what happens on data changes
         config.setup = function (editor) {
+            //editor.execCommand('mceRepaint', false);
+            editor.settings.object_resizing = false;
             editor.on('change', function (e) {
                 var newData = e.level.content;
 
@@ -3070,6 +3072,7 @@ App.TinymceEditorComponent = Ember.Component.extend({
         }
 
         tinyMCE.init(config);
+
 
     },
     update: function () {
@@ -3214,6 +3217,74 @@ App.MyprofilesController = Ember.ObjectController.extend({
         }
     }
 });
+
+/////
+
+App.WorkflowView = Ember.View.extend({
+    template: Ember.Handlebars.compile(''), // Blank template
+    dataBinding: "controller.data",
+    selectedBinding: "controller.selected",
+    selectedChanged: function () {
+
+        // Properties required to build view
+        var p = this.getProperties("elementId", "data", "lastCount", "selected");
+
+        // Used to gain context of controller in on selected changed event
+        var controller = this;
+
+
+
+        var nodes = [
+    { id: 1, label: 'Node 1' },
+    { id: 2, label: 'Node 2' },
+    { id: 3, label: 'Node 3' },
+    { id: 4, label: 'Node 4' },
+    { id: 5, label: 'Node 5' }
+        ];
+
+        // create an array with edges
+        var edges = [
+          { from: 1, to: 2 },
+          { from: 1, to: 3 },
+          { from: 2, to: 4 },
+          { from: 2, to: 5 }
+        ];
+
+        // create a network
+        var container = document.getElementById(p.data.outlet);
+        var data = {
+            nodes: nodes,
+            edges: edges,
+        };
+        var options = {
+            width: '100%',
+            height: '400px',
+            navigation: false
+        };
+        var _this = this;
+        Ember.run.scheduleOnce('afterRender', this, function () {
+            App.Node.store.find('node', { id: NewGUID(), groupid: _this.data.wfid }).then(function (m) {
+                debugger;
+            });
+            
+            //var network = new vis.Graph(container, data, options);
+            $(container).append('<h4>' + this.data.wfname + '</h4>');
+            
+        });
+
+        //$("#" + p.elementId).append('<h4>wahaha</h4>');
+        
+        //this.notifyPropertyChange("selected");
+    }.observes("selected"),
+
+    didInsertElement: function () {
+        this.selectedChanged();
+    }
+});
+
+
+
+////
 
 function uploadPhoto(event) {
     var files = event.files;

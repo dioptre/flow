@@ -66,12 +66,15 @@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/colorbox.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/expedit-flow.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger.css">
+
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger-theme-flat.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger-theme-flat.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Scripts/bootstrapvalidator/dist/css/bootstrapValidator.min.css">
 
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/select2.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/jquery.dataTables.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/dataTables.responsive.css">
+        
 
        
 
@@ -123,6 +126,7 @@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/moment.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.dataTables.min.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/dataTables.bootstrap.js")"></script>
+        <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/dataTables.responsive.js")"></script>
         @*<script src="http://momentjs.com/downloads/moment.js"></script>*@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/twix.min.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.velocity.min.js")"></script>
@@ -143,6 +147,7 @@
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/tiny-mce-custom-render-helper.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myformeditor/client.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myfilepicker/client.min.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myworkflow/client.min.js")"></script>
     </head>
     <body>
 
@@ -197,7 +202,7 @@
 
 <script id="form-tabs" type="text/x-handlebars-template">
     <ul class="nav nav-tabs" role="tablist">
-        <li class="active"><a href="#form-{{id}}">Form</a></li>
+        <li class="active"><a href="#form-{{id}}">{{#if heading }}{{heading}} {{/if}}Form</a></li>
         <li><a href="#results-{{id}}" class="results">Results</a></li>
     </ul>
     <div class="tab-content">
@@ -1895,8 +1900,7 @@
           {{/if}}
        </script>
 
-
-
+        <div id="gout"></div>
     </body>
 </html>
 

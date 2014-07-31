@@ -1,6 +1,10 @@
 ﻿body {
     margin-top:0px !important;
 }
+
+
+
+
 #username {display: block !important;}
 #username-email {display: block !important;}
 #email {display: block !important;}
@@ -223,6 +227,11 @@ div.table_description {
   width: 100%; /* bootstrap template overrides this default bootstrap class*/
 }
 
+table.dataTable td {
+padding: 11px 9px;
+border: 1px solid #edf2f7; /*TODO*/
+}
+
 .mce-widget.mce-tooltip {
     display: none !important;
 }
@@ -291,6 +300,35 @@ span.graph-manipulationUI:hover {
   margin-bottom: 13px;
   margin-right: 6px;
   margin-right: 10px;
+}
+
+
+/* Change up bootstrap default tab color */
+.tiny-form .tab-content {
+    background:  rgb(244,244,244);
+    padding: 15px;
+}
+.tiny-form ul.nav-tabs li.active a, .tiny-form ul.nav-tabs li.active a:hover  {
+    background: linear-gradient(to top, rgb(244,244,244) 0%,rgba(0,0,0,0) 100%);
+    border-bottom-color:  rgb(244,244,244);
+}
+.tiny-form table thead, .tiny-form table tfoot {
+    background: #ccc;
+    font-weight: bold;
+}
+.tiny-form table {
+    border: 1px solid rgb(103, 103, 162);
+    width: 100% !important;
+}
+
+.tiny-form .form-results .form-control {
+    width: inherit;
+}
+.tiny-form .pagination {
+    margin: 0;
+}
+.tiny-form .nav-tabs {
+text-transform: capitalize;
 }
 
 
