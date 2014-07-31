@@ -3,7 +3,8 @@
     <head>
         <title>Flow Pro</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
 
         <!-- Favicon ICO -->
         <!-- Use this to regenerate icon if changed - http://iconogen.com/upload.php -->
@@ -30,6 +31,8 @@
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
 
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
 
 
@@ -74,9 +77,9 @@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/select2.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/jquery.dataTables.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/dataTables.responsive.css">
-        
 
-       
+
+
 
 
         <script>
@@ -236,30 +239,30 @@
 	</div>
     <span class="help-block">{{field_options.description}}</span>
   </div>
-</script> 
+</script>
 
 <script id="temp-time" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
     <label for="{{cid}}-{{label}}">{{label}}</label>
     <input type="text" pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$" placeholder="hh:mm" data-bv-regexp-message="Please enter a time in the correct format (Ex. 13:52)" class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
-  </div>  
-</script> 
+  </div>
+</script>
 
 <script id="temp-date" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
     <label for="{{cid}}-{{label}}">{{label}}</label>
     <input type="text" data-bv-date="true" data-bv-date-format="DD/MM/YYYY" placeholder="DD/MM/YYYY" class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
-  </div> 
-</script> 
- 
+  </div>
+</script>
+
 <script id="temp-website" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
     <label for="{{cid}}-{{label}}">{{label}}</label>
     <input type="text" data-bv-uri="true" data-bv-uri-message="Please enter a valid URL starting with http://" class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
-  </div> 
+  </div>
 </script>
 
 <script id="temp-number" type="text/x-handlebars-template">
@@ -268,7 +271,7 @@
     <input type="text"class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" min="{{field_options.min}}" max="{{field_options.max}}" {{#if field_options.integer_only}}data-bv-integer="true" data-bv-integer-message="Number needs to be an integer. '1' is okay, '1.1' not!"{{/if}} {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
 	{{field_options.units}}
     <span class="help-block">{{field_options.description}}</span>
-  </div> 
+  </div>
 </script>
 
 <script id="temp-price" type="text/x-handlebars-template">
@@ -276,37 +279,37 @@
     <label for="{{cid}}-{{label}}">{{label}}</label>
     $<input type="text" data-bv-greaterthan="true" data-bv-greaterthan-value="0" data-bv-greaterthan-inclusive='false' class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
-  </div> 
+  </div>
 </script>
-  
+
 <script id="temp-email" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
     <label for="{{cid}}-{{label}} control-label">{{label}}</label>
     <input type="email" class="form-control {{form-size}}" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" data-bv-emailaddress="true" data-bv-emailaddress-message="Please enter a valid email in the form of name@mail.com" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
-  </div> 
+  </div>
 </script>
 
-<script id="temp-radio" type="text/x-handlebars-template"> 
+<script id="temp-radio" type="text/x-handlebars-template">
 <div class="form-group {{#if field_options.required}}required{{/if}}">
  <label for="{{cid}}-{{label}}">{{label}}</label>
-   
+
    {{#each field_options.options}}
      <div class="radio">
         <label>
           <input type="radio" name="{{../label}}" id="{{../cid}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}} value="{{label}}" {{#if checked}} checked{{/if}}>
           {{label}}
         </label>
-      </div>    
-     
+      </div>
+
    {{/each}}
-   
+
  <span class="help-block">{{field_options.description}}</span>
 </div>
 </script>
-  
-  
-<script id="temp-checkboxes" type="text/x-handlebars-template"> 
+
+
+<script id="temp-checkboxes" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
     <label for="{{cid}}-{{label}}">{{label}}</label>
 
@@ -318,12 +321,12 @@
           </label>
         </div>
       {{/each}}
-   
+
     <span class="help-block">{{field_options.description}}</span>
    </div>
 </script>
-  
-<script id="temp-dropdown" type="text/x-handlebars-template"> 
+
+<script id="temp-dropdown" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
     <label for="{{cid}}-{{label}}">{{label}}</label>
     <select class="form-control" name="{{cid}}-{{label}}" id="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
@@ -336,30 +339,30 @@
     <span class="help-block">{{field_options.description}}</span>
   </div>
 </script>
-  
-  
-<script id="temp-paragraph" type="text/x-handlebars-template"> 
+
+
+<script id="temp-paragraph" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
     <label for="{{cid}}-{{label}}">{{label}}</label>
     <textarea class="form-control" rows="3" id="{{cid}}-{{label}}" name="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}></textarea>
     <span class="help-block">{{field_options.description}}</span>
   </div>
 </script>
-  
-<script id="temp-file" type="text/x-handlebars-template"> 
+
+<script id="temp-file" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
     <label for="{{cid}}-{{label}}">{{label}}</label>
     <input type="file" class="form-control" name="{{cid}}-{{label}}" id="{{cid}}-{{label}}" {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
   </div>
 </script>
-  
+
 <script id="temp-text" type="text/x-handlebars-template">
   <div class="form-group {{#if field_options.required}}required{{/if}}">
     <label for="{{cid}}-{{label}}">{{label}}</label>
     <input type="text" class="form-control {{form-size}}" name="{{cid}}-{{label}}" id="{{cid}}-{{label}}" {{#if required}}data-bv-notempty="true"{{/if}}>
     <span class="help-block">{{field_options.description}}</span>
-  </div> 
+  </div>
 </script>
 
 <!-- the form stuff (doesn't belong here I knowww) -->
@@ -892,7 +895,7 @@
                     <span>Help</span>
                 {{/link-to}}
             {{/view}}
-            {{!--   
+            {{!--
                 {{#view App.HomeNavView}}
                     {{#link-to 'userprofile'}}
                         <i class="icon-cog"></i>
@@ -1643,34 +1646,34 @@
                                 <div class="form-group">
                                     <label class="col-lg-2 control-label">Username:</label>
                                     <div class="col-lg-8">
-                                        {{eui-input value=profile.Username size='medium' width='100%' disabled=true}}          
+                                        {{eui-input value=profile.Username size='medium' width='100%' disabled=true}}
                                     </div>
                                 </div>
 
                                 <div class="form-group">
                                     <label class="col-lg-2 control-label">First name:</label>
-                                    <div class="col-lg-8">                                
-                                        {{eui-input value=profile.Firstname size='medium' width='100%'}}          
+                                    <div class="col-lg-8">
+                                        {{eui-input value=profile.Firstname size='medium' width='100%'}}
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-lg-2 control-label">Last name:</label>
                                     <div class="col-lg-8">
-                                        {{eui-input value=profile.Surname size='medium' width='100%'}}          
+                                        {{eui-input value=profile.Surname size='medium' width='100%'}}
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-lg-2 control-label">Company:</label>
                                     <div class="col-lg-8">
-                                        {{eui-input value=profile.AddressName size='medium' width='100%'}}                                
+                                        {{eui-input value=profile.AddressName size='medium' width='100%'}}
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-lg-2 control-label">Email:</label>
                                     <div class="col-lg-8">
-                                        {{eui-input value=profile.DefaultEmail size='medium' width='100%' error=emailValid forceErrorCheck=true}}          
+                                        {{eui-input value=profile.DefaultEmail size='medium' width='100%' error=emailValid forceErrorCheck=true}}
                                     </div>
-                                </div>                       
+                                </div>
                                 <div class="actions">
                                     <input type="button" class="btn-glow primary" value="Save Changes" {{action "updateProfile" profile}}>
                                    @* <span>OR</span>
@@ -1679,13 +1682,13 @@
                             </form>
                         </div>
                     </div>
-                </div>              
+                </div>
                 {{else}}
                     <h3>My Profile</h3>
                     <br /><br /><p>You are not logged in. Please {{link-to 'login' 'login'}} to see your profile.</p>
                 {{/if}}
         {{/if}}
-            
+
         </script>
 
 
@@ -1818,7 +1821,7 @@
             </div>
         </div>
         </script>
-        
+
         <script type="text/x-handlebars" id="workflow">&nbsp;</script>
 
         <script type="text/x-handlebars" id="mylicenses">
@@ -1871,7 +1874,7 @@
                                       </thead>
                                       <tbody>
                                         {{#each lic in model.licenses}}
-                                          <tr {{bind-attr class="lic.IsExpired:warning"}}>  
+                                          <tr {{bind-attr class="lic.IsExpired:warning"}}>
                                             <td>{{lic.ModelName}}</td>
                                             <td>{{lic.id}}</td>
                                             <td>{{lic.LicenseeUsername}}</td>
@@ -1888,7 +1891,7 @@
                             {{else}}
                                 You have not purchased any licenses yet.
                             {{/if}}
-                        </div>                        
+                        </div>
                     </div>
                 </div>
                 {{else}}

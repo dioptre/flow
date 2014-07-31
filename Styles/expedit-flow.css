@@ -3,6 +3,12 @@
 }
 
 
+/* remove 300ms delay on click */
+html {
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+}
+
 
 
 #username {display: block !important;}
@@ -362,6 +368,12 @@ text-transform: capitalize;
   height: 32px;
   margin-top: 75px;
 }
+@media all and (max-width: 769px) {
+  .login-wrapper .logo {
+    height: 0px;
+    margin-top: 50px;
+  }
+}
 
 /* The float is turned off for mobile devices, thus the account info drops down on a second line. Readding float fixes that. */
 .navbar-header {
@@ -417,6 +429,12 @@ text-transform: capitalize;
 
 
 /* Hack fix if only one item in menubar */
+.nav.navbar-nav.pull-right {
+  margin: 0px;
+  padding-right: 20px;
+  padding-top: 4px;
+}
+
 .navbar-inverse .nav > li > a {
     border-left: none;
     padding-top: 9px; /*maybe*/
@@ -455,3 +473,47 @@ text-transform: capitalize;
 .graphResultRow {
     cursor: pointer;
 }
+
+@media (max-width: 372px){
+  .settings > a {
+    font-size: 0px;
+  }
+}
+
+
+
+/* new menu test */
+body.menu {
+  -webkit-transform: translate(170px,0px);
+  -ms-transform: translate(170px,0px);
+  -moz-transform: translate(170px,0px);
+  transform: translate(170px,0px);
+}
+
+@media (max-width: 768px) {
+  body.menu #sidebar-nav {
+    left: -164px !important;
+    top: 1px !important;
+    box-shadow: none !important;
+    height: 100% !important;
+    -webkit-transform: translate(0px,-1px);
+    -ms-transform: translate(0px,-1px);
+    -moz-transform: translate(0px,-1px);
+    transform: translate(0px,-1px);
+  }
+}
+
+
+body.menu .content {
+  margin-left: 0px;
+  position: inherit;
+  width: 100%;
+}
+
+body {
+  -webkit-transform: translate(0px,0px);
+  -moz-transform: translate(0px,0px);
+  -ms-transform: translate(0px,0px);
+  transform: translate(0px,0px);
+};
+

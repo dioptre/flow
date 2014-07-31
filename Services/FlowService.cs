@@ -37,6 +37,7 @@ using CookComputing.XmlRpc;
 using Orchard.Users.Events;
 using NKD.ViewModels;
 
+
 namespace EXPEDIT.Flow.Services {
 
     [UsedImplicitly]
@@ -535,6 +536,9 @@ namespace EXPEDIT.Flow.Services {
 
                     int graphs = 0, edges = 1, groups = 2, files = 3, locations = 4, experiences = 5, worktypes = 6;
 
+                    if (dataset.Tables.Count < 1)
+                        return result;
+
                     result.Nodes = (from o in dataset.Tables[graphs].AsEnumerable()
                                     select new FlowViewModelDetailed
                                     {
@@ -681,6 +685,60 @@ namespace EXPEDIT.Flow.Services {
                     (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
                     (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
                     (from o in d.GraphDataContexts where o.GraphDataID == m.GraphDataID select o).Delete();
+                }
+
+                //Forms
+                var forms = doc.DocumentNode.SelectNodes("//*[contains(@class,'tiny-form')]");
+                if (forms != null)
+                {
+                    var json = forms.Select(p => p.GetAttributeValue("data-json", null))
+                        .Where(f => f != null)
+                        .ToList();
+                    foreach (var js in json)
+                    {
+                        dynamic form = Newtonsoft.Json.Linq.JObject.Parse(HttpUtility.HtmlDecode(js));
+                        string recipients = null;
+                        if (form.emails != null)
+                            recipients = form.emails.Value;
+                        Guid formID = Guid.Parse(form.id.Value);
+                        string formStructure = JsonConvert.SerializeObject(form.fields);
+                        string formName = null;
+                        if (form.heading != null)
+                            formName = form.heading.Value;
+                        string formHash = null;
+                        if (!string.IsNullOrWhiteSpace(formStructure))
+                            formHash = formStructure.ComputeHash();
+                        else
+                            formHash = null;
+                        Form theForm = d.Forms.SingleOrDefault(f => f.FormID == formID);
+                        if (theForm == null)
+                        {
+                            theForm = new Form
+                            {
+                                FormID = formID,
+                                FormName = formName,
+                                FormActions = recipients,
+                                FormStructure = formStructure,
+                                FormStructureChecksum = formHash,
+                                VersionOwnerContactID = creatorContact,
+                                VersionOwnerCompanyID = creatorCompany,
+                                VersionUpdated = DateTime.UtcNow,
+                                VersionUpdatedBy = contact
+                            };
+                            d.Forms.AddObject(theForm);
+                        }
+                        else
+                        {
+                            if (formHash != theForm.FormStructureChecksum || recipients != theForm.FormActions)
+                            {
+                                theForm.FormStructureChecksum = formHash;
+                                theForm.FormStructure = formStructure;
+                                theForm.FormActions = recipients;
+                                theForm.VersionUpdated = DateTime.UtcNow;
+                                theForm.VersionUpdatedBy = contact;
+                            }
+                        }
+                    }
                 }
             }
             else

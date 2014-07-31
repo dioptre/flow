@@ -2506,6 +2506,10 @@ App.Workflow = DS.Model.extend({
 App.MyWorkflow = App.Search.extend({});
 App.MyNode = App.Search.extend({});
 App.MyFile = App.Search.extend({});
+App.File = App.Search.extend({});
+App.Location = App.Search.extend({});
+App.Context = App.Search.extend({});
+App.WorkType = App.Search.extend({});
 
 
 App.MySecurityList = DS.Model.extend({
@@ -3263,12 +3267,12 @@ App.WorkflowView = Ember.View.extend({
         };
         var _this = this;
         Ember.run.scheduleOnce('afterRender', this, function () {
-            App.Node.store.find('node', { id: NewGUID(), groupid: _this.data.wfid }).then(function (m) {
+            App.Node.store.find('node', { id: null, groupid: _this.data.wfid }).then(function (m) {
                 debugger;
+                //var network = new vis.Graph(container, data, options);
+                //$(container).append('<h4>' + _this.data.wfname + '</h4>');
+
             });
-            
-            //var network = new vis.Graph(container, data, options);
-            $(container).append('<h4>' + this.data.wfname + '</h4>');
             
         });
 
