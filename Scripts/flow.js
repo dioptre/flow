@@ -1812,7 +1812,6 @@ App.GraphController = Ember.ObjectController.extend({
 var renderDynamic = function () {
     window.cleanAlternative(this.$());
     window.renderFunctions(this.$());
-    console.log('rendered');
 };
 
 App.GraphView = Ember.View.extend({
