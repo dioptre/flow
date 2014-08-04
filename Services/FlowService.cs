@@ -474,7 +474,7 @@ namespace EXPEDIT.Flow.Services {
         }
 
 
-        public FlowGroupViewModel GetNode(string name, Guid? nid, Guid? gid, bool includeContent = false, bool includeDisconnected = false)
+        public FlowGroupViewModel GetNode(string name, Guid? nid, Guid? gid, bool includeContent = false, bool includeDisconnected = false, bool monitor = true)
         {
             name = name.ToSlug();
             var application = _users.ApplicationID;
@@ -483,6 +483,27 @@ namespace EXPEDIT.Flow.Services {
             var result = new FlowGroupViewModel { };
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
+                if (contact.HasValue && monitor)
+                {
+                    try
+                    {
+                        var d = new NKDC(_users.ApplicationConnectionString, null);
+                        var history = new GraphDataHistory
+                        {
+                            ContactID = contact,
+                            Opened = now,
+                            Session = string.Format("{0}", HttpContext.Current.Request.UserHostAddress),
+                            GraphDataID = nid.Value,
+                            VersionUpdated = now,
+                            VersionUpdatedBy = contact
+                        };
+                        d.GraphDataHistories.AddObject(history);
+                        d.SaveChanges();
+                    }
+                    catch { }
+                }          
+
+
                 using (var con = new SqlConnection(_users.ApplicationConnectionString))
                 using (var adapter = new SqlDataAdapter("E_SP_GetNode", con))
                 {
@@ -729,8 +750,9 @@ namespace EXPEDIT.Flow.Services {
                         }
                         else
                         {
-                            if (formHash != theForm.FormStructureChecksum || recipients != theForm.FormActions)
+                            if (formHash != theForm.FormStructureChecksum || recipients != theForm.FormActions || formName != theForm.FormName)
                             {
+                                theForm.FormName = formName;
                                 theForm.FormStructureChecksum = formHash;
                                 theForm.FormStructure = formStructure;
                                 theForm.FormActions = recipients;

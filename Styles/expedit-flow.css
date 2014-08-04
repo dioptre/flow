@@ -313,9 +313,20 @@ span.graph-manipulationUI:hover {
 .tiny-form .tab-content {
     background:  rgb(244,244,244);
     padding: 15px;
+    border-left: 1px solid #dddddd;
+    border-bottom: 1px solid #dddddd;
+    border-right: 1px solid #dddddd;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
 }
 .tiny-form ul.nav-tabs li.active a, .tiny-form ul.nav-tabs li.active a:hover  {
-    background: linear-gradient(to top, rgb(244,244,244) 0%,rgba(0,0,0,0) 100%);
+    background: #ffffff; /* Old browsers */
+    background: -moz-linear-gradient(top, #ffffff 0%, #f4f4f4 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#f4f4f4)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top, #ffffff 0%,#f4f4f4 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, #ffffff 0%,#f4f4f4 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, #ffffff 0%,#f4f4f4 100%); /* IE10+ */
+    background: linear-gradient(to bottom, #ffffff 0%,#f4f4f4 100%);
     border-bottom-color:  rgb(244,244,244);
 }
 .tiny-form table thead, .tiny-form table tfoot {

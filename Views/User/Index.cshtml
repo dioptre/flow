@@ -318,7 +318,7 @@
       {{#each field_options.options}}
         <div class="checkbox">
           <label>
-            <input name="{{../label}}" id="{{../cid}}" type="checkbox" {{#if checked}}checked{{/if}} {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
+            <input name="{{../cid}}-{{label}}" id="{{../cid}}-{{label}}" type="checkbox" {{#if checked}}checked{{/if}} {{#if field_options.required}}data-bv-notempty="true"{{/if}}>
             {{label}}
           </label>
         </div>

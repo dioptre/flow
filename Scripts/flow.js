@@ -25,7 +25,13 @@ App = Ember.Application.create({
     rootElement: '#emberapphere'
 });
 
-
+// might fix affected route
+App.ResetScroll = Ember.Mixin.create({
+  activate: function() {
+    this._super();
+    window.scrollTo(0,0);
+  }
+});
 
 App.Router.map(function () {
     this.route('graph', { path: 'process/:id' });
@@ -380,7 +386,7 @@ App.FileController = Ember.ObjectController.extend({
 })
 
 
-
+App.LoginRoute = Ember.Route.extend(App.ResetScroll, {});
 
 App.LoginController = Ember.Controller.extend({
     needs: ['application'],
@@ -3290,14 +3296,14 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
         var nodes = [];
         var edges = [];
         Enumerable.From(App.Node.store.all('node').content).ForEach(function (f) {
-            promises.push(f.get('workflows').then(function (g) {                 
+            promises.push(f.get('workflows').then(function (g) {
                 $.each(g.content, function (key, value) {
                     if (value.id == _this.data.wfid)
                         nodes.push(f);
                 });
             }));
         });
-        
+
         Ember.RSVP.allSettled(promises).then(function (array) {
             var edges = Enumerable.From(App.Node.store.all('edge').content).Where("f=>f.get('GroupID')=='" + _this.data.wfid + "'").ToArray();
             nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: ToTitleCase(item.get('label').replace(/_/g, ' ')) }; });
@@ -3320,14 +3326,14 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
                     }
                     return value;
                 });
-            
+
             var data = {
                 nodes: nodes,
                 edges: edges,
             };
             var network = new vis.Graph(container, data, options);
             network.scale = 0.82; //Zoom out a little
-            $("#" + p.data.outlet).append('<h4>' + _this.data.wfname +'</h4>');
+            $("#" + p.data.outlet).append('<h4>' + _this.data.wfname +' Workflow</h4>');
             network.on('click', function (data) {
                 if (data.nodes.length > 0) {
                     //_this.get('controller').send('transition');
@@ -3338,7 +3344,7 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
         });
         //Ember.run.scheduleOnce('afterRender', this, getData);
 
-       
+
 
         //this.notifyPropertyChange("selected");
     }, //.observes("selected"),
