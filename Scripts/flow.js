@@ -1,3 +1,6 @@
+$(function () {
+    FastClick.attach(document.body);
+});
 
 
 // Analytics using segment
@@ -645,17 +648,32 @@ App.ApplicationView = Ember.View.extend({
             $("body").click(function () {
                 if ($(this).hasClass("menu")) {
                     $(this).removeClass("menu");
+                    $("html").removeClass("menuHelper");
                 }
             });
             $menu.click(function(e) {
                 e.stopPropagation();
             });
+
+            // On click hide menu
+            $menu.find('a').click(function(){
+                if ($(this).attr('class') != "dropdown-toggle"){
+                    $("body").removeClass("menu");
+                    $("html").removeClass("menuHelper");
+                }
+            })
+
             $("#menu-toggler").click(function (e) {
                 e.stopPropagation();
                 $("body").toggleClass("menu");
+                $("html").toggleClass("menuHelper");
             });
+
             $(window).resize(function() {
-                $(this).width() > 769 && $("body.menu").removeClass("menu")
+                if ($(this).width() > 769) {
+                    $("body.menu").removeClass("menu");
+                    $("html.menuHelper").removeClass("menuHelper");
+                }
             })
 
 
@@ -734,7 +752,7 @@ App.Router.reopen({
         if (/^\/search/.test(url)) {
             url = '/search'
         }
-        
+
         // Only send event if actually on new page
         if (oldURL != url) {
             console.log('Tracking URL:', url);
@@ -746,28 +764,31 @@ App.Router.reopen({
 });
 
 App.ApplicationRoute = Ember.Route.extend({
-   actions: {
-     loading: function() {
+    actions: {
+        transition: function () {
+            alert('hi');
+        },
+        loading: function () {
 
-        // Remove menu link - mobile test
-        Ember.run.scheduleOnce('afterRender', this, function(){
-            $('body').removeClass('menu');
-        });
+            // Remove menu link - mobile test
+            // Ember.run.scheduleOnce('afterRender', this, function(){
+            //     $('body').removeClass('menu');
+            // });
 
-       Pace.restart();
-       this.router.one('didTransition', function() {
-         return setTimeout((function() {
-           return Pace.stop();
-         }), 0);
-       });
-       return true;
-     },
-     error: function() {
-       return setTimeout((function() {
-         return Pace.stop();
-       }), 0);
-     }
-   }
+            Pace.restart();
+            this.router.one('didTransition', function () {
+                return setTimeout((function () {
+                    return Pace.stop();
+                }), 0);
+            });
+            return true;
+        },
+        error: function () {
+            return setTimeout((function () {
+                return Pace.stop();
+            }), 0);
+        }
+    }
  });
 
 
@@ -1356,7 +1377,7 @@ App.GraphRoute = Ember.Route.extend({
                 if (typeof m.selected === 'undefined') {
                     if (m.params)
                         this.replaceWith('graph', NewGUID(), { queryParams: { workflowID: m.params.workflowID } });
-                    else 
+                    else
                         this.replaceWith('graph', NewGUID());
                 }
                 else {
@@ -1382,7 +1403,7 @@ App.GraphRoute = Ember.Route.extend({
                         id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group')
                     }
                 }).ToArray();
-            var addEdge = function (edges) {                
+            var addEdge = function (edges) {
                 if (edges.get('length') > 0) {
                     edges.forEach(function (edge) {
                         //if (m.params.workflowID == edge.get('GroupID')) //Hide connected wf edges
@@ -1595,7 +1616,7 @@ App.GraphController = Ember.ObjectController.extend({
             return (typeof this.get('validateExistingName') === 'string') || (typeof this.get('validateWorkflowName') === 'string');
     }.property('validateWorkflowName', 'validateNewName', 'validateExistingName'),
 
-    actions: {      
+    actions: {
         updateWorkflowNameNow: function(){
             //new name - model.workflow.name
             var _this = this;
@@ -1625,7 +1646,7 @@ App.GraphController = Ember.ObjectController.extend({
 
         },
         toggleworkflowEditNameModal: function () {
-            
+
             this.toggleProperty('workflowEditNameModal');
         },
         toggleWorkflowNewModal: function (data, callback) {
@@ -1721,7 +1742,7 @@ App.GraphController = Ember.ObjectController.extend({
             var _this = this;
             var promises = [];
             Enumerable.From(data.edges).ForEach(function (f) {
-                var m = App.Node.store.getById('edge', f);                
+                var m = App.Node.store.getById('edge', f);
                 if (m)
                     promises.push(m.destroyRecord());
             });
@@ -1788,16 +1809,19 @@ App.GraphController = Ember.ObjectController.extend({
 });
 
 
+var renderDynamic = function () {
+    window.cleanAlternative(this.$());
+    window.renderFunctions(this.$());
+    console.log('rendered');
+};
+
 App.GraphView = Ember.View.extend({
     didInsertElement : function(){
         this._super();
         this.selectedContentChanges();
     },
     selectedContentChanges: function () {
-        Ember.run.scheduleOnce('afterRender', this, function () {
-            window.cleanAlternative(this.$());
-            window.renderFunctions(this.$());
-        });
+        Ember.run.debounce(this, renderDynamic, 150, false);
     }.observes('controller.model.selected.content'),
 });
 
@@ -1881,7 +1905,7 @@ App.VizEditorComponent = Ember.Component.extend({
         var centralGravity = 0.0155; //TODO HACK, AG, Less gravity for known graphs
         if (!this.get('isWorflow')) {
             centralGravity = 0.5;
-        }        
+        }
         var container = $('<div>').appendTo(this.$())[0];
         var data = this.get('vizDataSet');
         var options = {
@@ -1890,7 +1914,7 @@ App.VizEditorComponent = Ember.Component.extend({
             //minVelocity: 5,
             //clustering: {
             //    enabled: true
-            //},           
+            //},
             labels:{
                   add:"Add Process",
                   edit:"Edit",
@@ -1928,7 +1952,7 @@ App.VizEditorComponent = Ember.Component.extend({
                 _this.sendAction('toggleWorkflowNewModal', data, cb);
                 if (_this.graph.editMode)
                     _this.graph._toggleEditMode();
-                _this.set('isSelected', false);                
+                _this.set('isSelected', false);
             },
             onDelete: function (data, callback) {
                 if (data.nodes.length > 0) {
@@ -1941,7 +1965,7 @@ App.VizEditorComponent = Ember.Component.extend({
                 _this.set('isSelected', false);
             },
             onEdit: function (data, callback) {
-                _this.sendAction('toggleWorkflowEditModal', data, callback);                
+                _this.sendAction('toggleWorkflowEditModal', data, callback);
             },
             onConnect: function (data, callback) {
                 if (typeof _this.graph.connection !== 'undefined') {
@@ -1969,7 +1993,7 @@ App.VizEditorComponent = Ember.Component.extend({
         this.graph = new vis.Graph(container, data, options);
         // This sets the new selected item on click
         this.graph.on('click', function (data) {
-            if (data.nodes.length > 0) {                
+            if (data.nodes.length > 0) {
                 _this.set('selected', data.nodes[0]);
                 if (IsGUID(data.nodes[0])) {
                     var md = _this.get('data'); // has to be synched with data
@@ -1982,7 +2006,7 @@ App.VizEditorComponent = Ember.Component.extend({
                             delete value.color;
                             delete value.fontColor;
                             if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
-                                value.color = "#FFFFFF"; //BEGIN                   
+                                value.color = "#FFFFFF"; //BEGIN
                                 value.fontColor = "#000000";
                             }
                             else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
@@ -2059,7 +2083,7 @@ App.VizEditorComponent = Ember.Component.extend({
                     delete value.color;
                     delete value.fontColor;
                     if (!Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
-                        value.color = "#FFFFFF"; //BEGIN     
+                        value.color = "#FFFFFF"; //BEGIN
                         value.fontColor = "#000000";
                     }
                     else if (!Enumerable.From(md.edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
@@ -2104,7 +2128,7 @@ App.VizEditorComponent = Ember.Component.extend({
         //Enumerable.From(md.nodes).ForEach(function (f) {
         //    //Add similar group if in workflow
         //});
-        d.edges.update(newEdges);      
+        d.edges.update(newEdges);
 
 
     }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement'),
@@ -2435,6 +2459,13 @@ App.NodeSerializer = DS.RESTSerializer.extend({
         //if (!edges || (edges.length === 0 && nodes.length === 1)) {
         //    delete payload.Edges;
         //}
+        //We want to exclude updates where content exists and new entries are null
+        var stock = Enumerable.From(payload.Nodes);
+        if (!stock.Any("f=>f.content != null")) { //Todo remove this line and get Viz working from store and not this query
+            var produce = Enumerable.From(store.all('node').content).Where("f=>f.get('content') != null");
+            var exclude = stock.Where("f=>f.content==null").Intersect(produce, "$.id");
+            payload.Nodes = stock.Except(produce, "$.id").ToArray();
+        }
 
         return this._super(store, type, payload, id, requestType);
     }
@@ -2710,7 +2741,7 @@ App.WikipediaController = Ember.ObjectController.extend({
         this.transitionToRoute('wikipedia', this.get('model.selected'));
     }.observes('model.selected'),
     watchSearch: function () {
-        
+
         var title = encodeURIComponent(this.get('model.title').replace(/ /ig, "_"));
         if (encodeURIComponent(this.get('selected').replace(/ /ig, "_")) !== title || title !== this.get('model.encodedTitle')) {
             this.transitionToRoute('wikipedia', title);
@@ -3048,7 +3079,7 @@ App.TinymceEditorComponent = Ember.Component.extend({
             editor.on('change', function (e) {
                 var newData = e.level.content;
 
-                // clean new data 
+                // clean new data
                 var cleanData = '';
                 window.cleanFunctions($(newData));
                 $(newData).each(function (i, d) {
@@ -3059,7 +3090,7 @@ App.TinymceEditorComponent = Ember.Component.extend({
                     if (typeof temp[0] !== 'undefined') {
                         cleanData += temp[0].outerHTML;
                     }
-                    
+
                 })
 
                 //console.log(cleanData, ' clean-new ',newData);
@@ -3089,7 +3120,7 @@ App.TinymceEditorComponent = Ember.Component.extend({
                 //tinyFrame.html(content);
                 //tinyMCE.activeEditor.setContent(content);
                 tinyMCE.execCommand('mceSetContent', false, content);
-                
+
             }
         }
     }.observes('data')
@@ -3224,7 +3255,9 @@ App.MyprofilesController = Ember.ObjectController.extend({
 
 /////
 
-App.WorkflowView = Ember.View.extend({
+App.WorkflowController = Ember.Controller.extend({});
+
+App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
     template: Ember.Handlebars.compile(''), // Blank template
     dataBinding: "controller.data",
     selectedBinding: "controller.selected",
@@ -3235,54 +3268,86 @@ App.WorkflowView = Ember.View.extend({
 
         // Used to gain context of controller in on selected changed event
         var controller = this;
-
-
-
-        var nodes = [
-    { id: 1, label: 'Node 1' },
-    { id: 2, label: 'Node 2' },
-    { id: 3, label: 'Node 3' },
-    { id: 4, label: 'Node 4' },
-    { id: 5, label: 'Node 5' }
-        ];
-
-        // create an array with edges
-        var edges = [
-          { from: 1, to: 2 },
-          { from: 1, to: 3 },
-          { from: 2, to: 4 },
-          { from: 2, to: 5 }
-        ];
-
-        // create a network
         var container = document.getElementById(p.data.outlet);
-        var data = {
-            nodes: nodes,
-            edges: edges,
-        };
         var options = {
             width: '100%',
             height: '400px',
-            navigation: false
+            navigation: false,
+            smoothCurves: true,
+            physics: { barnesHut: { centralGravity: 0.0155, springConstant: 0.01, damping: 0.1, springLength: 170 } },
+            stabilize: false,
+            stabilizationIterations: 200,
+            dataManipulation: {
+                enabled: false,
+                initiallyVisible: false
+            }
         };
         var _this = this;
-        Ember.run.scheduleOnce('afterRender', this, function () {
-            App.Node.store.find('node', { id: null, groupid: _this.data.wfid }).then(function (m) {
-                debugger;
-                //var network = new vis.Graph(container, data, options);
-                //$(container).append('<h4>' + _this.data.wfname + '</h4>');
-
-            });
-            
+        //debugger;
+        //console.log(new Date());
+        //var network = new vis.Graph(container, data, options);
+        var all = Enumerable.From(App.Node.store.all('node').content);
+        var promises = [];
+        var nodes = [];
+        var edges = [];
+        Enumerable.From(App.Node.store.all('node').content).ForEach(function (f) {
+            promises.push(f.get('workflows').then(function (g) {                 
+                $.each(g.content, function (key, value) {
+                    if (value.id == _this.data.wfid)
+                        nodes.push(f);
+                });
+            }));
         });
-
-        //$("#" + p.elementId).append('<h4>wahaha</h4>');
         
+        Ember.RSVP.allSettled(promises).then(function (array) {
+            var edges = Enumerable.From(App.Node.store.all('edge').content).Where("f=>f.get('GroupID')=='" + _this.data.wfid + "'").ToArray();
+            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: ToTitleCase(item.get('label').replace(/_/g, ' ')) }; });
+            edges = $.map(edges, function (item) { return { from: item.get('from'), to: item.get('to'), style: item.get('style'), color: item.get('color') }; });
+            Enumerable.From(nodes).ForEach(
+                function (value) {
+                    delete value.color;
+                    delete value.fontColor;
+                    if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "'").Any()) {
+                        value.color = "#FFFFFF"; //BEGIN
+                        value.fontColor = "#000000";
+                    }
+                    else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "'").Any()) {
+                        value.color = "#333333"; //END
+                        value.fontColor = "#FFFFFF";
+                    }
+                    else {
+                        value.color = "#6fa5d7"; //Current
+                        value.fontColor = "#000000";
+                    }
+                    return value;
+                });
+            
+            var data = {
+                nodes: nodes,
+                edges: edges,
+            };
+            var network = new vis.Graph(container, data, options);
+            network.scale = 0.82; //Zoom out a little
+            $("#" + p.data.outlet).append('<h4>' + _this.data.wfname +'</h4>');
+            network.on('click', function (data) {
+                if (data.nodes.length > 0) {
+                    //_this.get('controller').send('transition');
+                    //_this.transitionTo('search'); // m.selectedID, { queryParams: { workflowID: newwf.id }}
+                    document.location.hash = '#/process/' + data.nodes[0] + '?workflowID=' + _this.data.wfid;
+                }
+            });
+        });
+        //Ember.run.scheduleOnce('afterRender', this, getData);
+
+       
+
         //this.notifyPropertyChange("selected");
-    }.observes("selected"),
+    }, //.observes("selected"),
 
     didInsertElement: function () {
+
         this.selectedChanged();
+
     }
 });
 

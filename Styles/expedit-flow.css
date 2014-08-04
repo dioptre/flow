@@ -376,6 +376,7 @@ text-transform: capitalize;
 }
 
 /* The float is turned off for mobile devices, thus the account info drops down on a second line. Readding float fixes that. */
+.navbar { border-right: none; }
 .navbar-header {
   float: left;
 }
@@ -394,12 +395,8 @@ text-transform: capitalize;
 
 
 
-
+/* Make the main frame a bit more resonable on desktop */
 .content {
-/*  margin-bottom: 0px;
-  padding-bottom: 0px;  a little bit radical actually */
-  /*border-radius: 0 0 0 0;*/
-
   margin-bottom: 25px;
   padding-bottom: 25px;
 }
@@ -483,23 +480,64 @@ text-transform: capitalize;
 
 
 /* new menu test */
-body.menu {
-  -webkit-transform: translate(170px,0px);
-  -ms-transform: translate(170px,0px);
-  -moz-transform: translate(170px,0px);
-  transform: translate(170px,0px);
+body.menu #emberapphere{
+  -webkit-transform: translate(165px,0px);
+  -ms-transform: translate(165px,0px);
+  -moz-transform: translate(165px,0px);
+  transform: translate(165px,0px);
+  -webkit-transition: 0.25s all ease-out;
+  transition: 0.25s all ease-out;
 }
 
+html, body.menu {
+    height: 100%;
+    overflow-x:hidden;
+}
+
+/*::selection {color:red;background:yellow;}
+::-moz-selection {color:red;background:yellow;}*/
+
 @media (max-width: 768px) {
-  body.menu #sidebar-nav {
-    left: -164px !important;
-    top: 1px !important;
+  body {
+    background: white;
+  }
+  #sidebar-nav {
+    left: -165px !important;
+    top: 0px !important;
     box-shadow: none !important;
-    height: 100% !important;
-    -webkit-transform: translate(0px,-1px);
-    -ms-transform: translate(0px,-1px);
-    -moz-transform: translate(0px,-1px);
-    transform: translate(0px,-1px);
+    transition: none;
+    border-radius: 0px;
+    height: inherit !important;
+    min-height: 100vh;
+    transition: none;
+  }
+  body.menu .content {
+    pointer-events: none;
+    opacity: 0.4;
+    position: relative;
+    /*min-height: 100%;*/
+  }
+  body.menu .navbar {
+    opacity: 0.8;
+  }
+  .content {
+    margin-bottom: 0px;
+    border-bottom: none;
+    border-left: none;
+    box-shadow: none;
+    min-height: 0px;
+    border-radius: 0;
+  }
+  /* This keeps the content box always 100% minimum */
+  .content {
+    min-height: 100vh;
+    margin-top: -58px;
+    padding-top: 58px;
+    /*background: red;*/
+  }
+
+  .login-helper {
+    min-height: 400px;
   }
 }
 
@@ -510,10 +548,12 @@ body.menu .content {
   width: 100%;
 }
 
-body {
+body #emberapphere{
   -webkit-transform: translate(0px,0px);
   -moz-transform: translate(0px,0px);
   -ms-transform: translate(0px,0px);
   transform: translate(0px,0px);
+    -webkit-transition: 0.20s all ease-out;
+  transition: 0.20s all ease-out;
 };
 
