@@ -1049,7 +1049,7 @@
                     Choose a new name below:<br />
                     {{eui-input valueBinding="model.workflow.name" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
 
-                    {{eui-button label="Cancel" action="toggleworkflowEditNameModal" size='large'}}
+                    {{eui-button label="Cancel" action="cancelWorkflowNameNow" size='large'}}
                         {{eui-button label="Submit" action="updateWorkflowNameNow" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
                          </div>
                 {{/eui-modal}}
@@ -1071,7 +1071,7 @@
 
                      {{tinymce-editor data=model.selected.content}}
 
-                    {{eui-button label="Cancel" action="toggleWorkflowEditModal" size='large'}}
+                    {{eui-button label="Cancel" action="cancelWorkflow" size='large'}}
                     {{eui-button label="Submit" action="updateWorkflow" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
                     </div>
                 {{/eui-modal}}
@@ -1193,7 +1193,7 @@
             <br>
 
              {{#if keywords}}
-                {{#link-to 'wikipedia' componentURI}}Lookup <b>{{keywords}}</b> on wikipedia{{/link-to}}
+                {{#link-to 'wikipedia' componentURI}}Show the <b>{{keywords}}</b> wikipedia article{{/link-to}}
             {{/if}}
 
             <br><br>

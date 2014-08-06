@@ -1651,8 +1651,17 @@ App.GraphController = Ember.ObjectController.extend({
             })
 
         },
+        cancelWorkflowNameNow: function (data, callback) {
+            var wf = this.store.getById('workflow', this.get('workflowID'));
+            if (typeof wf !== 'undefined' && wf) {
+                wf.rollback()
+                this.get('workflow').set('name', wf.get('name'));
+                if (this.get('workflow.name'))
+                    this.get('workflow').set('name', 'Untitled Workflow - [0-9\-]* \@ [0-9\:]$/ig')
+            }
+            this.send('toggleworkflowEditNameModal', data, callback);
+        },
         toggleworkflowEditNameModal: function () {
-
             this.toggleProperty('workflowEditNameModal');
         },
         toggleWorkflowNewModal: function (data, callback) {
@@ -1660,6 +1669,12 @@ App.GraphController = Ember.ObjectController.extend({
         },
         toggleWorkflowEditModal: function (data, callback) {
             this.toggleProperty('workflowEditModal');
+        },
+        cancelWorkflow: function (data, callback) {
+            var wf = this.store.getById('node', this.get('selectedID'));
+            if (typeof wf !== 'undefined' && wf && wf.get('label').search(/^Untitled Process - [0-9\@\- :]*$/ig) < 0)
+                wf.rollback()
+            this.send('toggleWorkflowEditModal', data, callback);
         },
         updateWorkflow: function () {
             var _this = this;
@@ -1995,6 +2010,7 @@ App.VizEditorComponent = Ember.Component.extend({
         };
 
         // Initialise vis.js
+        console.log(container, data, options);
         this.graph = new vis.Graph(container, data, options);
         // This sets the new selected item on click
         this.graph.on('click', function (data) {

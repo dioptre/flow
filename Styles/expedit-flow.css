@@ -50,53 +50,52 @@ ul.pager { /* This is the pager on the search page */
 .ui-autocomplete {
   position: absolute;
   cursor: default;
-  z-index:10000000000 !important;
+  z-index: 10000000000 !important;
   /*position: block;*/
-    top: 100%;
-    left: 0;
-    float: left;
-    display: none;
-    min-width: 160px;
-    _width: 160px;
-    padding: 4px 0;
-    margin: 2px 0 0 0;
-    list-style: none;
-    background-color: #ffffff;
-    border-color: #ccc;
-    border-color: rgba(0, 0, 0, 0.2);
-    border-style: solid;
-    border-width: 1px;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
-    -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-    -webkit-background-clip: padding-box;
-    -moz-background-clip: padding;
-    background-clip: padding-box;
-    *border-right-width: 2px;
-    *border-bottom-width: 2px;
+  top: 100%;
+  left: 0;
+  float: left;
+  display: none;
+  min-width: 160px;
+  _width: 160px;
+  padding: 4px 0;
+  margin: 2px 0 0 0;
+  list-style: none;
+  background-color: #ffffff;
+  border-color: #ccc;
+  border-color: rgba(0, 0, 0, 0.2);
+  border-style: solid;
+  border-width: 1px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -webkit-background-clip: padding-box;
+  -moz-background-clip: padding;
+  background-clip: padding-box;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+}
 
-    .ui-menu-item > a.ui-corner-all {
-      display: block;
-      padding: 3px 15px;
-      clear: both;
-      font-weight: normal;
-      line-height: 18px;
-      color: #555555;
-      white-space: nowrap;
-
-      &.ui-state-hover, &.ui-state-active {
-        color: #ffffff;
-        text-decoration: none;
-        background-color: #0088cc;
-        border-radius: 0px;
-        -webkit-border-radius: 0px;
-        -moz-border-radius: 0px;
-        background-image: none;
-      }
-    }
+.ui-autocomplete .ui-menu-item > a.ui-corner-all {
+  display: block;
+  padding: 3px 15px;
+  clear: both;
+  font-weight: normal;
+  line-height: 18px;
+  color: #555555;
+  white-space: nowrap;
+}
+.ui-autocomplete .ui-menu-item > a.ui-corner-all.ui-state-hover, .ui-autocomplete .ui-menu-item > a.ui-corner-all.ui-state-active {
+  color: #ffffff;
+  text-decoration: none;
+  background-color: #0088cc;
+  border-radius: 0px;
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  background-image: none;
 }
 
 .ui-helper-hidden-accessible {
@@ -211,10 +210,18 @@ div.table_description {
 }
 
 .eui-modal-open {
-  position: fixed; /*fixes modals for safariii */
+  position: fixed; /*fixes modals for safariii*/
   width: 100%;
   overflow: hidden;
 }
+
+/*.eui-modal-open .content, .eui-modal-open #pad-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+}*/
+
+
+
 
 .eui-error-message {
     position: relative;
@@ -560,11 +567,94 @@ body.menu .content {
 }
 
 body #emberapphere{
-  -webkit-transform: translate(0px,0px);
-  -moz-transform: translate(0px,0px);
-  -ms-transform: translate(0px,0px);
-  transform: translate(0px,0px);
+
+
+/* new menu test */
+body.menu #emberapphere{
+  -webkit-transform: translate(165px,0px);
+  -ms-transform: translate(165px,0px);
+  -moz-transform: translate(165px,0px);
+  transform: translate(165px,0px);
+  -webkit-transition: 0.25s all ease-out;
+  transition: 0.25s all ease-out;
+}
+
+html, body.menu {
+    height: 100%;
+    overflow-x:hidden;
+}
+
+/*::selection {color:red;background:yellow;}
+::-moz-selection {color:red;background:yellow;}*/
+
+@media (max-width: 768px) {
+  body {
+    background: white;
+  }
+  #sidebar-nav {
+    left: -165px !important;
+    top: 0px !important;
+    box-shadow: none !important;
+    transition: none;
+    border-radius: 0px;
+    height: inherit !important;
+    min-height: 100vh;
+    transition: none;
+  }
+  body.menu .content {
+    pointer-events: none;
+    opacity: 0.4;
+    position: relative;
+    /*min-height: 100%;*/
+  }
+  body.menu .navbar {
+    opacity: 0.8;
+  }
+  .content {
+    margin-bottom: 0px;
+    border-bottom: none;
+    border-left: none;
+    box-shadow: none;
+    min-height: 0px;
+    border-radius: 0;
+  }
+  /* This keeps the content box always 100% minimum */
+  .content {
+    min-height: 100vh;
+    margin-top: -58px;
+    padding-top: 58px;
+    /*background: red;*/
+  }
+
+  .login-helper {
+    min-height: 400px;
+  }
+}
+
+
+body.menu .content {
+  margin-left: 0px;
+  position: inherit;
+  width: 100%;
+}
+
+body #emberapphere{
+  -webkit-transform: translate(0,0); /*https://code.google.com/p/chromium/issues/detail?id=20574*/
+  -moz-transform: translate(0,0);
+  -ms-transform: translate(0,0);
+  transform: translate(0,0);
     -webkit-transition: 0.20s all ease-out;
   transition: 0.20s all ease-out;
-};
+}
+
+
+/*inside tiny-mce editor*/
+/*body.mce-content-body > *  {
+  padding: 10px;
+}
+
+#tinymce {
+  padding: 10px !important;
+  background: red;
+}*/
 
