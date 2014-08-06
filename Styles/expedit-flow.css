@@ -9,14 +9,59 @@ html {
     touch-action: manipulation;
 }
 
+/*inside tiny nice covers*/
 .tiny-map img {
     max-width: none !important;
 }
-
+.tiny-location {
+  margin-bottom: 15px;
+}
 .tiny-map {
     height: 250px;
     background-color: lightgrey;
+
 }
+#tinymce .tiny-location {
+  margin-bottom: 35px;
+}
+#tinymce .tiny-map {
+  margin-bottom: -30px;
+}
+#tinymce .tiny-location a {
+  padding-left: 14px;
+  text-decoration: none !important;
+  color: black !important;
+}
+
+.tiny-workflow-cover {
+    display: none; /*make sure only show if in tiny-mce frame*/
+}
+#tinymce .tiny-workflow-cover:before , #tinymce .tiny-map:before {
+  content: "\f0e8";
+  font-family: 'FontAwesome';
+  display: block;
+  font-size: 100px;
+  color: white;
+  width: 100%;
+  text-align: center;
+  padding-top: 50px;
+}
+#tinymce .tiny-map:before {
+  content: "\f041";
+}
+#tinymce .tiny-workflow {
+  margin-bottom: 35px;
+}
+#tinymce .tiny-workflow-cover {
+    height: 250px;
+    background-color: lightgrey;
+    display: block;
+    margin-bottom: -57px;
+}
+#tinymce .tiny-workflow h4 {
+  padding-left: 15px;
+}
+
 
 
 #username {display: block !important;}
@@ -576,10 +621,10 @@ text-transform: capitalize;
 
 /* new menu test */
 body.menu #emberapphere{
-  -webkit-transform: translate(165px,0px);
-  -ms-transform: translate(165px,0px);
-  -moz-transform: translate(165px,0px);
-  transform: translate(165px,0px);
+  -webkit-transform: translate(165px,0);
+  -ms-transform: translate(165px,0);
+  -moz-transform: translate(165px,0);
+  transform: translate(165px,0);
   -webkit-transition: 0.25s all ease-out;
   transition: 0.25s all ease-out;
 }
@@ -645,10 +690,10 @@ body.menu .content {
 
 /* new menu test */
 body.menu #emberapphere{
-  -webkit-transform: translate(165px,0px);
-  -ms-transform: translate(165px,0px);
-  -moz-transform: translate(165px,0px);
-  transform: translate(165px,0px);
+  -webkit-transform: translate(165px,0);
+  -ms-transform: translate(165px,0);
+  -moz-transform: translate(165px,0);
+  transform: translate(165px,0);
   -webkit-transition: 0.25s all ease-out;
   transition: 0.25s all ease-out;
 }
@@ -716,7 +761,7 @@ body.menu .content {
 
 /*https://code.google.com/p/chromium/issues/detail?id=20574*/
 #emberapphere {
-  -webkit-transform: translate(0,0);
+  -webkit-transform: none;
   -moz-transform: translate(0,0);
   -ms-transform: translate(0,0);
   transform: translate(0,0);
@@ -773,7 +818,7 @@ table thead {
 
 .pretty-content p, #tinymce p {margin-bottom: 1.3em;}
 
-.pretty-content h1, .pretty-content h2, .pretty-content h3, .pretty-content h4, #tinymce h1, #tinymce h2, #tinymce h3, #tinymce h4 {
+.pretty-content h1, .pretty-content h2, .pretty-content h3, .pretty-content h4, .pretty-content h5, .pretty-content h6, #tinymce h1, #tinymce h2, #tinymce h3, #tinymce h4, #tinymce h5, #tinymce h6 {
   font-family: 'Libre Baskerville', 'Georgia', serif;
   margin: 1.414em 0 0.5em;
   font-weight: inherit;
@@ -790,7 +835,10 @@ table thead {
 
 .pretty-content h3, #tinymce h3 {font-size: 1.6em;}
 
-.pretty-content h4, #tinymce h4 {font-size: 1.25em;}
+.pretty-content h4, #tinymce h4 {
+  font-size: 1.25em;
+  font-variant: normal;
+}
 
 .pretty-content blockquote p, #tinymce blockquote p {
   font-size: 1.3em;
@@ -802,6 +850,8 @@ table thead {
 small, .font_small {font-size: 0.707em;}
 
 
-
+.tiny-form, .tiny-form  h4 {
+  font-family: 'Open Sans'
+}
 
 

@@ -1508,11 +1508,12 @@ App.GraphRoute = Ember.Route.extend({
             //});
             var nn = App.Node.store.createRecord('node', { id: m.selectedID, label: 'Untitled Process - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), content: '', VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss')) });            
             nn.get('workflows').then(function (w) {
-                _this.set('data', nn);
-                _this.set('data.workflowID', m.params.workflowID);
+                //_this.set('graphData', nn);
+                //_this.set('graphData.workflowID', m.params.workflowID);
                 w.pushObject(m.workflow);
                 m.selected = nn;
                 m.graphData = { nodes: [nn], edges: [] };
+                m.graphData.workflowID = m.params.workflowID;
                 m.selectedID = m.selectedID;
             });
 
@@ -1663,12 +1664,32 @@ App.GraphController = Ember.ObjectController.extend({
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
             if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
                 newWorkflow = App.Node.store.createRecord('workflow', {id: this.get('workflowID'), name: this.get('model.workflow.name') });
-                this.set('model.workflow', newWorkflow);
             }
             else
                 newWorkflow.set('name', this.get('model.workflow.name'));
+            if (newWorkflow.currentState.parentState.dirtyType == 'created')
+                this.set('model.workflow', newWorkflow);
             newWorkflow.save().then(function (data) {
                 Messenger().post({ type: 'success', message: "Workflow successfully updated." })
+                var wfid = _this.get('workflowID');
+                var all = Enumerable.From(App.Node.store.all('node').content);
+                var promises = [];
+                var nodes = [];
+                var edges = [];
+                all.ForEach(function (f) {
+                    promises.push(f.get('workflows').then(function (g) {
+                        $.each(g.content, function (key, value) {
+                            if (value.id == wfid) {
+                                nodes.push(f);
+                                f.save();
+                            }
+                        });
+                    }));
+                });
+
+                //Ember.RSVP.allSettled(promises).then(function (array) {
+                //});
+
 
                 if (_this.get('workflowGte2')) {
                     Enumerable.From(_this.get('model.workflows')).Where("f=>f.id==='" + _this.get('workflowID') + "'").Single().name = _this.get('model.workflow.name');
@@ -1722,6 +1743,8 @@ App.GraphController = Ember.ObjectController.extend({
             }
             else
                 newWorkflow.set('name', this.get('model.workflow.name'));
+            if (newWorkflow.currentState.parentState.dirtyType == 'created')
+                this.set('model.workflow', newWorkflow);
             newWorkflow.save().then(function (data) {
                 Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
                 var newNode = App.Node.store.getById('node', _this.get('selectedID'));
@@ -1754,7 +1777,7 @@ App.GraphController = Ember.ObjectController.extend({
         addNewNode: function () {
             var _this = this;
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
-            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
+            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined' || newWorkflow.currentState.parentState.dirtyType == 'created') {
                 this.send('updateWorkflowNameNow');
             }
             var c = this.get('newContent')
@@ -1777,7 +1800,7 @@ App.GraphController = Ember.ObjectController.extend({
         addNewEdge: function (data) {
             var _this = this;
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
-            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
+            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined'|| newWorkflow.currentState.parentState.dirtyType == 'created') {
                 this.send('updateWorkflowNameNow');
             }
             data.id = NewGUID();
@@ -1996,6 +2019,7 @@ App.VizEditorComponent = Ember.Component.extend({
             //physics: { barnesHut: { gravitationalConstant: -8425, centralGravity: 0.1, springLength: 150, springConstant: 0.058, damping: 0.3 } },
             physics: { barnesHut: { centralGravity: centralGravity, springConstant: 0.01, damping: 0.1, springLength: 170 } },
             stabilize: false,
+            //clustering: true,
             stabilizationIterations: 200,
             dataManipulation: {
                 enabled: this.get('editing'),
@@ -3217,10 +3241,12 @@ App.TinymceEditorComponent = Ember.Component.extend({
 
         // Setup plugins and toolbar
         config.plugins = ["locationpicker myfilepicker code link noneditable myformeditor myworkflow"];
-        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent code link | locationpicker | myfilepicker | myformeditor | myworkflow"];
+        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | code link | locationpicker myfilepicker myformeditor myworkflow"];
         config.schema = "html5";
         config.menubar = false;
         config.valid_elements = "*[*]";
+        config.valid_elements = '*[margin-left|class|href|src|width|height|onlick|role|id|name|title|placeholder]';
+
         //config.extended_valid_elements = "script[type|defer|src|language]";
         config.extended_valid_elements = "div[data-json|id|class|type]";
         // Choose selector
