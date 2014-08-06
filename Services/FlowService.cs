@@ -860,8 +860,11 @@ namespace EXPEDIT.Flow.Services {
                 if (!id.HasValue || isNew || id != mid)
                     return false;
                 var g = (from o in d.GraphData where o.GraphDataID == mid select o).Single();
+                d.GraphDataHistories.Where(f => f.GraphDataID == mid).Delete();
                 d.GraphDataRelation.Where(f => f.FromGraphDataID == mid || f.ToGraphDataID == mid).Delete();
                 d.GraphDataContexts.Where(f => f.GraphDataID == mid).Delete();
+                d.GraphDataFileDatas.Where(f => f.GraphDataID == mid).Delete();
+                d.GraphDataLocations.Where(f => f.GraphDataID == mid).Delete();                            
                 d.GraphData.DeleteObject(g);
                 d.SaveChanges();
                 return true;

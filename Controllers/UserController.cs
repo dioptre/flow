@@ -277,7 +277,7 @@ namespace EXPEDIT.Flow.Controllers {
                 m = m.node;
             if (!m.GraphDataID.HasValue)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
-            if (_Flow.DeleteEdge(m.GraphDataID.Value))
+            if (_Flow.DeleteNode(m.GraphDataID.Value))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);

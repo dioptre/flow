@@ -759,3 +759,49 @@ table thead {
 }
 
 
+/*nice typography for content*/
+
+.pretty-content, #tinymce {
+    font-size: 14px;
+    line-height: 25px;
+    font-family: 'Georgia', serif;
+    font-weight: 400;
+    line-height: 1.45;
+    color: #333;
+    /*font-size: 1em;*/
+}
+
+.pretty-content p, #tinymce p {margin-bottom: 1.3em;}
+
+.pretty-content h1, .pretty-content h2, .pretty-content h3, .pretty-content h4, #tinymce h1, #tinymce h2, #tinymce h3, #tinymce h4 {
+  font-family: 'Libre Baskerville', 'Georgia', serif;
+  margin: 1.414em 0 0.5em;
+  font-weight: inherit;
+  line-height: 1.2;
+  color: #3E4751;
+}
+
+.pretty-content h1, #tinymce h1 {
+  margin-top: 0;
+  font-size: 2.4em;
+}
+
+.pretty-content h2, #tinymce h2 {font-size: 2em;}
+
+.pretty-content h3, #tinymce h3 {font-size: 1.6em;}
+
+.pretty-content h4, #tinymce h4 {font-size: 1.25em;}
+
+.pretty-content blockquote p, #tinymce blockquote p {
+  font-size: 1.3em;
+  font-weight: 300;
+  line-height: 1.25;
+  font-style: italic;
+}
+
+small, .font_small {font-size: 0.707em;}
+
+
+
+
+

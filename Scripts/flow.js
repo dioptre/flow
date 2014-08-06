@@ -854,11 +854,17 @@ App.Search = DS.Model.extend({
     "Updated": DS.attr(''),
     updatedNice: function(){
         var updated = this.get('Updated');
-        return moment(updated).format('DD/MM/YYYY');
+        if (updated){
+            return moment(updated).format('DD/MM/YYYY');
+        }
+        return '';
     }.property('Updated'),
     updatedNiceMinutes: function(){
         var updated = this.get('Updated');
-        return moment(updated).format('DD/MM/YYYY @ HH:SS');
+        if (updated){
+         return moment(updated).format('DD/MM/YYYY @ HH:SS');
+        }
+        return '';
     }.property('Updated'),
     humanName: function () {
         var temp = this.get('Title');
@@ -1393,11 +1399,12 @@ App.GraphRoute = Ember.Route.extend({
         });
     },
     afterModel: function (m) {
+        var _this = this;
         m.selected = this.store.getById('node', m.selectedID);
         if (m.selected || (m.data && m.data.content && m.data.content.length > 0)) {
             //Get the selected item from m.data
-            
-            if (typeof m.selected === 'undefined') {
+
+            if (typeof m.selected === 'undefined' || m.selected === null) {
                 m.selected = Enumerable.From(m.data.content).FirstOrDefault();
                 if (typeof m.selected === 'undefined') {
                     if (m.params)
@@ -1411,7 +1418,6 @@ App.GraphRoute = Ember.Route.extend({
                 return;
             }
             //document.title = m.selected.get('humanName') + ' - FlowPro';
-            var _this = this;
             var array = { nodes: [], edges: [] };
             var depthMax = 15; // currently depthMax is limited to 1 unless the data is already in ember store
             var nodeMax = -1;
@@ -1488,18 +1494,27 @@ App.GraphRoute = Ember.Route.extend({
             m.editing = true;
             m.humanName = '';
             //TODO WORKFLOW
-            this.store.create
-            m.graphData = { nodes: [], edges: [] };
-            m.workflow = this.store.find('workflow', m.params.workflowID);
-            m.workflow.then(function (item) {
-                m.workflows = Em.A([{ id: item.get('id'), name: item.get('name'), humanName: item.get('humanName'), firstNode: item.get('firstNode') }]);
-            }, function (item) {
-                //m.workflow = App.Workflow.store.createRecord('workflow', { id: NewGUID(), name: 'Untitled Workflow - ' + new Date() });
-                m.workflow.set('content').name = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
-                m.workflows = Em.A([m.workflow]);
+            //this.store.create
+            //m.workflow = this.store.find('workflow', m.params.workflowID);
+            //var wfid = NewGUID();
+            m.workflow = App.Workflow.store.createRecord('workflow', { id: m.params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') });
+            m.workflows = Em.A([m.workflow]);
+            //m.workflow.then(function (item) {
+            //    m.workflows = Em.A([{ id: item.get('id'), name: item.get('name'), humanName: item.get('humanName'), firstNode: item.get('firstNode') }]);
+            //}, function (item) {
+            //    //m.workflow = App.Workflow.store.createRecord('workflow', { id: m.params.workflowID, name: 'Untitled Workflow - ' + new Date() });
+            //    m.workflow.set('content').name = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
+            //    m.workflows = Em.A([m.workflow]);
+            //});
+            var nn = App.Node.store.createRecord('node', { id: m.selectedID, label: 'Untitled Process - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), content: '', VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss')) });            
+            nn.get('workflows').then(function (w) {
+                _this.set('data', nn);
+                _this.set('data.workflowID', m.params.workflowID);
+                w.pushObject(m.workflow);
+                m.selected = nn;
+                m.graphData = { nodes: [nn], edges: [] };
+                m.selectedID = m.selectedID;
             });
-            m.selected = App.Node.store.createRecord('node', { id: m.selectedID, label: 'Untitled Process - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), content: '', VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss')) });
-
 
         }
 
@@ -1747,6 +1762,7 @@ App.GraphController = Ember.ObjectController.extend({
             var id = NewGUID();
             var newNode = { id: id, label: n, content: c, VersionUpdated: Ember.Date.parse(new Date()) };
             App.Node.store.createRecord('node', newNode).save().then(function (f) {
+                f.get('workflows').pushObject(_this.store.getById('workflow', _this.get('workflowID')));
                 Messenger().post({ type: 'success', message: 'Successfully Added Process' });
                 var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                 _this.get('graphData').nodes.pushObject(a);
@@ -1766,9 +1782,11 @@ App.GraphController = Ember.ObjectController.extend({
             }
             data.id = NewGUID();
             data.GroupID = this.get('workflowID');
-            App.Node.store.createRecord('edge', data).save().then(function () {
+            App.Node.store.createRecord('edge', data).save().then(function (o) {                
                 Messenger().post({ type: 'success', message: 'Successfully Added Connection' });
-                var f = App.Node.store.getById('edge', data.id);
+                var f = App.Node.store.getById('edge', data.id);                
+                _this.store.getById('node', f.get('from')).get('workflows').pushObject(_this.store.getById('workflow', _this.get('workflowID')));
+                _this.store.getById('node', f.get('to')).get('workflows').pushObject(_this.store.getById('workflow', _this.get('workflowID')));
                 var a = { id: f.get('id'), from: f.get('from'), to: f.get('to'), color: f.get('color'), width: f.get('width'), style: f.get('style') }
                 _this.get('graphData.edges').pushObject(a);
                 _this.set('graphData.edges', _this.get('graphData.edges').concat([]));
@@ -2103,33 +2121,21 @@ App.VizEditorComponent = Ember.Component.extend({
             this.setup(); // graph hasn't been initialised yet
         }
         var _this = this;
-        var all = Enumerable.From(App.Node.store.all('node').content);
-        var promises = [];
-        var nodes = [];
-        var edges = [];
         var wfid = this.get('data').workflowID;
-        Enumerable.From(App.Node.store.all('node').content).ForEach(function (f) {
-            promises.push(f.get('workflows').then(function (g) {
-                $.each(g.content, function (key, value) {
-                    if (value.id == wfid)
-                        nodes.push(f);
-                });
-            }));
-        });
 
-        Ember.RSVP.allSettled(promises).then(function (array) {
-            var edges = Enumerable.From(App.Node.store.all('edge').content).Where("f=>f.get('GroupID')=='" + wfid + "'").ToArray();
-            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: ToTitleCase(item.get('label').replace(/_/g, ' ')), mass: 0.8, group: item.get('group') }; });
-            edges = $.map(edges, function (item) { return { from: item.get('from'), to: item.get('to'), style: item.get('style'), color: item.get('color') }; });
+        var updateGraph = function (nodes, edges) {
+            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('humanName'), mass: 0.8, group: item.get('group') }; });
+            edges = $.map(edges, function (item) { return { id: item.get('id'), from: item.get('from'), to: item.get('to'), style: item.get('style'), color: item.get('color') }; });
             Enumerable.From(nodes).ForEach(
-                function (value) {
+                function (value) {                    
                     delete value.color;
                     delete value.fontColor;
-                    if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "'").Any()) {
+                    //console.log(value.id.replace(/\'/ig, '\''));
+                    if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id.replace(/'/ig, '\\\'') + "'").Any()) {
                         value.color = "#FFFFFF"; //BEGIN
                         value.fontColor = "#000000";
                     }
-                    else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "'").Any()) {
+                    else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id.replace(/'/ig, '\\\'') + "'").Any()) {
                         value.color = "#333333"; //END
                         value.fontColor = "#FFFFFF";
                     }
@@ -2144,7 +2150,6 @@ App.VizEditorComponent = Ember.Component.extend({
                 nodes: nodes,
                 edges: edges,
             };
-
             var d = _this.get('vizDataSet');
             var select = _this.get('selected');
 
@@ -2224,8 +2229,42 @@ App.VizEditorComponent = Ember.Component.extend({
 
             if (d.nodes.get(select) !== null && _this.graph.getSelectedNodes().length == 0)
                 _this.graph.selectNodes([select]);
-        });
+        }
 
+
+
+        if (!this.get('isWorkflow')) {
+            var all = Enumerable.From(App.Wikipedia.store.all('wikipedia').content);
+            var edges = Enumerable.From(App.Wikipedia.store.all('edge').content).Where("f=>typeof f.get('GroupID')=='undefined'").ToArray();
+            var cleaned = Enumerable.Empty();
+            var nodes = Enumerable.Empty();
+            Enumerable.From(edges).GroupBy("$.get('origin')", "$").ForEach(function (data) {
+                var clean = Enumerable.From(data.source).Take(20);
+                cleaned = cleaned.Concat(clean);
+                nodes = nodes.Concat(all.Intersect(clean.Select(function (edge) { return { id: edge.get('to') }; }), "$.id"));
+                nodes = nodes.Concat(all.Where("$.id=='" + data.Key() + "'").ToArray()); //from
+            });
+            updateGraph(nodes.ToArray(), cleaned.ToArray());
+        }
+        else {
+            var all = Enumerable.From(App.Node.store.all('node').content);
+            var nodes = [];
+            var edges = [];
+            var promises = [];
+            all.ForEach(function (f) {
+                promises.push(f.get('workflows').then(function (g) {
+                    $.each(g.content, function (key, value) {
+                        if (value.id == wfid)
+                            nodes.push(f);
+                    });
+                }));
+            });
+
+            Ember.RSVP.allSettled(promises).then(function (array) {
+                edges = Enumerable.From(App.Node.store.all('edge').content).Where("f=>f.get('GroupID')=='" + wfid + "'").ToArray();
+                updateGraph(nodes,edges);
+            });
+        }
 
     }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement'),
     actions: {
@@ -2354,6 +2393,9 @@ App.VizEditorComponent = Ember.Component.extend({
                     }
                     if (!found) {
                         var newNode = App.Node.store.getById('node', id);
+                        var o = newNode.get('workflows').then(function (w) {
+                            w.pushObject(App.Node.store.getById('workflow', _this.get('data.workflowID')));
+                        });
                         var a = { id: newNode.get('id'), label: newNode.get('label'), shape: newNode.get('shape'), group: newNode.get('group') };
                         currentNodesonScreen.nodes.add(a);
                         _this.get('data').nodes.push(a); //, currentNodesonScreen.nodes.concat([]));
@@ -2608,6 +2650,9 @@ App.Edge = DS.Model.extend({
         else
             return 'grey';
     }.property(),
+    origin: function () {
+        return this.get('from').replace("'", "\\\'");
+    }.property(),
     GroupID: DS.attr(),
     Related: DS.attr('date'),
     RelationTypeID: DS.attr(),
@@ -2689,11 +2734,26 @@ App.MyLicense = DS.Model.extend({
     RootServerID: DS.attr(''),
     ServerName: DS.attr(''),
     ServerID: DS.attr(''),
+    "LicenseeUsernameTags": function(){
+        var a = this.get('LicenseeUsername')
+        if (a) {
+            return '<span class="label label-success">' + a + '</span>'
+        }
+        return ''
+    }.property('LicenseeUsername'),
     ApplicationID: DS.attr(''),
     ServiceAuthenticationMethod: DS.attr(''),
     ServiceAuthorisationMethod: DS.attr(''),
     ValidFrom: DS.attr(''),
+    ValidFromNice: function(){
+        var a = this.get('ValidFrom');
+        return moment(a).format('DD/MM/YYYY');
+    }.property('ValidFrom'),
     Expiry: DS.attr(''),
+    ExpiryNice: function(){
+        var a = this.get('Expiry');
+        return moment(a).format('DD/MM/YYYY');
+    }.property('Expiry'),
     SupportExpiry: DS.attr(''),
     ValidForDuration: DS.attr(''),
     ValidForUnitID: DS.attr(''),
@@ -2769,7 +2829,7 @@ App.Wikipedia = DS.Model.extend({
     edges: DS.hasMany('edge'),
     group: function() {
         return 'wikipedia';
-    },
+    }.property(),
     humanName: function () {
         var temp = this.get('label');
         if (temp)
@@ -2955,12 +3015,14 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   Enumerable.From(edges).ForEach(function (f) { f.sequence = sequence; sequence++; App.Wikipedia.store.push('edge', f); });
                   Enumerable.From(edges).Where("$.to!='" + id.replace("'", "\\\'") + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to }); });
                   App.Wikipedia.store.push('wikipedia', { id: id, label: id, edges: edgeids, content: content });
-                  if (typeof array === 'undefined')
-                      Ember.run(null, resolve, { id: id, label: id, content: content, edges: edgeids });
-                  else {
-                      var toReturn = { Nodes: [{ id: id, label: id, content: content, edges: edgeids }], Edges: edges };
-                      Ember.run(null, resolve, toReturn);
-                  }
+                  setTimeout(function () {
+                      if (typeof array === 'undefined')
+                          Ember.run(null, resolve, { id: id, label: id, content: content, edges: edgeids });
+                      else {
+                          var toReturn = { Nodes: [{ id: id, label: id, content: content, edges: edgeids }], Edges: edges };
+                          Ember.run(null, resolve, toReturn);
+                      }
+                  }, 300);
               }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
                   Ember.run(null, reject, jqXHR);
