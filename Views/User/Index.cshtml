@@ -151,6 +151,7 @@
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/bootstrapvalidator/dist/js/bootstrapValidator.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/tiny-mce-custom-render-helper.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myformeditor/client.min.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/locationpicker/client.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myfilepicker/client.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myworkflow/client.min.js")"></script>
     </head>
@@ -493,7 +494,7 @@
                                   <tr>
                                     {{!--<td><img {{bind-attr src=result.ResourcePreviewPath}} height="15"></td>--}}
                                     <td>{{workf.humanName}}</td>
-                                    <td>{{workf.Updated}}</td>
+                                    <td>{{workf.updatedNiceMinutes}}</td>
                                     <td>{{link-to 'View' 'workflow' workf.id}}</td>
                                     {{#if controllers.application.isLoggedIn}}
                                         <td><a {{action 'editPermission' workf}} class="hlink">Edit</a></td>
@@ -530,7 +531,7 @@
                                   <tr>
                                     {{!--<td><img {{bind-attr src=proc.ResourcePreviewPath}} height="15"></td>--}}
                                     <td>{{proc.Title}}</td>
-                                    <td>{{proc.Updated}}</td>
+                                    <td>{{proc.updatedNiceMinutes}}</td>
                                     <td>{{link-to 'View' 'graph' proc.id (query-params workflowID="undefined")}}</td>
                                     {{#if controllers.application.isLoggedIn}}
                                         <td><a {{action 'editPermission' proc}} class="hlink">Edit</a></td>
@@ -608,8 +609,8 @@
                     <td><img {{bind-attr src=result.ResourcePreviewPath}} height="15"></td>
                     <td>{{result.Title}}</td>
                     <td>{{result.Description}}</td>
-                    <td>{{result.Updated}}</td>
-                    <td><a {{bind-attr href=result.ResourcePath}}>Download File</a></td>
+                    <td>{{result.updatedNiceMinutes}}</td>
+                    <td><a {{bind-attr href=result.ResourcePath}}>Download</a></td>
                     {{#if controllers.application.isLoggedIn}}
                         <td><a {{action 'editPermission' result}} class="hlink">Edit</a></td>
                     {{/if}}
@@ -1198,8 +1199,8 @@
                 {{#link-to 'graph' result.ReferenceID (query-params workflowID="undefined") tagName='tr' class='graphResultRow'}}
 
                   <td>{{safehtml result.humanName}}</td>
-                  <td>{{safehtml result.Author}}</td>
-                  <td>{{safehtml result.Updated}}</td>
+                  <td>{{safehtml result.authorTags}}</td>
+                  <td>{{safehtml result.updatedNice}}</td>
                 {{/link-to}}
               {{/each}}
             </tbody>
@@ -1248,9 +1249,9 @@
                 <tr>
                   <td>{{safehtml result.Title}}</td>
                   <td>{{safehtml result.Description}}</td>
-                  <td>{{safehtml result.Author}}</td>
-                  <td>{{safehtml result.Updated}}</td>
-                  <td><a {{bind-attr href=result.ResourcePath}}>Download File</a></td>
+                  <td>{{safehtml result.authorTags}}</td>
+                  <td>{{safehtml result.updatedNice}}</td>
+                  <td><a {{bind-attr href=result.ResourcePath}}>Download</a></td>
                 </tr>
               {{/each}}
             </tbody>

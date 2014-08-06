@@ -844,7 +844,22 @@ App.Search = DS.Model.extend({
         return '/share/preview/' + this.get('ReferenceID') + '?width=30&height=30&crop=true';
     }.property('ReferenceID'),
     "Author": DS.attr(''),
+    "authorTags": function(){
+        var author = this.get('Author')
+        if (author) {
+            return '<span class="label label-info">' + author + '</span>'
+        }
+        return ''
+    }.property('Author'),
     "Updated": DS.attr(''),
+    updatedNice: function(){
+        var updated = this.get('Updated');
+        return moment(updated).format('DD/MM/YYYY');
+    }.property('Updated'),
+    updatedNiceMinutes: function(){
+        var updated = this.get('Updated');
+        return moment(updated).format('DD/MM/YYYY @ HH:SS');
+    }.property('Updated'),
     humanName: function () {
         var temp = this.get('Title');
         if (temp)
