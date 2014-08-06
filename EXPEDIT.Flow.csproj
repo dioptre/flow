@@ -171,7 +171,6 @@
     <Content Include="Images\logo.png" />
     <Content Include="Scripts\test.js" />
     <Content Include="Scripts\flow.js" />
-    <Content Include="Scripts\vis.js" />
     <Content Include="Static\32_Layer-1.png" />
     <Content Include="Static\64_Layer-1.png" />
     <Content Include="Static\AdminTheme\calendar.html" />
@@ -1239,8 +1238,6 @@
     <Content Include="Styles\img\graph\upArrow.png" />
     <Content Include="Styles\img\graph\zoomExtends.png" />
     <Content Include="Styles\img\timeline\delete.png" />
-    <Content Include="Styles\vis.min.css" />
-    <Content Include="Scripts\vis.min.js" />
     <Content Include="Styles\alertify.bootstrap.css" />
     <Content Include="Styles\alertify.core.css" />
     <Content Include="Styles\alertify.default.css" />
@@ -1255,7 +1252,6 @@
     <Content Include="Styles\jquery.fileupload-ui.css" />
     <Content Include="Styles\jquery.fileupload.css" />
     <Content Include="Styles\normalize.css" />
-    <Content Include="Styles\vis.css" />
     <Content Include="Web.config" />
     <Content Include="Views\Web.config" />
     <Content Include="Scripts\Web.config" />

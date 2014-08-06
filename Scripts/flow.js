@@ -1656,11 +1656,10 @@ App.GraphController = Ember.ObjectController.extend({
         },
         cancelWorkflowNameNow: function (data, callback) {
             var wf = this.store.getById('workflow', this.get('workflowID'));
-            if (typeof wf !== 'undefined' && wf) {
-                wf.rollback()
-                this.get('workflow').set('name', wf.get('name'));
-                if (this.get('workflow.name'))
-                    this.get('workflow').set('name', 'Untitled Workflow - [0-9\-]* \@ [0-9\:]$/ig')
+            if (typeof wf !== 'undefined' && wf && !wf.currentState.isEmpty) {
+                wf.rollback();
+                if (typeof this.get('workflow') !== 'undefined')
+                    this.get('workflow').set('name', wf.get('name'));
             }
             this.send('toggleworkflowEditNameModal', data, callback);
         },
@@ -1675,8 +1674,9 @@ App.GraphController = Ember.ObjectController.extend({
         },
         cancelWorkflow: function (data, callback) {
             var wf = this.store.getById('node', this.get('selectedID'));
-            if (typeof wf !== 'undefined' && wf && wf.get('label').search(/^Untitled Process - [0-9\@\- :]*$/ig) < 0)
-                wf.rollback()
+            if (typeof wf !== 'undefined' && wf && wf.currentState.parentState.dirtyType != 'created') { //&& wf.get('label').search(/^Untitled Process - [0-9\@\- :]*$/ig) < 0)
+                wf.rollback();
+            }
             this.send('toggleWorkflowEditModal', data, callback);
         },
         updateWorkflow: function () {
@@ -2155,7 +2155,7 @@ App.VizEditorComponent = Ember.Component.extend({
         d.edges.update(newEdges);
 
         if (d.nodes.get(selected) !== null)
-            this.graph.setSelection([selected]);
+            this.graph.selectNodes([selected]);
 
 
     }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement'),
