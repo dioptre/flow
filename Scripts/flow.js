@@ -2064,9 +2064,23 @@ App.VizEditorComponent = Ember.Component.extend({
         this.graph.scale = 0.82; //Zoom out a little
 
         $(window).resize(function () {
-            _this.graph.zoomExtent(); //Not working?!
-            _this.graph.redraw(); // This makes the graph responsive!!!
+            setTimeout(function () {
+                _this.graph.zoomExtent(); //Not working?!
+                _this.graph.redraw(); // This makes the graph responsive!!!
+            }, 500);
         });
+
+        $(window).bind('orientationchange', function () {
+            setTimeout(function () {
+                _this.graph.zoomExtent(); //Not working?!
+                _this.graph.redraw(); // This makes the graph responsive!!!
+            }, 500);
+        });
+
+        setTimeout(function () {
+            //_this.graph.zoomExtent(); //Not working?!
+            _this.graph.redraw(); // This makes the graph responsive!!!
+        }, 500);
     },
     dataUpdates: function () {
 
