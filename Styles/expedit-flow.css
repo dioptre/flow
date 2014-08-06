@@ -9,6 +9,14 @@ html {
     touch-action: manipulation;
 }
 
+.tiny-map img {
+    max-width: none !important;
+}
+
+.tiny-map {
+    height: 250px;
+    background-color: lightgrey;
+}
 
 
 #username {display: block !important;}
@@ -42,8 +50,10 @@ label.valid {
 .mce-container.mce-panel.mce-floatpanel.mce-window.mce-in {
      z-index:1000000000001 !important;
 }
-
-ul.pager { /* This is the pager on the search page */
+ul.pager {
+  margin: 0;
+}
+ul.pager > li { /* This is the pager on the search page */
   margin-top: 5px;
 }
 
@@ -302,14 +312,28 @@ span.network-manipulationUI:hover {
   background-color: rgb(214, 214, 214);
 }
 
+/*processes page*/
+div.row.processes {
+  margin-top: -15px;
+}
+.process-header {
+  /* margin-top: -30px; */
+  margin-bottom: 90px;
+}
 .process-header small {
   margin-left: 0px;
 }
+.process-header h1 {
+  font-size: 26px;
+  font-weight: bold;
+}
+
 
 .main-searchbox button.btn {
   margin-top: -3px;
 }
 .main-searchbox span.tag, .main-searchbox input[type=text] {
+  border-radius: 4px;
   margin-left: 0px;
   margin-bottom: 13px;
   margin-right: 6px;
@@ -488,16 +512,35 @@ text-transform: capitalize;
 }
 
 .graphButtons {
-    text-align:right;
+  display: block;
+  text-align: left;
+  background: #F2F2F2;
+  /* background: transparent; */
+  margin-top: -21px;
+  padding: 9px 13px;
+  padding-bottom: 6px;
+  margin-bottom: -1px;
+  border: 1px solid rgb(231, 231, 231);
+  border-bottom: none;
 }
 
+.graphButton:hover {
+  color: rgb(103, 103, 103);
+  color: rgba(36, 52, 79, 0.85);
+}
 .graphButton {
-    padding-left:5px;
+    color: white;
+    color: rgba(36, 52, 79, 0.66);
+    padding-right:5px;
     text-decoration: none !important;
     cursor: pointer;
     font-size: small;
 }
-
+.graphButton-group {
+  margin-right: 7px;
+  margin-bottom: 7px;
+  display: inline-block;
+}
 .network-manipulationDiv {
     display: none !important;
 }
@@ -600,9 +643,6 @@ body.menu .content {
   width: 100%;
 }
 
-body #emberapphere{
-
-
 /* new menu test */
 body.menu #emberapphere{
   -webkit-transform: translate(165px,0px);
@@ -672,23 +712,50 @@ body.menu .content {
   width: 100%;
 }
 
-body #emberapphere{
-  -webkit-transform: translate(0,0); /*https://code.google.com/p/chromium/issues/detail?id=20574*/
+
+
+/*https://code.google.com/p/chromium/issues/detail?id=20574*/
+#emberapphere {
+  -webkit-transform: translate(0,0);
   -moz-transform: translate(0,0);
   -ms-transform: translate(0,0);
   transform: translate(0,0);
-    -webkit-transition: 0.20s all ease-out;
+  -webkit-transition: 0.20s all ease-out;
   transition: 0.20s all ease-out;
 }
 
 
 /*inside tiny-mce editor*/
-/*body.mce-content-body > *  {
-  padding: 10px;
+#tinymce {
+  padding: 15px !important;
 }
 
-#tinymce {
-  padding: 10px !important;
-  background: red;
-}*/
+
+/*search page & tables*/
+.search-page h3 {
+  font-weight: bold;
+}
+.row.search-page > div {
+margin-top: 65px;
+}
+
+
+
+/*fixing tables*/
+table th {
+  padding-left: 0;
+  padding-right: 0;
+}
+.table thead th {
+  padding-top: 9px !important;
+    padding-bottom: 9px !important;
+}
+table thead {
+  border-top: none !important;
+  border-bottom: 2px solid #AFAEAE;
+  border-bottom: 2px solid #E2E2E2;
+  background: #DADADA;
+  background: #eee;
+}
+
 

@@ -1393,9 +1393,10 @@ App.GraphRoute = Ember.Route.extend({
         });
     },
     afterModel: function (m) {
-        if (m.data && m.data.content && m.data.content.length > 0) {
+        m.selected = this.store.getById('node', m.selectedID);
+        if (m.selected || (m.data && m.data.content && m.data.content.length > 0)) {
             //Get the selected item from m.data
-            m.selected = Enumerable.From(m.data.content).Where("f=>f.id==='" + m.selectedID + "'").FirstOrDefault();
+            
             if (typeof m.selected === 'undefined') {
                 m.selected = Enumerable.From(m.data.content).FirstOrDefault();
                 if (typeof m.selected === 'undefined') {
@@ -1545,10 +1546,10 @@ App.GraphController = Ember.ObjectController.extend({
 
     }.observes('model', 'model.selected', 'model.@each.workflows'),
     changeSelected: function () {
-        var found = false;
-        var edges = Enumerable.From(this.get('graphData').edges);
-        if (edges.Any("f=>f.from=='" + this.get('model.selectedID') + "'") || edges.Any("f=>f.to=='" + this.get('model.selectedID') + "'"))
-            this.transitionToRoute('graph', this.get('model.selectedID'));
+        //var found = false;
+        //var edges = Enumerable.From(this.get('graphData').edges);
+        //if (edges.Any("f=>f.from=='" + this.get('model.selectedID') + "'") || edges.Any("f=>f.to=='" + this.get('model.selectedID') + "'"))
+        this.transitionToRoute('graph', this.get('model.selectedID'));
     }.observes('model.selectedID'),
     checkWorkflowName: function () {
         var _this = this;
@@ -1941,7 +1942,7 @@ App.VizEditorComponent = Ember.Component.extend({
         var _this = this;
         var groups = {};
         var centralGravity = 0.0155; //TODO HACK, AG, Less gravity for known graphs
-        if (!this.get('isWorflow')) {
+        if (!this.get('isWorkflow')) {
             centralGravity = 0.5;
         }
         var container = $('<div>').appendTo(this.$())[0];
@@ -2035,7 +2036,7 @@ App.VizEditorComponent = Ember.Component.extend({
             if (data.nodes.length > 0) {
                 _this.set('selected', data.nodes[0]);
                 if (IsGUID(data.nodes[0])) {
-                    var md = _this.get('data'); // has to be synched with data
+                    var wfid = _this.get('data').workflowID; // has to be synched with data
                     var d = _this.get('vizDataSet');
                     var edges = d.edges.get();
                     var nodes = d.nodes.get();
@@ -2044,17 +2045,17 @@ App.VizEditorComponent = Ember.Component.extend({
                         function (value) {
                             delete value.color;
                             delete value.fontColor;
-                            if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
+                            if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + wfid + "'").Any() && value.group.indexOf(wfid) > -1) {
                                 value.color = "#FFFFFF"; //BEGIN
                                 value.fontColor = "#000000";
                             }
-                            else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
-                                    && (value.group.indexOf(md.workflowID) > -1
-                           || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
+                            else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + wfid + "'").Any()
+                                    && (value.group.indexOf(wfid) > -1
+                           || (value.group.indexOf(wfid) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + wfid + "'").Any()))) {
                                 value.color = "#333333"; //END
                                 value.fontColor = "#FFFFFF";
                             }
-                            else if (value.group.indexOf(md.workflowID) > -1) {
+                            else if (value.group.indexOf(wfid) > -1) {
                                 value.color = "#6fa5d7"; //Current
                                 value.fontColor = "#000000";
                             }
@@ -2062,9 +2063,6 @@ App.VizEditorComponent = Ember.Component.extend({
                         });
                     d.nodes.update(nodes);
                 }
-                //TODO: check for node workflow currency and update color
-                //if (value.group.indexOf(md.workflowID) < 0)
-                //    value.color = "#00FF00";
 
             }
             if (data.nodes.length > 0 || data.edges.length > 0)
@@ -2104,87 +2102,129 @@ App.VizEditorComponent = Ember.Component.extend({
         if (this.graph === null) {
             this.setup(); // graph hasn't been initialised yet
         }
-
-        var md = this.get('data'); // has to be synched with data
-        var d = this.get('vizDataSet');
-        var selected = this.get('selected');
-
-        // Step 1: remove nodes which aren't in the d set anymore
-        var delNodes = d.nodes.get({
-            filter: function (i) {
-                var yes = true;
-                md.nodes.forEach(function (j) {
-                    if (i.id === j.id) { yes = false; }
+        var _this = this;
+        var all = Enumerable.From(App.Node.store.all('node').content);
+        var promises = [];
+        var nodes = [];
+        var edges = [];
+        var wfid = this.get('data').workflowID;
+        Enumerable.From(App.Node.store.all('node').content).ForEach(function (f) {
+            promises.push(f.get('workflows').then(function (g) {
+                $.each(g.content, function (key, value) {
+                    if (value.id == wfid)
+                        nodes.push(f);
                 });
-                return yes;
-            }
+            }));
         });
-        d.nodes.remove(delNodes);
 
-        var firstNode = true;
-        //Step 1a: Clean Nodes for Presentation
-        md.nodes = Enumerable.From(md.nodes).Select(
-            function (value, index) {
-                if (typeof value !== 'undefined' && typeof value.label === 'string')
-                    value.label = value.label.replace(/_/g, ' ');
-                value.mass = 1.8;
-                if (IsGUID(value.id)) {
-                    if (firstNode) {
-                        //value.x = 150; //TODO Shake the sedentary nodes out
-                        firstNode = false;
-                    }
+        Ember.RSVP.allSettled(promises).then(function (array) {
+            var edges = Enumerable.From(App.Node.store.all('edge').content).Where("f=>f.get('GroupID')=='" + wfid + "'").ToArray();
+            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: ToTitleCase(item.get('label').replace(/_/g, ' ')), mass: 0.8, group: item.get('group') }; });
+            edges = $.map(edges, function (item) { return { from: item.get('from'), to: item.get('to'), style: item.get('style'), color: item.get('color') }; });
+            Enumerable.From(nodes).ForEach(
+                function (value) {
                     delete value.color;
                     delete value.fontColor;
-                    if (!Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
+                    if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "'").Any()) {
                         value.color = "#FFFFFF"; //BEGIN
                         value.fontColor = "#000000";
                     }
-                    else if (!Enumerable.From(md.edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
-                        && (value.group.indexOf(md.workflowID) > -1
-                            || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
+                    else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "'").Any()) {
                         value.color = "#333333"; //END
                         value.fontColor = "#FFFFFF";
                     }
-                    else if (value.group.indexOf(md.workflowID) > -1) {
+                    else {
                         value.color = "#6fa5d7"; //Current
                         value.fontColor = "#000000";
                     }
-                }
-                else if (typeof value.group === 'undefined') {
-                    value.color = "#6fa5d7"; //Current
-                    value.fontColor = "#000000";
-                }
-                return value;
-            }).ToArray();
-
-        // Step 2: add all the new nodes & update nodes
-        d.nodes.update(md.nodes);
-
-        // Now same thing for edges
-        var delEdges = d.edges.get({
-            filter: function (i) {
-                var yes = true;
-                md.edges.forEach(function (j) {
-                    if (i.id === j.id) { yes = false; }
+                    return value;
                 });
-                return yes;
-            }
+
+            var md = {
+                nodes: nodes,
+                edges: edges,
+            };
+
+            var d = _this.get('vizDataSet');
+            var select = _this.get('selected');
+
+            // Step 1: remove nodes which aren't in the d set anymore
+            var delNodes = d.nodes.get({
+                filter: function (i) {
+                    var yes = true;
+                    md.nodes.forEach(function (j) {
+                        if (i.id === j.id) { yes = false; }
+                    });
+                    return yes;
+                }
+            });
+            d.nodes.remove(delNodes);
+
+            //var firstNode = true;
+            ////Step 1a: Clean Nodes for Presentation
+            //md.nodes = Enumerable.From(md.nodes).Select(
+            //    function (value, index) {
+            //        if (typeof value !== 'undefined' && typeof value.label === 'string')
+            //            value.label = value.label.replace(/_/g, ' ');
+            //        value.mass = 0.8;
+            //        if (IsGUID(value.id)) {
+            //            if (firstNode) {
+            //                //value.x = 150; //TODO Shake the sedentary nodes out
+            //                firstNode = false;
+            //            }
+            //            delete value.color;
+            //            delete value.fontColor;
+            //            if (!Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any() && value.group.indexOf(md.workflowID) > -1) {
+            //                value.color = "#FFFFFF"; //BEGIN
+            //                value.fontColor = "#000000";
+            //            }
+            //            else if (!Enumerable.From(md.edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()
+            //                && (value.group.indexOf(md.workflowID) > -1
+            //                    || (value.group.indexOf(md.workflowID) < 0 && Enumerable.From(md.edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + md.workflowID + "'").Any()))) {
+            //                value.color = "#333333"; //END
+            //                value.fontColor = "#FFFFFF";
+            //            }
+            //            else if (value.group.indexOf(md.workflowID) > -1) {
+            //                value.color = "#6fa5d7"; //Current
+            //                value.fontColor = "#000000";
+            //            }
+            //        }
+            //        else if (typeof value.group === 'undefined') {
+            //            value.color = "#6fa5d7"; //Current
+            //            value.fontColor = "#000000";
+            //        }
+            //        return value;
+            //    }).ToArray();
+
+            // Step 2: add all the new nodes & update nodes
+            d.nodes.update(md.nodes);
+
+            // Now same thing for edges
+            var delEdges = d.edges.get({
+                filter: function (i) {
+                    var yes = true;
+                    md.edges.forEach(function (j) {
+                        if (i.id === j.id) { yes = false; }
+                    });
+                    return yes;
+                }
+            });
+            d.edges.remove(delEdges);
+
+
+            var newEdges = md.edges.filter(function (edge) {
+                return (d.nodes.get(edge.from) !== null && d.nodes.get(edge.to) !== null);
+            });
+
+
+            //Enumerable.From(md.nodes).ForEach(function (f) {
+            //    //Add similar group if in workflow
+            //});
+            d.edges.update(newEdges);
+
+            if (d.nodes.get(select) !== null && _this.graph.getSelectedNodes().length == 0)
+                _this.graph.selectNodes([select]);
         });
-        d.edges.remove(delEdges);
-
-
-        var newEdges = md.edges.filter(function (edge) {
-            return (d.nodes.get(edge.from) !== null && d.nodes.get(edge.to) !== null);
-        });
-
-
-        //Enumerable.From(md.nodes).ForEach(function (f) {
-        //    //Add similar group if in workflow
-        //});
-        d.edges.update(newEdges);
-
-        if (d.nodes.get(selected) !== null)
-            this.graph.selectNodes([selected]);
 
 
     }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement'),
@@ -2517,11 +2557,10 @@ App.NodeSerializer = DS.RESTSerializer.extend({
         //}
         //We want to exclude updates where content exists and new entries are null
         var stock = Enumerable.From(payload.Nodes);
-        if (!stock.Any("f=>f.content != null")) { //Todo remove this line and get Viz working from store and not this query
-            var produce = Enumerable.From(store.all('node').content).Where("f=>f.get('content') != null");
-            var exclude = stock.Where("f=>f.content==null").Intersect(produce, "$.id");
-            payload.Nodes = stock.Except(produce, "$.id").ToArray();
-        }
+
+        var produce = Enumerable.From(store.all('node').content).Where("f=>f.get('content') != null");
+        var exclude = stock.Where("f=>f.content==null").Intersect(produce, "$.id");
+        payload.Nodes = stock.Except(produce, "$.id").ToArray();
 
         return this._super(store, type, payload, id, requestType);
     }

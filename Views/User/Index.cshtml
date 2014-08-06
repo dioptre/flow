@@ -162,6 +162,7 @@
 <script type="text/javascript">
     var mapHelper = '@Url.Content("~/Modules/NKD/Scripts/NKD.maps.js")';
     $(document).ready(function () {
+        MapInitialize(); //HACK TODO
         if (GetExplorerVersion() > 0) {
             $("html").addClass("ie");
         }
@@ -875,7 +876,7 @@
                         {{eui-button label="Add" action="submitExistingNodeModal" style='primary' size='medium'}}
                     </div>
                 {{/eui-modal}}
-      <p class="graphButtons">{{#if isWorkflow}}<a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign" style="color:grey;"></i>&nbsp;Add Process&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down" style="color:grey;"></i>&nbsp;Add Existing Process&nbsp;</a>&nbsp;|&nbsp;<a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small" style="color:grey;"></i>&nbsp;Add Connection&nbsp;</a><a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a>{{#if isSelected}}<a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash" style="color:grey;"></i>&nbsp;Delete Selected&nbsp;</a>{{/if}}&nbsp;|&nbsp;{{/if}}<a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share" style="color:grey;"></i>&nbsp;Export Workflow&nbsp;</a></p></script>
+      <prettygirl class="graphButtons">{{#if isWorkflow}}<div class='graphButton-group'><a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign"></i>&nbsp;Add Process&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down"></i>&nbsp;Add Existing Process&nbsp;</a></div><div class='graphButton-group'><a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a><a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Add Connection&nbsp;</a></div>{{#if isSelected}}<div class='graphButton-group'><a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash"></i>&nbsp;Delete Selected&nbsp;</a></div>{{/if}}{{/if}}<div class='graphButton-group'><a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share"></i>&nbsp;Export&nbsp;Workflow</a></div></prettygirl></script>
 
 
   <script type="text/x-handlebars" id="wikipedia">
@@ -910,60 +911,17 @@
   <script type="text/x-handlebars" id="graph">
 
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12 process-header">
-                   <h1>{{#if model.selected}}{{humanReadableName}}{{/if}}
+        <div class="row processes">
+            <div class="col-md-6 process-header">
+               <h4><small>Process</small></h4>
+               <h1>
+                    {{#if model.selected}}{{humanReadableName}}{{/if}}
+                    <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
+                        <i class="icon-pencil"></i>
+                    </span>
+                </h1>
+                <hr>
 
-                            <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
-                                <i class="icon-pencil"></i> Edit selected Process
-                            </span>
-                    </h1>
-
-                    {{!--<h4>
-                        <small>
-                            {{#if model.workflow.name}}
-                                {{model.workflow.name}}
-                           {{else}}
-                                Current process has no workflow yet. Please choose a workflow name.
-                            {{/if}}
-
-                              <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray'>
-                                <i class="icon-pencil"></i> Edit Workflow name
-                            </span>
-
-                             - this process is available in {{model.workflows.length}} Workflows. Change current:
-                    {{#if workflowGte2}}
-                        {{view Ember.Select content=model.workflows optionValuePath="content.id" optionLabelPath="content.name" valueBinding="workflowID"}}
-                    {{/if}}
-
-                        </small>
-                    </h4>--}}
-
-
-                    <h4>
-                        <small>
-                            {{#if model.workflow.name }}
-                                {{#if workflowGte2}}
-                                {{eui-select optionsBinding='model.workflows' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='small' width='230px'}}
-                                {{else}}
-                                    {{model.workflow.name}}
-                                {{/if}}
-                           {{else}}
-                                Current process has no workflow yet. Please choose a workflow name.
-                            {{/if}}
-
-                              <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray'>
-                                <i class="icon-pencil"></i> Edit Workflow name
-                            </span>
-                        </small>
-                    </h4>
-                   <hr>
-              </div>
-            </div>
-       </div>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-6">
                 {{#eui-modal openBinding="workflowEditNameModal"}}
                      <div style="padding: 50px; text-align: center;">
                          <h4> Update Workflow name</h4>
@@ -1014,14 +972,59 @@
                 {{/eui-modal}}
 
 
-                        {{safehtml model.selected.content}}
+                {{safehtml model.selected.content}}
 
             </div>
-              <div class="col-md-6 vh-75 networkColumn">
+            <div class="col-md-6 process-header">
+                <h4><small>Workflow</small></h4>
+                <h1>
+                    {{#if model.workflow.name }}
+                        {{#if workflowGte2}}
+                        {{eui-select optionsBinding='model.workflows' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='medium' width='300px'}}
+                        {{else}}
+                            {{model.workflow.name}}
+                        {{/if}}
+                   {{else}}
+                        Current process has no workflow yet. Please choose a workflow name.
+                    {{/if}}
+
+                      <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray'>
+                        <i class="icon-pencil"></i> {{!--Edit Workflow name--}}
+                    </span>
+                </h1>
+                <hr>
+                 <div class="vh-75 networkColumn">
                   {{viz-editor data=graphData selected=selectedID editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
               </div>
-           </div>
-        </div>
+            </div>
+
+
+
+                    {{!--<h4>
+                        <small>
+                            {{#if model.workflow.name}}
+                                {{model.workflow.name}}
+                           {{else}}
+                                Current process has no workflow yet. Please choose a workflow name.
+                            {{/if}}
+
+                              <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray'>
+                                <i class="icon-pencil"></i> Edit Workflow name
+                            </span>
+
+                             - this process is available in {{model.workflows.length}} Workflows. Change current:
+                    {{#if workflowGte2}}
+                        {{view Ember.Select content=model.workflows optionValuePath="content.id" optionLabelPath="content.name" valueBinding="workflowID"}}
+                    {{/if}}
+
+                        </small>
+                    </h4>--}}
+
+
+                   <hr>
+
+            </div>
+       </div>
   </script>
 
 
@@ -1029,7 +1032,7 @@
 
 
 
-<!--  <script type="text/x-handlebars" id="loading">
+<!--  <script type="text/x-handlebars"  "loading">
     <h1>Loading...</h1>
   </script>-->
 
@@ -1110,7 +1113,7 @@
 
             &nbsp;
             <button {{action 'search'}} type="button" class="btn btn-primary">
-                <span class="glyphicon icon-search"></span>Search
+                <span class="glyphicon icon-search"></span>&nbsp;Search
             </button>
 
             <br>
@@ -1118,15 +1121,12 @@
              {{#if keywords}}
                 {{#link-to 'wikipedia' componentURI}}Show the <b>{{keywords}}</b> wikipedia article{{/link-to}}
             {{/if}}
-
-            <br><br>
-            <br><br>
         </div>
     </div>
 
 
 
-      <div class="row">
+      <div class="row search-page">
             {{#if keywords}}
                 {{#if graph}}
                   <div {{bind-attr class='activeResultsClass :overscroll'}}>
@@ -1166,7 +1166,21 @@
 
 
 <script type="text/x-handlebars" data-template-name="graphResults">
-   <h3><i class="icon-sitemap"></i>&nbsp;Processes<small>&nbsp;<a {{action 'newProcess'}}><i class="icon icon-plus-sign"></i></a></small></h3>
+    {{#unless loading}}
+        {{#if results}}
+          <ul class="pager pull-right">
+              {{#if prev}}
+                 <li><a {{action 'prev' 'pageGraph'}}>Previous</a></li>
+              {{/if}}
+              {{#if next}}
+                <li><a {{action 'next' 'pageGraph'}}>Next</a></li>
+              {{/if}}
+          </ul>
+        {{/if}}
+    {{/unless}}
+
+  <h3>Processes</h3>
+
 
   {{#if loading}}
 
@@ -1175,16 +1189,6 @@
   {{else}}
 
     {{#if results}}
-      <ul class="pager">
-          {{#if prev}}
-             <li><a {{action 'prev' 'pageGraph'}}>Previous</a></li>
-          {{/if}}
-          {{#if next}}
-            <li><a {{action 'next' 'pageGraph'}}>Next</a></li>
-          {{/if}}
-      </ul>
-
-
       <div class="table-responsive">
         <table class="table table-condensed table-hover">
             <thead>
@@ -1218,21 +1222,27 @@
 
 
 <script type="text/x-handlebars" data-template-name="fileResults">
-  <h3><i class="icon-file"></i>&nbsp;Files</h3>
+
+    {{#unless loading}}
+        {{#if results}}
+          <ul class="pager pull-right">
+                {{#if prev}}
+                   <li><a {{action 'prev' 'pageFile'}}>Previous</a></li>
+                {{/if}}
+                {{#if next}}
+                  <li><a {{action 'next' 'pageFile'}}>Next</a></li>
+                {{/if}}
+          </ul>
+        {{/if}}
+    {{/unless}}
+
+
+  <h3>Files</h3>
 
   {{#if loading}}
     Loading...
   {{else}}
     {{#if results}}
-      <ul class="pager">
-          {{#if prev}}
-             <li><a {{action 'prev' 'pageFile'}}>Previous</a></li>
-          {{/if}}
-          {{#if next}}
-            <li><a {{action 'next' 'pageFile'}}>Next</a></li>
-          {{/if}}
-      </ul>
-
       <div class="table-responsive">
         <table class="table table-condensed table-hover">
             <thead>
@@ -1272,7 +1282,19 @@
 
 
 <script type="text/x-handlebars" data-template-name="mapResults">
-  <h3><i class="icon-globe"></i>&nbsp;Process Locations</h3>
+    {{#unless loading}}
+        {{#if results}}
+          <ul class="pager pull-right">
+                {{#if prev}}
+                   <li><a {{action 'prev' 'pageMap'}}>Previous</a></li>
+                {{/if}}
+                {{#if next}}
+                  <li><a {{action 'next' 'pageMap'}}>Next</a></li>
+                {{/if}}
+          </ul>
+        {{/if}}
+    {{/unless}}
+    <h3>Locations</h3>
 
   {{#if loading}}
 
@@ -1280,21 +1302,9 @@
 
   {{else}}
 
-    {{#if results}}
-      <ul class="pager">
-          {{#if prev}}
-             <li><a {{action 'prev' 'pageMap'}}>Previous</a></li>
-          {{/if}}
-          {{#if next}}
-            <li><a {{action 'next' 'pageMap'}}>Next</a></li>
-          {{/if}}
-      </ul>
-
-    {{else}}
-
+    {{#unless results}}
         Sorry no results could be found.
-
-    {{/if}}
+    {{/unless}}
 
   {{/if}}
 
