@@ -418,6 +418,7 @@ App.LoginController = Ember.Controller.extend({
                       url: "/flow/myuserinfo"
                     }).then(function(data){
                         data.UserName = ToTitleCase(data.UserName);
+                        data.Thumb = "/share/photo/" + data.UserID;
                         analytics.identify(data.id, {
                             name: data.UserName
                         });
@@ -513,6 +514,7 @@ App.ApplicationView = Ember.View.extend({
                           url: "/flow/myuserinfo"
                         }).then(function(data){
                             data.UserName = ToTitleCase(data.UserName);
+                            data.Thumb = "/share/photo/" + data.UserID;
                             _this.set('controller.userProfile', data);
                         }, function (jqXHR) {
                           jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -771,8 +773,9 @@ App.Router.reopen({
 
 App.ApplicationRoute = Ember.Route.extend({
     actions: {
-        transition: function () {
-            alert('hi');
+        transitionSearch: function (a) {
+            this.transitionTo('search', {queryParams: {keywords: a}})
+            $('.searchTransitionMenu').val('').blur();
         },
         loading: function () {
 
@@ -1755,7 +1758,7 @@ App.GraphController = Ember.ObjectController.extend({
                 _this.set('graphData.edges', _this.get('graphData.edges').concat([]));
             }, function () {
                 Messenger().post({type:'error', message:'Error Adding Connection'});
-                Messenger().post({type:'info', message:'No Workflow name set. Please try again.'});
+                Messenger().post({type:'info', message:'No permission or No Workflow name set. Please try again.'});
                 _this.toggleProperty('workflowEditModal'); //Hack TODO can't save without wf
             });
         },
@@ -2010,8 +2013,8 @@ App.VizEditorComponent = Ember.Component.extend({
         };
 
         // Initialise vis.js
-        console.log(container, data, options);
-        this.graph = new vis.Graph(container, data, options);
+        //console.log(container, data, options);
+        this.graph = new vis.Network(container, data, options);
         // This sets the new selected item on click
         this.graph.on('click', function (data) {
             if (data.nodes.length > 0) {
@@ -2075,7 +2078,7 @@ App.VizEditorComponent = Ember.Component.extend({
 
         var md = this.get('data'); // has to be synched with data
         var d = this.get('vizDataSet');
-
+        var selected = this.get('selected');
 
         // Step 1: remove nodes which aren't in the d set anymore
         var delNodes = d.nodes.get({
@@ -2150,6 +2153,9 @@ App.VizEditorComponent = Ember.Component.extend({
         //    //Add similar group if in workflow
         //});
         d.edges.update(newEdges);
+
+        if (d.nodes.get(selected) !== null)
+            this.graph.setSelection([selected]);
 
 
     }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement'),
@@ -2997,8 +3003,7 @@ Ember.Handlebars.helper('wikiurl', function (item, options) {
 
 
 Ember.TextField.reopen({
-    attributeBindings: ['autofocus', 'style'],
-    autofocus: 'autofocus',
+    attributeBindings: ['style'],
     style: 'style'
 });
 
@@ -3291,7 +3296,7 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
         var controller = this;
         var container = document.getElementById(p.data.outlet);
         var options = {
-            width: '100%',
+            width: '85%',
             height: '400px',
             navigation: false,
             smoothCurves: true,
@@ -3347,7 +3352,7 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
                 nodes: nodes,
                 edges: edges,
             };
-            var network = new vis.Graph(container, data, options);
+            var network = new vis.Network(container, data, options);
             network.scale = 0.82; //Zoom out a little
             $("#" + p.data.outlet).append('<h4>' + _this.data.wfname +' Workflow</h4>');
             network.on('click', function (data) {
