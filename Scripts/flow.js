@@ -2,29 +2,6 @@ $(function () {
     FastClick.attach(document.body);
 });
 
-
-// Analytics using segment
-window.analytics = window.analytics || [], window.analytics.methods = ["identify", "group", "track", "page", "pageview", "alias", "ready", "on", "once", "off", "trackLink", "trackForm", "trackClick", "trackSubmit"], window.analytics.factory = function (t) { return function () { var a = Array.prototype.slice.call(arguments); return a.unshift(t), window.analytics.push(a), window.analytics } }; for (var i = 0; i < window.analytics.methods.length; i++) { var key = window.analytics.methods[i]; window.analytics[key] = window.analytics.factory(key) } window.analytics.load = function (t) { if (!document.getElementById("analytics-js")) { var a = document.createElement("script"); a.type = "text/javascript", a.id = "analytics-js", a.async = !0, a.src = ("https:" === document.location.protocol ? "https://" : "http://") + "cdn.segment.io/analytics.js/v1/" + t + "/analytics.min.js"; var n = document.getElementsByTagName("script")[0]; n.parentNode.insertBefore(a, n) } }, window.analytics.SNIPPET_VERSION = "2.0.9";
-
-if (window.location.host === "app.flowpro.io") {
-    analytics.load("mt4vl39sxg"); // PRODUCTION
-
-    // Code for inspectlet
-    window.__insp = window.__insp || [];
-    __insp.push(['wid', 1905013122]);
-    (function() {
-        function __ldinsp(){var insp = document.createElement('script'); insp.type = 'text/javascript'; insp.async = true; insp.id = "inspsync"; insp.src = ('https:' == document.location.protocol ? 'https' : 'http') + '://cdn.inspectlet.com/inspectlet.js'; var x = document.getElementsByTagName('script')[0]; x.parentNode.insertBefore(insp, x); }
-        if (window.attachEvent){
-            window.attachEvent('onload', __ldinsp);
-        }else{
-            window.addEventListener('load', __ldinsp, false);
-        }
-    })();
-
-} else {
-    analytics.load("b24wxbyi89"); // DEV
-}
-
 Ember.FEATURES["query-params"] = true;
 
 function RedirectToLogin() {
@@ -432,8 +409,9 @@ App.LoginController = Ember.Controller.extend({
                     }).then(function(data){
                         data.UserName = ToTitleCase(data.UserName);
                         data.Thumb = "/share/photo/" + data.UserID;
-                        analytics.identify(data.id, {
-                            name: data.UserName
+                        mixpanel.identify(data.id);
+                        mixpanel.people.set({
+                            $first_name: data.UserName
                         });
                         _this.set('controllers.application.userProfile', data);
                     }, function (jqXHR) {
@@ -478,7 +456,7 @@ App.ApplicationController = Ember.Controller.extend({
                 // App.reset(); - should reset
                 // _this.transitionToRoute('login');
                 // Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
-                analytics.track('Manual logout');
+                mixpanel.track('Manual logout');
                 $.cookie('showLoggedOutModal', true);
                 RedirectToLogin();
             }, function (jqXHR) {
@@ -777,7 +755,9 @@ App.Router.reopen({
         // Only send event if actually on new page
         if (oldURL != url) {
             console.log('Tracking URL:', url);
-            analytics.page(url);
+            mixpanel.track('Page Viewed', {
+                url: url
+            });
         }
 
         oldURL = url; // create copy
@@ -961,7 +941,7 @@ App.SearchController = Ember.ObjectController.extend({
         },
         search: function () {
             this.loadAll();
-            analytics.track('Manual search', {
+            mixpanel.track('Manual search', {
                 keywords: this.get('keywords'),
                 tags: this.get('tags')
             });
@@ -1425,7 +1405,7 @@ App.GraphRoute = Ember.Route.extend({
         m.selected = this.store.getById('node', m.selectedID);
         if (m.selected) {
             //Get the selected item from m.data
-            
+
             var matchedWorkflow = Enumerable.From(m.selected._data.workflows).Where("f=>f.id == '" + m.workflowID + "'").Any();
             if (!matchedWorkflow) { // The current node does not exist with the query param (workflowID)
                 var firstWorkflow = Enumerable.From(m.selected._data.workflows).FirstOrDefault();
@@ -1434,7 +1414,7 @@ App.GraphRoute = Ember.Route.extend({
                 else {
                     //this.replaceWith('graph', m.selectedID, { queryParams: { workflowID: NewGUID() } });  //leave out otherwise recursive
                     // create the workflow here
-                    m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') });                    
+                    m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') });
                 }
             }
             else {
@@ -1444,7 +1424,7 @@ App.GraphRoute = Ember.Route.extend({
 
 
 
-         
+
             document.title = m.selected.get('humanName') + ' - FlowPro'; //TODO FIX
 
 
@@ -1565,7 +1545,7 @@ App.GraphController = Ember.ObjectController.extend({
     updateGraph: '',
     workflowName: function () {
         var a = this.store.getById('workflow', this.get('workflowID'));
-        if (a) 
+        if (a)
             a = a.get('name');
         else
             a = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
@@ -1773,14 +1753,14 @@ App.GraphController = Ember.ObjectController.extend({
         toggleWorkflowEditModal: function (data, callback) {
             this.toggleProperty('workflowEditModal');
         },
-        cancelWorkflow: function (data, callback) {
+        cancelProcess: function (data, callback) {
             var wf = this.store.getById('node', this.get('selectedID'));
             if (typeof wf !== 'undefined' && wf && wf.currentState.parentState.dirtyType != 'created') { //&& wf.get('label').search(/^Untitled Process - [0-9\@\- :]*$/ig) < 0)
                 wf.rollback();
             }
             this.send('toggleWorkflowEditModal', data, callback);
         },
-        updateWorkflow: function () {
+        updateProcess: function () {
             var _this = this;
 
             tinyMCE.triggerSave();
@@ -1876,13 +1856,13 @@ App.GraphController = Ember.ObjectController.extend({
                     _this = _this;
 
 
-                   
+
 
                     var currentSelected = _this.get('selected');
                     var currentWorkflow = _this.get('workflowID');
                     var isDeleted = false;
                     // var deletedNode = _this.store.filter('node', { id: currentSelected });
-                    
+
                     // After the delete check all the remaing nodes and edges
                     var all = Enumerable.From(App.Node.store.all('node').content);
                     var promises1 = [];
@@ -1898,9 +1878,9 @@ App.GraphController = Ember.ObjectController.extend({
 
 
                     Ember.RSVP.allSettled(promises1).then(function () {
-                        debugger;
+                        //debugger;
                         var selectedNodeAlive = Enumerable.From(nodes).Where('f=>f.id=="' + currentSelected.get('id') + '"').Any()
-                        if (!selectedNodeAlive) { // current node selected, have to redirect 
+                        if (!selectedNodeAlive) { // current node selected, have to redirect
                             if (nodes.length >= 1) {  // if selected node was deleted transition to this node
                                 _this.transitionToRoute('graph', nodes[0].id);
                             } else {
@@ -1911,12 +1891,12 @@ App.GraphController = Ember.ObjectController.extend({
                             _this.set('updateGraph', NewGUID()); // make graph rerender
                         }
                     });
-    
+
                 }
 
 
                  Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
-               
+
 
             }, function (error) {
 
@@ -2006,7 +1986,7 @@ App.VizEditorComponent = Ember.Component.extend({
         }
     }.observes('editing'),
     data: null,
-    updateGraph: '', 
+    updateGraph: '',
     vizDataSet: { nodes: new vis.DataSet(), edges: new vis.DataSet() },
     classNames: ['vis-component'],
     selected: '',
@@ -2117,53 +2097,42 @@ App.VizEditorComponent = Ember.Component.extend({
         this.graph.on('click', function (data) {
             if (data.nodes.length > 0) {
                 var wfid = _this.get('workflowID'); // has to be synched with data
-                var all = Enumerable.From(App.Node.store.all('node').content);
-                var hasEdge = false;
-                var promises = [];
-                all.ForEach(function (f) {
-                    promises.push(f.get('edges').then(function (g) {
-                        $.each(g.content, function (key, value) {
-                            if (value.get('from') === data.nodes[0] || value.get('to') === data.nodes[0])
-                                hasEdge = true;
-                        });
-                    }));
-                });
-                Ember.RSVP.allSettled(promises).then(function (array) {
-                    if (hasEdge) {
-                        _this.set('selected', data.nodes[0]);
-                        if (IsGUID(data.nodes[0])) {
-                            var d = _this.get('vizDataSet');
-                            var edges = d.edges.get();
-                            var nodes = d.nodes.get();
-                            var n = d.nodes.get(data.nodes[0]);
-                            Enumerable.From(nodes).ForEach(
-                                function (value) {
-                                    //delete value.color;
-                                    //delete value.fontColor;
-                                    if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + wfid + "'").Any() && value.group.indexOf(wfid) > -1) {
-                                        value.color = "#FFFFFF"; //BEGIN
-                                        value.fontColor = "#000000";
-                                    }
-                                    else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + wfid + "'").Any()
-                                            && (value.group.indexOf(wfid) > -1
-                                   || (value.group.indexOf(wfid) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + wfid + "'").Any()))) {
-                                        value.color = "#333333"; //END
-                                        value.fontColor = "#FFFFFF";
-                                    }
-                                    else if (value.group.indexOf(wfid) > -1) {
-                                        value.color = "#6fa5d7"; //Current
-                                        value.fontColor = "#000000";
-                                    }
-                                    return value;
-                                });
-                            d.nodes.update(nodes);
-                        }
-                    }
+                if (!IsGUID(data.nodes[0]) || Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  (f.get('from') === '" + data.nodes[0] + "' || f.get('to') === '" + data.nodes[0] + "')")) {
+                    _this.set('selected', data.nodes[0]);
                     if (data.nodes.length > 0 || data.edges.length > 0)
                         _this.set('isSelected', true);
                     else
                         _this.set('isSelected', false);
-                });
+
+                    //if (IsGUID(data.nodes[0])) {
+                    //    var d = _this.get('vizDataSet');
+                    //    var edges = d.edges.get();
+                    //    var nodes = d.nodes.get();
+                    //    var n = d.nodes.get(data.nodes[0]);
+                    //    Enumerable.From(nodes).ForEach(
+                    //        function (value) {
+                    //            //delete value.color;
+                    //            //delete value.fontColor;
+                    //            if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + wfid + "'").Any() && value.group.indexOf(wfid) > -1) {
+                    //                value.color = "#FFFFFF"; //BEGIN
+                    //                value.fontColor = "#000000";
+                    //            }
+                    //            else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + wfid + "'").Any()
+                    //                    && (value.group.indexOf(wfid) > -1
+                    //           || (value.group.indexOf(wfid) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + wfid + "'").Any()))) {
+                    //                value.color = "#333333"; //END
+                    //                value.fontColor = "#FFFFFF";
+                    //            }
+                    //            else if (value.group.indexOf(wfid) > -1) {
+                    //                value.color = "#6fa5d7"; //Current
+                    //                value.fontColor = "#000000";
+                    //            }
+                    //            return value;
+                    //        });
+                    //    d.nodes.update(nodes);
+                    //}
+                }
+
             }
         });
 

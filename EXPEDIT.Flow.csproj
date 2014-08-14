@@ -1232,11 +1232,8 @@
     <Content Include="Styles\img\graph\downArrow.png" />
     <Content Include="Styles\img\graph\editIcon.png" />
     <Content Include="Styles\img\graph\leftArrow.png" />
-    <Content Include="Styles\img\graph\minus.png" />
-    <Content Include="Styles\img\graph\plus.png" />
     <Content Include="Styles\img\graph\rightArrow.png" />
     <Content Include="Styles\img\graph\upArrow.png" />
-    <Content Include="Styles\img\graph\zoomExtends.png" />
     <Content Include="Styles\img\timeline\delete.png" />
     <Content Include="Styles\alertify.bootstrap.css" />
     <Content Include="Styles\alertify.core.css" />
@@ -1247,6 +1244,9 @@
     <Content Include="Styles\fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Styles\images\checked.gif" />
     <Content Include="Styles\images\unchecked.gif" />
+    <Content Include="Styles\img\updated_graph\minus.png" />
+    <Content Include="Styles\img\updated_graph\plus.png" />
+    <Content Include="Styles\img\updated_graph\zoomExtends.png" />
     <Content Include="Styles\jquery.fileupload-noscript.css" />
     <Content Include="Styles\jquery.fileupload-ui-noscript.css" />
     <Content Include="Styles\jquery.fileupload-ui.css" />
@@ -1513,6 +1513,9 @@
     <Content Include="Static\home\wwwroot\images\feature2.psd" />
     <Content Include="Static\home\wwwroot\images\static-hero.psd" />
     <Content Include="Static\home\wwwroot\index.php" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Styles\img\updated_graph\fullscreen-icon.psd" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
