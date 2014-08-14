@@ -1413,6 +1413,7 @@ App.GraphRoute = Ember.Route.extend({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
             selectedID: id,
             workflowID: params.workflowID,
+            updateGraph: Ember.Object.create(),
             content: '',
             label: '',
             editing: true,  // This gets passed to visjs to enable/disable editing dependig on context
@@ -1432,10 +1433,13 @@ App.GraphRoute = Ember.Route.extend({
                     this.replaceWith('graph', m.selectedID, { queryParams: { workflowID: firstWorkflow.id } }); // choose the first workflowID which the node is in
                 else {
                     //this.replaceWith('graph', m.selectedID, { queryParams: { workflowID: NewGUID() } });  //leave out otherwise recursive
+                    // create the workflow here
+                    m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') });                    
                 }
             }
             else {
                 m.workflow = this.store.getById('workflow', m.workflowID);
+                m.updateGraph.set('updated', NewGUID());
             }
 
 
@@ -1537,7 +1541,7 @@ App.GraphRoute = Ember.Route.extend({
             nn.get('workflows').then(function (w) {
                 //_this.set('graphData', nn);
                 //_this.set('graphData.workflowID', m.params.workflowID);
-                w.pushObject(m.workflow);
+                w.content.pushObject(m.workflow);
                 m.selected = nn;
                 m.workflowID = m.params.workflowID;
                 m.selectedID = m.selectedID;
@@ -1558,6 +1562,7 @@ App.GraphController = Ember.ObjectController.extend({
     workflowEditNameModal: false,
     workflowNewModal: false, // up to here is for new ones
     editing: true,
+    updateGraph: '',
     workflowName: function () {
         var a = this.store.getById('workflow', this.get('workflowID'));
         if (a) 
@@ -1579,7 +1584,9 @@ App.GraphController = Ember.ObjectController.extend({
     workflows: function(){
         return this.get('model.selected')._data.workflows;
     }.property('model.selected'),
-    workflowsOptionsArray: function(){
+    workflowsOptionsArray: function () {
+        if (typeof this.get('workflows') === 'undefined')
+            return [];
         var x =  this.get('workflows').map(function (a) {
             return { name: a.get('name'), id: a.id }
         });
@@ -1708,7 +1715,7 @@ App.GraphController = Ember.ObjectController.extend({
                 newWorkflow = App.Node.store.createRecord('workflow', {id: this.get('workflowID'), name: this.get('model.workflow.name') });
             }
             else
-                newWorkflow.set('name', this.get('model.workflow.name'));
+                newWorkflow.set('name', this.get('workflowName'));
             if (newWorkflow.currentState.parentState.dirtyType == 'created')
                 this.set('model.workflow', newWorkflow);
             newWorkflow.save().then(function (data) {
@@ -1784,7 +1791,7 @@ App.GraphController = Ember.ObjectController.extend({
                 this.set('model.workflow', newWorkflow);
             }
             else
-                newWorkflow.set('name', this.get('model.workflow.name'));
+                newWorkflow.set('name', this.get('workflowName'));
             if (newWorkflow.currentState.parentState.dirtyType == 'created')
                 this.set('model.workflow', newWorkflow);
             newWorkflow.save().then(function (data) {
@@ -1797,11 +1804,6 @@ App.GraphController = Ember.ObjectController.extend({
                 newNode.save().then(function (f) {
                     Messenger().post({ type: 'success', message: 'Successfully Updated Process' });
                     var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
-                    var duplicate = Enumerable.From(_this.get('graphData.nodes')).Where("g=>g.id=='" + f.get('id') + "'").FirstOrDefault();
-                    if (duplicate)
-                        _this.get('model.graphData.nodes').removeObject(duplicate);
-                    _this.get('model.graphData.nodes').pushObject(a);
-                    _this.set('model.graphData.nodes', _this.get('model.graphData.nodes').concat([])); //HACK TODO
                     _this.set('workflowEditModal', false);
                 }, function () {
                     if (_this.get('model'))
@@ -1827,14 +1829,12 @@ App.GraphController = Ember.ObjectController.extend({
             var id = NewGUID();
             var newNode = { id: id, label: n, content: c, VersionUpdated: Ember.Date.parse(new Date()) };
             App.Node.store.createRecord('node', newNode).save().then(function (f) {
-                f.get('workflows').pushObject(_this.store.getById('workflow', _this.get('workflowID')));
+                f.get('workflows').content.pushObject(_this.store.getById('workflow', _this.get('workflowID')));
                 Messenger().post({ type: 'success', message: 'Successfully Added Process' });
-                var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
-                _this.get('graphData').nodes.pushObject(a);
                 _this.set('newName', null);
                 _this.set('newContent', null);
                 _this.toggleProperty('workflowNewModal');
-               _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //HACK TODO
+                _this.set('updateGraph', NewGUID());
             }, function () {
                 Messenger().post({type:'error', message:'Error Adding Process'});
             });
@@ -1843,18 +1843,13 @@ App.GraphController = Ember.ObjectController.extend({
             var _this = this;
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
             if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined'|| newWorkflow.currentState.parentState.dirtyType == 'created') {
-                this.send('updateWorkflowNameNow');
+                this.send('updateWorkflowNameNow'); // create a new workflow if it doens't exist
             }
             data.id = NewGUID();
             data.GroupID = this.get('workflowID');
             App.Node.store.createRecord('edge', data).save().then(function (o) {
                 Messenger().post({ type: 'success', message: 'Successfully Added Connection' });
-                var f = App.Node.store.getById('edge', data.id);
-                _this.store.getById('node', f.get('from')).get('workflows').pushObject(_this.store.getById('workflow', _this.get('workflowID')));
-                _this.store.getById('node', f.get('to')).get('workflows').pushObject(_this.store.getById('workflow', _this.get('workflowID')));
-                var a = { id: f.get('id'), from: f.get('from'), to: f.get('to'), color: f.get('color'), width: f.get('width'), style: f.get('style') }
-                _this.get('graphData.edges').pushObject(a);
-                _this.set('graphData.edges', _this.get('graphData.edges').concat([]));
+                _this.set('updateGraph', NewGUID());
             }, function () {
                 Messenger().post({type:'error', message:'Error Adding Connection'});
                 Messenger().post({type:'info', message:'No permission or No Workflow name set. Please try again.'});
@@ -1876,52 +1871,52 @@ App.GraphController = Ember.ObjectController.extend({
             });
             Ember.RSVP.allSettled(promises).then(function (array) {
                 if (Enumerable.From(array).Any("f=>f.state=='rejected'"))
-                    Messenger().post({type:'error', message:'Error Updating Workflow'});
+                    Messenger().post({ type: 'error', message: 'Error Updating Workflow' });
                 else {
                     _this = _this;
 
+
+                   
+
                     var currentSelected = _this.get('selected');
-
-                    var graphData = _this.get('graphData');
-                    var removedNode = false;
-                    Enumerable.From(graphData.nodes).Where(function (f) {
-                        if (data.nodes.indexOf(f.id) > -1)
-                            return true;
-                        else
-                            return false;
-                    }).ForEach(function (f) {
-                        removedNode = true;
-                        graphData.nodes.removeObject(f);
+                    var currentWorkflow = _this.get('workflowID');
+                    var isDeleted = false;
+                    // var deletedNode = _this.store.filter('node', { id: currentSelected });
+                    
+                    // After the delete check all the remaing nodes and edges
+                    var all = Enumerable.From(App.Node.store.all('node').content);
+                    var promises1 = [];
+                    var nodes = [];
+                    all.ForEach(function (f) {
+                        promises1.push(f.get('workflows').then(function (g) {
+                            $.each(g.content, function (key, value) {
+                                if (value.id === currentWorkflow)
+                                    nodes.push(f);
+                            });
+                        }));
                     });
-                    if (removedNode) {
-                        var nodeRedirect = Enumerable.From(graphData.nodes).FirstOrDefault();
-                        if (nodeRedirect)
-                            _this.transitionToRoute('graph', nodeRedirect.id);
-                        else
-                            _this.transitionToRoute('graph', data.nodes[0].id);
-                    }
-                    _this.set('graphData.nodes', _this.get('graphData.nodes').concat([])); //TODO HACK
 
-                    Enumerable.From(graphData.edges).Where(function (f) {
-                        if (data.edges.indexOf(f.id) > -1)
-                            return true;
-                        else
-                            return false;
-                    }).ForEach(function (f) {
-                        graphData.edges.removeObject(f);
+
+                    Ember.RSVP.allSettled(promises1).then(function () {
+                        debugger;
+                        var selectedNodeAlive = Enumerable.From(nodes).Where('f=>f.id=="' + currentSelected.get('id') + '"').Any()
+                        if (!selectedNodeAlive) { // current node selected, have to redirect 
+                            if (nodes.length >= 1) {  // if selected node was deleted transition to this node
+                                _this.transitionToRoute('graph', nodes[0].id);
+                            } else {
+                                Messenger().post({ type: 'info', message: 'All processes in current workflow deleted. Redirecting to search.' });
+                                _this.transitionToRoute('search');
+                            }
+                        } else {
+                            _this.set('updateGraph', NewGUID()); // make graph rerender
+                        }
                     });
-                    _this.set('graphData.edges', _this.get('graphData.edges').concat([])); //TODO HACK
-
-
-                    Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
-                    //Enumerable.From(data.edges).ForEach(function (f) {
-                    //    var m = App.Node.store.getById('edge', f);
-                    //    if (m)
-                    //        promises.push(m.destroyRecord());
-                    //});
-
-
+    
                 }
+
+
+                 Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
+               
 
             }, function (error) {
 
@@ -2011,9 +2006,11 @@ App.VizEditorComponent = Ember.Component.extend({
         }
     }.observes('editing'),
     data: null,
+    updateGraph: '', 
     vizDataSet: { nodes: new vis.DataSet(), edges: new vis.DataSet() },
     classNames: ['vis-component'],
     selected: '',
+    selectedName: '',
     workflowID: '',
     isSelected: false,
     isWorkflow: function () {
@@ -2119,41 +2116,55 @@ App.VizEditorComponent = Ember.Component.extend({
         // This sets the new selected item on click
         this.graph.on('click', function (data) {
             if (data.nodes.length > 0) {
-                _this.set('selected', data.nodes[0]);
-                if (IsGUID(data.nodes[0])) {
-                    var wfid = _this.get('workflowID'); // has to be synched with data
-                    var d = _this.get('vizDataSet');
-                    var edges = d.edges.get();
-                    var nodes = d.nodes.get();
-                    var n = d.nodes.get(data.nodes[0]);
-                    Enumerable.From(nodes).ForEach(
-                        function (value) {
-                            delete value.color;
-                            delete value.fontColor;
-                            if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + wfid + "'").Any() && value.group.indexOf(wfid) > -1) {
-                                value.color = "#FFFFFF"; //BEGIN
-                                value.fontColor = "#000000";
-                            }
-                            else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + wfid + "'").Any()
-                                    && (value.group.indexOf(wfid) > -1
-                           || (value.group.indexOf(wfid) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + wfid + "'").Any()))) {
-                                value.color = "#333333"; //END
-                                value.fontColor = "#FFFFFF";
-                            }
-                            else if (value.group.indexOf(wfid) > -1) {
-                                value.color = "#6fa5d7"; //Current
-                                value.fontColor = "#000000";
-                            }
-                            return value;
+                var wfid = _this.get('workflowID'); // has to be synched with data
+                var all = Enumerable.From(App.Node.store.all('node').content);
+                var hasEdge = false;
+                var promises = [];
+                all.ForEach(function (f) {
+                    promises.push(f.get('edges').then(function (g) {
+                        $.each(g.content, function (key, value) {
+                            if (value.get('from') === data.nodes[0] || value.get('to') === data.nodes[0])
+                                hasEdge = true;
                         });
-                    d.nodes.update(nodes);
-                }
-
+                    }));
+                });
+                Ember.RSVP.allSettled(promises).then(function (array) {
+                    if (hasEdge) {
+                        _this.set('selected', data.nodes[0]);
+                        if (IsGUID(data.nodes[0])) {
+                            var d = _this.get('vizDataSet');
+                            var edges = d.edges.get();
+                            var nodes = d.nodes.get();
+                            var n = d.nodes.get(data.nodes[0]);
+                            Enumerable.From(nodes).ForEach(
+                                function (value) {
+                                    //delete value.color;
+                                    //delete value.fontColor;
+                                    if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + wfid + "'").Any() && value.group.indexOf(wfid) > -1) {
+                                        value.color = "#FFFFFF"; //BEGIN
+                                        value.fontColor = "#000000";
+                                    }
+                                    else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id + "' && f.group == '" + wfid + "'").Any()
+                                            && (value.group.indexOf(wfid) > -1
+                                   || (value.group.indexOf(wfid) < 0 && Enumerable.From(edges).Where("f=>f.to=='" + value.id + "' && f.group == '" + wfid + "'").Any()))) {
+                                        value.color = "#333333"; //END
+                                        value.fontColor = "#FFFFFF";
+                                    }
+                                    else if (value.group.indexOf(wfid) > -1) {
+                                        value.color = "#6fa5d7"; //Current
+                                        value.fontColor = "#000000";
+                                    }
+                                    return value;
+                                });
+                            d.nodes.update(nodes);
+                        }
+                    }
+                    if (data.nodes.length > 0 || data.edges.length > 0)
+                        _this.set('isSelected', true);
+                    else
+                        _this.set('isSelected', false);
+                });
             }
-            if (data.nodes.length > 0 || data.edges.length > 0)
-                _this.set('isSelected',true);
-            else
-                _this.set('isSelected', false);
         });
 
         //this.graph.on('stabilized', function (iterations) {
@@ -2180,23 +2191,21 @@ App.VizEditorComponent = Ember.Component.extend({
             _this.graph.redraw(); // This makes the graph responsive!!!
         }, 500);
     },
-    dataUpdates: function () {
-
-        //console.log('updated')
+    dataUpdated: function (_this) {
+        //console.log('updated graph ' + new Date())
         //var _this = this;
-        if (this.graph === null) {
-            this.setup(); // graph hasn't been initialised yet
+        if (_this.graph === null) {
+            _this.setup(); // graph hasn't been initialised yet
         }
-        var _this = this;
-        var wfid = this.get('workflowID');
+        var wfid = _this.get('workflowID');
 
         var updateGraph = function (nodes, edges) {
             nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('humanName'), mass: 0.8, group: item.get('group') }; });
             edges = $.map(edges, function (item) { return { id: item.get('id'), from: item.get('from'), to: item.get('to'), style: item.get('style'), color: item.get('color') }; });
             Enumerable.From(nodes).ForEach(
                 function (value) {
-                    delete value.color;
-                    delete value.fontColor;
+                    //delete value.color;
+                    //delete value.fontColor;
                     //console.log(value.id.replace(/\'/ig, '\''));
                     if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id.replace(/'/ig, '\\\'') + "'").Any()) {
                         value.color = "#FFFFFF"; //BEGIN
@@ -2300,7 +2309,7 @@ App.VizEditorComponent = Ember.Component.extend({
 
 
 
-        if (!this.get('isWorkflow')) {
+        if (!_this.get('isWorkflow')) {
             var all = Enumerable.From(App.Wikipedia.store.all('wikipedia').content);
             var edges = Enumerable.From(App.Wikipedia.store.all('edge').content).Where("f=>typeof f.get('GroupID')=='undefined'").ToArray();
             var cleaned = Enumerable.Empty();
@@ -2327,13 +2336,23 @@ App.VizEditorComponent = Ember.Component.extend({
                 }));
             });
 
+            if (!Enumerable.From(nodes).Any("f=>f.id=='" + _this.get('selected') + "'"))
+                nodes.push(App.Node.store.getById('node', _this.get('selected')));
+
             Ember.RSVP.allSettled(promises).then(function (array) {
                 edges = Enumerable.From(App.Node.store.all('edge').content).Where("f=>f.get('GroupID')=='" + wfid + "'").ToArray();
                 updateGraph(nodes,edges);
             });
         }
 
-    }.observes('workflowID','selected', 'data', 'data.nodes', 'data.edges').on('didInsertElement'),
+    },
+    dataUpdates: function () {
+        //var _this = this;
+        //var a = function () {
+        //    Ember.run.scheduleOnce('afterRender', _this, _this.dataUpdated, _this);
+        //} //TODO optimise further
+        Ember.run.debounce(this, this.dataUpdated, this, 100, false);
+    }.observes('workflowID', 'data', 'data.nodes', 'data.edges', 'selectedName', 'updateGraph', 'data.updateGraph.updated').on('didInsertElement'),
     actions: {
         edgeCreateY: function () {
             if (typeof this.graph.connection === 'undefined')
@@ -2461,11 +2480,11 @@ App.VizEditorComponent = Ember.Component.extend({
                     if (!found) {
                         var newNode = App.Node.store.getById('node', id);
                         var o = newNode.get('workflows').then(function (w) {
-                            w.pushObject(App.Node.store.getById('workflow', _this.get('data.workflowID')));
+                            w.content.pushObject(App.Node.store.getById('workflow', _this.get('workflowID')));
                         });
                         var a = { id: newNode.get('id'), label: newNode.get('label'), shape: newNode.get('shape'), group: newNode.get('group') };
                         currentNodesonScreen.nodes.add(a);
-                        _this.get('data').nodes.push(a); //, currentNodesonScreen.nodes.concat([]));
+                        //_this.get('data').nodes.push(a); //, currentNodesonScreen.nodes.concat([]));
 
                     } else {
                         alert('Process already in workflow.')

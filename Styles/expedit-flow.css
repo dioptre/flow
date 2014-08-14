@@ -261,7 +261,7 @@ div.table_description {
 
 .eui-modal.eui-full .mce-tinymce.mce-container.mce-panel {
     max-width: 737px;
-    margin: -35px auto 25px auto;
+    margin: 25px auto;
 }
 
 .eui-modal-open {

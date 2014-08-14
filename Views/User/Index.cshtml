@@ -872,7 +872,7 @@
                         <br>
 
                         <b>Add Process:</b><br>
-                        <input id="existingNodesel" style="width: 275px;" class='select2' type='hidden'/>
+                        <input id="existingNodesel" style="width: 276px;" class='select2' type='hidden'/>
 
                         <br>
                         <br>
@@ -957,31 +957,14 @@
 
                     {{eui-input valueBinding="model.selected.label" placeholder='Enter a process name' error=validateNewName forceErrorCheck=true}}
 
-                     <br /><br />
-                    <p>
-                        The process detail:
-                    </p>
-
                      {{tinymce-editor data=model.selected.content}}
 
                     {{eui-button label="Cancel" action="cancelWorkflow" size='large'}}
                     {{eui-button label="Submit" action="updateWorkflow" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
                     </div>
                 {{/eui-modal}}
-                {{#eui-modal openBinding="workflowNewModal" style="full"}}
-                    <div style="padding: 50px; text-align: center;">
-                    <p>
-                        The new process name:
-                    </p>
-                    {{eui-input valueBinding="newName" placeholder='Enter a new process name' error=validateNewNewName forceErrorCheck=true}} <br /><br />
-                    <p>
-                        The new process detail:
-                    </p>
-                    {{tinymce-editor data=newContent}}
-                    {{eui-button label="Cancel" action="toggleWorkflowNewModal" size='large'}}
-                    {{eui-button label="Submit" action="addNewNode" style='primary' size='large' disabled=validateNewNewName loading=loadingNewNewName}}
-                    </div>
-                {{/eui-modal}}
+
+
 
                 <div class='pretty-content'>
                     {{safehtml model.selected.content}}
@@ -1007,7 +990,7 @@
                 </h1>
                 <hr>
                  <div class="vh-75 networkColumn">
-                  {{viz-editor workflowID=workflowID selected=selectedID editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
+                  {{viz-editor workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
               </div>
             </div>
 
