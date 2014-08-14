@@ -1431,7 +1431,7 @@ App.GraphRoute = Ember.Route.extend({
                 if (firstWorkflow)
                     this.replaceWith('graph', m.selectedID, { queryParams: { workflowID: firstWorkflow.id } }); // choose the first workflowID which the node is in
                 else {
-                    this.replaceWith('graph', m.selectedID, { queryParams: { workflowID: newGUID() } });
+                    //this.replaceWith('graph', m.selectedID, { queryParams: { workflowID: NewGUID() } });  //leave out otherwise recursive
                 }
             }
             else {
