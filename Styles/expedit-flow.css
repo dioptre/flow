@@ -378,6 +378,7 @@ div.row.processes {
   margin-top: -3px;
 }
 .main-searchbox span.tag, .main-searchbox input[type=text] {
+  border: 1px solid #D0D0D0;
   border-radius: 4px;
   margin-left: 0px;
   margin-bottom: 13px;
@@ -428,9 +429,20 @@ text-transform: capitalize;
 
 /* Userful helpers for vertical viewport height with fallback */
 .vh-75 {
-  min-height: 480px;
+  min-height: 380px;
   height: 75vh;
 }
+
+/*Probably should work on this once I got the slider implemented*/
+/*@media all and (max-height: 400px) {
+.vh-75.networkColumn {
+  max-height: 480px;
+  height: 20vh;
+}
+}*/
+
+
+
 .vh-65 {
   min-height: 320px;
   height: 65vh;
@@ -589,14 +601,45 @@ text-transform: capitalize;
 .network-manipulationDiv {
     display: none !important;
 }
+/*remove akward spaces between shadow and icon*/
+div.network-navigation {
+  width: 30px;
+  height: 30px;
+  background-position: 0 0;
+}
 
-#network-navigation_zoomIn, #network-navigation_zoomOut, #network-navigation_up, #network-navigation_down, #network-navigation_left, #network-navigation_right {
+/*#network-navigation_zoomIn, #network-navigation_zoomOut, */
+#network-navigation_up, #network-navigation_down, #network-navigation_left, #network-navigation_right {
     display: none !important;
 }
-
-#network-navigation_zoomExtends {
-    bottom: 10px !important;
+/*custom icons bro*/
+div.network-navigation.zoomOut {
+  background-image: url("img/updated_graph/minus.png");
+  background-size: 30px;
 }
+
+div.network-navigation.zoomIn {
+  background-image: url("img/updated_graph/plus.png");
+  background-size: 30px;
+}
+div.network-navigation.zoomExtends {
+  background-image: url("img/updated_graph/zoomExtends.png");
+  background-size: 30px;
+}
+/*make the hovers blue*/
+div.network-navigation.active {
+box-shadow: 0px 0px 1px 3px rgba(21, 142, 207, 0.95);
+}
+div.network-navigation:hover {
+box-shadow: 0px 0px 3px 3px rgba(21, 90, 207, 0.3);
+}
+
+
+
+
+/*#network-navigation_zoomExtends {
+    bottom: 10px !important;
+}*/
 
 
 .network-manipulation-closeDiv {
@@ -853,5 +896,7 @@ small, .font_small {font-size: 0.707em;}
 .tiny-form, .tiny-form  h4 {
   font-family: 'Open Sans'
 }
-
+.cursor-progress {
+  cursor: progress !important;
+}
 

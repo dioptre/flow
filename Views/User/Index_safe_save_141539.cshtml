@@ -901,8 +901,8 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="pretty-content">
-                    {{view Ember.TextField valueBinding='title' classNameBindings=":search :form-control :hidden-sm :hidden-md :hidden-lg" style="width: 100%;"}}
-                    {{view Ember.TextField valueBinding='title' classNameBindings=":search :form-control :hidden-xs" style="width: 75%;"}}
+                    {{view Ember.TextField valueBinding='title' classNameBindings=":search :form-control :visible-xs-*" style="width: 100%;"}}
+                    {{view Ember.TextField valueBinding='title' classNameBindings=":search :form-control :.hidden-xs" style="width: 75%;"}}
                     <br> <br>
                     <h1><b>{{humanName}}</b></h1>
                     {{#if model.content}}
@@ -912,7 +912,7 @@
             </div>
             <div class="col-md-6 networkColumn">
                 <br>
-                {{viz-editor selected=selected openModal="toggleWorkflowEditModal"}}
+                {{viz-editor data=graphData selected=selected openModal="toggleWorkflowEditModal"}}
             </div>
         </div>
     </div>
@@ -991,11 +991,11 @@
             <div class="col-md-6 process-header">
                 <h4><small>Workflow</small></h4>
                 <h1>
-                    {{#if workflowName }}
+                    {{#if model.workflow.name }}
                         {{#if workflowGte2}}
                         {{eui-select optionsBinding='model.workflows' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='medium' width='300px'}}
                         {{else}}
-                            {{workflowName}}
+                            {{model.workflow.name}}
                         {{/if}}
                    {{else}}
                         Current process has no workflow yet. Please choose a workflow name.
@@ -1007,7 +1007,7 @@
                 </h1>
                 <hr>
                  <div class="vh-75 networkColumn">
-                  {{viz-editor workflowID=workflowID selected=selectedID editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
+                  {{viz-editor data=graphData selected=selectedID editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
               </div>
             </div>
 
