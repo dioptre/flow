@@ -2333,7 +2333,7 @@ App.VizEditorComponent = Ember.Component.extend({
             });
         }
 
-    }.observes('workflowID','selected').on('didInsertElement'),
+    }.observes('workflowID','selected', 'data', 'data.nodes', 'data.edges').on('didInsertElement'),
     actions: {
         edgeCreateY: function () {
             if (typeof this.graph.connection === 'undefined')
