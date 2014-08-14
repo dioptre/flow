@@ -993,7 +993,7 @@
                 <h1>
                     {{#if workflowName }}
                         {{#if workflowGte2}}
-                        {{eui-select optionsBinding='model.workflows' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='medium' width='300px'}}
+                            {{eui-select optionsBinding='workflowsOptionsArray' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='medium' width='300px'}}
                         {{else}}
                             {{workflowName}}
                         {{/if}}

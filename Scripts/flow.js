@@ -1434,6 +1434,9 @@ App.GraphRoute = Ember.Route.extend({
                     this.replaceWith('graph', m.selectedID, { queryParams: { workflowID: newGUID() } });
                 }
             }
+            else {
+                m.workflow = this.store.getById('workflow', m.workflowID);
+            }
 
 
 
@@ -1562,7 +1565,7 @@ App.GraphController = Ember.ObjectController.extend({
         else
             a = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
         return a;
-    }.property('workflowID'),
+    }.property('workflowID', 'model.workflow.name'),
     workflowID: null, // available ids will be in model
     workflowEditModal : false,
     validateWorkflowName: false,
@@ -1573,8 +1576,16 @@ App.GraphController = Ember.ObjectController.extend({
     loadingWorkflowName: false,
     loadingNewName: false,
     loadingExistingName: false,
-    workflowGte2: Ember.computed.gte('model.workflows.length', 2),
-    graphDataLte2: Ember.computed.lte('model.graphData.length', 2),
+    workflows: function(){
+        return this.get('model.selected')._data.workflows;
+    }.property('model.selected'),
+    workflowsOptionsArray: function(){
+        var x =  this.get('workflows').map(function (a) {
+            return { name: a.get('name'), id: a.id }
+        });
+        return x;
+    }.property('workflows'),
+    workflowGte2: Ember.computed.gte('workflows.length', 2),
     fitVis: function(){
         Ember.run.scheduleOnce('afterRender', this, function(){
             $('body').fitVids();
@@ -1723,7 +1734,7 @@ App.GraphController = Ember.ObjectController.extend({
 
 
                 if (_this.get('workflowGte2')) {
-                    Enumerable.From(_this.get('model.workflows')).Where("f=>f.id==='" + _this.get('workflowID') + "'").Single().name = _this.get('model.workflow.name');
+                    //Enumerable.From(_this.get('model.workflows')).Where("f=>f.id==='" + _this.get('workflowID') + "'").Single().name = _this.get('model.workflow.name');
                     // _this.refresh();
                     location.reload();
 
@@ -2322,7 +2333,7 @@ App.VizEditorComponent = Ember.Component.extend({
             });
         }
 
-    }.observes('data', 'data.nodes', 'data.edges').on('didInsertElement'),
+    }.observes('workflowID','data', 'data.nodes', 'data.edges').on('didInsertElement'),
     actions: {
         edgeCreateY: function () {
             if (typeof this.graph.connection === 'undefined')
