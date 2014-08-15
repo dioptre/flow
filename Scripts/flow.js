@@ -24,6 +24,7 @@ App.ResetScroll = Ember.Mixin.create({
 });
 
 App.Router.map(function () {
+    // App & Features
     this.route('graph', { path: 'process/:id' });
     this.route('workflow', { path: 'workflow/:id' });
     this.route('wikipedia', { path: "/wikipedia/:id" });
@@ -32,17 +33,33 @@ App.Router.map(function () {
     this.route('mylicenses');
     this.route('file');
     this.route('permission');
+
+    // User  Stuff
     this.route('login');
+    this.route('signup');
+    this.route('resetpassword');
     this.route('myprofiles');
     this.route('help');
-// Currently unused.
-// this.route('userlist');
-// this.route('userprofile');
-// this.route('usernew');
+
+    // Currently unused.
+    // this.route('userlist');
+    // this.route('userprofile');
+    // this.route('usernew');
+
+    // 404 page
+    this.route('errorpage', {path: '/*wildcard'})
 });
+
+
+App.ErrorpageRoute = Ember.Route.extend({
+    model: function(){
+        return {currentpage: location.href}
+    }
+})
 
 App.HelpRoute = Ember.Route.extend({
     beforeModel: function (m) {
+        // Just redirect to a creatin workflow
         return this.replaceWith('graph', '76be503d-4689-47f8-99fe-2f512f81d4d5', { queryParams: { workflowID: 'c65d9b93-d986-4f70-bc0a-3eb2c6c0ecdd' } });
     }
 });
@@ -383,9 +400,6 @@ App.LoginController = Ember.Controller.extend({
     email: "",
     rememberme: false,
     password: "",
-    bindingChercker: function(){
-        //console.log('value changed')
-    }.observes('email', 'password', 'rememberme'),
     actions: {
         loginUser: function(){
             var UserName = this.get('email');
@@ -428,8 +442,99 @@ App.LoginController = Ember.Controller.extend({
             });
         }
     }
+})
 
+App.ResetpasswordController = Ember.Controller.extend({
+    needs: ['application'],
+    email: "",
+    actions: {
+        resetPassword: function(){
+            var email = this.get('email');
+            var _this = this;
 
+            $.post('/share/login', {
+                UserName: UserName,
+                Password: Password,
+                RememberMe: RememberMe
+            }).then(function(data){
+                if (data === true) {
+                    Messenger().post({ type: 'success', message: 'Successfully logged in.', id: 'authenticate' });
+                    _this.set('controllers.application.isLoggedIn', true)
+                    // Duplicate code starts here, but works fine
+                    $.ajax({
+                      url: "/flow/myuserinfo"
+                    }).then(function(data){
+                        data.UserName = ToTitleCase(data.UserName);
+                        data.Thumb = "/share/photo/" + data.UserID;
+                        mixpanel.identify(data.id);
+                        mixpanel.people.set({
+                            $first_name: data.UserName
+                        });
+                        _this.set('controllers.application.userProfile', data);
+                    }, function (jqXHR) {
+                      jqXHR.then = null; // tame jQuery's ill mannered promises
+                    });
+                    // end duplicate code
+                    _this.transitionToRoute('search');
+                } else {
+                    Messenger().post({type:'error', message:'Incorrect username and/or password. Please try again.', id:'authenticate'});
+                }
+
+            }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+            });
+        }
+    }
+})
+
+// App.SignupRoute = Ember.Route.extend({
+//     model: function(){
+//         var imgKey = NewGUID();
+//         return imgKey
+//     }
+// })
+
+App.SignupController = Ember.Controller.extend({
+    needs: ['application'],
+    captchaKey: NewGUID(),
+    captchaImg: function(){
+        var _this = this;
+        Ember.$.getJSON('/share/captcha/' + this.get('captchaKey')).then(function(data){
+            console.log(data)
+            _this.set('captchaURL', 'data:image/png;base64,' + data.Image64);
+        });
+    }.observes('captchaKey').on('init'),
+    captchaURL: '',
+    captchaSolution: '',
+    email: "",
+    username: "",
+    rememberme: false,
+    password: "",
+    usercreated: false,
+    actions: {
+        signupUser: function(){
+            var _this = this;
+            // Simple AJAX call for magic signup
+            $.post('/share/signup', {
+                UserName: _this.get('username'),
+                Email: _this.get('email'),
+                Password: _this.get('password'),
+                CaptchaCookie: _this.get('captchaKey'),
+                CaptchaKey: _this.get('captchaSolution')
+            }).then(function(data){
+                if (data.IsValid === true) {
+                    Messenger().post({type:'success', message:'Account successfully created.', id:'authenticate'});
+                    _this.set('password', '');
+                    _this.transitionToRoute('login');
+                } else {
+                    Messenger().post({type:'error', message:'Something went wrong in the account creation. Please try again.', id:'authenticate'});
+                }
+
+            }, function (jqXHR) {
+                  jqXHR.then = null; // tame jQuery's ill mannered promises
+            });
+        }
+    }
 })
 
 App.ApplicationController = Ember.Controller.extend({
@@ -744,7 +849,7 @@ App.ApplicationView = Ember.View.extend({
 
 var oldURL = '';
 App.Router.reopen({
-    notifyGoogleAnalytics: function () {
+    notifyAnalytics: function () {
         var url = this.get('url');
 
         // Duplicate search results shouldn't be tracked
@@ -756,8 +861,15 @@ App.Router.reopen({
         if (oldURL != url) {
             console.log('Tracking URL:', url);
             mixpanel.track('Page Viewed', {
+                pageName: document.title,
+                domain: location.host,
                 url: url
             });
+
+             ga('send', 'pageview', {
+                'page': this.get('url'),
+                'title': this.get('url')
+              });
         }
 
         oldURL = url; // create copy
@@ -771,30 +883,24 @@ App.ApplicationRoute = Ember.Route.extend({
             $('.searchTransitionMenu').val('').blur();
         },
         loading: function (m) {
-
-            // Remove menu link - mobile test
-            // Ember.run.scheduleOnce('afterRender', this, function(){
-            //     $('body').removeClass('menu');
-            // });
-
-
-
             Pace.restart();
-            $('body').addClass('cursor-progress');
+            $('body').addClass('cursor-progress loading-stuff');
             this.router.one('didTransition', function () {
                 return setTimeout((function () {
-                    $('body').removeClass('cursor-progress');
+                    $('body').removeClass('cursor-progress loading-stuff');
                     return Pace.stop();
-
                 }), 0);
             });
             return true;
         },
         error: function () {
-            return setTimeout((function () {
-                $('body').removeClass('cursor-progress');
-                return Pace.stop();
 
+            // On error show the error page - sort of like a 404 error
+            this.transitionTo('errorpage');
+
+            return setTimeout((function () {
+                $('body').removeClass('cursor-progress loading-stuff');
+                return Pace.stop();
             }), 0);
         }
     }
@@ -996,22 +1102,62 @@ App.SearchController = Ember.ObjectController.extend({
            return  this.toggleProperty('mapModal');
         }
     },
+    loadGraphQuery: '',
     loadGraph: function(){
         var controller = this;
-        if (this.get('graph') && this.get('componentURI').length > 0) {
-            controller.set('controllers.graphResults.loading', true);
-            this.store.find('search', {
-                page: this.get('pageGraph'),
-                keywords: this.get('keywords'),
-                tags: this.get('tags'),
-                type: 'process',
-                pagesize: this.get('pageSize')
-            }).then(function (res) {
-                controller.set('controllers.graphResults.results', res.get('content'));
-                controller.set('controllers.graphResults.loading', false);
-            });
+        var query = {
+            page: controller.get('pageGraph'),
+            keywords: controller.get('keywords'),
+            tags: controller.get('tags'),
+            type: 'process',
+            pagesize: controller.get('pageSize')
+        }
+
+        // Search function
+        var loadFn = function() {
+            if (controller.get('graph') && controller.get('componentURI').length > 0) {
+                controller.set('controllers.graphResults.loading', true);
+                controller.store.find('search', query).then(function (res) {
+                    controller.set('controllers.graphResults.results', res.get('content'));
+                    controller.set('controllers.graphResults.loading', false);
+                });
+            }
+        }
+
+        // Don't reload the search if the old query was identical to current one (stops the flickering!!!)
+        if (controller.get('loadGraphQuery') !== JSON.stringify(query)) {
+            loadFn();
+            controller.set('loadGraphQuery', JSON.stringify(query));
         }
     }.observes('graph', 'pageGraph'),
+    loadFileQuery: '',
+    loadFile: function(){
+        var controller = this;
+
+        var query = {
+                page: controller.get('pageFile'),
+                keywords: controller.get('keywords'),
+                tags: controller.get('tags'),
+                type: 'file',
+                pagesize: controller.get('pageSize')
+            }
+
+        var loadFn = function() {
+            if (controller.get('file') && controller.get('componentURI').length > 0) {
+                controller.set('controllers.fileResults.loading', true);
+                controller.store.find('search', query).then(function (res) {
+                    controller.set('controllers.fileResults.results', res.get('content'));
+                    controller.set('controllers.fileResults.loading', false);
+                });
+            }
+        }
+
+        if (controller.get('loadFileQuery') !== JSON.stringify(query)) {
+            loadFn();
+            controller.set('loadFileQuery', JSON.stringify(query));
+        }
+
+    }.observes('file', 'pageFile'),
     loadMap: function(){
         var controller = this;
         if (this.get('map') && this.get('componentURI').length > 0) {
@@ -1032,24 +1178,7 @@ App.SearchController = Ember.ObjectController.extend({
             });
         }
     }.observes('map', 'pageMap'),
-    loadFile: function(){
-        var controller = this;
-        if (this.get('file') && this.get('componentURI').length > 0) {
-            controller.set('controllers.fileResults.loading', true);
-            this.store.find('search', {
-                page: this.get('pageFile'),
-                keywords: this.get('keywords'),
-                tags: this.get('tags'),
-                type: 'file',
-                pagesize: this.get('pageSize')
-            }).then(function (res) {
-                controller.set('controllers.fileResults.results', res.get('content'));
-                controller.set('controllers.fileResults.loading', false);
-            });
-        }
-    }.observes('file', 'pageFile'),
     loadAll: function(){
-        //console.log('loading all');
         this.loadGraph();
         this.loadMap();
         this.loadFile();

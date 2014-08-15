@@ -534,6 +534,10 @@ text-transform: capitalize;
 .navbar.navbar-inverse {
   border-top: 2px solid rgb(86, 110, 164);
 }
+/*.loading-stuff .navbar.navbar-inverse {
+  border-top: 2px solid white;
+}*/
+
 
 /*Puts the toggle putton in the right position*/
 .navbar-inverse .navbar-toggle {
