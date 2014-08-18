@@ -686,32 +686,49 @@
 </script>
 
 <script type="text/x-handlebars" id="signup">
-    <div class="login-helper"></div>
-    <div class="login-wrapper login-bg">
+    <div class="login-helper login-helper-signup"></div>
+    <div class="login-wrapper login-bg captcha">
         <a href="#">
             <img class="logo" src="@Url.Content("~/Modules/EXPEDIT.Flow/Images/logo-all-white-transparent.png")" alt="logo" />
         </a>
         <form {{action 'signupUser' on='submit'}} >
         <div class="box">
             <div class="content-wrap">
+
                 <h6>Sign up</h6>
-                {{input type="text" valueBinding='username' classNameBindings=":form-control" placeholder="Username"}}
-                {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
-                {{input valueBinding='password' type="password" classNameBindings=":form-control" placeholder="Choose a Password"}}
 
-                <h5> Verify your human:</h5>
-                <img alt="Embedded Image" {{bind-attr src=captchaURL}} width="100" height="40" />
-                {{input valueBinding='captchaSolution' type="text" classNameBindings=":form-control" placeholder="Characters above"}}
+                {{#unless controllers.application.isLoggedIn}}
+                    {{input type="text" valueBinding='username' classNameBindings=":form-control" placeholder="Username"}}
+                    {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
+                    {{input valueBinding='password' type="password" classNameBindings=":form-control" placeholder="Choose a Password"}}
 
-                <button type="submit" class="btn-glow primary login">
-                    Sign Up
-                </button>
+                    <h5> Verify you're human:</h5>
+                    <img class='captcha-img' alt="Embedded Image" {{bind-attr src=captchaURL}} width="100" height="40" />
+                    <div class="refresh" title="Create a new human code" {{action 'changeCaptcha'}}>
+                        <i class="icon-refresh" ></i>
+                    </div>
+                    <div style='width: 100px; display: inline-block;'>
+                        {{input valueBinding='captchaSolution' type="text" classNameBindings=":form-control" placeholder="Characters above"}}
+                    </div>
+
+                    <button type="submit" class="btn-glow primary login">
+                        Sign Up
+                    </button>
+                {{else}}
+                    <p>You are already logged in as {{controllers.application.userProfile.name}}</p>
+                    <p>Log out to sign up a new user</p>
+                    <a {{action 'togglelogoutModal'}}>
+                         Logout
+                     </a>
+
+                {{/unless}}
+
             </div>
         </div>
         </form>
         <div class="no-account">
             <p>Already have an account?</p>
-            {{#link-to}}Log in{{/link-to}}
+            {{#link-to 'login'}}Log in{{/link-to}}
         </div>
     </div>
 
@@ -731,7 +748,7 @@
 
                 {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
                 {{input valueBinding='password' type="password" class="form-control" placeholder="Your Password"}}
-                <a href="/Users/account/RequestLostPassword" class="forgot">Forgot password?</a>
+                {{#link-to 'resetpassword' class="forgot"}}Forgot password?{{/link-to}}
                 <div class="remember">
                     {{input valueBinding="rememberme" id="remember-me" type="checkbox"}}
                     <label for="remember-me">Remember me</label>
@@ -755,23 +772,26 @@
         <a href="#">
             <img class="logo" src="@Url.Content("~/Modules/EXPEDIT.Flow/Images/logo-all-white-transparent.png")" alt="logo" />
         </a>
-        <form {{action 'resetPassword' on='submit'}} >
-        <div class="box">
-            <div class="content-wrap">
-                <h6>Reset your Password</h6>
-                {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
-                {{!--
-                    <div class="remember">
-                        {{input valueBinding="rememberme" id="remember-me" type="checkbox"}}
-                        <label for="remember-me">Are you sure?</label>
-                    </div>
-                --}}
-                <button type="submit" class="btn-glow primary login">
-                    Reset Password
-                </button>
+        {{#if emailsent}}
+            <div class="box">
+                <div class="content-wrap">
+                    <h6>Email send successfully</h6>
+                    <p>Please check your email inbox for: <i>{{email}}</i>. <br>To finish of reseting your password, follow the link included in the email.</p>
+                </div>
             </div>
-        </div>
+        {{else}}
+            <form {{action 'resetPassword' on='submit'}} >
+            <div class="box">
+                <div class="content-wrap">
+                    <h6>Reset your Password</h6>
+                    {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
+                    <button type="submit" class="btn-glow primary login">
+                        Reset Password
+                    </button>
+                </div>
+            </div>
         </form>
+        {{/if}}
         <div class="no-account">
             <p>Do not have an account?</p>
             {{#link-to 'signup'}}Sign up{{/link-to}}

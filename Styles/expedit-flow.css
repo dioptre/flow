@@ -640,13 +640,6 @@ box-shadow: 0px 0px 3px 3px rgba(21, 90, 207, 0.3);
 }
 
 
-
-
-/*#network-navigation_zoomExtends {
-    bottom: 10px !important;
-}*/
-
-
 .network-manipulation-closeDiv {
     display: none !important;
 }
@@ -667,23 +660,14 @@ box-shadow: 0px 0px 3px 3px rgba(21, 90, 207, 0.3);
 
 
 
-/* new menu test */
-body.menu #emberapphere{
-  -webkit-transform: translate(165px,0);
-  -ms-transform: translate(165px,0);
-  -moz-transform: translate(165px,0);
-  transform: translate(165px,0);
-  -webkit-transition: 0.25s all ease-out;
-  transition: 0.25s all ease-out;
-}
+
+
 
 html, body.menu {
     height: 100%;
     overflow-x:hidden;
 }
 
-/*::selection {color:red;background:yellow;}
-::-moz-selection {color:red;background:yellow;}*/
 
 @media (max-width: 768px) {
   body {
@@ -727,75 +711,13 @@ html, body.menu {
   .login-helper {
     min-height: 400px;
   }
+  .login-helper-signup {
+    min-height: 500px;
+  }
 }
 
-
-body.menu .content {
-  margin-left: 0px;
-  position: inherit;
-  width: 100%;
-}
-
-/* new menu test */
-body.menu #emberapphere{
-  -webkit-transform: translate(165px,0);
-  -ms-transform: translate(165px,0);
-  -moz-transform: translate(165px,0);
-  transform: translate(165px,0);
-  -webkit-transition: 0.25s all ease-out;
-  transition: 0.25s all ease-out;
-}
-
-html, body.menu {
-    height: 100%;
-    overflow-x:hidden;
-}
-
-/*::selection {color:red;background:yellow;}
-::-moz-selection {color:red;background:yellow;}*/
-
-@media (max-width: 768px) {
-  body {
-    background: white;
-  }
-  #sidebar-nav {
-    left: -165px !important;
-    top: 0px !important;
-    box-shadow: none !important;
-    transition: none;
-    border-radius: 0px;
-    height: inherit !important;
-    min-height: 100vh;
-    transition: none;
-  }
-  body.menu .content {
-    pointer-events: none;
-    opacity: 0.4;
-    position: relative;
-    /*min-height: 100%;*/
-  }
-  body.menu .navbar {
-    opacity: 0.8;
-  }
-  .content {
-    margin-bottom: 0px;
-    border-bottom: none;
-    border-left: none;
-    box-shadow: none;
-    min-height: 0px;
-    border-radius: 0;
-  }
-  /* This keeps the content box always 100% minimum */
-  .content {
-    min-height: 100vh;
-    margin-top: -58px;
-    padding-top: 58px;
-    /*background: red;*/
-  }
-
-  .login-helper {
-    min-height: 400px;
-  }
+.login-helper-signup {
+  min-height: 600px;
 }
 
 
@@ -905,3 +827,27 @@ small, .font_small {font-size: 0.707em;}
   cursor: progress !important;
 }
 
+
+/* Signup page - captcha loading feature */
+.captcha .captcha-img {
+  border-radius: 4px;
+}
+.captcha .refresh {
+    -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  vertical-align: middle;
+  height: 40px;
+  width: 40px;
+  line-height: 40px;
+  font-size: 15px;
+  display: inline-block;
+  -webkit-transition: 0.2s all;
+  transition: 0.2s all;
+}
+.captcha .refresh:active {
+  -webkit-transform: rotate(35deg);
+  font-size: 20px;
+}

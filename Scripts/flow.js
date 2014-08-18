@@ -409,18 +409,20 @@ App.LoginController = Ember.Controller.extend({
 
             this.set('password', '');
 
+            _this.set('controllers.application.isLoading', true)
             $.post('/share/login', {
                 UserName: UserName,
                 Password: Password,
                 RememberMe: RememberMe
             }).then(function(data){
+                _this.set('controllers.application.isLoading', false)
                 if (data === true) {
-                    Messenger().post({ type: 'success', message: 'Successfully logged in.', id: 'authenticate' });
-                    _this.set('controllers.application.isLoggedIn', true)
-                    // Duplicate code starts here, but works fine
-                    $.ajax({
+
+                    Ember.$.ajax({
                       url: "/flow/myuserinfo"
                     }).then(function(data){
+                        Messenger().post({ type: 'success', message: 'Successfully logged in.', id: 'authenticate' });
+                        _this.set('controllers.application.isLoggedIn', true)
                         data.UserName = ToTitleCase(data.UserName);
                         data.Thumb = "/share/photo/" + data.UserID;
                         mixpanel.identify(data.id);
@@ -428,10 +430,7 @@ App.LoginController = Ember.Controller.extend({
                             $first_name: data.UserName
                         });
                         _this.set('controllers.application.userProfile', data);
-                    }, function (jqXHR) {
-                      jqXHR.then = null; // tame jQuery's ill mannered promises
-                    });
-                    // end duplicate code
+                    })
                     _this.transitionToRoute('search');
                 } else {
                     Messenger().post({type:'error', message:'Incorrect username and/or password. Please try again.', id:'authenticate'});
@@ -447,60 +446,50 @@ App.LoginController = Ember.Controller.extend({
 App.ResetpasswordController = Ember.Controller.extend({
     needs: ['application'],
     email: "",
+    emailsent: false,
     actions: {
         resetPassword: function(){
             var email = this.get('email');
             var _this = this;
 
-            $.post('/share/login', {
-                UserName: UserName,
-                Password: Password,
-                RememberMe: RememberMe
-            }).then(function(data){
-                if (data === true) {
-                    Messenger().post({ type: 'success', message: 'Successfully logged in.', id: 'authenticate' });
-                    _this.set('controllers.application.isLoggedIn', true)
-                    // Duplicate code starts here, but works fine
-                    $.ajax({
-                      url: "/flow/myuserinfo"
-                    }).then(function(data){
-                        data.UserName = ToTitleCase(data.UserName);
-                        data.Thumb = "/share/photo/" + data.UserID;
-                        mixpanel.identify(data.id);
-                        mixpanel.people.set({
-                            $first_name: data.UserName
-                        });
-                        _this.set('controllers.application.userProfile', data);
-                    }, function (jqXHR) {
-                      jqXHR.then = null; // tame jQuery's ill mannered promises
-                    });
-                    // end duplicate code
-                    _this.transitionToRoute('search');
-                } else {
-                    Messenger().post({type:'error', message:'Incorrect username and/or password. Please try again.', id:'authenticate'});
-                }
+            if (!validateEmail(email)){
+                Messenger().post({ type: 'error', message: 'Invalid email. Please try again.', id: 'authenticate' });
+            } else {
+                _this.set('controllers.application.isLoading', true)
+                $.post('/share/requestpassword', {
+                    id: email
+                }).then(function(data){
+                    _this.set('controllers.application.isLoading', false);
+                    if (data === true) {
+                        Messenger().post({ type: 'success', message: 'Successfully reset password. Please check your email.', id: 'authenticate' });
+                        _this.set('emailsent', true);
+                    } else {
+                        Messenger().post({type:'error', message:'Unsuccesfull. Please make sure you have submitted the correct email.', id:'authenticate'});
+                    }
 
-            }, function (jqXHR) {
-                  jqXHR.then = null; // tame jQuery's ill mannered promises
-            });
+                }, function (jqXHR) {
+                      jqXHR.then = null; // tame jQuery's ill mannered promises
+                });
+            }
         }
     }
 })
 
-// App.SignupRoute = Ember.Route.extend({
-//     model: function(){
-//         var imgKey = NewGUID();
-//         return imgKey
-//     }
-// })
 
 App.SignupController = Ember.Controller.extend({
     needs: ['application'],
     captchaKey: NewGUID(),
     captchaImg: function(){
         var _this = this;
+        // Set the temporary loading image
+        var loadingIMGbase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAUCAMAAAD4FJ6oAAAANlBMVEX///////93dXWDgYGNjIyYl5eioaGsq6u1tLS+vb3HxsbPz8/Y19fg4ODo6Ojw8PD39/f///9n9tiyAAAAAnRSTlPm8i0ECmIAAACbSURBVCjP1ZPNCsMwDINT2W4SO396/5fdcaOUjuw2XcWHBLZSOjaVEreVjl3i+Esk+hdkYV1Ma9Ieka5XU0Z9TvFMTgN8GnR2hUpXiiIvg+i4QYqTubBJAOgS9NPzwGhaCse79QdijdSgm/SBgcmzFm/Glk9n2E2xBUACsJEhxgJoWKuVtXZA8tZdVlnLYguZGTj/4sd+mNj+kF/3mjUy6Wc2lAAAAABJRU5ErkJggg==';
+        var loadingIMGbase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAUBAMAAAA95HOpAAAALVBMVEX///////93dXWDgYGNjIyYl5eioaG1tLTHxsbPz8/Y19fg4ODo6Ojw8PD///8WzaMaAAAAAnRSTlPm8i0ECmIAAABCSURBVCjPY2AUxA4EGN7hAgxyOCQeDhGZ6UBYiU3mhVGGUZpyHxaZt65rXVeF3MMi8+bMmTOn75wbTD7FHXM4YxsAHLyPsxAxleAAAAAASUVORK5CYII=';
+        _this.set('captchaURL', loadingIMGbase64);
+
+        // Pull in a new image from the server
+        _this.set('controllers.application.isLoading', true)
         Ember.$.getJSON('/share/captcha/' + this.get('captchaKey')).then(function(data){
-            console.log(data)
+            _this.set('controllers.application.isLoading', false)
             _this.set('captchaURL', 'data:image/png;base64,' + data.Image64);
         });
     }.observes('captchaKey').on('init'),
@@ -512,43 +501,123 @@ App.SignupController = Ember.Controller.extend({
     password: "",
     usercreated: false,
     actions: {
+        changeCaptcha: function(){
+            this.set('captchaKey', NewGUID());
+        },
         signupUser: function(){
             var _this = this;
-            // Simple AJAX call for magic signup
-            $.post('/share/signup', {
-                UserName: _this.get('username'),
-                Email: _this.get('email'),
-                Password: _this.get('password'),
-                CaptchaCookie: _this.get('captchaKey'),
-                CaptchaKey: _this.get('captchaSolution')
-            }).then(function(data){
-                if (data.IsValid === true) {
-                    Messenger().post({type:'success', message:'Account successfully created.', id:'authenticate'});
-                    _this.set('password', '');
-                    _this.transitionToRoute('login');
-                } else {
-                    Messenger().post({type:'error', message:'Something went wrong in the account creation. Please try again.', id:'authenticate'});
-                }
 
-            }, function (jqXHR) {
-                  jqXHR.then = null; // tame jQuery's ill mannered promises
+            _this.set('controllers.application.isLoading', true)
+
+
+            if (!validateEmail(_this.get('email'))) {
+                Messenger().post({type:'error', message:'Invalid email.', id:'authenticate'});
+                return;
+            }
+
+            if (_this.get('captchaSolution').length !== 4) {
+                Messenger().post({type:'error', message:'Invalid human code.', id:'authenticate'});
+                return;
+            }
+
+            // First check username email availabiltiy
+            $.post('/share/DuplicateUser', {
+                UserName: _this.get('username'),
+                Email: _this.get('email')
+            }).then(function(data){
+                _this.set('controllers.application.isLoading', false);
+                if (data) {
+                 $.post('/share/signup', {
+                    UserName: _this.get('username'),
+                    Email: _this.get('email'),
+                    Password: _this.get('password'),
+                    CaptchaKey: _this.get('captchaSolution'),
+                    CaptchaCookie: _this.get('captchaKey')
+                 }).then(function(data){
+                    if (data.Response === 1) {
+                        Messenger().post({ type: 'success', message: 'Successful signup!', id: 'authenticate' });
+                        _this.set('captchaKey', NewGUID());
+                        _this.set('email', '');
+                        _this.set('username', '');
+                        _this.set('password', '');
+                        _this.transitionToRoute('search');
+                    }
+                    else if (data.Response === 4) {
+                         Messenger().post({type:'error', message:'Invalid human code. Please try again.', id:'authenticate'});
+                        //_this.set('captchaKey', NewGUID());
+                    } else {
+                         Messenger().post({type:'error', message:'Unknown error. Plese try again later.', id:'authenticate'});
+
+                    }
+                 })
+                } else {
+                    Messenger().post({type:'error', message:'Email and/or username already taken.', id:'authenticate'});
+                }
             });
+
         }
     }
 })
 
+App.ApplicationRoute = Ember.Route.extend({
+    actions: {
+        transitionSearch: function (a) {
+            this.transitionTo('search', {queryParams: {keywords: a}})
+            $('.searchTransitionMenu').val('').blur();
+        },
+        loading: function (m) {
+            var controller = this.controller;
+
+            if(typeof controller !== 'undefined') {
+                console.log('loading')
+                controller.get('startLoading')()
+                this.router.one('didTransition', function () {
+                    controller.get('stopLoading')();
+                });
+            }
+            return true;
+        },
+        error: function () {
+            var controller = this.controller;
+
+
+            // On error show the error page - sort of like a 404 error
+            this.transitionTo('errorpage');
+
+            if(typeof controller !== 'undefined') {
+                controller.get('stopLoading')()
+            }
+
+            return true;
+        }
+    }
+ });
+
+
 App.ApplicationController = Ember.Controller.extend({
-    ////queryParams: ['workflowID'],
-    //workflowID: null,
     currentPathDidChange: function () {
         window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
         var currentPath = this.get('currentPath');
-
-        //if (currentPath !== "graph" && currentPath !== "workflow") { // remove workflow id query param unless on graph/wk route
-        //    this.set('workflowID', null)
-        //}
         App.set('currentPath', currentPath);  // Set path to the top
     }.observes('currentPath'), // This set the current path App.get('currentPath');
+    isLoading: false, // this allows triggering the loading from anywhere in the code, just go: _this.set('controllers.application.isLoading', true)
+    isLoadingObserver: function(){
+       if(this.get('isLoading')){
+        this.get('startLoading')();
+       } else {
+        this.get('stopLoading')();
+       }
+    }.observes('isLoading'),
+    stopLoading: function(){
+        setTimeout((function () {
+                $('body').removeClass('cursor-progress loading-stuff');
+                return Pace.stop();
+        }), 0);
+    },
+    startLoading: function(){
+        Pace.restart();
+        $('body').addClass('cursor-progress loading-stuff');
+    },
     isLoggedIn: false,
     logoutModal: false,
     userProfile: '',
@@ -556,11 +625,6 @@ App.ApplicationController = Ember.Controller.extend({
         logoutUser: function(){
             var _this = this;
             $.post('/share/logout').then(function(data){
-                // _this.set('isLoggedIn', false); - not necessary as reloads
-                // _this.set('userProfile', '');
-                // App.reset(); - should reset
-                // _this.transitionToRoute('login');
-                // Messenger().post({ type: 'success', message: 'Successfully logged out.', id: 'authenticate' });
                 mixpanel.track('Manual logout');
                 $.cookie('showLoggedOutModal', true);
                 RedirectToLogin();
@@ -876,35 +940,6 @@ App.Router.reopen({
     }.on('didTransition'),
 });
 
-App.ApplicationRoute = Ember.Route.extend({
-    actions: {
-        transitionSearch: function (a) {
-            this.transitionTo('search', {queryParams: {keywords: a}})
-            $('.searchTransitionMenu').val('').blur();
-        },
-        loading: function (m) {
-            Pace.restart();
-            $('body').addClass('cursor-progress loading-stuff');
-            this.router.one('didTransition', function () {
-                return setTimeout((function () {
-                    $('body').removeClass('cursor-progress loading-stuff');
-                    return Pace.stop();
-                }), 0);
-            });
-            return true;
-        },
-        error: function () {
-
-            // On error show the error page - sort of like a 404 error
-            this.transitionTo('errorpage');
-
-            return setTimeout((function () {
-                $('body').removeClass('cursor-progress loading-stuff');
-                return Pace.stop();
-            }), 0);
-        }
-    }
- });
 
 
 
@@ -2228,10 +2263,8 @@ App.VizEditorComponent = Ember.Component.extend({
                 var wfid = _this.get('workflowID'); // has to be synched with data
                 if (!IsGUID(data.nodes[0]) || Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  (f.get('from') === '" + data.nodes[0] + "' || f.get('to') === '" + data.nodes[0] + "')")) {
                     _this.set('selected', data.nodes[0]);
-                    if (data.nodes.length > 0 || data.edges.length > 0)
-                        _this.set('isSelected', true);
-                    else
-                        _this.set('isSelected', false);
+                    _this.set('isSelected', true);
+
 
                     //if (IsGUID(data.nodes[0])) {
                     //    var d = _this.get('vizDataSet');
@@ -2261,8 +2294,14 @@ App.VizEditorComponent = Ember.Component.extend({
                     //    d.nodes.update(nodes);
                     //}
                 }
-
+                else {
+                    _this.set('isSelected', false);
+                }
             }
+            else if (data.edges.length > 0)
+                _this.set('isSelected', true);
+             else
+                _this.set('isSelected', false);
         });
 
         //this.graph.on('stabilized', function (iterations) {
