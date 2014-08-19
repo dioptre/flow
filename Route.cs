@@ -327,6 +327,66 @@ namespace EXPEDIT.Flow
                                 {"area", "EXPEDIT.Flow"}
                             },
                             new MvcRouteHandler())
+                },
+                new RouteDescriptor {
+                        Priority = 5,
+                        Route = new Route(
+                            "Flow/NodeDuplicateID",
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"},
+                                {"controller", "User"},
+                                {"action", "NodeDuplicateID"}
+                            },
+                            null,
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"}
+                            },
+                            new MvcRouteHandler())
+                },
+                new RouteDescriptor {
+                        Priority = 5,
+                        Route = new Route(
+                            "Flow/WorkflowDuplicateID",
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"},
+                                {"controller", "User"},
+                                {"action", "WorkflowDuplicateID"}
+                            },
+                            null,
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"}
+                            },
+                            new MvcRouteHandler())
+                },
+                new RouteDescriptor {
+                        Priority = 5,
+                        Route = new Route(
+                            "Flow/CheckNodePermission",
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"},
+                                {"controller", "User"},
+                                {"action", "CheckNodePermission"}
+                            },
+                            null,
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"}
+                            },
+                            new MvcRouteHandler())
+                },
+                new RouteDescriptor {
+                        Priority = 5,
+                        Route = new Route(
+                            "Flow/CheckWorkflowPermission",
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"},
+                                {"controller", "User"},
+                                {"action", "CheckWorkflowPermission"}
+                            },
+                            null,
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"}
+                            },
+                            new MvcRouteHandler())
                 }
 
             };

@@ -533,6 +533,7 @@ text-transform: capitalize;
 /*add a 2px line to the top of the page, matches the loading of peace nicely*/
 .navbar.navbar-inverse {
   border-top: 2px solid rgb(86, 110, 164);
+  border-top: 2px solid rgb(0, 0, 0);
 }
 /*.loading-stuff .navbar.navbar-inverse {
   border-top: 2px solid white;
@@ -738,6 +739,14 @@ body.menu .content {
   -webkit-transition: 0.20s all ease-out;
   transition: 0.20s all ease-out;
 }
+body.menu #emberapphere{
+  -webkit-transform: translate(165px,0);
+  -ms-transform: translate(165px,0);
+  -moz-transform: translate(165px,0);
+  transform: translate(165px,0);
+  -webkit-transition: 0.25s all ease-out;
+  transition: 0.25s all ease-out;
+}
 
 
 /*inside tiny-mce editor*/
@@ -851,3 +860,50 @@ small, .font_small {font-size: 0.707em;}
   -webkit-transform: rotate(35deg);
   font-size: 20px;
 }
+
+/* Code for the toggle animation -> http://codepen.io/xypaul/pen/ukple*/
+/* Sass Meister: http://sassmeister.com/*/
+.navbar-toggle {
+  padding: 0;
+}
+.navbar-toggle svg {
+  margin-top: -7px;
+  margin-right: -16px;
+  margin-bottom: 5px;
+}
+.svg-menu-toggle {
+  fill: #fff;
+  pointer-events: all;
+  cursor: pointer;
+}
+.svg-menu-toggle .bar {
+  -webkit-transform: rotate(0) translateY(0) translateX(0);
+  transform: rotate(0) translateY(0) translateX(0);
+  opacity: 1;
+  -webkit-transform-origin: 20px 10px;
+  transform-origin: 20px 10px;
+  -webkit-transition: -webkit-transform 0.4s ease-in-out, opacity 0.2s ease-in-out;
+  transition: transform 0.4s ease-in-out, opacity 0.2s ease-in-out;
+}
+.svg-menu-toggle .bar:nth-of-type(1) {
+  -webkit-transform-origin: 20px 10px;
+  transform-origin: 20px 10px;
+}
+.svg-menu-toggle .bar:nth-of-type(3) {
+  -webkit-transform-origin: 20px 20px;
+  transform-origin: 20px 20px;
+}
+
+body.menu .svg-menu-toggle .bar:nth-of-type(1) {
+  -webkit-transform: rotate(-45deg) translateY(0) translateX(0);
+  transform: rotate(-45deg) translateY(0) translateX(0);
+}
+body.menu .svg-menu-toggle .bar:nth-of-type(2) {
+  opacity: 0;
+}
+body.menu .svg-menu-toggle .bar:nth-of-type(3) {
+  -webkit-transform: rotate(45deg) translateY(0em) translateX(0em);
+  transform: rotate(45deg) translateY(0em) translateX(0em);
+}
+
+

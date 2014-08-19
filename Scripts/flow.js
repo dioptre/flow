@@ -1555,6 +1555,7 @@ App.GraphRoute = Ember.Route.extend({
         id = id.toLowerCase(); // just in case
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
+            duplicateNode: $.get('flow/NodeDuplicateID/' + id),
             selectedID: id,
             workflowID: params.workflowID,
             updateGraph: Ember.Object.create(),
@@ -1586,107 +1587,39 @@ App.GraphRoute = Ember.Route.extend({
                 m.updateGraph.set('updated', NewGUID());
             }
 
-
-
-
             document.title = m.selected.get('humanName') + ' - FlowPro'; //TODO FIX
 
 
-            //var array = { nodes: [], edges: [] };
-            //var depthMax = 15; // currently depthMax is limited to 1 unless the data is already in ember store
-            //var nodeMax = -1;
-            //var prime = {};
-            //prime.edges = [];
-            //prime.workflows = [];
-            //var edgePromises = [];
-            //var workflowPromises = [];
-            //prime.nodes = Enumerable.From(m.data.content).Select(
-            //    function (f) {
-            //        edgePromises.push(f.get('edges'));
-            //        workflowPromises.push(f.get('workflows'));
-            //        return {
-            //            id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group')
-            //        }
-            //    }).ToArray();
-            //var addEdge = function (edges) {
-            //    if (edges.get('length') > 0) {
-            //        edges.forEach(function (edge) {
-            //            //if (m.params.workflowID == edge.get('GroupID')) //Hide connected wf edges
-            //            prime.edges.push({ id: edge.get('id'), from: edge.get('from'), to: edge.get('to'), color: edge.get('color'), width: edge.get('width'), style: edge.get('style'), group: edge.get('GroupID') });
-            //        });
-            //    }
-            //};
-            //var getWorkflow = function (workflows) {
-            //    if (workflows.get('length') > 0) {
-            //        workflows.forEach(function (workflow) {
-            //            prime.workflows.push({ id: workflow.get('id'), name: workflow.get('name'), humanName: workflow.get('humanName'), firstNode: workflow.get('firstNode') });
-            //        });
-            //    }
-            //};
-            //var sessionNodes = [];
-            //var residents = App.Node.store.filter('node', function (record) {
-            //    return (record.get('edges').content == null || record.get('edges').content.loadingRecordsCount == 0) && typeof record.get('VersionUpdated') !== 'undefined';
-            //}).then(function (val) {
-            //    //Don't show orphans anymore
-            //    //sessionNodes = Enumerable.From(val.content).Select(
-            //    //    function (f) {
-            //    //        return {
-            //    //            id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group')
-            //    //        }
-            //    //    }).ToArray();
-            //});
+        } else { //NEW NODE
 
-            //Ember.RSVP.allSettled([Ember.RSVP.map(edgePromises, addEdge), Ember.RSVP.map(workflowPromises, getWorkflow), residents])
-            //    .then(function () {
-            //        if (!Enumerable.From(prime.workflows).Any("f=>f.id=='" + m.params.workflowID + "'")) {
-            //            var newwf = Enumerable.From(prime.workflows).FirstOrDefault();
-            //            if (typeof newwf !== 'undefined' && newwf) {
+            // Before creating a new node, check if it already exists, because if it does, then must be a permission problem
+            if (m.duplicateNode) {
+                Messenger().post({ type: 'error', message: 'Permission denied. Ensure you have permission and are logged in.' });
+                _this.transitionTo('login');
+            }
 
-            //                _this.replaceWith('graph', m.selectedID, { queryParams: { workflowID: newwf.id }})
-            //            }
-            //        }
-            //        prime.nodes = Em.A(prime.nodes.concat(sessionNodes));
-            //        prime = Ember.Object.create(prime);
-            //        m.workflows = Em.A(Enumerable.From(prime.workflows)
-            //            .GroupBy("$.id", "", "key,e=>Ember.Object.create({id: key, name: e.source[0].name, humanName: e.source[0].humanName, firstNode: e.source[0].firstNode})")
-            //          .ToArray());
-
-            //        m.workflow = Ember.Object.create(Enumerable.From(m.workflows).Where("f=>f.id==='" + m.params.workflowID + "'").SingleOrDefault());
-            //        if (typeof m.workflow.get('name') === 'undefined') {
-            //            m.workflow.set('content').name = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
-            //            m.workflow.set('id', m.params.workflowID);
-            //        }
-            //        delete prime.workflows;
-            //        m.graphData = prime;
-            //      //m.graphData = Ember.Object.create({});
-            //       // m.workflowID = m.params.workflowID;
-            //    });
-
-        }
-        else { //NEW NODE
+            // Reset (creating a new node)
             m.content = '';
             m.label = '';
             m.editing = true;
             m.humanName = '';
-            //TODO WORKFLOW
-            //this.store.create
-            //m.workflow = this.store.find('workflow', m.params.workflowID);
-            //var wfid = NewGUID();
-            m.workflow = App.Workflow.store.createRecord('workflow', { id: m.params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') });
+
+            m.workflow = App.Workflow.store.createRecord('workflow', {
+                id: m.params.workflowID,
+                name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss')
+            });
             m.workflows = Em.A([m.workflow]);
-            //m.workflow.then(function (item) {
-            //    m.workflows = Em.A([{ id: item.get('id'), name: item.get('name'), humanName: item.get('humanName'), firstNode: item.get('firstNode') }]);
-            //}, function (item) {
-            //    //m.workflow = App.Workflow.store.createRecord('workflow', { id: m.params.workflowID, name: 'Untitled Workflow - ' + new Date() });
-            //    m.workflow.set('content').name = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
-            //    m.workflows = Em.A([m.workflow]);
-            //});
-            var nn = App.Node.store.createRecord('node', { id: m.selectedID, label: 'Untitled Process - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), content: '', VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss')) });
-            nn.get('workflows').then(function (w) {
-                //_this.set('graphData', nn);
-                //_this.set('graphData.workflowID', m.params.workflowID);
+
+            var newNode = App.Node.store.createRecord('node', {
+                id: m.selectedID,
+                label: 'Untitled Process - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'),
+                content: '',
+                VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss'))
+            });
+
+            newNode.get('workflows').then(function (w) {
                 w.content.pushObject(m.workflow);
-                m.selected = nn;
+                m.selected = newNode;
                 m.workflowID = m.params.workflowID;
                 m.selectedID = m.selectedID;
             });
@@ -1700,6 +1633,7 @@ App.GraphRoute = Ember.Route.extend({
 });
 
 App.GraphController = Ember.ObjectController.extend({
+    needs: ['application'],
     queryParams: ['workflowID'],
     newName: null,
     newContent: null,

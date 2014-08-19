@@ -31,10 +31,8 @@
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
 
-
+        <!-- Famous viewport settings to disable zooming in -->
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
-
 
         <!-- bootstrap -->
         <link href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/bootstrap/bootstrap.css")" rel="stylesheet" />
@@ -59,9 +57,6 @@
         <!-- open sans font -->
         <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
         <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css' />
-
-<!--         <link href="http://fonts.googleapis.com/css?family=Droid+Serif" rel="stylesheet" type="text/css">
-        <link href="http://fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet" type="text/css"> -->
         <link href='http://fonts.googleapis.com/css?family=Libre+Baskerville:400,700,400italic' rel='stylesheet' type='text/css'>
 
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
@@ -132,13 +127,6 @@
                 ga('send', 'pageview');
 
             }
-
-
-
-
-
-
-
 		</script>
 
         <!--[if lt IE 9]>
@@ -696,7 +684,9 @@
             <div class="content-wrap">
 
                 <h6>Sign up</h6>
-
+                <p>
+                    Welcome to FlowPro. To sign up as a free user (no credit card required, just fill out the form below. Upgrading to a premium user, can be done anytime after that.
+                </p>
                 {{#unless controllers.application.isLoggedIn}}
                     {{input type="text" valueBinding='username' classNameBindings=":form-control" placeholder="Username"}}
                     {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
@@ -715,12 +705,8 @@
                         Sign Up
                     </button>
                 {{else}}
-                    <p>You are already logged in as {{controllers.application.userProfile.name}}</p>
-                    <p>Log out to sign up a new user</p>
-                    <a {{action 'togglelogoutModal'}}>
-                         Logout
-                     </a>
-
+                    <p>You are already logged in as <b>{{controllers.application.userProfile.UserName}}</b></p>
+                    <p>Log out to sign up as new user.</p>
                 {{/unless}}
 
             </div>
@@ -746,16 +732,21 @@
             <div class="content-wrap">
                 <h6>Log in</h6>
 
-                {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
-                {{input valueBinding='password' type="password" class="form-control" placeholder="Your Password"}}
-                {{#link-to 'resetpassword' class="forgot"}}Forgot password?{{/link-to}}
-                <div class="remember">
-                    {{input valueBinding="rememberme" id="remember-me" type="checkbox"}}
-                    <label for="remember-me">Remember me</label>
-                </div>
-                <button type="submit" class="btn-glow primary login">
-                    Log in
-                </button>
+                 {{#unless controllers.application.isLoggedIn}}
+                    {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
+                    {{input valueBinding='password' type="password" class="form-control" placeholder="Your Password"}}
+                    {{#link-to 'resetpassword' class="forgot"}}Forgot password?{{/link-to}}
+                    <div class="remember">
+                        {{input valueBinding="rememberme" id="remember-me" type="checkbox"}}
+                        <label for="remember-me">Remember me</label>
+                    </div>
+                    <button type="submit" class="btn-glow primary login">
+                        Log in
+                    </button>
+                {{else}}
+                    <p>You are already logged in as <b>{{controllers.application.userProfile.UserName}}</b></p>
+                    <p>Log out to log in as a different user.</p>
+                {{/unless}}
             </div>
         </div>
         </form>
@@ -772,26 +763,36 @@
         <a href="#">
             <img class="logo" src="@Url.Content("~/Modules/EXPEDIT.Flow/Images/logo-all-white-transparent.png")" alt="logo" />
         </a>
-        {{#if emailsent}}
-            <div class="box">
-                <div class="content-wrap">
-                    <h6>Email send successfully</h6>
-                    <p>Please check your email inbox for: <i>{{email}}</i>. <br>To finish of reseting your password, follow the link included in the email.</p>
+       {{#unless controllers.application.isLoggedIn}}
+            {{#if emailsent}}
+                <div class="box">
+                    <div class="content-wrap">
+                        <h6>Email send successfully</h6>
+                        <p>Please check your email inbox for: <i>{{email}}</i>. <br>To finish of reseting your password, follow the link included in the email.</p>
+                    </div>
                 </div>
-            </div>
+            {{else}}
+                <form {{action 'resetPassword' on='submit'}} >
+                <div class="box">
+                    <div class="content-wrap">
+                        <h6>Reset your Password</h6>
+                        {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
+                        <button type="submit" class="btn-glow primary login">
+                            Reset Password
+                        </button>
+                    </div>
+                </div>
+            </form>
+            {{/if}}
         {{else}}
-            <form {{action 'resetPassword' on='submit'}} >
             <div class="box">
                 <div class="content-wrap">
-                    <h6>Reset your Password</h6>
-                    {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
-                    <button type="submit" class="btn-glow primary login">
-                        Reset Password
-                    </button>
+                    <p>You are already logged in as <b>{{controllers.application.userProfile.UserName}}</b></p>
+                    <p>Log out to log in as a different user.</p>
                 </div>
             </div>
-        </form>
-        {{/if}}
+        {{/unless}}
+
         <div class="no-account">
             <p>Do not have an account?</p>
             {{#link-to 'signup'}}Sign up{{/link-to}}
@@ -843,9 +844,26 @@
         <div class="navbar-header">
             <div class="navbar-toggle" type="button" data-toggle="collapse" id="menu-toggler">
                 <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
+                <!--
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                -->
+                <svg class="inline-svg" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="44px" height="32px" viewBox="0 0 32 22.5" enable-background="new 0 0 32 22.5" xml:space="preserve">
+                    <g class="svg-menu-toggle">
+                        <path class="bar" d="M20.945,8.75c0,0.69-0.5,1.25-1.117,1.25H3.141c-0.617,0-1.118-0.56-1.118-1.25l0,0
+                            c0-0.69,0.5-1.25,1.118-1.25h16.688C20.445,7.5,20.945,8.06,20.945,8.75L20.945,8.75z">
+                        </path>
+                        <path class="bar" d="M20.923,15c0,0.689-0.501,1.25-1.118,1.25H3.118C2.5,16.25,2,15.689,2,15l0,0c0-0.689,0.5-1.25,1.118-1.25 h16.687C20.422,13.75,20.923,14.311,20.923,15L20.923,15z">
+                        </path>
+                        <path class="bar" d="M20.969,21.25c0,0.689-0.5,1.25-1.117,1.25H3.164c-0.617,0-1.118-0.561-1.118-1.25l0,0
+                            c0-0.689,0.5-1.25,1.118-1.25h16.688C20.469,20,20.969,20.561,20.969,21.25L20.969,21.25z">
+                        </path>
+                        <!-- needs to be here as a 'hit area' -->
+                        <rect width="44px" height="32px" fill="none">
+                        </rect>
+                    </g>
+                </svg>
             </div>
 
             <a class="navbar-brand" href="#">
@@ -1011,7 +1029,8 @@
                         {{eui-button label="Add" action="submitExistingNodeModal" style='primary' size='medium'}}
                     </div>
                 {{/eui-modal}}
-      <prettygirl class="graphButtons">{{#if isWorkflow}}<div class='graphButton-group'><a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign"></i>&nbsp;Add Process&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down"></i>&nbsp;Add Existing Process&nbsp;</a></div><div class='graphButton-group'><a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a><a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Add Connection&nbsp;</a></div>{{#if isSelected}}<div class='graphButton-group'><a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash"></i>&nbsp;Delete Selected&nbsp;</a></div>{{/if}}{{/if}}<div class='graphButton-group'><a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share"></i>&nbsp;Export&nbsp;Workflow</a></div></prettygirl></script>
+                {{#if controllers.application.isLoggedIn}}
+      <prettygirl class="graphButtons">{{#if isWorkflow}}<div class='graphButton-group'><a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign"></i>&nbsp;Add Process&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down"></i>&nbsp;Add Existing Process&nbsp;</a></div><div class='graphButton-group'><a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a><a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Add Connection&nbsp;</a></div>{{#if isSelected}}<div class='graphButton-group'><a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash"></i>&nbsp;Delete Selected&nbsp;</a></div>{{/if}}{{/if}}<div class='graphButton-group'><a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share"></i>&nbsp;Export&nbsp;Workflow</a></div></prettygirl>{{/if}}</script>
 
 
   <script type="text/x-handlebars" id="wikipedia">
@@ -1054,13 +1073,16 @@
 
     <div class="container-fluid">
         <div class="row processes">
+            <!-- PROCESS VIEW STARTS HERE -->
             <div class="col-md-6 process-header">
                <h4><small>Process</small></h4>
                <h1>
                     {{#if model.selected}}{{humanReadableName}}{{/if}}
-                    <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
-                        <i class="icon-pencil"></i>
-                    </span>
+                    {{#if controllers.application.isLoggedIn}}
+                        <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
+                            <i class="icon-pencil"></i>
+                        </span>
+                    {{/if}}
                 </h1>
                 <hr>
 
@@ -1069,54 +1091,49 @@
                          <h4> Update Workflow name</h4>
                          <br />
                          <br />
-                    Choose a new name below:<br />
-                    {{eui-input valueBinding="model.workflow.name" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+                        Choose a new name below:<br />
+                        {{eui-input valueBinding="model.workflow.name" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
 
-                    {{eui-button label="Cancel" action="cancelWorkflowNameNow" size='large'}}
+                        {{eui-button label="Cancel" action="cancelWorkflowNameNow" size='large'}}
                         {{eui-button label="Submit" action="updateWorkflowNameNow" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
-                         </div>
+                    </div>
                 {{/eui-modal}}
 
                  {{#eui-modal openBinding="workflowEditModal" style="full"}}
                     <div style="padding: 50px; text-align: center;">
+                        <p> The process name: </p>
 
+                        {{eui-input valueBinding="model.selected.label" placeholder='Enter a process name' error=validateNewName forceErrorCheck=true}}
 
-                    <p>
-                        The process name:
-                    </p>
+                        <br /> <br /> <br /> <br /> <!-- fixes spacing issue with error modal on eui-input -->
 
-                    {{eui-input valueBinding="model.selected.label" placeholder='Enter a process name' error=validateNewName forceErrorCheck=true}}
+                        {{tinymce-editor data=model.selected.content}}
 
-                     <br /> <br /> <br /> <br /> <!-- fixes spacing issue with error modal on eui-input -->
-
-                     {{tinymce-editor data=model.selected.content}}
-
-                    {{eui-button label="Cancel" action="cancelProcess" size='large'}}
-                    {{eui-button label="Submit" action="updateProcess" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                        {{eui-button label="Cancel" action="cancelProcess" size='large'}}
+                        {{eui-button label="Submit" action="updateProcess" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
                     </div>
                 {{/eui-modal}}
 
                 {{#eui-modal openBinding="workflowNewModal" style="full"}}
                     <div style="padding: 50px; text-align: center;">
-                    <p>
-                        The new process name:
-                    </p>
-                    {{eui-input valueBinding="newName" placeholder='Enter a new process name' error=validateNewNewName forceErrorCheck=true}}
+                        <p> The new process name: </p>
+                        {{eui-input valueBinding="newName" placeholder='Enter a new process name' error=validateNewNewName forceErrorCheck=true}}
 
-                    <br /> <br /> <br /> <br /> <!-- fixes spacing issue with error modal on eui-input -->
+                        <br /> <br /> <br /> <br /> <!-- fixes spacing issue with error modal on eui-input -->
 
-                    {{tinymce-editor data=newContent}}
-                    {{eui-button label="Cancel" action="toggleWorkflowNewModal" size='large'}}
-                    {{eui-button label="Submit" action="addNewNode" style='primary' size='large' disabled=validateNewNewName loading=loadingNewNewName}}
+                        {{tinymce-editor data=newContent}}
+                        {{eui-button label="Cancel" action="toggleWorkflowNewModal" size='large'}}
+                        {{eui-button label="Submit" action="addNewNode" style='primary' size='large' disabled=validateNewNewName loading=loadingNewNewName}}
                     </div>
                 {{/eui-modal}}
-
 
                 <div class='pretty-content'>
                     {{safehtml model.selected.content}}
                 </div>
 
             </div>
+
+            <!-- WORKFLOW STARTS HERE -->
             <div class="col-md-6 process-header">
                 <h4><small>Workflow</small></h4>
                 <h1>
@@ -1126,18 +1143,20 @@
                         {{else}}
                             {{workflowName}}
                         {{/if}}
-                   {{else}}
+                    {{else}}
                         Current process has no workflow yet. Please choose a workflow name.
                     {{/if}}
 
-                      <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray'>
-                        <i class="icon-pencil"></i> {{!--Edit Workflow name--}}
-                    </span>
+                    {{#if controllers.application.isLoggedIn}}
+                        <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray'>
+                            <i class="icon-pencil"></i> {{!--Edit Workflow name--}}
+                        </span>
+                    {{/if}}
                 </h1>
                 <hr>
-                 <div class="vh-75 networkColumn">
-                  {{viz-editor workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
-              </div>
+                <div class="vh-75 networkColumn">
+                    {{viz-editor workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
+                </div>
             </div>
 
 

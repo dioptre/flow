@@ -1438,6 +1438,62 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
+        public bool GetDuplicateWorkflow(Guid gid)
+        {
+            //var company = _users.DefaultContactCompanyID;
+            //var contact = _users.ContactID;
+            //var application = _users.ApplicationID;
+            //if (contact == null)
+            //    return false;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                return (from o in d.GraphDataGroups where o.GraphDataGroupID == gid select o).Any();
+            }
+        }
+
+        public bool GetDuplicateNode(Guid gid)
+        {
+            //var company = _users.DefaultContactCompanyID;
+            //var contact = _users.ContactID;
+            //var application = _users.ApplicationID;
+            //if (contact == null)
+            //    return false;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                return (from o in d.GraphData where o.GraphDataID == gid select o).Any();
+            }
+        }
+
+        public bool CheckPermission(Guid gid, ActionPermission permission, Type typeToCheck)
+        {
+            var contact = _users.ContactID;
+            if (contact == null)
+                contact = Guid.NewGuid();
+            var application = _users.ApplicationID;
+            var company = _users.DefaultContactCompanyID;
+            var d = new NKDC(_users.ApplicationConnectionString, null);
+            var table = d.GetTableName(typeToCheck);
+            return _users.CheckPermission(new SecuredBasic
+            {
+                AccessorApplicationID = _users.ApplicationID,
+                AccessorContactID = _users.ContactID,
+                OwnerTableType = table
+            }, permission);
+        }
+
+        public bool CheckWorkflowPermission(Guid gid, ActionPermission permission)
+        {
+            return CheckPermission(gid, permission, typeof(GraphDataGroup));
+        }
+
+        public bool CheckNodePermission(Guid gid, ActionPermission permission)
+        {
+            return CheckPermission(gid, permission, typeof(GraphData));
+        }   
+
+        
 
         public UserProfileViewModel GetMyProfile()
         {

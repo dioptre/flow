@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using Orchard.Security;
 using Orchard.Users.Services;
 using Orchard.Users.Events;
+using NKD.Models;
 
 namespace EXPEDIT.Flow.Controllers {
 
@@ -181,6 +182,7 @@ namespace EXPEDIT.Flow.Controllers {
 
         [Themed(false)]
         [HttpGet]
+        [ActionName("NodeDuplicate")]
         public ActionResult NodeDuplicate(string id)
         {
             string gid = Request.Params["guid"];
@@ -193,6 +195,7 @@ namespace EXPEDIT.Flow.Controllers {
 
         [Themed(false)]
         [HttpGet]
+        [ActionName("WorkflowDuplicate")]
         public ActionResult WorkflowDuplicate(string id)
         {
             string gid = Request.Params["guid"];
@@ -201,6 +204,42 @@ namespace EXPEDIT.Flow.Controllers {
             if (Guid.TryParse(gid, out tgid))
                 guid = tgid;
             return new JsonHelper.JsonNetResult(_Flow.GetDuplicateWorkflow(id, guid), JsonRequestBehavior.AllowGet);
+        }
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("WorkflowDuplicateID")]
+        public ActionResult WorkflowDuplicateID(string id)
+        {
+            Guid gid;
+            Guid temp;
+            if (Guid.TryParse(id, out temp))
+            {
+                gid = temp;
+                return new JsonHelper.JsonNetResult(_Flow.GetDuplicateWorkflow(gid), JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                return new JsonHelper.JsonNetResult(false, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("NodeDuplicateID")]
+        public ActionResult NodeDuplicateID(string id)
+        {
+            Guid gid;
+            Guid temp;
+            if (Guid.TryParse(id, out temp))
+            {
+                gid = temp;
+                return new JsonHelper.JsonNetResult(_Flow.GetDuplicateNode(gid), JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                return new JsonHelper.JsonNetResult(false, JsonRequestBehavior.AllowGet);
+            }
         }
 
         [Themed(false)]
@@ -536,6 +575,45 @@ namespace EXPEDIT.Flow.Controllers {
         {
             return View();
         }
+
+        
+
+        [Themed(false)]
+        [HttpGet]
+        public ActionResult CheckWorkflowPermission(string id, ActionPermission permission)
+        {
+            Guid gid;
+            Guid temp;
+            if (Guid.TryParse(id, out temp))
+            {
+                gid = temp;
+                return new JsonHelper.JsonNetResult(_Flow.CheckWorkflowPermission(gid, permission), JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                return new JsonHelper.JsonNetResult(false, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+
+        [Themed(false)]
+        [HttpGet]
+        public ActionResult CheckNodePermission(string id, ActionPermission permission)
+        {
+            Guid gid;
+            Guid temp;
+            if (Guid.TryParse(id, out temp))
+            {
+                gid = temp;
+                return new JsonHelper.JsonNetResult(_Flow.CheckNodePermission(gid, permission), JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                return new JsonHelper.JsonNetResult(false, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+
 
     }
 }
