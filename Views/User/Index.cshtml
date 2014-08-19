@@ -685,7 +685,7 @@
 
                 <h6>Sign up</h6>
                 <p>
-                    Welcome to FlowPro. To sign up as a free user (no credit card required, just fill out the form below. Upgrading to a premium user, can be done anytime after that.
+                    Welcome to FlowPro. To sign up as a free user (no credit card required), just fill out the form below. Upgrading to a premium user, can be done anytime after that.
                 </p>
                 {{#unless controllers.application.isLoggedIn}}
                     {{input type="text" valueBinding='username' classNameBindings=":form-control" placeholder="Username"}}
@@ -1029,7 +1029,7 @@
                         {{eui-button label="Add" action="submitExistingNodeModal" style='primary' size='medium'}}
                     </div>
                 {{/eui-modal}}
-                {{#if controllers.application.isLoggedIn}}
+                {{#if editing}}
       <prettygirl class="graphButtons">{{#if isWorkflow}}<div class='graphButton-group'><a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign"></i>&nbsp;Add Process&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down"></i>&nbsp;Add Existing Process&nbsp;</a></div><div class='graphButton-group'><a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a><a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Add Connection&nbsp;</a></div>{{#if isSelected}}<div class='graphButton-group'><a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash"></i>&nbsp;Delete Selected&nbsp;</a></div>{{/if}}{{/if}}<div class='graphButton-group'><a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share"></i>&nbsp;Export&nbsp;Workflow</a></div></prettygirl>{{/if}}</script>
 
 
@@ -1155,7 +1155,7 @@
                 </h1>
                 <hr>
                 <div class="vh-75 networkColumn">
-                    {{viz-editor workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=editing toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
+                    {{viz-editor workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=controllers.application.isLoggedIn toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
                 </div>
             </div>
 

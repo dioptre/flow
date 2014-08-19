@@ -51,15 +51,51 @@ App.Router.map(function () {
 });
 
 
+// This is used to setup Title - http://www.jrhe.co.uk/setting-the-document-title-in-ember-js-apps/ - http://emberjs.jsbin.com/furabo/1/edit
+Ember.Route = Ember.Route.extend({
+  actions: {
+    _setupTitle: function() {
+        // Try Title Attr on Controller first
+        var controllerTitle = this.controller.get('title'); // Title Attribute must be set on controller (pretty stupid name thinking about it - should be something unusual like _titleAttr)
+        if (controllerTitle && typeof controllerTitle !== 'undefined') {
+            App.setTitle(controllerTitle);
+        } else {
+
+
+            // // Try Title Attr on Route
+            // var routerTitle = this.get('title');
+            // if(routerTitle && typeof routerTitle !== 'undefined'){
+            //     App.setTitle(title);
+            //     return false;
+            // } else {
+                return true; // Bubble up!
+            // }
+
+        }
+    },
+    didTransition: function() {
+      this.send('_setupTitle');
+    }
+  }
+});
+App.setTitle = function(title) { // little utilitiy function, pretty useless atm
+    // to do any extra stuff with title, do it here
+    title = title + " | FlowPro";
+   document.title = title;
+};
+
 App.ErrorpageRoute = Ember.Route.extend({
     model: function(){
         return {currentpage: location.href}
     }
 })
+App.ErrorpageController = Ember.Controller.extend({
+    title: '404 Error'
+})
 
 App.HelpRoute = Ember.Route.extend({
     beforeModel: function (m) {
-        // Just redirect to a creatin workflow
+        // Just redirect to a cretain workflow (the help workflow)
         return this.replaceWith('graph', '76be503d-4689-47f8-99fe-2f512f81d4d5', { queryParams: { workflowID: 'c65d9b93-d986-4f70-bc0a-3eb2c6c0ecdd' } });
     }
 });
@@ -111,6 +147,12 @@ App.PermissionRoute = Ember.Route.extend({
 
 App.PermissionController = Ember.ObjectController.extend({
     needs: ['application'],
+    title: function() {
+        var _this = this;
+        // Go through all the types, and pick the matching type (then pick the text val)
+        var text = Enumerable.From(_this.get('types')).Where('f=>f.id=="' + _this.get('type') +'"').Select("f=>f.text").ToString()
+        return 'Permissions for ' + text;
+    }.property('type'),
     queryParams: ['type'],
     types: [{ id: 'node', text: 'Processes' }, { id: 'workflow', text: 'Workflows' }, { id: 'file', text: 'Files' }],
     type: 'node',
@@ -143,6 +185,7 @@ App.MyworkflowsRoute = Ember.Route.extend({
 
 App.MyworkflowsController = Ember.ObjectController.extend({
     needs: ['application'],
+    title: 'My Workflows',
     permissionModal: false,
     activeItem: null,
     actions: {
@@ -272,6 +315,7 @@ App.FileRoute = Ember.Route.extend({
 
 App.FileController = Ember.ObjectController.extend({
     needs: ['application'],
+    title: 'My Files',
     permissionModal: false,
     activeItem: null,
     actions: {
@@ -1029,13 +1073,15 @@ App.SearchSerializer = DS.RESTSerializer.extend({
 });
 
 
-
-App.SearchController = Ember.ObjectController.extend({
+App.SearchRoute = Ember.Route.extend({});
+// App.SearchController = Ember.ObjectController.extend({
+App.SearchController = Ember.Controller.extend({
     needs: ['graphResults','mapResults','fileResults'],
     queryParams: ['keywords', 'tags', 'graph', 'file', 'map', 'pageGraph', 'pageFile', 'pageMap', 'pageSize'],
     graph: true,
     file: true,
     map: false,
+    title: "Search",
     activeResultsClass: function(){
         var i = 0;
         if (this.get('graph')) i++;
@@ -1555,7 +1601,7 @@ App.GraphRoute = Ember.Route.extend({
         id = id.toLowerCase(); // just in case
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
-            duplicateNode: $.get('flow/NodeDuplicateID/' + id),
+            duplicateNode: $.get('/flow/NodeDuplicateID/' + id),
             selectedID: id,
             workflowID: params.workflowID,
             updateGraph: Ember.Object.create(),
@@ -1587,7 +1633,7 @@ App.GraphRoute = Ember.Route.extend({
                 m.updateGraph.set('updated', NewGUID());
             }
 
-            document.title = m.selected.get('humanName') + ' - FlowPro'; //TODO FIX
+
 
 
         } else { //NEW NODE
@@ -1635,6 +1681,11 @@ App.GraphRoute = Ember.Route.extend({
 App.GraphController = Ember.ObjectController.extend({
     needs: ['application'],
     queryParams: ['workflowID'],
+    title: function(){
+        var name = this.get('selected.humanName') + ' Process';
+        App.setTitle(name);
+        return name;
+    }.property('selected.humanName'),
     newName: null,
     newContent: null,
     workflowEditNameModal: false,
@@ -3466,6 +3517,7 @@ App.MylicensesRoute = Ember.Route.extend({
 
 App.MylicensesController = Ember.ObjectController.extend({
     needs: ['application'],
+    title: 'My Licenses',
     userModal: false,
     activeItem: null,
     actions: {
@@ -3545,6 +3597,9 @@ App.MyprofilesRoute = Ember.Route.extend({
 
 App.MyprofilesController = Ember.ObjectController.extend({
     needs: ['application'],
+    title: function() {
+        return 'My Profile'
+    }.property('profile'),
     emailValid: function() {
         var emailpat = /^[^@]+@[^@]+\.[^@\.]{2,}$/;
         var email = this.get('profile.DefaultEmail');
