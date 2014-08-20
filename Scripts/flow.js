@@ -1057,7 +1057,7 @@ App.Search = DS.Model.extend({
             return ToTitleCase(temp.replace(/_/g, ' '));
         else
             return null;
-    }.property()
+    }.property('Title')
 });
 
 
@@ -1599,8 +1599,18 @@ App.GraphRoute = Ember.Route.extend({
     model: function (params) {
         var id = params.id;
         id = id.toLowerCase(); // just in case
+        //var workflow = new Promise(function (resolve, reject) {
+        //    (function (resolve) {
+        //        resolve();
+        //    }, function () {
+        //        resolve();
+        //    })
+        //});
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
+            workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
+                return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') })
+            }),
             duplicateNode: $.get('/flow/NodeDuplicateID/' + id),
             selectedID: id,
             workflowID: params.workflowID,
@@ -1625,7 +1635,9 @@ App.GraphRoute = Ember.Route.extend({
                 else {
                     //this.replaceWith('graph', m.selectedID, { queryParams: { workflowID: NewGUID() } });  //leave out otherwise recursive
                     // create the workflow here
-                    m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') });
+                    m.workflow = App.Workflow.store.getById('workflow', m.workflowID);
+                    if (!m.workflow)
+                        m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') });
                 }
             }
             else {
@@ -1649,11 +1661,13 @@ App.GraphRoute = Ember.Route.extend({
             m.label = '';
             m.editing = true;
             m.humanName = '';
-
-            m.workflow = App.Workflow.store.createRecord('workflow', {
-                id: m.params.workflowID,
-                name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss')
-            });
+            m.workflow = this.store.getById('Workflow', m.params.workflowID);
+            if (!m.workflow) {
+                m.workflow = App.Workflow.store.createRecord('workflow', {
+                    id: m.params.workflowID,
+                    name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss')
+                });
+            }
             m.workflows = Em.A([m.workflow]);
 
             var newNode = App.Node.store.createRecord('node', {
@@ -2246,7 +2260,10 @@ App.VizEditorComponent = Ember.Component.extend({
         this.graph.on('click', function (data) {
             if (data.nodes.length > 0) {
                 var wfid = _this.get('workflowID'); // has to be synched with data
-                if (!IsGUID(data.nodes[0]) || Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  (f.get('from') === '" + data.nodes[0] + "' || f.get('to') === '" + data.nodes[0] + "')")) {
+                if (!IsGUID(data.nodes[0])
+                    || Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  (f.get('from') === '" + data.nodes[0] + "' || f.get('to') === '" + data.nodes[0] + "')")
+                    || !Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  (f.get('from') === '" + _this.get('selected') + "' || f.get('to') === '" + _this.get('selected') + "')")
+                    ) {
                     _this.set('selected', data.nodes[0]);
                     _this.set('isSelected', true);
 

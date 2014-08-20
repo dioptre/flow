@@ -769,6 +769,29 @@ namespace EXPEDIT.Flow.Services {
                 (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
                 (from o in d.GraphDataContexts where o.GraphDataID == m.GraphDataID select o).Delete();
             }
+
+            //Default Group
+            if (m.workflows != null)
+            {
+                foreach (var gid in m.workflows)
+                {
+                    if (gid.HasValue)
+                    {
+                        var firstProcess = !(from o in d.GraphDataRelation where o.GraphDataGroupID==gid.Value select o).Any();
+                        if (firstProcess)
+                        {
+                            var fp = new GraphDataRelation
+                            {
+                                FromGraphDataID = m.GraphDataID,
+                                ToGraphDataID = null,
+                                GraphDataRelationID = Guid.NewGuid(),
+                                GraphDataGroupID = gid.Value
+                            };
+                            d.GraphDataRelation.AddObject(fp);
+                        }
+                    }
+                }
+            }
         }
 
         public bool CreateNode(FlowViewModel m)

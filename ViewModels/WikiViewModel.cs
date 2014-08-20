@@ -19,6 +19,8 @@ namespace EXPEDIT.Flow.ViewModels
         public string GraphData { get; set; }
         public bool IsDuplicate { get; set; }
         public bool IsNew { get; set; }
+        public Guid?[] edges { get; set; }
+        public Guid?[] workflows { get; set; }
       
     }
 }
