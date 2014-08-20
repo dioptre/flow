@@ -1597,6 +1597,7 @@ App.GraphRoute = Ember.Route.extend({
         }
     },
     model: function (params) {
+        var _this = this;
         var id = params.id;
         id = id.toLowerCase(); // just in case
         //var workflow = new Promise(function (resolve, reject) {
@@ -1609,7 +1610,15 @@ App.GraphRoute = Ember.Route.extend({
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
             workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
-                return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') })
+
+                var groupID = Enumerable.From(_this.store.all('edge').content).Where("f=>f.get('from') ==='" + id + "' && f.get('to') === null").Select("f=>f.get('GroupID')").FirstOrDefault();
+                if (typeof groupID !== 'undefined' && document.URL.indexOf(groupID) < 1) {
+                    return this.store.find('workflow', params.workflowID).then(function (wfid) {
+                        _this.replaceWith('graph', id, { queryParams: { workflowID: groupID } })
+                    });                    
+                }
+                else if (typeof groupID === 'undefined' || !groupID)
+                    return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') })
             }),
             duplicateNode: $.get('/flow/NodeDuplicateID/' + id),
             selectedID: id,
