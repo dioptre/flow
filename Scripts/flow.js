@@ -1610,7 +1610,6 @@ App.GraphRoute = Ember.Route.extend({
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
             workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
-
                 var groupID = Enumerable.From(_this.store.all('edge').content).Where("f=>f.get('from') ==='" + id + "' && f.get('to') === null").Select("f=>f.get('GroupID')").FirstOrDefault();
                 if (typeof groupID !== 'undefined' && document.URL.indexOf(groupID) < 1) {
                     return _this.store.find('workflow', groupID).then(function (wfid) {
@@ -2271,7 +2270,7 @@ App.VizEditorComponent = Ember.Component.extend({
                 var wfid = _this.get('workflowID'); // has to be synched with data
                 if (!IsGUID(data.nodes[0])
                     || Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  (f.get('from') === '" + data.nodes[0] + "' || f.get('to') === '" + data.nodes[0] + "')")
-                    || !Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  (f.get('from') === '" + _this.get('selected') + "' || f.get('to') === '" + _this.get('selected') + "')")
+                    //|| !Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  ((f.get('from') === '" + _this.get('selected') + "' && f.get('to') !== null) || f.get('to') === '" + _this.get('selected') + "' )")
                     ) {
                     _this.set('selected', data.nodes[0]);
                     _this.set('isSelected', true);
@@ -2792,7 +2791,7 @@ App.NodeSerializer = DS.RESTSerializer.extend({
                 node.workflows = [];
         });
 
-        if (workflows) {
+        if (workflows && workflows.length && workflows.length > 0) {
             workflows.forEach(function (workflow) {
                 if (edges) {
                     edges.forEach(function (edge) {
