@@ -126,11 +126,17 @@ App.WorkflowRoute = Ember.Route.extend({
             return this.replaceWith('graph', fn, { queryParams: { workflowID: id } });
         }
         else {
-            if (!id)
-                id = NewGUID();
-            //this.controllerFor('application').set('workflowID', id);
-            return this.replaceWith('graph', NewGUID(), { queryParams: { workflowID: id } });
-
+            fn = Enumerable.From(App.Workflow.store.all('edge').content).Where("f=>f.get('GroupID')==='" + id + "'").Select("f=>f.get('from')").FirstOrDefault();
+            if (typeof fn !== 'undefined' && fn && fn !== null) {
+                //this.controllerFor('application').set('workflowID', id);
+                return this.replaceWith('graph', fn, { queryParams: { workflowID: id } });
+            }
+            else {
+                if (!id)
+                    id = NewGUID();
+                //this.controllerFor('application').set('workflowID', id);
+                return this.replaceWith('graph', NewGUID(), { queryParams: { workflowID: id } });
+            }
         }
     }
 });
