@@ -1613,8 +1613,8 @@ App.GraphRoute = Ember.Route.extend({
 
                 var groupID = Enumerable.From(_this.store.all('edge').content).Where("f=>f.get('from') ==='" + id + "' && f.get('to') === null").Select("f=>f.get('GroupID')").FirstOrDefault();
                 if (typeof groupID !== 'undefined' && document.URL.indexOf(groupID) < 1) {
-                    return this.store.find('workflow', params.workflowID).then(function (wfid) {
-                        _this.replaceWith('graph', id, { queryParams: { workflowID: groupID } })
+                    return _this.store.find('workflow', groupID).then(function (wfid) {
+                        _this.replaceWith('graph', id, { queryParams: { workflowID: groupID } });
                     });                    
                 }
                 else if (typeof groupID === 'undefined' || !groupID)
