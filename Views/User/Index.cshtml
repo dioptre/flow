@@ -440,7 +440,7 @@
                                     {{#each item in model}}
                                         <tr>
                                         {{!--<td><img {{bind-attr src=result.ResourcePreviewPath}} height="15"></td>--}}
-                                        <td>{{item.ReferenceName}}</td>
+                                        <td>{{item.humanName}}</td>
                                         <td>{{item.Updated}}</td>
                                         <td>
                                                 {{item.AccessorCompanyName}}
@@ -566,7 +566,7 @@
                                 {{#each proc in model.processes}}
                                   <tr>
                                     {{!--<td><img {{bind-attr src=proc.ResourcePreviewPath}} height="15"></td>--}}
-                                    <td>{{proc.Title}}</td>
+                                    <td>{{proc.humanName}}</td>
                                     <td>{{proc.updatedNiceMinutes}}</td>
                                     <td>{{link-to 'View' 'graph' proc.id (query-params workflowID="undefined")}}</td>
                                     {{#if controllers.application.isLoggedIn}}
@@ -1921,7 +1921,7 @@
         <script type="text/x-handlebars" id="workflow">&nbsp;</script>
 
         <script type="text/x-handlebars" id="mylicenses">
-            <h3> My Licenses</h3>
+            <h3> My Licenses @*<small><a href="/store/">Buy License</a></small>*@</h3>
             <br><br>
             {{#if loading}}
               Loading...

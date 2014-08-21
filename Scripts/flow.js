@@ -2907,7 +2907,7 @@ App.Workflow = DS.Model.extend({
             return ToTitleCase(temp.replace(/_/g, ' '));
         else
             return null;
-    }.property()
+    }.property('name')
 });
 
 
@@ -2944,7 +2944,14 @@ App.MySecurityList = DS.Model.extend({
     CanCreate: DS.attr(''),
     CanRead: DS.attr(''),
     CanUpdate: DS.attr(''),
-    CanDelete: DS.attr('')
+    CanDelete: DS.attr(''),
+    humanName: function () {
+        var temp = this.get('ReferenceName');
+        if (temp)
+            return ToTitleCase(temp.replace(/_/g, ' '));
+        else
+            return null;
+    }.property('ReferenceName')
 });
 
 //  Don't need these
