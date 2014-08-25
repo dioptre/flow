@@ -2236,11 +2236,12 @@ App.VizEditorComponent = Ember.Component.extend({
         var data = this.get('vizDataSet');
         var options = {
             navigation: true,
-            //freezeForStabilization: true,
-            //minVelocity: 5,
+            freezeForStabilization: true,
+            minVelocity: 5,
             //clustering: {
             //    enabled: true
             //},
+            //configurePhysics: true,
             labels:{
                   add:"Add Process",
                   edit:"Edit",
@@ -2258,13 +2259,13 @@ App.VizEditorComponent = Ember.Component.extend({
                   deleteClusterError:"Clusters cannot be deleted."
             },
             //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}},
-            smoothCurves: true,
+            smoothCurves: false,
             //hierarchicalLayout: {enabled:true},
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
             //physics: {barnesHut: {enabled: false}},
             //physics: { barnesHut: { gravitationalConstant: -8425, centralGravity: 0.1, springLength: 150, springConstant: 0.058, damping: 0.3 } },
-            physics: { barnesHut: { centralGravity: centralGravity, springConstant: 0.01, damping: 0.1, springLength: 170 } },
-            stabilize: false,
+            physics: { barnesHut: { enabled: true, gravitationalConstant: -12000, centralGravity: centralGravity, springConstant: 0.01, damping: 0.1, springLength: 170 }, repulsion: { nodeDistance: 170} },
+            stabilize: true,
             //clustering: true,
             stabilizationIterations: 200,
             dataManipulation: {
@@ -2402,7 +2403,7 @@ App.VizEditorComponent = Ember.Component.extend({
         var wfid = _this.get('workflowID');
 
         var updateGraph = function (nodes, edges) {
-            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('humanName'), mass: 0.8, group: item.get('group') }; });
+            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('humanName'), mass: 0.2, group: item.get('group') }; });
             edges = $.map(edges, function (item) { return { id: item.get('id'), from: item.get('from'), to: item.get('to'), style: item.get('style'), color: item.get('color') }; });
             Enumerable.From(nodes).ForEach(
                 function (value) {
@@ -2416,6 +2417,8 @@ App.VizEditorComponent = Ember.Component.extend({
                     else if (!Enumerable.From(edges).Where("f=>f.from=='" + value.id.replace(/'/ig, '\\\'') + "'").Any()) {
                         value.color = "#333333"; //END
                         value.fontColor = "#FFFFFF";
+                        if (!IsGUID(value.id) && Enumerable.From(edges).Where("f=>f.to=='" + value.id.replace(/'/ig, '\\\'') + "'").Count() > 1)
+                            value.color = "salmon";
                     }
                     else {
                         value.color = "#6fa5d7"; //Current
