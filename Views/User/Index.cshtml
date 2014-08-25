@@ -1070,18 +1070,52 @@
 
 
   <script type="text/x-handlebars" id="graph">
-
     <div class="container-fluid">
         <div class="row processes">
             <!-- PROCESS VIEW STARTS HERE -->
-            <div class="col-md-6 process-header">
-               <h4><small>Process</small></h4>
+            <div {{bind-attr class='columnLayout'}}>
+            {{#if isPreview}}
+                <style>
+                    .navbar {
+                        display:none;
+                    }
+                    #sidebar-nav {
+                        display:none;
+                    }
+                    .content {
+                        margin-left:0px;
+                    }
+                </style>
+            {{else}}
+                    <style>
+                        .navbar {
+                            display: inherit;
+                        }
+
+                        #sidebar-nav {
+                            display: inherit;
+                        }
+
+                        .content {
+                            margin-left: 177px;
+                        }
+                    </style>
+                    <h4><small>Process</small></h4>
+            {{/if}}
                <h1>
                     {{#if model.selected}}{{humanReadableName}}{{/if}}
                     {{#if controllers.application.isLoggedIn}}
+                    {{#unless isPreview}}
                         <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
                             <i class="icon-pencil"></i>
+                        </span>&nbsp;
+                        <span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;">
+                           <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
                         </span>
+                    {{/unless}}
+                    {{/if}}
+                    {{#if isPreview}}
+                        <small>{{workflowName}}</small>
                     {{/if}}
                 </h1>
                 <hr>
@@ -1096,6 +1130,28 @@
 
                         {{eui-button label="Cancel" action="cancelWorkflowNameNow" size='large'}}
                         {{eui-button label="Submit" action="updateWorkflowNameNow" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                    </div>
+                {{/eui-modal}}
+
+
+                {{#eui-modal openBinding="workflowShareModal"}}
+                     <div style="padding: 50px; text-align: center; max-width:530px;">
+                         <h4>Share Workflow Process</h4>
+                         <br />
+                         <br />
+                         {{#unless generatePreviewLink}}
+                         Link:<br />
+                         <a {{bind-attr href="currentURL"}}>{{currentURL}}</a>
+                         <br/><br/>
+                         {{else}}
+                         Embed:<br/>
+                         <textarea rows="8" cols="50">
+                         &lt;iframe id="flowpro_io" marginheight="0" frameborder="0" src="{{{unbound previewURL}}}" width="100%" height="2048" onLoad="document.getElementById('flowpro_io').height=document.getElementById('flowpro_io').contentWindow.document.body.scrollHeight + 'px'; document.getElementById('flowpro_io').width=document.getElementById('flowpro_io').contentWindow.document.body.scrollWidth + 'px';"&gt;&lt;/iframe&gt;</textarea>
+                         <br /><br />
+                         {{/unless}}
+                         {{input type="checkbox" checked=generatePreviewLink}} Show Content Only
+                         <br /><br />
+                         {{eui-button label="OK" action="cancelWorkflowShare" size='large'}}
                     </div>
                 {{/eui-modal}}
 
@@ -1129,10 +1185,89 @@
 
                 <div class='pretty-content'>
                     {{safehtml model.selected.content}}
+                    <h3>Links</h3>
+                    {{#unless model.links.prev}}{{#unless model.links.next}}{{#unless model.links.into}}{{#unless model.links.out}}<p class="semi-transparent">No connections yet.</p>{{/unless}}{{/unless}}{{/unless}}{{/unless}}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{#if model.links.prev}}
+                                <h4>Previous</h4>
+                                {{#each model.links.prev}}
+                                  <p>
+                                    {{#ifeq color='red'}}
+                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="red"}}{{node.humanName}}{{/link-to}}
+                                    {{else}}
+                                        {{#ifeq color='green'}}
+                                            {{#link-to 'graph' node.id (query-params workflowID=wfid) class="green"}}{{node.humanName}}{{/link-to}}
+                                        {{else}}
+                                            {{#link-to 'graph' node.id (query-params workflowID=wfid) class="black"}}{{node.humanName}}{{/link-to}}
+                                        {{/ifeq}}
+                                    {{/ifeq}}
+                                  </p>
+                                {{/each}}
+                            {{/if}}
+                       </div>
+                       <div class="col-md-6">
+                         {{#if model.links.next}}
+                            <h4>Next</h4>
+                            {{#each model.links.next}}
+                              <p>
+                                {{#ifeq color='red'}}
+                                    {{#link-to 'graph' node.id (query-params workflowID=wfid) class="red"}}{{node.humanName}}{{/link-to}}
+                                {{else}}
+                                    {{#ifeq color='green'}}
+                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="green"}}{{node.humanName}}{{/link-to}}
+                                    {{else}}
+                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="black"}}{{node.humanName}}{{/link-to}}
+                                    {{/ifeq}}
+                                {{/ifeq}}
+                              </p>
+                            {{/each}}
+                           {{/if}}
+                       </div>   
+                    </div>
+                    <div class="row semi-transparent">
+                        <div class="col-md-6">
+                          {{#if model.links.into}}
+                            <h4>Into</h4>
+                            {{#each model.links.into}}
+                               <p>
+                                {{#ifeq color='red'}}
+                                    {{#link-to 'graph' node.id (query-params workflowID=wfid) class="red"}}{{node.humanName}}{{/link-to}}
+                                {{else}}
+                                    {{#ifeq color='green'}}
+                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="green"}}{{node.humanName}}{{/link-to}}
+                                    {{else}}
+                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="black"}}{{node.humanName}}{{/link-to}}
+                                    {{/ifeq}}
+                                {{/ifeq}}
+                              </p>
+                            {{/each}}
+                          {{/if}}
+                       </div>
+                       <div class="col-md-6">
+                          {{#if model.links.out}}
+                            <h4>Out</h4>
+                            {{#each model.links.out}}
+                               <p>
+                                {{#ifeq color='red'}}
+                                    {{#link-to 'graph' node.id (query-params workflowID=wfid) class="red"}}{{node.humanName}}{{/link-to}}
+                                {{else}}
+                                    {{#ifeq color='green'}}
+                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="green"}}{{node.humanName}}{{/link-to}}
+                                    {{else}}
+                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="black"}}{{node.humanName}}{{/link-to}}
+                                    {{/ifeq}}
+                                {{/ifeq}}
+                              </p>
+                            {{/each}}
+                           {{/if}}
+                       </div>   
+                    </div>
                 </div>
 
             </div>
 
+            {{#unless isPreview}}
             <!-- WORKFLOW STARTS HERE -->
             <div class="col-md-6 process-header">
                 <h4><small>Workflow</small></h4>
@@ -1158,39 +1293,16 @@
                     {{viz-editor workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=controllers.application.isLoggedIn toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
                 </div>
             </div>
+            {{/unless}}
 
-
-
-                    {{!--<h4>
-                        <small>
-                            {{#if model.workflow.name}}
-                                {{model.workflow.name}}
-                           {{else}}
-                                Current process has no workflow yet. Please choose a workflow name.
-                            {{/if}}
-
-                              <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray'>
-                                <i class="icon-pencil"></i> Edit Workflow name
-                            </span>
-
-                             - this process is available in {{model.workflows.length}} Workflows. Change current:
-                    {{#if workflowGte2}}
-                        {{view Ember.Select content=model.workflows optionValuePath="content.id" optionLabelPath="content.name" valueBinding="workflowID"}}
-                    {{/if}}
-
-                        </small>
-                    </h4>--}}
-
-
-                   <hr>
+             <hr>
+            {{#if isPreview}}
+                    <div><a href="http://flowpro.io" style="float:right;">Content provided by FlowPro.io</a></div> 
+            {{/if}}
 
             </div>
        </div>
   </script>
-
-
-
-
 
 
 <!--  <script type="text/x-handlebars"  "loading">

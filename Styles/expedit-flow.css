@@ -295,6 +295,7 @@ div.table_description {
 
 .form-control {
   width: 100%; /* bootstrap template overrides this default bootstrap class*/
+  max-width: 480px;
 }
 
 table.dataTable td {
@@ -906,4 +907,18 @@ body.menu .svg-menu-toggle .bar:nth-of-type(3) {
   transform: rotate(45deg) translateY(0em) translateX(0em);
 }
 
+.green {
+    color:green;
+}
 
+.red {
+    color:red;
+}
+
+.black {
+    /*color:black;*/    
+}
+
+.semi-transparent {
+    opacity:0.5;
+}

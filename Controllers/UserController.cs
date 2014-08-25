@@ -62,6 +62,12 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
         [Themed(false)]
+        public ActionResult Preview()
+        {
+            return View();
+        }
+
+        [Themed(false)]
         public ActionResult Searches(string q)
         {
             int page;

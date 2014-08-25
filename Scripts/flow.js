@@ -1589,6 +1589,9 @@ App.GraphRoute = Ember.Route.extend({
     queryParams: {
         workflowID: {
             refreshModel: true
+        },
+        preview: {
+            refreshModel: true
         }
     },
     actions: {
@@ -1632,7 +1635,9 @@ App.GraphRoute = Ember.Route.extend({
             content: '',
             label: '',
             editing: true,  // This gets passed to visjs to enable/disable editing dependig on context
-            params: params
+            params: params,
+            links: { prev: [], next: [], up: [], down: [] },
+            preview: params.preview
         });
     },
     afterModel: function (m) {
@@ -1659,7 +1664,18 @@ App.GraphRoute = Ember.Route.extend({
                 m.updateGraph.set('updated', NewGUID());
             }
 
+            //Now get links
+            var edges =  Enumerable.From(_this.store.all('edge').content);
+            var prev = edges.Where("f=>f.get('GroupID')==='" + m.workflowID + "' && f.get('to')==='" + m.selectedID + "'").Distinct();
+            var next = edges.Where("f=>f.get('GroupID')==='" + m.workflowID + "' && f.get('from')==='" + m.selectedID + "'").Distinct();
+            var into = edges.Where("f=>f.get('GroupID')!=='" + m.workflowID + "' && f.get('to')==='" + m.selectedID + "'").Distinct();
+            var out = edges.Where("f=>f.get('GroupID')!=='" + m.workflowID + "' && f.get('from')==='" + m.selectedID + "'").Distinct();
 
+            var nodes = Enumerable.From(_this.store.all('node').content);
+            m.links.prev = prev.Join(nodes, "$.get('from')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), color: outer.get('color.color')}").ToArray();
+            m.links.next = next.Join(nodes, "$.get('to')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), color: outer.get('color.color')}").ToArray();
+            m.links.into = into.Join(nodes, "$.get('from')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), color: outer.get('color.color')}").ToArray();
+            m.links.out = out.Join(nodes, "$.get('to')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), color: outer.get('color.color')}").ToArray();
 
 
         } else { //NEW NODE
@@ -1708,7 +1724,7 @@ App.GraphRoute = Ember.Route.extend({
 
 App.GraphController = Ember.ObjectController.extend({
     needs: ['application'],
-    queryParams: ['workflowID'],
+    queryParams: ['workflowID', 'preview'],
     title: function(){
         var name = this.get('selected.humanName') + ' Process';
         App.setTitle(name);
@@ -1717,6 +1733,7 @@ App.GraphController = Ember.ObjectController.extend({
     newName: null,
     newContent: null,
     workflowEditNameModal: false,
+    workflowShareModal: false,
     workflowNewModal: false, // up to here is for new ones
     editing: true,
     updateGraph: '',
@@ -1728,7 +1745,31 @@ App.GraphController = Ember.ObjectController.extend({
             a = 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss');
         return a;
     }.property('workflowID', 'model.workflow.name'),
+    isPreview: function () {
+        var preview = this.get('preview');
+        if (typeof preview === 'undefined' || preview === 'undefined' || preview === false || preview === 'false' || preview === null || preview === 'null')
+            return false;
+        else
+            return true;
+    }.property('preview'),
+    columnLayout: function () {
+        if (this.get('isPreview'))
+            return 'process-header col-md-12';
+        else
+            return 'process-header col-md-6';
+    }.property('preview'),
     workflowID: null, // available ids will be in model
+    preview: null,
+    currentURL: function () {
+        return window.document.URL;
+    }.property('workflowID', 'model.selected', 'preview', 'generatePreviewLink'),
+    previewURL: function () {
+        if (queryParamsLookup('preview') !== null)
+            return window.document.URL;
+        else
+            return window.document.URL + '&preview=true';
+    }.property('workflowID', 'model.selected', 'preview', 'generatePreviewLink'),
+    generatePreviewLink: false,
     workflowEditModal : false,
     validateWorkflowName: false,
     validateNewName: false,
@@ -1930,6 +1971,12 @@ App.GraphController = Ember.ObjectController.extend({
         toggleWorkflowEditModal: function (data, callback) {
             this.toggleProperty('workflowEditModal');
         },
+        toggleShareModal: function (data, callback) {
+            this.toggleProperty('workflowShareModal');
+        },
+        cancelWorkflowShare: function (data, callback) {
+            this.set('workflowShareModal', false);
+        },
         cancelProcess: function (data, callback) {
             var wf = this.store.getById('node', this.get('selectedID'));
             if (typeof wf !== 'undefined' && wf && wf.currentState.parentState.dirtyType != 'created') { //&& wf.get('label').search(/^Untitled Process - [0-9\@\- :]*$/ig) < 0)
@@ -2082,7 +2129,6 @@ App.GraphController = Ember.ObjectController.extend({
         }
     }
 });
-
 
 var renderDynamic = function () {
     window.cleanAlternative(this.$());
@@ -2462,7 +2508,7 @@ App.VizEditorComponent = Ember.Component.extend({
 
 
 
-        if (!_this.get('isWorkflow')) {
+        if (!IsGUID(_this.get('selected'))) {
             var all = Enumerable.From(App.Wikipedia.store.all('wikipedia').content);
             var edges = Enumerable.From(App.Wikipedia.store.all('edge').content).Where("f=>typeof f.get('GroupID')=='undefined'").ToArray();
             var cleaned = Enumerable.Empty();
@@ -3384,6 +3430,13 @@ Ember.Handlebars.helper('prettyDate', function (item, options) {
     return '';
 });
 
+Handlebars.registerHelper('ifeq', function (value) {
+    var prop = Object.keys(value.hash)[0];
+    if (value.hash[prop] == value.hashContexts[prop][prop]) {
+        return value.fn(this);
+    }
+    return value.inverse(this);
+});
 
 
 Ember.Handlebars.helper('wikiurl', function (item, options) {
@@ -3676,7 +3729,8 @@ App.MyprofilesController = Ember.ObjectController.extend({
 
 /////
 
-App.WorkflowController = Ember.Controller.extend({});
+App.WorkflowController = Ember.ArrayController.extend({
+});
 
 App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
     template: Ember.Handlebars.compile(''), // Blank template
@@ -3754,7 +3808,11 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
                 if (data.nodes.length > 0) {
                     //_this.get('controller').send('transition');
                     //_this.transitionTo('search'); // m.selectedID, { queryParams: { workflowID: newwf.id }}
-                    document.location.hash = '#/process/' + data.nodes[0] + '?workflowID=' + _this.data.wfid;
+                    var preview = queryParamsLookup('preview');
+                    if (preview !== null)
+                        document.location.hash = '#/process/' + data.nodes[0] + '?workflowID=' + _this.data.wfid + "&preview=" + preview;
+                    else
+                        document.location.hash = '#/process/' + data.nodes[0] + '?workflowID=' + _this.data.wfid;
                 }
             });
         });
