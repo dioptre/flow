@@ -1116,6 +1116,9 @@
                     {{/if}}
                     {{#if isPreview}}
                         <small>{{workflowName}}</small>
+                       <span {{action 'togglePreview' }} class='btn-flat gray'>
+                           <i class="icon-pencil"></i>
+                       </span>
                     {{/if}}
                 </h1>
                 <hr>

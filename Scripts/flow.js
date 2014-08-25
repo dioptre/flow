@@ -1974,6 +1974,9 @@ App.GraphController = Ember.ObjectController.extend({
         toggleShareModal: function (data, callback) {
             this.toggleProperty('workflowShareModal');
         },
+        togglePreview: function (data, callback) {
+            this.set('preview', false);
+        },
         cancelWorkflowShare: function (data, callback) {
             this.set('workflowShareModal', false);
         },
