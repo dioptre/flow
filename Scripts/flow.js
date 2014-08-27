@@ -3214,10 +3214,12 @@ App.WikipediaRoute = Ember.Route.extend({
             if (transition.targetName !== 'wikipedia') {
                 Ember.run.later(_this, cleanWikipedia, 0);
             } else {
-                if (this.get('lastTransition') !== transition.params.wikipedia.id) {
+                if (transition.params.wikipedia.id.match(/.*_$/) !== null)
+                    transition.abort();
+                else if (this.get('lastTransition') !== transition.params.wikipedia.id) {
                     transition.abort();
                     this.set('lastTransition', transition.params.wikipedia.id);
-                    Ember.run.debounce(this, this.transitionTo, 'wikipedia', transition.params.wikipedia.id, 300, false);
+                    Ember.run.debounce(this, this.transitionTo, 'wikipedia', transition.params.wikipedia.id, 400, false);
                 }
             }
         }
