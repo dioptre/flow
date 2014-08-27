@@ -3281,7 +3281,43 @@ App.WikipediaAdapter = DS.Adapter.extend({
             });
         }
         else
-        return new Ember.RSVP.Promise(function (resolve, reject) {
+            return new Ember.RSVP.Promise(function (resolve, reject) {
+                var processContent = function () {
+                    var edges = [];
+                    var content = '';
+                    if (html) {
+                        content = InstaView.convert(html);
+                        var leaves = html.match(/\[\[.*?\]\]/igm);
+                        $.each(leaves, function (key, val) {
+                            var leaf = '';
+                            if (val.indexOf('|') > -1)
+                                leaf = val.replace(/\[\[(.*)?\|.*/, "$1");
+                            else if (val.indexOf('[' > -1))
+                                leaf = val.replace(/\[\[(.*)?\]\]/, "$1");
+                            else leaf = val;
+                            if (leaf) {
+                                edges.push({ id: id + '-' + leaf, from: id, to: leaf.replace(/ /g, '_') });
+                            }
+                        });
+                    }
+                    edges = Enumerable.From(edges)
+                        .Where("$.to.search(/^(file|image|category):.*/i)!==0")
+                        .GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].from, to: e.source[0].to}")
+                        .ToArray();
+                    var edgeids = Enumerable.From(edges).Select("$.id").ToArray();
+                    var sequence = 1;
+                    Enumerable.From(edges).ForEach(function (f) { f.sequence = sequence; sequence++; App.Wikipedia.store.push('edge', f); });
+                    Enumerable.From(edges).Where("$.to!='" + id.replace("'", "\\\'") + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to }); });
+                    App.Wikipedia.store.push('wikipedia', { id: id, label: id, edges: edgeids, content: content });
+                    setTimeout(function () {
+                        if (typeof array === 'undefined')
+                            Ember.run(null, resolve, { id: id, label: id, content: content, edges: edgeids });
+                        else {
+                            var toReturn = { Nodes: [{ id: id, label: id, content: content, edges: edgeids }], Edges: edges };
+                            Ember.run(null, resolve, toReturn);
+                        }
+                    }, 300);
+                };
             var url = 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=' + encodeURIComponent(id) + '&prop=revisions&rvprop=content';
             jQuery.getJSON("https://query.yahooapis.com/v1/public/yql?" +
                 "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
@@ -3294,74 +3330,47 @@ App.WikipediaAdapter = DS.Adapter.extend({
                           return false;
                   });
 
-                  var edges = [];
-                  var content = '';
-                  if (html) {
-                      content = InstaView.convert(html);
-                      var leaves = html.match(/\[\[.*?\]\]/igm);
-                      $.each(leaves, function (key, val) {
-                          var leaf = '';
-                          if (val.indexOf('|') > -1)
-                              leaf = val.replace(/\[\[(.*)?\|.*/, "$1");
-                          else if (val.indexOf('[' > -1))
-                              leaf = val.replace(/\[\[(.*)?\]\]/, "$1");
-                          else leaf = val;
-                          if (leaf) {
-                              edges.push({ id: id + '-' + leaf, from: id, to: leaf.replace(/ /g, '_') });
+                  if (!html) {
+                      url = 'http://en.wikipedia.org/w/api.php?format=json&action=opensearch&search=' + encodeURIComponent(id) + '&limit=1';
+                      jQuery.getJSON("https://query.yahooapis.com/v1/public/yql?" +
+                        "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
+                        encodeURIComponent(url) +
+                        "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
+                      ).then(function (result) {
+                          if (result.query.count == 1 && result.query.results.resources.content.json.json[1]) {
+                              var sr = result.query.results.resources.content.json.json[1].json;
+                              sr = sr.replace(/ /ig, '_');
+                              url = 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=' + encodeURIComponent(sr) + '&prop=revisions&rvprop=content';
+                              jQuery.getJSON("https://query.yahooapis.com/v1/public/yql?" +
+                              "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
+                              encodeURIComponent(url) +
+                              "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
+                              ).then(function (srData) {
+                                  $.each(srData, function (key, val) {
+                                      recurse(key, val, id);
+                                      if (html)
+                                          return false;
+                                  });
+                                  processContent();
+                              }, function (jqXHR) {
+                                  jqXHR.then = null; // tame jQuery's ill mannered promises
+                                  Ember.run(null, reject, jqXHR);
+                              })
+
                           }
+                          else {
+                              processContent();
+                          }
+                      }, function (jqXHR) {
+                          jqXHR.then = null; // tame jQuery's ill mannered promises
+                          Ember.run(null, reject, jqXHR);
                       });
+
                   }
-                  //edges = Enumerable.From(edges).GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].get('from'), to: e.source[0].get('to')}").ToArray()
-                  edges = Enumerable.From(edges)
-                      .Where("$.to.search(/^(file|image|category):.*/i)!==0")
-                      .GroupBy("$.id", "", "key,e=>{id: key, from: e.source[0].from, to: e.source[0].to}")
-                      .ToArray();
-                  //oldNodes = Enumerable.From(App.Wikipedia.store.all('wikipedia').content).Select("$.id").ToArray();
-                  //oldEdges = Enumerable.From(App.Wikipedia.store.all('edges').content).Select("$.id").ToArray();
-                  //Enumerable.From(edges).Where(function (f) {
-                  //    if (oldNodes.indexOf(f.to) > -1) {
-                  //        //Update
-                  //        //var node = App.Wikipedia.store.get('wikipedia', id);
-                  //        //node.set("content", );
-                  //        //post.save();
-                  //    } else {
-                  //        //Insert
-                  //        if (id == f.to)
-                  //            isNew = true;
-                  //        App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to, content: content });
-                  //    }
-                  //});
-                  //Enumerable.From(edges).Where(function (f) {
-                  //    if (oldEdges.indexOf(f.id) > -1) {
-                  //        //Update
-                  //    } else {
-                  //        //Insert
-                  //        App.Wikipedia.store.push('edge', f);
-                  //    }
-                  //});
-                  //if (!isNew) {
-                  //    var node = App.Wikipedia.store.getById('wikipedia', id);
-                  //    if (node) {
-                  //        App.Wikipedia.store.deleteRecord(node);
-                  //        App.Wikipedia.store.createRecord('wikipedia', { id: id, label: id, content: content });
-                  //    }
-                  //}
+                  else {
+                      processContent();
+                  }                 
 
-
-
-                  var edgeids = Enumerable.From(edges).Select("$.id").ToArray();
-                  var sequence = 1;
-                  Enumerable.From(edges).ForEach(function (f) { f.sequence = sequence; sequence++; App.Wikipedia.store.push('edge', f); });
-                  Enumerable.From(edges).Where("$.to!='" + id.replace("'", "\\\'") + "'").ForEach(function (f) { App.Wikipedia.store.push('wikipedia', { id: f.to, label: f.to }); });
-                  App.Wikipedia.store.push('wikipedia', { id: id, label: id, edges: edgeids, content: content });
-                  setTimeout(function () {
-                      if (typeof array === 'undefined')
-                          Ember.run(null, resolve, { id: id, label: id, content: content, edges: edgeids });
-                      else {
-                          var toReturn = { Nodes: [{ id: id, label: id, content: content, edges: edgeids }], Edges: edges };
-                          Ember.run(null, resolve, toReturn);
-                      }
-                  }, 300);
               }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises
                   Ember.run(null, reject, jqXHR);
