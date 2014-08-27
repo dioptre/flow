@@ -1097,7 +1097,7 @@
                         }
 
                         .content {
-                            margin-left: 177px;
+                           /* margin-left: 177px;*/
                         }
                     </style>
                     <h4><small>Process</small></h4>
@@ -1125,7 +1125,9 @@
                     {{/if}}
                 </h1>
                 <hr>
-
+                {{#if isPreview}}
+                    <div class="semi-transparent"><a href="http://flowpro.io" style="float:right;">Content provided by FlowPro.io</a></div>
+                {{/if}}
                 {{#eui-modal openBinding="workflowEditNameModal"}}
                      <div style="padding: 50px; text-align: center;">
                          <h4> Update Workflow name</h4>

@@ -2520,16 +2520,20 @@ App.VizEditorComponent = Ember.Component.extend({
 
         if (!IsGUID(_this.get('selected'))) {
             var all = Enumerable.From(App.Wikipedia.store.all('wikipedia').content);
-            var edges = Enumerable.From(App.Wikipedia.store.all('edge').content).Where("f=>typeof f.get('GroupID')=='undefined'").ToArray();
+            var edges = Enumerable.From(App.Wikipedia.store.all('edge').content).Where("f=>typeof f.get('GroupID')=='undefined'");
             var cleaned = Enumerable.Empty();
             var nodes = Enumerable.Empty();
             Enumerable.From(edges).GroupBy("$.get('origin')", "$").ForEach(function (data) {
                 var clean = Enumerable.From(data.source).Take(20);
                 cleaned = cleaned.Concat(clean);
                 nodes = nodes.Concat(all.Intersect(clean.Select(function (edge) { return { id: edge.get('to') }; }), "$.id"));
-                nodes = nodes.Concat(all.Where("$.id=='" + data.Key() + "'").ToArray()); //from
+                nodes = nodes.Concat(all.Where("$.id=='" + data.Key() + "'")); //from
             });
-            updateGraph(nodes.ToArray(), cleaned.ToArray());
+            nodes.Distinct().ForEach(function (data) {
+                cleaned = cleaned.Concat(edges.Where("f=>f.get('destination') === '" + data.get('dataName') + "'"));
+            });
+
+            updateGraph(nodes.ToArray(), cleaned.Distinct().ToArray());
         }
         else {
             var all = Enumerable.From(App.Node.store.all('node').content);
@@ -2922,7 +2926,7 @@ App.Node = DS.Model.extend({
             return ToTitleCase(temp.replace(/_/g, ' '));
         else
             return null;
-    }.property('label'),
+    }.property('label'), 
     VersionUpdated: DS.attr('date')
 });
 
@@ -2950,6 +2954,9 @@ App.Edge = DS.Model.extend({
     }.property(),
     origin: function () {
         return this.get('from').replace("'", "\\\'");
+    }.property(),
+    destination: function () {
+        return this.get('to').replace("'", "\\\'");
     }.property(),
     GroupID: DS.attr(),
     Related: DS.attr('date'),
@@ -3141,11 +3148,15 @@ App.Wikipedia = DS.Model.extend({
             return ToTitleCase(temp.replace(/_/g, ' '));
         else
             return null;
-    }.property()
+    }.property(),
+    dataName: function () {
+        return this.get('id').replace(/'/g, '\\\'');
+    }.property('label')
 });
 
 
 App.WikipediaRoute = Ember.Route.extend({
+    lastTransition : null,
     model: function (params) {
         if (typeof params !== 'undefined' && params.id && params.id.indexOf(' ') > 0) {
             this.transitionTo('wikipedia', params.id.replace(/ /ig, "_"));
@@ -3190,13 +3201,24 @@ App.WikipediaRoute = Ember.Route.extend({
             //var newModel = route.model();
             //controller.set('model', newModel);
             //$(".filteredData").remove();
+            
             var _this = this;
+            var cleanWikipedia = function () {
+                Enumerable.From(_this.store.all('edge').content).Where("f=>typeof f.get('GroupID') === 'undefined'").ForEach(function (data) {
+                    _this.store.unloadRecord(data);
+                });
+                Enumerable.From(_this.store.all('wikipedia').content).ForEach(function (data) {
+                    _this.store.unloadRecord(data);
+                });
+            };
             if (transition.targetName !== 'wikipedia') {
-                this.store.unloadAll('wikipedia'); //TODO HACK, will need to fix this before sync
-                this.store.unloadAll('edge');
-                //this.store.filter('edge', { GroupID: 'undefined' }, function (post) {
-                //    _this.store.unloadRecord(post);
-                //});
+                Ember.run.later(_this, cleanWikipedia, 0);
+            } else {
+                if (this.get('lastTransition') !== transition.params.wikipedia.id) {
+                    transition.abort();
+                    this.set('lastTransition', transition.params.wikipedia.id);
+                    Ember.run.debounce(this, this.transitionTo, 'wikipedia', transition.params.wikipedia.id, 300, false);
+                }
             }
         }
     }
