@@ -3413,6 +3413,7 @@ function filterData(data) {
     // [... add as needed ...]
     data = data.replace(/^null$/, '');
     data = data.replace(/<pre><\/pre>/ig, '');
+    data = data.replace(/\(\)/, '');
     //Fix Vids
     //data = $(data).fitVids().prop('outerHTML');
     var tags = ['em', 'div', 'p', 'span']; //Attempt to fix eufeeds
