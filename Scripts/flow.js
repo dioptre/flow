@@ -3212,14 +3212,14 @@ App.WikipediaRoute = Ember.Route.extend({
                 });
             };
             if (transition.targetName !== 'wikipedia') {
-                Ember.run.later(_this, cleanWikipedia, 0);
+                Ember.run.later(_this, cleanWikipedia, 1);
             } else {
                 if (transition.params.wikipedia.id.match(/.*_$/) !== null)
                     transition.abort();
                 else if (this.get('lastTransition') !== transition.params.wikipedia.id) {
                     transition.abort();
                     this.set('lastTransition', transition.params.wikipedia.id);
-                    Ember.run.debounce(this, this.transitionTo, 'wikipedia', transition.params.wikipedia.id, 460, false);
+                    Ember.run.debounce(this, this.transitionTo, 'wikipedia', transition.params.wikipedia.id, 1000, false);
 
                 }
                 else {
@@ -3258,6 +3258,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
     },
     findQuery: function (store, type, query, array) {
         var _this = this;
+        var context = this;
         var id = query;
         var html;
         var recurse = function (key, val, parent) {
@@ -3348,22 +3349,26 @@ App.WikipediaAdapter = DS.Adapter.extend({
                           if (result.query.count == 1 && result.query.results.resources.content.json.json[1]) {
                               var sr = result.query.results.resources.content.json.json[1].json;
                               sr = sr.replace(/ /ig, '_');
-                              url = 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=' + encodeURIComponent(sr) + '&prop=revisions&rvprop=content';
-                              jQuery.getJSON("https://query.yahooapis.com/v1/public/yql?" +
-                              "q=select%20content%20from%20data.headers%20where%20url%3D%22" +
-                              encodeURIComponent(url) +
-                              "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
-                              ).then(function (srData) {
-                                  $.each(srData, function (key, val) {
-                                      recurse(key, val, id);
-                                      if (html)
-                                          return false;
-                                  });
-                                  processContent();
-                              }, function (jqXHR) {
-                                  jqXHR.then = null; // tame jQuery's ill mannered promises
-                                  Ember.run(null, reject, jqXHR);
-                              })
+
+                              document.location.hash = '#/wikipedia/' + sr;
+                              Ember.run(null, reject, result);
+
+                              //url = 'http://en.wikipedia.org/w/api.php?format=json&action=query&titles=' + encodeURIComponent(sr) + '&prop=revisions&rvprop=content';
+                              //jQuery.getJSON("https://query.yahooapis.com/v1/public/yql?" +
+                              //"q=select%20content%20from%20data.headers%20where%20url%3D%22" +
+                              //encodeURIComponent(url) +
+                              //"%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
+                              //).then(function (srData) {
+                              //    $.each(srData, function (key, val) {
+                              //        recurse(key, val, id);
+                              //        if (html)
+                              //            return false;
+                              //    });
+                              //    processContent();
+                              //}, function (jqXHR) {
+                              //    jqXHR.then = null; // tame jQuery's ill mannered promises
+                              //    Ember.run(null, reject, jqXHR);
+                              //})
 
                           }
                           else {
