@@ -3216,16 +3216,17 @@ App.WikipediaRoute = Ember.Route.extend({
             } else {
                 if (transition.params.wikipedia.id.match(/.*_$/) !== null)
                     transition.abort();
+                else if (this.get('lastTransition') !== transition.params.wikipedia.id) {
+                    transition.abort();
+                    this.set('lastTransition', transition.params.wikipedia.id);
+                    Ember.run.debounce(this, this.transitionTo, 'wikipedia', transition.params.wikipedia.id, 460, false);
+
+                }
                 else {
                     var duplicate = Enumerable.From(App.Wikipedia.store.all('wikipedia').content).Where("f=>f.id.toLowerCase()=='" + transition.params.wikipedia.id + "'.toLowerCase()").FirstOrDefault();
                     if (duplicate && transition.params.wikipedia.id !== duplicate.id) {
                         transition.abort();
                         this.replaceWith('wikipedia', duplicate.id);
-                    }
-                    else if (this.get('lastTransition') !== transition.params.wikipedia.id) {
-                        transition.abort();
-                        this.set('lastTransition', transition.params.wikipedia.id);
-                        Ember.run.debounce(this, this.transitionTo, 'wikipedia', transition.params.wikipedia.id, 460, false);
                     }
                 }
             }
