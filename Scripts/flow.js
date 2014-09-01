@@ -1082,21 +1082,24 @@ App.SearchSerializer = DS.RESTSerializer.extend({
 App.SearchRoute = Ember.Route.extend({});
 // App.SearchController = Ember.ObjectController.extend({
 App.SearchController = Ember.Controller.extend({
-    needs: ['graphResults','mapResults','fileResults'],
-    queryParams: ['keywords', 'tags', 'graph', 'file', 'map', 'pageGraph', 'pageFile', 'pageMap', 'pageSize'],
+    needs: ['graphResults','mapResults','fileResults','workflowResults'],
+    queryParams: ['keywords', 'tags', 'wf', 'graph', 'file', 'map', 'pageWorkflow', 'pageGraph', 'pageFile', 'pageMap', 'pageSize'],
+    wf: false,
     graph: true,
     file: true,
     map: false,
     title: "Search",
     activeResultsClass: function(){
         var i = 0;
+        if (this.get('wf')) i++;
         if (this.get('graph')) i++;
         if (this.get('file')) i++;
         if (this.get('map')) i++;
         $(window).trigger('redrawMap');
         if (i===0) return '';
         return 'col-md-' + (12 / i);
-    }.property('graph', 'file', 'map'),
+    }.property('wf', 'graph', 'file', 'map'),
+    pageWorkflow: 0,
     pageGraph: 0,
     pageFile: 0,
     pageMap: 0,
@@ -1189,6 +1192,34 @@ App.SearchController = Ember.Controller.extend({
            return  this.toggleProperty('mapModal');
         }
     },
+    loadWorkflowQuery: '',
+    loadWorkflow: function () {
+        var controller = this;
+        var query = {
+            page: controller.get('pageWorkflow'),
+            keywords: controller.get('keywords'),
+            tags: controller.get('tags'),
+            type: 'workflow',
+            pagesize: controller.get('pageSize')
+        }
+
+        // Search function
+        var loadFn = function () {
+            if (controller.get('wf') && controller.get('componentURI').length > 0) {
+                controller.set('controllers.workflowResults.loading', true);
+                controller.store.find('search', query).then(function (res) {
+                    controller.set('loadWorkflowQuery', JSON.stringify(query));
+                    controller.set('controllers.workflowResults.results', res.get('content'));
+                    controller.set('controllers.workflowResults.loading', false);
+                });
+            }
+        }
+
+        //// Don't reload the search if the old query was identical to current one (stops the flickering!!!)
+        if (controller.get('loadWorkflowQuery') !== JSON.stringify(query)) {
+            loadFn();            
+        }
+    }.observes('wf', 'pageWorkflow'),
     loadGraphQuery: '',
     loadGraph: function(){
         var controller = this;
@@ -1205,6 +1236,7 @@ App.SearchController = Ember.Controller.extend({
             if (controller.get('graph') && controller.get('componentURI').length > 0) {
                 controller.set('controllers.graphResults.loading', true);
                 controller.store.find('search', query).then(function (res) {
+                    controller.set('loadGraphQuery', JSON.stringify(query));
                     controller.set('controllers.graphResults.results', res.get('content'));
                     controller.set('controllers.graphResults.loading', false);
                 });
@@ -1214,7 +1246,6 @@ App.SearchController = Ember.Controller.extend({
         // Don't reload the search if the old query was identical to current one (stops the flickering!!!)
         if (controller.get('loadGraphQuery') !== JSON.stringify(query)) {
             loadFn();
-            controller.set('loadGraphQuery', JSON.stringify(query));
         }
     }.observes('graph', 'pageGraph'),
     loadFileQuery: '',
@@ -1233,6 +1264,7 @@ App.SearchController = Ember.Controller.extend({
             if (controller.get('file') && controller.get('componentURI').length > 0) {
                 controller.set('controllers.fileResults.loading', true);
                 controller.store.find('search', query).then(function (res) {
+                    controller.set('loadFileQuery', JSON.stringify(query));
                     controller.set('controllers.fileResults.results', res.get('content'));
                     controller.set('controllers.fileResults.loading', false);
                 });
@@ -1241,7 +1273,6 @@ App.SearchController = Ember.Controller.extend({
 
         if (controller.get('loadFileQuery') !== JSON.stringify(query)) {
             loadFn();
-            controller.set('loadFileQuery', JSON.stringify(query));
         }
 
     }.observes('file', 'pageFile'),
@@ -1269,9 +1300,11 @@ App.SearchController = Ember.Controller.extend({
         this.loadGraph();
         this.loadMap();
         this.loadFile();
+        this.loadWorkflow();
     }.observes('pageSize', 'tags'), // the did insert element here doesn't  work that's why the view is setup below to kickoff the initial search
     searchQuery: function () { // this builds the search query
         var controller = this;
+        this.set('pageWorkflow', 0);
         this.set('pageGraph', 0);
         this.set('pageFile', 0);
         this.set('pageMap', 0);
@@ -1296,6 +1329,31 @@ App.SearchView = Ember.View.extend({
 
 
 
+App.WorkflowResultsController = Ember.ObjectController.extend({
+    needs: 'search',
+    next: false,
+    prev: false,
+    loading: true,
+    page: Ember.computed.alias('controllers.search.pageWorkflow'),
+    pageSize: Ember.computed.alias('controllers.search.pageSize'),
+    resultsUpdated: function () {
+
+        if (this.get('results')[0]) {
+            // Total Rows
+            var totalRows = this.get('results')[0].get('TotalRows');
+            var pageSize = this.get('pageSize');
+            var page = this.get('page');
+
+            // From ths info it can be calculate if next and prev should be true or false
+            this.set('prev', (page > 0));
+
+            var nOfPages = Math.ceil(totalRows / pageSize) - 1;
+            this.set('next', (nOfPages > page));
+        }
+
+    }.observes('results'),
+    results: []
+});
 
 
 

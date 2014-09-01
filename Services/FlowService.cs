@@ -1044,6 +1044,8 @@ namespace EXPEDIT.Flow.Services {
                     GraphDataGroupID = m.GraphDataGroupID.Value,
                     GraphDataGroupName = m.GraphDataGroupName,
                     Comment = m.Comment,
+                    Created = now,
+                    CreatedBy = contact,
                     VersionUpdated = now,
                     VersionUpdatedBy = contact,
                     VersionOwnerCompanyID = creatorCompany,

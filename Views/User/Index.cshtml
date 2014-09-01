@@ -751,7 +751,7 @@
         </div>
         </form>
         <div class="no-account">
-            <p>Do not have an account?</p>
+            <p>Don't have an account?</p>
             {{#link-to 'signup'}}Sign up{{/link-to}}
         </div>
     </div>
@@ -1348,16 +1348,18 @@
                 {{view Ember.Select content=pageSizes value=pageSize }}
                 <br> <br> <br>
 
-                <h4>Categroise to display:</h4>
+                <h4>Categories to display:</h4><br />
+                Workflows:
+                {{view Ember.Checkbox checkedBinding='wf'}}
+                &nbsp;|&nbsp;
                 Processes:
                 {{view Ember.Checkbox checkedBinding='graph'}}
-
+                &nbsp;|&nbsp;
                 Files:
                 {{view Ember.Checkbox checkedBinding='file'}}
-
+                &nbsp;|&nbsp;
                 Process Locations:
                 {{view Ember.Checkbox checkedBinding='map'}}
-
                 <br><br>
                 {{eui-button label="Done" action="toggleSettingsModal" style='primary' size='large'}}
             </div>
@@ -1379,9 +1381,6 @@
             <button {{action 'toggleMapModal'}} class="btn btn-default">
                 <i class="icon icon-globe"></i>
             </button>
-
-
-
 
             <button {{action 'toggleDateModal'}} class="btn btn-default">
                 <i class='icon icon-calendar'></i>
@@ -1410,6 +1409,11 @@
 
       <div class="row search-page">
             {{#if keywords}}
+                {{#if wf}}
+                  <div {{bind-attr class='activeResultsClass :overscroll'}}>
+                    {{render 'workflowResults'}}
+                  </div>
+                {{/if}}
                 {{#if graph}}
                   <div {{bind-attr class='activeResultsClass :overscroll'}}>
                     {{render 'graphResults'}}
@@ -1445,7 +1449,59 @@
 
   </style>
 
+<script type="text/x-handlebars" data-template-name="workflowResults">
+    {{#unless loading}}
+        {{#if results}}
+          <ul class="pager pull-right">
+              {{#if prev}}
+                 <li><a {{action 'prev' 'pageGraph'}}>Previous</a></li>
+              {{/if}}
+              {{#if next}}
+                <li><a {{action 'next' 'pageGraph'}}>Next</a></li>
+              {{/if}}
+          </ul>
+        {{/if}}
+    {{/unless}}
 
+  <h3>Workflows</h3>
+
+
+  {{#if loading}}
+
+    Loading...
+
+  {{else}}
+
+    {{#if results}}
+      <div class="table-responsive">
+        <table class="table table-condensed table-hover">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each result in results}}
+                {{#link-to 'workflow' result.ReferenceID tagName='tr' class='graphResultRow'}}
+                  <td>{{safehtml result.humanName}}</td>
+                  <td>{{safehtml result.authorTags}}</td>
+                  <td>{{safehtml result.updatedNice}}</td>
+                {{/link-to}}
+              {{/each}}
+            </tbody>
+        </table>
+      </div>
+    {{else}}
+
+        Sorry no results could be found.
+
+    {{/if}}
+
+  {{/if}}
+
+</script>
 
 <script type="text/x-handlebars" data-template-name="graphResults">
     {{#unless loading}}
