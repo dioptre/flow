@@ -1208,7 +1208,7 @@ App.SearchController = Ember.Controller.extend({
             if (controller.get('wf') && controller.get('componentURI').length > 0) {
                 controller.set('controllers.workflowResults.loading', true);
                 controller.store.find('search', query).then(function (res) {
-                    controller.set('loadWorkflowQuery', JSON.stringify(query));
+                    controller.set('loadWorkflowQuery', JSON.stringify(query) + Math.round(new Date().getTime() / 30000));
                     controller.set('controllers.workflowResults.results', res.get('content'));
                     controller.set('controllers.workflowResults.loading', false);
                 });
@@ -1216,7 +1216,7 @@ App.SearchController = Ember.Controller.extend({
         }
 
         //// Don't reload the search if the old query was identical to current one (stops the flickering!!!)
-        if (controller.get('loadWorkflowQuery') !== JSON.stringify(query)) {
+        if (controller.get('loadWorkflowQuery') !== JSON.stringify(query) + Math.round(new Date().getTime() / 30000)) {
             loadFn();            
         }
     }.observes('wf', 'pageWorkflow'),
@@ -1236,7 +1236,7 @@ App.SearchController = Ember.Controller.extend({
             if (controller.get('graph') && controller.get('componentURI').length > 0) {
                 controller.set('controllers.graphResults.loading', true);
                 controller.store.find('search', query).then(function (res) {
-                    controller.set('loadGraphQuery', JSON.stringify(query));
+                    controller.set('loadGraphQuery', JSON.stringify(query) + Math.round(new Date().getTime() / 30000));
                     controller.set('controllers.graphResults.results', res.get('content'));
                     controller.set('controllers.graphResults.loading', false);
                 });
@@ -1244,7 +1244,7 @@ App.SearchController = Ember.Controller.extend({
         }
 
         // Don't reload the search if the old query was identical to current one (stops the flickering!!!)
-        if (controller.get('loadGraphQuery') !== JSON.stringify(query)) {
+        if (controller.get('loadGraphQuery') !== JSON.stringify(query) + Math.round(new Date().getTime() / 30000)) {
             loadFn();
         }
     }.observes('graph', 'pageGraph'),
@@ -1264,14 +1264,14 @@ App.SearchController = Ember.Controller.extend({
             if (controller.get('file') && controller.get('componentURI').length > 0) {
                 controller.set('controllers.fileResults.loading', true);
                 controller.store.find('search', query).then(function (res) {
-                    controller.set('loadFileQuery', JSON.stringify(query));
+                    controller.set('loadFileQuery', JSON.stringify(query) + Math.round(new Date().getTime() / 30000));
                     controller.set('controllers.fileResults.results', res.get('content'));
                     controller.set('controllers.fileResults.loading', false);
                 });
             }
         }
 
-        if (controller.get('loadFileQuery') !== JSON.stringify(query)) {
+        if (controller.get('loadFileQuery') !== JSON.stringify(query) + Math.round(new Date().getTime() / 30000)) {
             loadFn();
         }
 
