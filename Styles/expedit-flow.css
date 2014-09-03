@@ -907,18 +907,47 @@ body.menu .svg-menu-toggle .bar:nth-of-type(3) {
   transform: rotate(45deg) translateY(0em) translateX(0em);
 }
 
-.green {
+.next-steps .green {
     color:green;
 }
 
-.red {
+.next-steps .red {
     color:red;
 }
-
-.black {
-    /*color:black;*/    
+.next-steps a {
+  color: inherit;
 }
+
+
 
 .semi-transparent {
     opacity:0.5;
+}
+
+.next-steps h3 {
+  text-align: center;
+  font-size: 16px;
+  color: #b3b3b3;
+  padding-top: 32px;
+  padding-bottom: 8px;
+}
+.next-steps-prev > div, .next-steps-fwd > div {
+  margin-bottom: 5px;
+}
+.next-steps-prev a, .next-steps-fwd a {
+  font-size: 14px;
+}
+.next-steps-prev {
+  text-align: right;
+}
+.next-steps-fwd {
+  text-align: left;
+}
+@media (max-width: 768px) {
+  .next-steps-prev {
+    text-align: left;
+  }
+  .next-steps-fwd {
+    text-align: right;
+  }
 }

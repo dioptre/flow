@@ -1217,7 +1217,7 @@ App.SearchController = Ember.Controller.extend({
 
         //// Don't reload the search if the old query was identical to current one (stops the flickering!!!)
         if (controller.get('loadWorkflowQuery') !== JSON.stringify(query) + Math.round(new Date().getTime() / 30000)) {
-            loadFn();            
+            loadFn();
         }
     }.observes('wf', 'pageWorkflow'),
     loadGraphQuery: '',
@@ -1681,7 +1681,7 @@ App.GraphRoute = Ember.Route.extend({
                 if (typeof groupID !== 'undefined' && document.URL.indexOf(groupID) < 1) {
                     return _this.store.find('workflow', groupID).then(function (wfid) {
                         _this.replaceWith('graph', id, { queryParams: { workflowID: groupID } });
-                    });                    
+                    });
                 }
                 else if (typeof groupID === 'undefined' || !groupID)
                     return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') })
@@ -1730,10 +1730,10 @@ App.GraphRoute = Ember.Route.extend({
             var out = edges.Where("f=>f.get('GroupID')!=='" + m.workflowID + "' && f.get('from')==='" + m.selectedID + "'").Distinct();
 
             var nodes = Enumerable.From(_this.store.all('node').content);
-            m.links.prev = prev.Join(nodes, "$.get('from')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), color: outer.get('color.color')}").ToArray();
-            m.links.next = next.Join(nodes, "$.get('to')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), color: outer.get('color.color')}").ToArray();
-            m.links.into = into.Join(nodes, "$.get('from')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), color: outer.get('color.color')}").ToArray();
-            m.links.out = out.Join(nodes, "$.get('to')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), color: outer.get('color.color')}").ToArray();
+            m.links.prev = prev.Join(nodes, "$.get('from')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), wfname:outer.get('groupName'), color: outer.get('color.color')}").ToArray();
+            m.links.next = next.Join(nodes, "$.get('to')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), wfname:outer.get('groupName'), color: outer.get('color.color')}").ToArray();
+            m.links.into = into.Join(nodes, "$.get('from')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), wfname:outer.get('groupName'), color: outer.get('color.color')}").ToArray();
+            m.links.out = out.Join(nodes, "$.get('to')", "$.id", "outer,inner=>{node:inner, wfid:outer.get('GroupID'), wfname:outer.get('groupName'), color: outer.get('color.color')}").ToArray();
 
 
         } else { //NEW NODE
@@ -1788,6 +1788,12 @@ App.GraphController = Ember.ObjectController.extend({
         App.setTitle(name);
         return name;
     }.property('selected.humanName'),
+    nextSteps: function(){
+        return (this.get('model.links.prev').length > 0) || (this.get('model.links.next').length > 0);
+    }.property('model.links.prev','model.links.next'),
+    nextWorkflowSteps: function(){
+        return (this.get('model.links.into').length > 0) || (this.get('model.links.out').length > 0);
+    }.property('model.links.into','model.links.out'),
     newName: null,
     newContent: null,
     workflowEditNameModal: false,
@@ -2984,7 +2990,7 @@ App.Node = DS.Model.extend({
             return ToTitleCase(temp.replace(/_/g, ' '));
         else
             return null;
-    }.property('label'), 
+    }.property('label'),
     VersionUpdated: DS.attr('date')
 });
 
@@ -3017,6 +3023,13 @@ App.Edge = DS.Model.extend({
         return this.get('to').replace("'", "\\\'");
     }.property(),
     GroupID: DS.attr(),
+    groupName: function () {
+        var temp = App.Workflow.store.getById('workflow', this.get('GroupID'))
+        if (temp)
+            return temp.get('shortName');
+        else
+            return null;
+    }.property(),
     Related: DS.attr('date'),
     RelationTypeID: DS.attr(),
     Weight: DS.attr(),
@@ -3031,6 +3044,17 @@ App.Workflow = DS.Model.extend({
         var temp = this.get('name');
         if (temp)
             return ToTitleCase(temp.replace(/_/g, ' '));
+        else
+            return null;
+    }.property('name'),
+    shortName: function () {
+        var temp = this.get('name');
+        if (temp) {
+            if (temp.length > 17)
+                return ToTitleCase(temp.substring(0, 17).replace(/_/g, ' ')) + '...';
+            else
+                return ToTitleCase(temp.replace(/_/g, ' '));
+        }
         else
             return null;
     }.property('name')
@@ -3259,7 +3283,7 @@ App.WikipediaRoute = Ember.Route.extend({
             //var newModel = route.model();
             //controller.set('model', newModel);
             //$(".filteredData").remove();
-            
+
             var _this = this;
             var cleanWikipedia = function () {
                 Enumerable.From(_this.store.all('edge').content).Where("f=>typeof f.get('GroupID') === 'undefined'").ForEach(function (data) {
@@ -3277,7 +3301,7 @@ App.WikipediaRoute = Ember.Route.extend({
                 else if (this.get('lastTransition') !== transition.params.wikipedia.id) {
                     transition.abort();
                     this.set('lastTransition', transition.params.wikipedia.id);
-                    Ember.run.debounce(this, this.transitionTo, 'wikipedia', transition.params.wikipedia.id, 1000, false);
+                    Ember.run.debounce(this, this.transitionTo, 'wikipedia', transition.params.wikipedia.id, 1300, false);
 
                 }
                 else {
@@ -3304,7 +3328,50 @@ App.WikipediaController = Ember.ObjectController.extend({
         if (encodeURIComponent(this.get('selected').replace(/ /ig, "_")) !== title || title !== this.get('model.encodedTitle')) {
             this.transitionToRoute('wikipedia', title);
         }
-    }.observes('model.title')
+    }.observes('model.title'),
+    actions: {
+        showDemo: function () {
+            _this = this;
+            Enumerable.From(_this.store.all('edge').content).Where("f=>typeof f.get('GroupID') === 'undefined'").ForEach(function (data) {
+                _this.store.unloadRecord(data);
+            });
+            Enumerable.From(_this.store.all('wikipedia').content).ForEach(function (data) {
+                _this.store.unloadRecord(data);
+            });
+            
+            
+            
+            var updateWikiSearch = function (text) {
+                $("#wikiSearch").blur();
+                _this.set('model.title', text);
+                setTimeout(function () { $("#wikiSearch").select(); }, 250);                
+            }
+
+            Ember.run.later(_this, function () { Messenger().post({ type: 'success', message: "Let's compare cats with dogs.<br/><br/>1. Type in cat.", id: 'wiki-help', hideAfter: 6 }) }, 0);
+
+            Ember.run.later(_this, updateWikiSearch, 'c', 400);
+            Ember.run.later(_this, updateWikiSearch, 'ca', 800);
+            Ember.run.later(_this, updateWikiSearch, 'cat', 1200);
+
+            Ember.run.later(_this, function () { Messenger().post({ type: 'success', message: "2. Now type in dog.", id: 'wiki-help' }) }, 6500);
+
+            Ember.run.later(_this, updateWikiSearch, 'd', 9000);
+            Ember.run.later(_this, updateWikiSearch, 'do', 9400);
+            Ember.run.later(_this, updateWikiSearch, 'dog', 9800);
+
+            Ember.run.later(_this, function () {
+                Messenger().post({ type: 'success', message: "The colors show how the topics connect. <br/><br/>Red: connected<br/>White: start<br/>Black: unexplored<br/>Blue: explored", id: 'wiki-help', hideAfter: 20 });
+                Ember.run.later(_this, function () {
+                    $('html, body').animate({
+                        scrollTop: $(".network-frame").offset().top
+                    }, 400);
+                }, 8000)}
+                ,'dog'
+                , 11000);
+            
+
+        }
+    }
 });
 
 App.WikipediaAdapter = DS.Adapter.extend({
@@ -3440,7 +3507,7 @@ App.WikipediaAdapter = DS.Adapter.extend({
                   }
                   else {
                       processContent();
-                  }                 
+                  }
 
               }, function (jqXHR) {
                   jqXHR.then = null; // tame jQuery's ill mannered promises

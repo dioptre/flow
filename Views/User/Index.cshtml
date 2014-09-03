@@ -214,7 +214,7 @@
 <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/jquery.flot.resize.js"></script>*@
 <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/theme.js"></script>
 
-<script src="~/Modules/EXPEDIT.Flow/Scripts/flow.js"></script>
+<script src="~/Modules/EXPEDIT.Flow/Scripts/flow.js?id=4"></script>
 
 
 
@@ -1051,8 +1051,8 @@
             <div class="col-md-6">
                 <div class="pretty-content">
                     {{view Ember.TextField valueBinding='title' classNameBindings=":search :form-control :hidden-sm :hidden-md :hidden-lg" style="width: 100%;"}}
-                    {{view Ember.TextField valueBinding='title' classNameBindings=":search :form-control :hidden-xs" style="width: 75%;"}}
-                    <h4 style="font-family: 'Open Sans', sans-serif;">Connect more topics using the search bar above...</h4>
+                    {{view Ember.TextField valueBinding='title' id='wikiSearch' classNameBindings=":search :form-control :hidden-xs" style="width: 75%;"}}                    
+                    <h4 style="font-family: 'Open Sans', sans-serif;">Connect more topics using the search bar above...<small {{action 'showDemo' }} style="cursor:pointer;font-family: 'Open Sans', sans-serif;color:#428bca;"><i class="icon-magic"></i>&nbsp;Show me how!</small></h4>
                     <br /><br />
                     <h1><b>{{humanName}}</b></h1>
                     {{#if model.content}}
@@ -1194,87 +1194,77 @@
 
                 <div class='pretty-content'>
                     {{safehtml model.selected.content}}
-                    <h3>Links</h3>
-                    {{#unless model.links.prev}}{{#unless model.links.next}}{{#unless model.links.into}}{{#unless model.links.out}}<p class="semi-transparent">No connections yet.</p>{{/unless}}{{/unless}}{{/unless}}{{/unless}}
-                    <div class="row">
-                        <div class="col-md-6">
-                            {{#if model.links.prev}}
-                                <h4>Previous</h4>
-                                {{#each model.links.prev}}
-                                  <p>
-                                    {{#ifeq color='red'}}
-                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="red"}}{{node.humanName}}{{/link-to}}
-                                    {{else}}
-                                        {{#ifeq color='green'}}
-                                            {{#link-to 'graph' node.id (query-params workflowID=wfid) class="green"}}{{node.humanName}}{{/link-to}}
-                                        {{else}}
-                                            {{#link-to 'graph' node.id (query-params workflowID=wfid) class="black"}}{{node.humanName}}{{/link-to}}
-                                        {{/ifeq}}
-                                    {{/ifeq}}
-                                  </p>
-                                {{/each}}
-                            {{/if}}
-                       </div>
-                       <div class="col-md-6">
-                         {{#if model.links.next}}
-                            <h4>Next</h4>
-                            {{#each model.links.next}}
-                              <p>
-                                {{#ifeq color='red'}}
-                                    {{#link-to 'graph' node.id (query-params workflowID=wfid) class="red"}}{{node.humanName}}{{/link-to}}
-                                {{else}}
-                                    {{#ifeq color='green'}}
-                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="green"}}{{node.humanName}}{{/link-to}}
-                                    {{else}}
-                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="black"}}{{node.humanName}}{{/link-to}}
-                                    {{/ifeq}}
-                                {{/ifeq}}
-                              </p>
-                            {{/each}}
-                           {{/if}}
-                       </div>   
-                    </div>
-                    <div class="row semi-transparent">
-                        <div class="col-md-6">
-                          {{#if model.links.into}}
-                            <h4>Into</h4>
-                            {{#each model.links.into}}
-                               <p>
-                                {{#ifeq color='red'}}
-                                    {{#link-to 'graph' node.id (query-params workflowID=wfid) class="red"}}{{node.humanName}}{{/link-to}}
-                                {{else}}
-                                    {{#ifeq color='green'}}
-                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="green"}}{{node.humanName}}{{/link-to}}
-                                    {{else}}
-                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="black"}}{{node.humanName}}{{/link-to}}
-                                    {{/ifeq}}
-                                {{/ifeq}}
-                              </p>
-                            {{/each}}
-                          {{/if}}
-                       </div>
-                       <div class="col-md-6">
-                          {{#if model.links.out}}
-                            <h4>Out</h4>
-                            {{#each model.links.out}}
-                               <p>
-                                {{#ifeq color='red'}}
-                                    {{#link-to 'graph' node.id (query-params workflowID=wfid) class="red"}}{{node.humanName}}{{/link-to}}
-                                {{else}}
-                                    {{#ifeq color='green'}}
-                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="green"}}{{node.humanName}}{{/link-to}}
-                                    {{else}}
-                                        {{#link-to 'graph' node.id (query-params workflowID=wfid) class="black"}}{{node.humanName}}{{/link-to}}
-                                    {{/ifeq}}
-                                {{/ifeq}}
-                              </p>
-                            {{/each}}
-                           {{/if}}
-                       </div>   
-                    </div>
+
                 </div>
 
+
+                <div class='next-steps'>
+                    <h3>Where to go next</h3>
+                    {{#unless nextSteps}}
+                        <p class="semi-transparent">No connections yet.</p>
+                    {{else}}
+                        <div class="row">
+                            <div class="col-md-6 next-steps-prev">
+                                {{#if model.links.prev}}
+                                    {{#each model.links.prev}}
+                                        <div {{bind-attr class=color}}>
+                                            {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
+                                                &#8592;  <!-- prev arrow -->
+                                                {{node.humanName}}
+                                            {{/link-to}}
+                                        </div>
+                                    {{/each}}
+                                {{/if}}
+                           </div>
+                           <div class="col-md-6 next-steps-fwd">
+                                {{#if model.links.next}}
+                                    {{#each model.links.next}}
+                                        <div {{bind-attr class=color}}>
+                                            {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
+                                                {{node.humanName}}
+                                                &#8594;<!-- next arrow -->
+                                            {{/link-to}}
+                                        </div>
+                                    {{/each}}
+                                {{/if}}
+                           </div>
+                        </div>
+                    {{/unless}}
+
+                    {{#if nextWorkflowSteps}}
+                        <div class="semi-transparent">
+                            <h3>Related next steps (other workflows)</h3>
+                            <div class="row">
+                                <div class="col-md-6 next-steps-prev">
+                                    {{#if model.links.into}}
+                                        {{#each model.links.into}}
+                                            <div {{bind-attr class=color}}>
+                                                {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
+                                                    &#8592;  <!-- prev arrow -->
+                                                    {{node.humanName}} ({{wfname}})
+                                                {{/link-to}}
+                                            </div>
+                                        {{/each}}
+                                    {{/if}}
+                               </div>
+                               <div class="col-md-6 next-steps-fwd">
+                                    {{#if model.links.out}}
+                                        {{#each model.links.out}}
+                                            <div {{bind-attr class=color}}>
+                                                {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
+                                                    {{node.humanName}} ({{wfname}})
+                                                    &#8594;<!-- next arrow -->
+                                                {{/link-to}}
+                                            </div>
+                                        {{/each}}
+                                    {{/if}}
+                               </div>
+                            </div>
+                        </div>
+                    {{/if}}
+                </div>
             </div>
+
 
             {{#unless isPreview}}
             <!-- WORKFLOW STARTS HERE -->
@@ -1306,7 +1296,7 @@
 
              <hr>
             {{#if isPreview}}
-                    <div><a href="http://flowpro.io" target="_blank" style="float:right;">Content provided by FlowPro.io</a></div> 
+                    <div><a href="http://flowpro.io" target="_blank" style="float:right;">Content provided by FlowPro.io</a></div>
             {{/if}}
 
             </div>
