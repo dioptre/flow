@@ -1789,10 +1789,10 @@ App.GraphController = Ember.ObjectController.extend({
         return name;
     }.property('selected.humanName'),
     nextSteps: function(){
-        return (this.get('model.links.prev').length > 0) || (this.get('model.links.next').length > 0);
+        return ((this.get('model.links.prev') && this.get('model.links.prev').length > 0) || (this.get('model.links.next') && this.get('model.links.next').length > 0));
     }.property('model.links.prev','model.links.next'),
     nextWorkflowSteps: function(){
-        return (this.get('model.links.into').length > 0) || (this.get('model.links.out').length > 0);
+        return ((this.get('model.links.into') && this.get('model.links.into').length > 0) || (this.get('model.links.out') && this.get('model.links.out').length > 0));
     }.property('model.links.into','model.links.out'),
     newName: null,
     newContent: null,
