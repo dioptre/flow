@@ -671,6 +671,9 @@ App.ApplicationController = Ember.Controller.extend({
     isLoggedIn: false,
     logoutModal: false,
     userProfile: '',
+    // getUserProfile: function(){
+
+    // },
     actions: {
         logoutUser: function(){
             var _this = this;
@@ -720,10 +723,10 @@ App.ApplicationView = Ember.View.extend({
 
                     // Pull in user information if it hasn't been set yet
                     if (result === true) {
-                        $.ajax({
-                          url: "/flow/myuserinfo"
-                        }).then(function(data){
+                       //_this.get('controller.getUserProfile')();
+                        $.ajax({url: "/flow/myuserinfo"}).then(function(data){
                             data.UserName = ToTitleCase(data.UserName);
+                            data.Licensed = data.Licenses && (data.Licenses.length > 0)
                             data.Thumb = "/share/photo/" + data.UserID;
                             _this.set('controller.userProfile', data);
                         }, function (jqXHR) {
@@ -1795,6 +1798,9 @@ App.GraphController = Ember.ObjectController.extend({
         return ((this.get('model.links.into') && this.get('model.links.into').length > 0) || (this.get('model.links.out') && this.get('model.links.out').length > 0));
     }.property('model.links.into','model.links.out'),
     newName: null,
+    previewNext: function () {
+        return (!this.get('nextSteps') && this.get('preview'));
+    }.property('preview', 'nextSteps'),
     newContent: null,
     workflowEditNameModal: false,
     workflowShareModal: false,
@@ -3107,7 +3113,18 @@ App.MySecurityList = DS.Model.extend({
 //  Don't need these
 // App.MyWhiteList = App.MySecurityList.extend({});
 // App.MyBlackList = App.MySecurityList.extend({});
-
+App.Myinfo = DS.Model.extend({
+    Companies: DS.attr(''),
+    ContactName: DS.attr(''),
+    CurrentCompany: DS.attr(''),
+    CurrentCompanyID: DS.attr(''),
+    IsPartner: DS.attr(''),
+    IsSubscriber: DS.attr(''),
+    Licenses: DS.attr(''),
+    Roles: DS.attr(''),
+    UserID: DS.attr(''),
+    UserName: DS.attr('')
+})
 
 App.MyLicense = DS.Model.extend({
     LicenseID: DS.attr(''),
@@ -3214,7 +3231,7 @@ App.MyProfile = DS.Model.extend({
     LocationID: DS.attr(''),
     Thumb: function () {
         return "/share/photo/" + this.get('AspNetUserID');
-    }.property()
+    }.property('AspNetUserID')
 });
 
 App.Wikipedia = DS.Model.extend({
@@ -3338,13 +3355,13 @@ App.WikipediaController = Ember.ObjectController.extend({
             Enumerable.From(_this.store.all('wikipedia').content).ForEach(function (data) {
                 _this.store.unloadRecord(data);
             });
-            
-            
-            
+
+
+
             var updateWikiSearch = function (text) {
                 $("#wikiSearch").blur();
                 _this.set('model.title', text);
-                setTimeout(function () { $("#wikiSearch").select(); }, 250);                
+                setTimeout(function () { $("#wikiSearch").select(); }, 250);
             }
 
             Ember.run.later(_this, function () { Messenger().post({ type: 'success', message: "Let's compare cats with dogs.<br/><br/>1. Type in cat.", id: 'wiki-help', hideAfter: 6 }) }, 0);
@@ -3368,7 +3385,7 @@ App.WikipediaController = Ember.ObjectController.extend({
                 }, 8000)}
                 ,'dog'
                 , 11000);
-            
+
 
         }
     }

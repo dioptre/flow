@@ -528,6 +528,7 @@ text-transform: capitalize;
 }
 /*For nav lock icon */
 .warning { color:rgb(167, 20, 20) !important; }
+.info-lock { color: rgb(255, 182, 0) !important; }
 .success-lock { color: rgb(53, 158, 61) !important; }
 
 
@@ -907,29 +908,32 @@ body.menu .svg-menu-toggle .bar:nth-of-type(3) {
   transform: rotate(45deg) translateY(0em) translateX(0em);
 }
 
+
+/*.next-steps {
+  border-top: 1px solid #ECECEC;
+}*/
 .next-steps .green {
     color:green;
 }
-
 .next-steps .red {
     color:red;
 }
 .next-steps a {
   color: inherit;
 }
-
-
-
 .semi-transparent {
     opacity:0.5;
 }
-
 .next-steps h3 {
   text-align: center;
   font-size: 16px;
   color: #b3b3b3;
   padding-top: 32px;
   padding-bottom: 8px;
+}
+.next-steps p {
+  text-align: center;
+  font-style: italic;
 }
 .next-steps-prev > div, .next-steps-fwd > div {
   margin-bottom: 5px;
