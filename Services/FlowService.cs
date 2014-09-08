@@ -873,8 +873,6 @@ namespace EXPEDIT.Flow.Services {
         {
             var company = _users.DefaultContactCompanyID;
             var companies = _users.ContactCompanies;
-            var contact = _users.ContactID;
-            var now = DateTime.UtcNow;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -893,6 +891,25 @@ namespace EXPEDIT.Flow.Services {
                 return true;
             }
         }
+
+        public bool UnlinkNode(Guid mid)
+        {
+            var company = _users.DefaultContactCompanyID;
+            var companies = _users.ContactCompanies;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                bool isNew;
+                var id = CheckNodePrivileges(d, null, mid, companies, company, ActionPermission.Delete, out isNew);
+                if (!id.HasValue || isNew || id != mid)
+                    return false;
+                var g = (from o in d.GraphData where o.GraphDataID == mid select o).Single();
+                d.GraphDataRelation.Where(f => f.FromGraphDataID == mid || f.ToGraphDataID == mid).Delete();
+                d.SaveChanges();
+                return true;
+            }
+        }
+
 
         public bool CreateEdge(FlowEdgeViewModel m)
         {

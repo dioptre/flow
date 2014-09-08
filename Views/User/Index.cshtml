@@ -1177,8 +1177,8 @@
                         Choose a new name below:<br />
                         {{eui-input valueBinding="model.workflow.name" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
 
-                        {{eui-button label="Cancel" action="cancelWorkflowNameNow" size='large'}}
-                        {{eui-button label="Submit" action="updateWorkflowNameNow" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                        {{eui-button label="Cancel" action="cancelWorkflowName" size='large'}}
+                        {{eui-button label="Submit" action="updateDirtyGraph" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
                     </div>
                 {{/eui-modal}}
 
@@ -1215,7 +1215,7 @@
                         {{tinymce-editor data=model.selected.content}}
 
                         {{eui-button label="Cancel" action="cancelProcess" size='large'}}
-                        {{eui-button label="Submit" action="updateProcess" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                        {{eui-button label="Submit" action="updateDirtyGraph" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
                     </div>
                 {{/eui-modal}}
 

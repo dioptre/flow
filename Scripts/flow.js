@@ -619,7 +619,7 @@ App.ApplicationRoute = Ember.Route.extend({
             var controller = this.controller;
 
             if(typeof controller !== 'undefined') {
-                console.log('loading')
+                //console.log('loading')
                 controller.get('startLoading')()
                 this.router.one('didTransition', function () {
                     controller.get('stopLoading')();
@@ -1991,57 +1991,9 @@ App.GraphController = Ember.ObjectController.extend({
     }.property('validateWorkflowName', 'validateNewName', 'validateExistingName'),
 
     actions: {
-        updateWorkflowNameNow: function(){
-            //new name - model.workflow.name
-            var _this = this;
-            newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
-            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
-                newWorkflow = App.Node.store.createRecord('workflow', {id: this.get('workflowID'), name: this.get('model.workflow.name') });
-            }
-            else
-                newWorkflow.set('name', this.get('workflowName'));
-            if (newWorkflow.currentState.parentState.dirtyType == 'created')
-                this.set('model.workflow', newWorkflow);
-            newWorkflow.save().then(function (data) {
-                Messenger().post({ type: 'success', message: "Workflow successfully updated." })
-                var wfid = _this.get('workflowID');
-                var all = Enumerable.From(App.Node.store.all('node').content);
-                var promises = [];
-                var nodes = [];
-                var edges = [];
-                all.ForEach(function (f) {
-                    promises.push(f.get('workflows').then(function (g) {
-                        $.each(g.content, function (key, value) {
-                            if (value.id == wfid) {
-                                nodes.push(f);
-                                f.save();
-                            }
-                        });
-                    }));
-                });
-
-                //Ember.RSVP.allSettled(promises).then(function (array) {
-                //});
-
-
-                if (_this.get('workflowGte2')) {
-                    //Enumerable.From(_this.get('model.workflows')).Where("f=>f.id==='" + _this.get('workflowID') + "'").Single().name = _this.get('model.workflow.name');
-                    // _this.refresh();
-                    location.reload();
-
-                    // this.get('model.workflows').findProperty('id', this.get('workflowID')) - don't need linq.zzz
-                }
-
-                _this.set('workflowEditNameModal', false);
-            }, function () {
-                Messenger().post({ type: 'error', message: "Workflow update failed. Try again please." })
-
-            })
-
-        },
-        cancelWorkflowNameNow: function (data, callback) {
+        cancelWorkflowName: function (data, callback) {
             var wf = this.store.getById('workflow', this.get('workflowID'));
-            if (typeof wf !== 'undefined' && wf && !wf.currentState.isEmpty) {
+            if (typeof wf !== 'undefined' && wf && wf.currentState.parentState.dirtyType != 'created') {
                 wf.rollback();
                 if (typeof this.get('workflow') !== 'undefined')
                     this.get('workflow').set('name', wf.get('name'));
@@ -2077,7 +2029,7 @@ App.GraphController = Ember.ObjectController.extend({
             }
             this.send('toggleWorkflowEditModal', data, callback);
         },
-        updateProcess: function () {
+        updateDirtyGraph: function () {
             var _this = this;
 
             tinyMCE.triggerSave();
@@ -2089,68 +2041,113 @@ App.GraphController = Ember.ObjectController.extend({
             }
             else
                 newWorkflow.set('name', this.get('workflowName'));
-            if (newWorkflow.currentState.parentState.dirtyType == 'created')
-                this.set('model.workflow', newWorkflow);
-            newWorkflow.save().then(function (data) {
-                Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
+
+            var updateDirtyProcesses = function () {
+                Enumerable.From(App.Node.store.all('node').content).Where("f=>f.get('isNew') && f.id !=='" + _this.get('model.selectedID') + "'").ForEach(function (newNode) {
+                    newNode.save().then(function (f) {
+                        Messenger().post({ type: 'success', message: 'Successfully Updated Changed Process' });
+                    }, function () {
+                        Messenger().post({ type: 'error', message: 'Error Updating Changed Process' });
+                    });
+                });
+            };
+
+            var updateProcesses = function () {
                 var newNode = App.Node.store.getById('node', _this.get('selectedID'));
                 if (typeof newNode === 'undefined' || !newNode) {
                     newNode = App.Node.store.createRecord('node', { id: _this.get('model.selectedID'), label: _this.get('model.selected.label'), content: _this.get('model.selected.content'), VersionUpdated: Ember.Date.parse(new Date()) });
                     this.set('model.selected', newNode);
                 }
-                newNode.save().then(function (f) {
-                    Messenger().post({ type: 'success', message: 'Successfully Updated Process' });
-                    var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
-                    _this.set('workflowEditModal', false);
+                if (newNode.get('isDirty')) {
+                    newNode.save().then(function (f) {
+                        Messenger().post({ type: 'success', message: 'Successfully Updated Process' });
+                        updateDirtyProcesses();
+                        var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
+                        _this.set('workflowEditModal', false);
+                    }, function () {
+                        if (_this.get('model'))
+                            Messenger().post({ type: 'error', message: 'Error Updating Process' });
+                        else
+                            Messenger().post({ type: 'error', message: 'Error Adding Process' });;
+                    });
+                }
+                else {
+                    updateDirtyProcesses();                    
+                }
+
+            };
+
+            if (newWorkflow.get('isDirty')) {
+                this.set('model.workflow', newWorkflow);
+                newWorkflow.save().then(function (data) {
+                    Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
+
+                    var wfid = _this.get('workflowID');
+                    var all = Enumerable.From(App.Node.store.all('node').content);
+                    var promises = [];
+                    var nodes = [];
+                    var edges = [];
+                    all.ForEach(function (f) {
+                        promises.push(f.get('workflows').then(function (g) {
+                            $.each(g.content, function (key, value) {
+                                if (value.id == wfid) {
+                                    nodes.push(f);
+                                    //f.save();
+                                }
+                            });
+                        }));
+                    });
+                    Ember.RSVP.allSettled(promises).then(function (array) {
+                        if (_this.get('workflowGte2')) { //Reload page if update dropdown emberui text (bug in emberui)
+                            //Enumerable.From(_this.get('model.workflows')).Where("f=>f.id==='" + _this.get('workflowID') + "'").Single().name = _this.get('model.workflow.name');
+                            // _this.refresh();
+                            location.reload();
+                            // this.get('model.workflows').findProperty('id', this.get('workflowID')) - don't need linq.zzz
+                        }
+                        _this.set('workflowEditNameModal', false);
+                        updateProcesses();
+                    });
                 }, function () {
-                    if (_this.get('model'))
-                        Messenger().post({ type: 'error', message: 'Error Updating Process' });
+                    if (_this.get('workflowID'))
+                        Messenger().post({ type: 'error', message: 'Error Updating Workflow.' });
                     else
-                        Messenger().post({ type: 'error', message: 'Error Adding Process' });;
+                        Messenger().post({ type: 'error', message: 'Error Adding Workflow' });
                 });
-            }, function () {
-                if (_this.get('workflowID'))
-                    Messenger().post({type:'error', message:'Error Updating Workflow.'});
-                else
-                    Messenger().post({type:'error', message:'Error Adding Workflow'});
-            });
+            } else {
+                updateProcesses();
+            }
         },
         addNewNode: function () {
             var _this = this;
-            newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
-            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined' || newWorkflow.currentState.parentState.dirtyType == 'created') {
-                this.send('updateWorkflowNameNow');
-            }
+            this.send('updateDirtyGraph');
             var c = this.get('newContent')
             var n = this.get('newName')
             var id = NewGUID();
             var newNode = { id: id, label: n, content: c, VersionUpdated: Ember.Date.parse(new Date()) };
             App.Node.store.createRecord('node', newNode).save().then(function (f) {
                 f.get('workflows').content.pushObject(_this.store.getById('workflow', _this.get('workflowID')));
-                Messenger().post({ type: 'success', message: 'Successfully Added Process' });
+                Messenger().post({ type: 'success', message: 'Successfully Added New Process' });
                 _this.set('newName', null);
                 _this.set('newContent', null);
                 _this.toggleProperty('workflowNewModal');
                 _this.set('updateGraph', NewGUID());
-            }, function () {
-                Messenger().post({type:'error', message:'Error Adding Process'});
+            }, function (o) {
+                Messenger().post({ type: 'error', message: 'Error Adding New Process. No Permission.' });
+                console.log(o);
             });
         },
         addNewEdge: function (data) {
             var _this = this;
-            newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
-            if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined'|| newWorkflow.currentState.parentState.dirtyType == 'created') {
-                this.send('updateWorkflowNameNow'); // create a new workflow if it doens't exist
-            }
+            this.send('updateDirtyGraph'); // create a new workflow if it doens't exist
             data.id = NewGUID();
             data.GroupID = this.get('workflowID');
-            App.Node.store.createRecord('edge', data).save().then(function (o) {
-                Messenger().post({ type: 'success', message: 'Successfully Added Connection' });
+            var newEdge = App.Node.store.createRecord('edge', data);
+            newEdge.save().then(function (o) {
+                Messenger().post({ type: 'success', message: 'Successfully Added New Connection' });
                 _this.set('updateGraph', NewGUID());
-            }, function () {
-                Messenger().post({type:'error', message:'Error Adding Connection'});
-                Messenger().post({type:'info', message:'No permission or No Workflow name set. Please try again.'});
-                _this.toggleProperty('workflowEditModal'); //Hack TODO can't save without wf
+            }, function (o) {
+                Messenger().post({type:'error', message:'Error Adding New Connection. No Permission. Can\'t connect to or from a node that is not in your permission.'});                
+                _this.store.deleteRecord(newEdge);
             });
         },
         deleteGraphItems: function (data, callback) {
@@ -2171,9 +2168,6 @@ App.GraphController = Ember.ObjectController.extend({
                     Messenger().post({ type: 'error', message: 'Error Updating Workflow' });
                 else {
                     _this = _this;
-
-
-
 
                     var currentSelected = _this.get('selected');
                     var currentWorkflow = _this.get('workflowID');
@@ -3011,7 +3005,7 @@ App.Node = DS.Model.extend({
         if (temp)
             return ToTitleCase(temp.replace(/_/g, ' '));
         else
-            return null;
+            return '';
     }.property('label'),
     VersionUpdated: DS.attr('date')
 });

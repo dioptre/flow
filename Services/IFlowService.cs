@@ -40,6 +40,9 @@ namespace EXPEDIT.Flow.Services
         bool DeleteNode(Guid nid);
 
         [OperationContract]
+        bool UnlinkNode(Guid nid);
+
+        [OperationContract]
         bool CreateEdge(FlowEdgeViewModel flow);
 
         [OperationContract]
