@@ -2186,7 +2186,7 @@ App.GraphController = Ember.ObjectController.extend({
             });
             Ember.RSVP.allSettled(promises).then(function (array) {
                 if (Enumerable.From(array).Any("f=>f.state=='rejected'"))
-                    Messenger().post({ type: 'error', message: 'Error Updating Workflow' });
+                    Messenger().post({ type: 'error', message: 'Error Updating Workflow Deletions' });
                 else {
                     _this = _this;
 
@@ -2224,10 +2224,8 @@ App.GraphController = Ember.ObjectController.extend({
                         }
                     });
 
-                }
-
-
-                 Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
+                    Messenger().post({ type: 'success', message: 'Successfully Updated Workflow Deletions' });
+                }               
 
 
             }, function (error) {
