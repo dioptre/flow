@@ -892,7 +892,7 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
-        public bool UnlinkNode(Guid mid)
+        public bool UnlinkNode(Guid mid, Guid? gid = null)
         {
             var company = _users.DefaultContactCompanyID;
             var companies = _users.ContactCompanies;
@@ -904,7 +904,10 @@ namespace EXPEDIT.Flow.Services {
                 if (!id.HasValue || isNew || id != mid)
                     return false;
                 var g = (from o in d.GraphData where o.GraphDataID == mid select o).Single();
-                d.GraphDataRelation.Where(f => f.FromGraphDataID == mid || f.ToGraphDataID == mid).Delete();
+                if (gid.HasValue)
+                    d.GraphDataRelation.Where(f => (f.FromGraphDataID == mid || f.ToGraphDataID == mid) && (f.GraphDataRelationID == gid.Value)).Delete();
+                else
+                    d.GraphDataRelation.Where(f => (f.FromGraphDataID == mid || f.ToGraphDataID == mid)).Delete();
                 d.SaveChanges();
                 return true;
             }

@@ -2123,8 +2123,8 @@ App.GraphController = Ember.ObjectController.extend({
             var c = this.get('newContent')
             var n = this.get('newName')
             var id = NewGUID();
-            var newNode = { id: id, label: n, content: c, VersionUpdated: Ember.Date.parse(new Date()) };
-            App.Node.store.createRecord('node', newNode).save().then(function (f) {
+            var newNode = App.Node.store.createRecord('node',{ id: id, label: n, content: c, VersionUpdated: Ember.Date.parse(new Date()) });
+            newNode.save().then(function (f) {
                 f.get('workflows').content.pushObject(_this.store.getById('workflow', _this.get('workflowID')));
                 Messenger().post({ type: 'success', message: 'Successfully Added New Process' });
                 _this.set('newName', null);
@@ -2133,7 +2133,7 @@ App.GraphController = Ember.ObjectController.extend({
                 _this.set('updateGraph', NewGUID());
             }, function (o) {
                 Messenger().post({ type: 'error', message: 'Error Adding New Process. No Permission.' });
-                console.log(o);
+                _this.store.unloadRecord(newNode);
             });
         },
         addNewEdge: function (data) {
@@ -2146,8 +2146,8 @@ App.GraphController = Ember.ObjectController.extend({
                 Messenger().post({ type: 'success', message: 'Successfully Added New Connection' });
                 _this.set('updateGraph', NewGUID());
             }, function (o) {
-                Messenger().post({type:'error', message:'Error Adding New Connection. No Permission. Can\'t connect to or from a node that is not in your permission.'});                
-                _this.store.deleteRecord(newEdge);
+                Messenger().post({type:'error', message:'Error Adding New Connection. No Permission. Can\'t connect to or from a node that is not in your permission list.'});                
+                _this.store.unloadRecord(newEdge);
             });
         },
         deleteGraphItems: function (data, callback) {
@@ -2160,8 +2160,26 @@ App.GraphController = Ember.ObjectController.extend({
             });
             Enumerable.From(data.nodes).ForEach(function (f) {
                 var m = App.Node.store.getById('node', f);
-                if (m)
-                    promises.push(m.destroyRecord());
+                if (m && !m.get('isNew')) {
+                    var promise = new Ember.RSVP.Promise(function (resolve, reject) {
+                        var wfid = _this.get('workflowID');
+                        var gid = m.id;
+                        $.ajax({
+                            url: '/flow/nodes',
+                            type: 'DELETE',
+                            data: { id: gid, workflows: wfid },
+                            success: function (result) {
+                                // Do something with the result
+                                m.unloadRecord();
+                                resolve(result);
+                            },
+                            error: function(jqXHR, textStatus, errorThrown) {
+                                reject(jqXHR);
+                            }
+                        });
+                    });
+                    promises.push(promise);
+                }
             });
             Ember.RSVP.allSettled(promises).then(function (array) {
                 if (Enumerable.From(array).Any("f=>f.state=='rejected'"))
