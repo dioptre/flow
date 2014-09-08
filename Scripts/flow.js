@@ -828,6 +828,9 @@ App.ApplicationView = Ember.View.extend({
             //     });
             // });
 
+
+            $('.preloader').remove();
+
             $('.navbar-nav').on("click", "li.notification-dropdown > a.trigger", function(e){
 
                 var $el = $(this).parent();
