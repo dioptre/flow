@@ -2042,13 +2042,16 @@ App.GraphController = Ember.ObjectController.extend({
             else
                 newWorkflow.set('name', this.get('workflowName'));
 
-            var updateDirtyProcesses = function () {
-                Enumerable.From(App.Node.store.all('node').content).Where("f=>f.get('isNew') && f.id !=='" + _this.get('model.selectedID') + "'").ForEach(function (newNode) {
-                    newNode.save().then(function (f) {
-                        Messenger().post({ type: 'success', message: 'Successfully Updated Changed Process' });
-                    }, function () {
-                        Messenger().post({ type: 'error', message: 'Error Updating Changed Process' });
-                    });
+            var updateDirtyProcesses = function () {                
+                Enumerable.From(App.Node.store.all('node').content).Where("f=>f.get('isDirty') && f.id !=='" + _this.get('model.selectedID') + "'").ForEach(
+                    function (newNode) {
+                        if (Enumerable.From(newNode.get('workflows').content.content).Any("f=>f.id=='" + _this.get('workflowID') + "'")) {
+                            newNode.save().then(function (f) {
+                                Messenger().post({ type: 'success', message: 'Successfully Updated Changed Process' });
+                            }, function () {
+                                Messenger().post({ type: 'error', message: 'Error Updating Changed Process' });
+                            });
+                        }
                 });
             };
 
@@ -2062,7 +2065,7 @@ App.GraphController = Ember.ObjectController.extend({
                     newNode.save().then(function (f) {
                         Messenger().post({ type: 'success', message: 'Successfully Updated Process' });
                         updateDirtyProcesses();
-                        var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
+                        //var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                         _this.set('workflowEditModal', false);
                     }, function () {
                         if (_this.get('model'))
@@ -2082,22 +2085,22 @@ App.GraphController = Ember.ObjectController.extend({
                 newWorkflow.save().then(function (data) {
                     Messenger().post({ type: 'success', message: 'Successfully Updated Workflow' });
 
-                    var wfid = _this.get('workflowID');
-                    var all = Enumerable.From(App.Node.store.all('node').content);
-                    var promises = [];
-                    var nodes = [];
-                    var edges = [];
-                    all.ForEach(function (f) {
-                        promises.push(f.get('workflows').then(function (g) {
-                            $.each(g.content, function (key, value) {
-                                if (value.id == wfid) {
-                                    nodes.push(f);
-                                    //f.save();
-                                }
-                            });
-                        }));
-                    });
-                    Ember.RSVP.allSettled(promises).then(function (array) {
+                    //var wfid = _this.get('workflowID');
+                    //var all = Enumerable.From(App.Node.store.all('node').content);
+                    //var promises = [];
+                    //var nodes = [];
+                    //var edges = [];
+                    //all.ForEach(function (f) {
+                    //    promises.push(f.get('workflows').then(function (g) {
+                    //        $.each(g.content, function (key, value) {
+                    //            if (value.id == wfid) {
+                    //                nodes.push(f);
+                    //                //f.save();
+                    //            }
+                    //        });
+                    //    }));
+                    //});
+                    //Ember.RSVP.allSettled(promises).then(function (array) {
                         if (_this.get('workflowGte2')) { //Reload page if update dropdown emberui text (bug in emberui)
                             //Enumerable.From(_this.get('model.workflows')).Where("f=>f.id==='" + _this.get('workflowID') + "'").Single().name = _this.get('model.workflow.name');
                             // _this.refresh();
@@ -2106,7 +2109,7 @@ App.GraphController = Ember.ObjectController.extend({
                         }
                         _this.set('workflowEditNameModal', false);
                         updateProcesses();
-                    });
+                    //});
                 }, function () {
                     if (_this.get('workflowID'))
                         Messenger().post({ type: 'error', message: 'Error Updating Workflow.' });
