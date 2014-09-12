@@ -10,6 +10,14 @@ function RedirectToLogin() {
 }
 
 
+$.ajaxSetup({
+    beforeSend: function (xhr, settings) {
+        if (settings.url.match(/\/\//igm) === null)
+            settings.url = expHost + settings.url;
+    }
+});
+
+
 App = Ember.Application.create({
     // LOG_TRANSITIONS: true,
     rootElement: '#emberapphere'
@@ -1017,6 +1025,7 @@ App.Router.reopen({
 
 
 App.ApplicationAdapter = DS.RESTAdapter.extend({
+    host: expHost,
     namespace: 'flow',
     headers: {
         __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
