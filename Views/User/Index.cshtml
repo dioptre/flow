@@ -954,6 +954,10 @@
 
 
         <div class="row">
+            <div class="col-md-6 networkColumn">
+                <br>
+                {{viz-editor selected=selected data=graphData openModal="toggleWorkflowEditModal"}}
+            </div>
             <div class="col-md-6">
                 <div class="pretty-content">
                     {{view Ember.TextField valueBinding='title' classNameBindings=":search :form-control :hidden-sm :hidden-md :hidden-lg" style="width: 100%;"}}
@@ -966,10 +970,6 @@
                     {{/if}}
                 </div>
             </div>
-            <div class="col-md-6 networkColumn">
-                <br>
-                {{viz-editor selected=selected data=graphData openModal="toggleWorkflowEditModal"}}
-            </div>
         </div>
     </div>
 
@@ -979,6 +979,37 @@
   <script type="text/x-handlebars" id="graph">
     <div class="container-fluid">
         <div class="row processes">
+
+            <!-- WORKFLOW STARTS HERE -->
+            {{#unless isPreview}}
+
+            <div class="col-md-6 process-header">
+                <h4><small>Workflow</small></h4>
+                <h1>
+                    {{#if workflowName }}
+                        {{#if workflowGte2}}
+                            {{eui-select optionsBinding='workflowsOptionsArray' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='medium' width='300px'}}
+                        {{else}}
+                            {{workflowName}}
+                        {{/if}}
+                    {{else}}
+                        Current step has no workflow yet. Please choose a workflow name.
+                    {{/if}}
+
+                    {{#if controllers.application.isLoggedIn}}
+                        <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray' title="Edit Workflow">
+                            <i class="icon-pencil"></i> {{!--Edit Workflow name--}}
+                        </span>
+                    {{/if}}
+                </h1>
+                <hr>
+                <div class="vh-75 networkColumn">
+                    {{viz-editor workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=controllers.application.isLoggedIn toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
+                </div>
+            </div>
+            {{/unless}}
+
+
             <!-- PROCESS VIEW STARTS HERE -->
             <div {{bind-attr class='columnLayout'}}>
             {{#if isPreview}}
@@ -1178,33 +1209,7 @@
             </div>
 
 
-            {{#unless isPreview}}
-            <!-- WORKFLOW STARTS HERE -->
-            <div class="col-md-6 process-header">
-                <h4><small>Workflow</small></h4>
-                <h1>
-                    {{#if workflowName }}
-                        {{#if workflowGte2}}
-                            {{eui-select optionsBinding='workflowsOptionsArray' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='medium' width='300px'}}
-                        {{else}}
-                            {{workflowName}}
-                        {{/if}}
-                    {{else}}
-                        Current step has no workflow yet. Please choose a workflow name.
-                    {{/if}}
 
-                    {{#if controllers.application.isLoggedIn}}
-                        <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray' title="Edit Workflow">
-                            <i class="icon-pencil"></i> {{!--Edit Workflow name--}}
-                        </span>
-                    {{/if}}
-                </h1>
-                <hr>
-                <div class="vh-75 networkColumn">
-                    {{viz-editor workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=controllers.application.isLoggedIn toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems'}}
-                </div>
-            </div>
-            {{/unless}}
 
              <hr>
             {{#if isPreview}}
@@ -2082,7 +2087,7 @@
 
 
 
-        
+
         <!-- Analytics -->
         <script>
 

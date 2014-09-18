@@ -2441,6 +2441,7 @@ App.VizEditorComponent = Ember.Component.extend({
                 var wfid = _this.get('workflowID'); // has to be synched with data
                 if (!IsGUID(data.nodes[0])
                     || Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  (f.get('from') === '" + data.nodes[0] + "' || f.get('to') === '" + data.nodes[0] + "')")
+                    || !Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' && f.get('to') !== null")
                     //|| !Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  ((f.get('from') === '" + _this.get('selected') + "' && f.get('to') !== null) || f.get('to') === '" + _this.get('selected') + "' )")
                     ) {
                     _this.set('selected', data.nodes[0]);
