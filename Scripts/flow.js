@@ -168,7 +168,7 @@ App.PermissionController = Ember.ObjectController.extend({
         return 'Permissions for ' + text;
     }.property('type'),
     queryParams: ['type'],
-    types: [{ id: 'node', text: 'Processes' }, { id: 'workflow', text: 'Workflows' }, { id: 'file', text: 'Files' }],
+    types: [{ id: 'node', text: 'Steps' }, { id: 'workflow', text: 'Workflows' }, { id: 'file', text: 'Files' }],
     type: 'node',
     actions: {
         deletePermission: function (item) {
@@ -1685,7 +1685,7 @@ App.GraphRoute = Ember.Route.extend({
     },
     actions: {
         error: function(){
-            Messenger().post({ type: 'error', message: 'Could not find process. Ensure you have permission and are logged in.' });
+            Messenger().post({ type: 'error', message: 'Could not find step. Ensure you have permission and are logged in.' });
             // Ember.run.later(null, RedirectToLogin, 3000); maybe not do a refresh
         }
     },
@@ -1791,7 +1791,7 @@ App.GraphRoute = Ember.Route.extend({
 
             var newNode = App.Node.store.createRecord('node', {
                 id: m.selectedID,
-                label: 'Untitled Process - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'),
+                label: 'Untitled Step - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'),
                 content: '',
                 VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss'))
             });
@@ -1815,7 +1815,7 @@ App.GraphController = Ember.ObjectController.extend({
     needs: ['application'],
     queryParams: ['workflowID', 'preview'],
     title: function(){
-        var name = this.get('selected.humanName') + ' Process';
+        var name = this.get('selected.humanName') + ' Step';
         App.setTitle(name);
         return name;
     }.property('selected.humanName'),
@@ -2059,9 +2059,9 @@ App.GraphController = Ember.ObjectController.extend({
                     function (newNode) {
                         if (Enumerable.From(newNode.get('workflows').content.content).Any("f=>f.id=='" + _this.get('workflowID') + "'")) {
                             newNode.save().then(function (f) {
-                                Messenger().post({ type: 'success', message: 'Successfully Updated Changed Process' });
+                                Messenger().post({ type: 'success', message: 'Successfully Updated Changed Step' });
                             }, function () {
-                                Messenger().post({ type: 'error', message: 'Error Updating Changed Process' });
+                                Messenger().post({ type: 'error', message: 'Error Updating Changed Step' });
                             });
                         }
                 });
@@ -2075,15 +2075,15 @@ App.GraphController = Ember.ObjectController.extend({
                 }
                 if (newNode.get('isDirty')) {
                     newNode.save().then(function (f) {
-                        Messenger().post({ type: 'success', message: 'Successfully Updated Process' });
+                        Messenger().post({ type: 'success', message: 'Successfully Updated Step' });
                         updateDirtyProcesses();
                         //var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                         _this.set('workflowEditModal', false);
                     }, function () {
                         if (_this.get('model'))
-                            Messenger().post({ type: 'error', message: 'Error Updating Process' });
+                            Messenger().post({ type: 'error', message: 'Error Updating Step' });
                         else
-                            Messenger().post({ type: 'error', message: 'Error Adding Process' });;
+                            Messenger().post({ type: 'error', message: 'Error Adding Step' });;
                     });
                 }
                 else {
@@ -2141,13 +2141,13 @@ App.GraphController = Ember.ObjectController.extend({
             var newNode = App.Node.store.createRecord('node',{ id: id, label: n, content: c, VersionUpdated: Ember.Date.parse(new Date()) });
             newNode.save().then(function (f) {
                 f.get('workflows').content.pushObject(_this.store.getById('workflow', _this.get('workflowID')));
-                Messenger().post({ type: 'success', message: 'Successfully Added New Process' });
+                Messenger().post({ type: 'success', message: 'Successfully Added New Step' });
                 _this.set('newName', null);
                 _this.set('newContent', null);
                 _this.toggleProperty('workflowNewModal');
                 _this.set('updateGraph', NewGUID());
             }, function (o) {
-                Messenger().post({ type: 'error', message: 'Error Adding New Process. No Permission.' });
+                Messenger().post({ type: 'error', message: 'Error Adding New Step. No Permission.' });
                 _this.store.unloadRecord(newNode);
             });
         },
@@ -2228,7 +2228,7 @@ App.GraphController = Ember.ObjectController.extend({
                             if (nodes.length >= 1) {  // if selected node was deleted transition to this node
                                 _this.transitionToRoute('graph', nodes[0].id);
                             } else {
-                                Messenger().post({ type: 'info', message: 'All processes in current workflow deleted. Redirecting to search.' });
+                                Messenger().post({ type: 'info', message: 'All steps in current workflow deleted. Redirecting to search.' });
                                 _this.transitionToRoute('search');
                             }
                         } else {
@@ -2358,14 +2358,14 @@ App.VizEditorComponent = Ember.Component.extend({
             //},
             //configurePhysics: true,
             labels:{
-                  add:"Add Process",
+                  add:"Add Step",
                   edit:"Edit",
                   link:"Add Connection",
                   del:"Delete selected",
-                  editNode:"Edit Process",
+                  editNode:"Edit Step",
                   back:"Back",
-                  addDescription:"Click the empty space to create a Process.",
-                  linkDescription:"Connect Processes by dragging.",
+                  addDescription:"Click the empty space to create a Step.",
+                  linkDescription:"Connect Steps by dragging.",
                   addError:"The function for add does not support two arguments (data,callback).",
                   linkError:"The function for connect does not support two arguments (data,callback).",
                   editError:"The function for edit does not support two arguments (data, callback).",
@@ -2399,7 +2399,7 @@ App.VizEditorComponent = Ember.Component.extend({
             },
             onDelete: function (data, callback) {
                 if (data.nodes.length > 0) {
-                    var r = confirm("Sure you want to delete this process?");
+                    var r = confirm("Sure you want to delete this step?");
                     if (!r) {
                         return false;
                     }
@@ -2743,7 +2743,7 @@ App.VizEditorComponent = Ember.Component.extend({
             // Make selectbox work after it's been inserted to the view - jquery hackss
             Ember.run.scheduleOnce('afterRender', this, function () {
                 $('#existingNodesel').select2({
-                    placeholder: "Enter Process...",
+                    placeholder: "Enter Step...",
                     minimumInputLength: 2,
                     tags: true,
                     //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
@@ -2811,7 +2811,7 @@ App.VizEditorComponent = Ember.Component.extend({
                         //_this.get('data').nodes.push(a); //, currentNodesonScreen.nodes.concat([]));
 
                     } else {
-                        alert('Process already in workflow.')
+                        alert('Step already in workflow.')
                     }
                 });
             }
@@ -3809,12 +3809,16 @@ App.TinymceEditorComponent = Ember.Component.extend({
                 if (newData) _this.set('data', cleanData);
                 _this.set('watchData', true);
             });
+
         }
 
         // Set content once initialized
         config.init_instance_callback = function (editor) {
             _this.update();
             //resize();
+            $('div').each(function () {
+                $(this).attr('title', $(this).attr('aria-label'));
+            });
         }
 
         tinyMCE.init(config);

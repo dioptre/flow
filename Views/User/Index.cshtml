@@ -339,7 +339,7 @@
 </script>
 
 <script type="text/x-handlebars" id="myworkflows">
-    <h3> My Workflows & Processes</h3>
+    <h3> My Workflows & Steps</h3>
     <br><br>
     {{#if loading}}
       Loading...
@@ -412,7 +412,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    {{model.processes.length}} <b>Processes</b>
+                    {{model.processes.length}} <b>Steps</b>
 
                     {{#if model.processes}}
                         <div class="table-responsive">
@@ -444,7 +444,7 @@
                           </table>
                         </div>
                     {{else}}
-                        You have not created any processes yet.
+                        You have not created any steps yet.
                     {{/if}}
                 </div>
             </div>
@@ -453,7 +453,7 @@
          You have no files.
       {{/if}}
       {{else}}
-           You are not logged in. Please {{link-to 'login' 'login'}} to see your workflows and processes.
+           You are not logged in. Please {{link-to 'login' 'login'}} to see your workflows and steps.
       {{/if}}
     {{/if}}
 </script>
@@ -784,12 +784,12 @@
                                             <i class="icon-download-alt"></i> New order placed
                                             <span class="time"><i class="icon-time"></i> 1 day.</span>
                                         </a>
+                                    -->
 
                                         <div class="footer">
-                                            <a href="/store/" class="logout">Buy new licenses</a>
+                                            <a href="/store/" class="logout">Buy License</a>
                                         </div>
 
-                                    -->
 
                                 </div>
                             </div>
@@ -919,13 +919,13 @@
   <script type="text/x-handlebars" id="components/viz-editor">
                 {{#eui-modal openBinding="existingNodeModal"}}
                     <div style="padding: 50px; text-align: center;">
-                        <h4>Add existing Process</h4>
+                        <h4>Add existing Step</h4>
 
                         <br>
-                        <p> You can add an existing process by using the input box below: </p>
+                        <p> You can add an existing steps by using the input box below: </p>
                         <br>
 
-                        <b>Add Process:</b><br>
+                        <b>Add Step:</b><br>
                         <input id="existingNodesel" style="width: 276px;" class='select2' type='hidden'/>
 
                         <br>
@@ -936,7 +936,7 @@
                     </div>
                 {{/eui-modal}}
                 {{#if editing}}
-      <prettygirl class="graphButtons">{{#if isWorkflow}}<div class='graphButton-group'><a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign"></i>&nbsp;Add Process&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down"></i>&nbsp;Add Existing Process&nbsp;</a></div><div class='graphButton-group'><a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a><a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Add Connection&nbsp;</a></div>{{#if isSelected}}<div class='graphButton-group'><a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash"></i>&nbsp;Delete Selected&nbsp;</a></div>{{/if}}{{/if}}<div class='graphButton-group'><a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share"></i>&nbsp;Export&nbsp;Workflow</a></div></prettygirl>{{/if}}</script>
+      <prettygirl class="graphButtons">{{#if isWorkflow}}<div class='graphButton-group'><a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign"></i>&nbsp;Add Step&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down"></i>&nbsp;Add Existing Step&nbsp;</a></div><div class='graphButton-group'><a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a><a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Add Connection&nbsp;</a></div>{{#if isSelected}}<div class='graphButton-group'><a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash"></i>&nbsp;Delete Selected&nbsp;</a></div>{{/if}}{{/if}}<div class='graphButton-group'><a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share"></i>&nbsp;Export&nbsp;Workflow</a></div></prettygirl>{{/if}}</script>
 
 
   <script type="text/x-handlebars" id="wikipedia">
@@ -1007,26 +1007,26 @@
                            /* margin-left: 177px;*/
                         }
                     </style>
-                    <h4><small>Process</small></h4>
+                    <h4><small>Step</small></h4>
             {{/if}}
                <h1>
                     {{#if model.selected}}{{humanReadableName}}{{/if}}
                     {{#if controllers.application.isLoggedIn}}
                     {{#unless isPreview}}
-                        <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray'>
+                        <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit Step">
                             <i class="icon-pencil"></i>
                         </span>&nbsp;
-                        <span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;">
+                        <span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;" title="Share or embed in your website">
                            <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
                         </span>&nbsp;
-                       <span {{action 'togglePreview' }} class='btn-flat gray'>
+                       <span {{action 'togglePreview' }} class='btn-flat gray' title="Preview for sharing">
                            <i class="icon-play"></i>
                        </span>
                     {{/unless}}
                     {{/if}}
                     {{#if isPreview}}
                         <small>{{workflowName}}</small>
-                       <span {{action 'togglePreview' }} class='btn-flat gray'>
+                       <span {{action 'togglePreview' }} class='btn-flat gray' title="Edit Content @@ FlowPro.io">
                            <i class="icon-pencil"></i>
                        </span>
                     {{/if}}
@@ -1051,7 +1051,7 @@
 
                 {{#eui-modal openBinding="workflowShareModal"}}
                      <div style="padding: 50px; text-align: center; max-width:530px;">
-                         <h4>Share Workflow Process</h4>
+                         <h4>Share Workflow Steps</h4>
                          <br />
                          <br />
                          {{#unless generatePreviewLink}}
@@ -1072,9 +1072,9 @@
 
                  {{#eui-modal openBinding="workflowEditModal" style="full"}}
                     <div style="padding: 50px; text-align: center;">
-                        <p> The process name: </p>
+                        <p> The step name: </p>
 
-                        {{eui-input valueBinding="model.selected.label" placeholder='Enter a process name' error=validateNewName forceErrorCheck=true}}
+                        {{eui-input valueBinding="model.selected.label" placeholder='Enter a step name' error=validateNewName forceErrorCheck=true}}
 
                         <br /> <br /> <br /> <br /> <!-- fixes spacing issue with error modal on eui-input -->
 
@@ -1087,8 +1087,8 @@
 
                 {{#eui-modal openBinding="workflowNewModal" style="full"}}
                     <div style="padding: 50px; text-align: center;">
-                        <p> The new process name: </p>
-                        {{eui-input valueBinding="newName" placeholder='Enter a new process name' error=validateNewNewName forceErrorCheck=true}}
+                        <p> The new step name: </p>
+                        {{eui-input valueBinding="newName" placeholder='Enter a new step name' error=validateNewNewName forceErrorCheck=true}}
 
                         <br /> <br /> <br /> <br /> <!-- fixes spacing issue with error modal on eui-input -->
 
@@ -1190,11 +1190,11 @@
                             {{workflowName}}
                         {{/if}}
                     {{else}}
-                        Current process has no workflow yet. Please choose a workflow name.
+                        Current step has no workflow yet. Please choose a workflow name.
                     {{/if}}
 
                     {{#if controllers.application.isLoggedIn}}
-                        <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray'>
+                        <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray' title="Edit Workflow">
                             <i class="icon-pencil"></i> {{!--Edit Workflow name--}}
                         </span>
                     {{/if}}
@@ -1254,13 +1254,13 @@
                 Workflows:
                 {{view Ember.Checkbox checkedBinding='wf'}}
                 &nbsp;|&nbsp;
-                Processes:
+                Steps:
                 {{view Ember.Checkbox checkedBinding='graph'}}
                 &nbsp;|&nbsp;
                 Files:
                 {{view Ember.Checkbox checkedBinding='file'}}
                 &nbsp;|&nbsp;
-                Process Locations:
+                Step Locations:
                 {{view Ember.Checkbox checkedBinding='map'}}
                 <br><br>
                 {{eui-button label="Done" action="toggleSettingsModal" style='primary' size='large'}}
@@ -1419,7 +1419,7 @@
         {{/if}}
     {{/unless}}
 
-  <h3>Processes</h3>
+  <h3>Steps</h3>
 
 
   {{#if loading}}
@@ -2000,7 +2000,7 @@
         <script type="text/x-handlebars" id="workflow">&nbsp;</script>
 
         <script type="text/x-handlebars" id="mylicenses">
-            <h3> My Licenses @*<small><a href="/store/">Buy License</a></small>*@</h3>
+            <h3> My Licenses <small><a href="/store/">Buy License</a></small></h3>
             <br><br>
             {{#if loading}}
               Loading...
