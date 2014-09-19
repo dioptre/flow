@@ -1862,7 +1862,7 @@ App.GraphController = Ember.ObjectController.extend({
         return window.document.URL;
     }.property('workflowID', 'model.selected', 'preview', 'generatePreviewLink'),
     previewURL: function () {
-        if (queryParamsLookup('preview') !== null)
+        if (queryParamsLookup('preview') !== null && queryParamsLookup('preview') !== 'false' && queryParamsLookup('preview') !== false)
             return window.document.URL;
         else
             return window.document.URL + '&preview=true';
@@ -3166,7 +3166,7 @@ App.Myinfo = DS.Model.extend({
     Roles: DS.attr(''),
     UserID: DS.attr(''),
     UserName: DS.attr('')
-})
+});
 
 App.MyLicense = DS.Model.extend({
     LicenseID: DS.attr(''),
@@ -3274,6 +3274,15 @@ App.MyProfile = DS.Model.extend({
     Thumb: function () {
         return "/share/photo/" + this.get('AspNetUserID');
     }.property('AspNetUserID')
+});
+
+App.Translation = DS.Model.extend({
+    DocType: DS.attr(''),
+    DocID: DS.attr(''),
+    DocName: DS.attr(''),
+    TranslationCulture: DS.attr(''),
+    TranslationName: DS.attr(''),
+    TranslationText: DS.attr('')
 });
 
 App.Wikipedia = DS.Model.extend({

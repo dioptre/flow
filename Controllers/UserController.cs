@@ -27,6 +27,7 @@ using Orchard.Users.Services;
 using Orchard.Users.Events;
 using NKD.Models;
 
+
 namespace EXPEDIT.Flow.Controllers {
 
     [Themed]
@@ -619,6 +620,53 @@ namespace EXPEDIT.Flow.Controllers {
             }
         }
 
+
+
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Translations")]
+        public ActionResult CreateTranslation(TranslationViewModel m)
+        {
+            //return new EmptyResult();
+            return UpdateTranslation(m);
+        }
+
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("Translations")]
+        public ActionResult UpdateTranslation(TranslationViewModel m)
+        {
+            if (m.translation != null && m.translation.id != null)
+                m = m.translation;
+            if (_Flow.UpdateTranslation(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+        }
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("Translations")]
+        public ActionResult GetTranslation(TranslationViewModel m)
+        {
+            if (m.translation != null && m.translation.id != null)
+                m = m.translation;
+            m.SearchType = SearchType.Flow;
+            if (string.IsNullOrWhiteSpace(m.DocType) || m.DocType == "undefined" || m.DocType == "process")
+                m.SearchType = SearchType.Flow;
+            else if (m.DocType == "file")
+                m.SearchType = SearchType.File;
+            else if (m.DocType == "model")
+                m.SearchType = SearchType.Model;
+            else if (m.DocType == "flowlocation")
+                m.SearchType = SearchType.FlowLocation;
+            else if (m.DocType == "workflow")
+                m.SearchType = SearchType.FlowGroup;
+            if (m.id.HasValue && _Flow.GetTranslation(m))
+                return new JsonHelper.JsonNetResult(m, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+        }
 
 
     }

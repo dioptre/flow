@@ -37,6 +37,10 @@ using CookComputing.XmlRpc;
 using Orchard.Users.Events;
 using NKD.ViewModels;
 
+using System.Net.Http;
+using System.Globalization;
+using System.Threading.Tasks;
+
 
 namespace EXPEDIT.Flow.Services {
 
@@ -1721,6 +1725,140 @@ namespace EXPEDIT.Flow.Services {
 
         public void Approved(IUser user) { }
 
+        public bool GetTranslation(TranslationViewModel m)
+        {
+
+            using (var client = new HttpClient())
+            {
+                var translateURL = @"https://www.googleapis.com/language/translate/v2";
+                try
+                {            
+                    var contact = _users.ContactID;
+                    var application = _users.ApplicationID;
+                    if (!CheckPermission(m.id.Value, ActionPermission.Read, typeof(GraphData)))
+                        return false;
+                    using (new TransactionScope(TransactionScopeOption.Suppress))
+                    {
+                        var d = new NKDC(_users.ApplicationConnectionString, null);
+                        switch (m.SearchType)
+                        {
+                            case SearchType.Flow:
+                                m.TableType = d.GetTableName(typeof(GraphData));
+                                break;
+                            default:
+                                return false;
+                        }
+
+                        var translation = (from o in d.TranslationData where o.ReferenceID == m.id && o.TableType == m.TableType && o.TranslationCulture == m.TranslationCulture && o.Version == 0 && o.VersionDeletedBy == null select o).FirstOrDefault();
+                        if (translation == null)
+                        {
+                            var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
+                            var lang = cultures.FirstOrDefault(f => f.Name.StartsWith(m.TranslationCulture));
+                            string originalName, originalText;
+                            DateTime originalUpdated;
+                            Guid? originalContact, originalCompany;
+                            switch (m.SearchType)
+                            {
+                                case SearchType.Flow:
+                                    var model = (from o in d.GraphData where o.GraphDataID == m.id && o.VersionDeletedBy == null && o.Version == 0 select o).FirstOrDefault();
+                                    if (model == null)
+                                        return false;
+                                    originalName = model.GraphName;
+                                    originalText = model.GraphContent;
+                                    originalUpdated = model.VersionUpdated ?? DateTime.UtcNow;
+                                    originalContact = model.VersionOwnerContactID;
+                                    originalCompany = model.VersionOwnerCompanyID;
+                                    break;
+                                default:
+                                    return false;
+                            }
+                            Task<HttpResponseMessage> rName = null, rText = null;
+                            Func<Task<HttpResponseMessage>, Task<string>> responseContent = async delegate(Task<HttpResponseMessage> responseAsync) {
+                                var response = responseAsync.Result;
+                                if (response.IsSuccessStatusCode)
+                                {
+                                    dynamic json = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
+                                    return json.data.translations[0].translatedText;
+                                }
+                                else
+                                {
+                                    return null;
+                                }
+                            };
+                            if (!string.IsNullOrWhiteSpace(originalName))
+                            {
+                                client.DefaultRequestHeaders.Accept.Clear();
+                                var requestContent = new FormUrlEncodedContent(new[] { 
+                                    new KeyValuePair<string, string>("key", "AIzaSyA7mP-819Mgz4dy6X0NIlQ6SjyzDn5QEJA") ,
+                                    //new KeyValuePair<string, string>("source", "en") ,
+                                    new KeyValuePair<string, string>("target", lang.TwoLetterISOLanguageName),
+                                    new KeyValuePair<string, string>("q", originalName) 
+                                });
+                                client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "GET");
+                                rName = client.PostAsync(translateURL, requestContent);
+                                
+                            }
+                            if (!string.IsNullOrWhiteSpace(originalText))
+                            {
+                                client.DefaultRequestHeaders.Accept.Clear();
+                                var requestContent = new FormUrlEncodedContent(new[] { 
+                                    new KeyValuePair<string, string>("key", "AIzaSyA7mP-819Mgz4dy6X0NIlQ6SjyzDn5QEJA") ,
+                                    //new KeyValuePair<string, string>("source", "en") ,
+                                    new KeyValuePair<string, string>("target", lang.TwoLetterISOLanguageName),
+                                    new KeyValuePair<string, string>("q", originalText) 
+                                });
+                                //client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "GET");
+                                rText = client.PostAsync(translateURL, requestContent);
+
+                            }
+                            m.TranslationName = responseContent(rName).Result;
+                            m.TranslationText = responseContent(rText).Result;
+                            if (!string.IsNullOrWhiteSpace(m.TranslationName) || !string.IsNullOrWhiteSpace(m.TranslationText))
+                            {
+                                translation = new TranslationData
+                                {
+                                    TableType = m.TableType,
+                                    ReferenceID = m.id,
+                                    ReferenceName = originalName,
+                                    ReferenceUpdated = originalUpdated,
+                                    OriginCulture = m.OriginCulture ?? "en-US",
+                                    TranslationCulture = lang.Name, //TODO could check real culture
+                                    TranslationName = m.TranslationName,
+                                    Translation = m.TranslationText,
+                                    VersionUpdated = DateTime.UtcNow,
+                                    VersionOwnerContactID = originalContact,
+                                    VersionOwnerCompanyID = originalCompany,
+                                    VersionUpdatedBy = contact
+                                };
+                                d.TranslationData.AddObject(translation);
+                                d.SaveChanges();
+                                return true;
+                            }
+                            return false;
+                          
+                        }
+                        else
+                        {
+                            m.TranslationText = translation.Translation;
+                            m.TranslationName = translation.TranslationName;
+                            return true;
+                        }
+                        
+                    }
+                    
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
+            }
+        
+        }
+
+        public bool UpdateTranslation(TranslationViewModel m)
+        {
+            return false;
+        }
 
     }
 }

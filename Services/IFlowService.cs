@@ -106,6 +106,12 @@ namespace EXPEDIT.Flow.Services
         [OperationContract]
         bool CheckNodePermission(Guid gid, ActionPermission permission);
 
+        [OperationContract]
+        bool GetTranslation(TranslationViewModel m);
+
+        [OperationContract]
+        bool UpdateTranslation(TranslationViewModel m);
+
 
     }
 }
