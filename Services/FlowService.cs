@@ -1739,6 +1739,8 @@ namespace EXPEDIT.Flow.Services {
                     switch (m.SearchType)
                     {
                         case SearchType.FlowGroup:
+                            if (!CheckPermission(m.DocID.Value, ActionPermission.Read, typeof(GraphDataGroup)))
+                                return false;
                             m.TableType = d.GetTableName(typeof(GraphDataGroup));
                             m.TranslationQueue = (from g in d.GraphDataGroups.Where(f => f.GraphDataGroupID == m.DocID && f.Version == 0 && f.VersionDeletedBy == null)
                                                   join t in d.TranslationData.Where(f => f.ReferenceID == m.DocID && f.TableType == m.TableType && f.TranslationCulture == m.TranslationCulture && f.Version == 0 && f.VersionDeletedBy == null)
@@ -1763,6 +1765,8 @@ namespace EXPEDIT.Flow.Services {
                                                       ));
                             break;
                         case SearchType.Flows:
+                            if (!CheckPermission(m.DocID.Value, ActionPermission.Read, typeof(GraphDataGroup)))
+                                return false;
                             m.TableType = d.GetTableName(typeof(GraphData));
                             m.TranslationQueue = (from g in (from g in d.GraphData
                                                   join gg in d.GraphDataRelation.Where(f=>f.GraphDataGroupID == m.DocID && f.Version == 0 && f.VersionDeletedBy == null)
@@ -1941,6 +1945,7 @@ namespace EXPEDIT.Flow.Services {
                         TranslationName = o.Value.TranslatedName,
                         id = o.Value.TranslationDataID,
                         DocID = o.Key,
+                        DocType = m.TableType,
                         DocName = o.Value.OriginalName
                     }).ToArray();
 
@@ -1958,6 +1963,45 @@ namespace EXPEDIT.Flow.Services {
 
         public bool UpdateTranslation(TranslationViewModel m)
         {
+
+            try
+            {
+                var contact = _users.ContactID;
+                var application = _users.ApplicationID;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    switch (m.SearchType)
+                    {
+                        case SearchType.FlowGroup:
+                            if (!CheckPermission(m.DocID.Value, ActionPermission.Update, typeof(GraphDataGroup)))
+                                return false;
+                            m.TableType = d.GetTableName(typeof(GraphDataGroup));
+                            break;
+                        case SearchType.Flow:
+                            if (!CheckPermission(m.DocID.Value, ActionPermission.Update, typeof(GraphData)))
+                                return false;
+                            m.TableType = d.GetTableName(typeof(GraphData));
+                            break;
+                        default:
+                            return false;
+                    }
+                    //Update
+                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.VersionDeletedBy == null select o).Single();
+                    tx.OriginCulture = m.OriginCulture ?? "en-US";
+                    if (m.TranslationName != null)
+                        tx.TranslationName = m.TranslationName;
+                    if (m.TranslationText != null)
+                        tx.Translation = m.TranslationText;
+                    tx.VersionUpdated = DateTime.UtcNow;
+                    tx.VersionUpdatedBy = contact;
+                }                       
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
             return false;
         }
 
