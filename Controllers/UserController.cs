@@ -662,8 +662,8 @@ namespace EXPEDIT.Flow.Controllers {
                 m.SearchType = SearchType.FlowLocation;
             else if (m.DocType == "workflow")
                 m.SearchType = SearchType.FlowGroup;
-            if (m.id.HasValue && _Flow.GetTranslation(m))
-                return new JsonHelper.JsonNetResult(m, JsonRequestBehavior.AllowGet);
+            if (m.DocID.HasValue && _Flow.GetTranslation(m))
+                return new JsonHelper.JsonNetResult(m.TranslationResults, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
         }

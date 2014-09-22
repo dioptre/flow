@@ -12,6 +12,7 @@ namespace EXPEDIT.Flow.ViewModels
     public class TranslationViewModel 
     {
         public string TranslationCulture { get; set; }
+        public string OriginalText { get; set; } //Only in Output
         public string TranslationText { get; set; }
         public string TranslationName { get; set; }
         public TranslationViewModel translation { get; set; }
@@ -40,6 +41,36 @@ namespace EXPEDIT.Flow.ViewModels
         public string OriginCulture {get;set;}
 
 
+        [JsonIgnore]
+        public Dictionary<Guid,Translation> TranslationQueue { get; set; }
+        [JsonIgnore]
+        public TranslationViewModel[] TranslationResults { get; set; }
+
+
+    }
+
+    public class Translation
+    {
+        public Guid? TranslationDataID { get; set; }
+        public string OriginalName { get; set; }
+        public string OriginalText { get; set; }
+        public DateTime? OriginalUpdated {get;set;}
+        public Guid? OriginalContact {get;set;}
+        public Guid? OriginalCompany {get;set;}
+        public string TranslatedName { get; set; }
+        public string TranslatedText { get; set; }
+
+        public Translation(string OriginalName = null, DateTime? OriginalUpdated = null, Guid? OriginalContact = null, Guid? OriginalCompany = null, Guid? TranslationDataID = null, string TranslatedName = null, string TranslatedText = null)
+        {
+            this.OriginalName = OriginalName;
+            this.OriginalUpdated = OriginalUpdated;
+            this.OriginalContact = OriginalContact;
+            this.OriginalCompany = OriginalCompany;
+            this.TranslationDataID = TranslationDataID;
+            this.TranslatedName = TranslatedName;
+            this.TranslatedText = TranslatedText;
+
+        }
     }
 
 }
