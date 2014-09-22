@@ -1727,8 +1727,6 @@ namespace EXPEDIT.Flow.Services {
 
         public bool GetTranslation(TranslationViewModel m)
         {
-
-
             var translateURL = @"https://www.googleapis.com/language/translate/v2";
             try
             {
@@ -1742,13 +1740,62 @@ namespace EXPEDIT.Flow.Services {
                     {
                         case SearchType.FlowGroup:
                             m.TableType = d.GetTableName(typeof(GraphDataGroup));
-                            //TODO: Could flag not to translate text here
+                            m.TranslationQueue = (from g in d.GraphDataGroups.Where(f => f.GraphDataGroupID == m.DocID && f.Version == 0 && f.VersionDeletedBy == null)
+                                                  join t in d.TranslationData.Where(f => f.ReferenceID == m.DocID && f.TableType == m.TableType && f.TranslationCulture == m.TranslationCulture && f.Version == 0 && f.VersionDeletedBy == null)
+                                                      on g.GraphDataGroupID equals t.ReferenceID
+                                                      into gt
+                                                  from tx in gt.DefaultIfEmpty()
+                                                  select new { g.GraphDataGroupID, g.GraphDataGroupName, g.VersionUpdated, g.VersionOwnerContactID, g.VersionOwnerCompanyID, Translation = gt.FirstOrDefault() })
+                                                  .ToDictionary(f => f.GraphDataGroupID, f => f.Translation == null ?
+                                                      new Translation(
+                                                        f.GraphDataGroupName,
+                                                        f.VersionUpdated,
+                                                        f.VersionOwnerContactID,
+                                                        f.VersionOwnerCompanyID) :
+                                                      new Translation(
+                                                        f.GraphDataGroupName,
+                                                        f.VersionUpdated,
+                                                        f.VersionOwnerContactID,
+                                                        f.VersionOwnerCompanyID,
+                                                        f.Translation.TranslationDataID,
+                                                        f.Translation.TranslationName,
+                                                        f.Translation.Translation
+                                                      ));
+                            break;
+                        case SearchType.Flows:
+                            m.TableType = d.GetTableName(typeof(GraphData));
+                            m.TranslationQueue = (from g in (from g in d.GraphData
+                                                  join gg in d.GraphDataRelation.Where(f=>f.GraphDataGroupID == m.DocID && f.Version == 0 && f.VersionDeletedBy == null)
+                                                    on g.GraphDataID equals gg.FromGraphDataID select g).Union(
+                                                     (from g in d.GraphData
+                                                      join gg in d.GraphDataRelation.Where(f => f.GraphDataGroupID == m.DocID && f.Version == 0 && f.VersionDeletedBy == null)
+                                                    on g.GraphDataID equals gg.ToGraphDataID select g))
+                                                  join t in d.TranslationData.Where(f => f.TableType == m.TableType && f.TranslationCulture == m.TranslationCulture && f.Version == 0 && f.VersionDeletedBy == null)
+                                                      on g.GraphDataID equals t.ReferenceID
+                                                      into gt
+                                                  from tx in gt.DefaultIfEmpty()
+                                                  select new { g.GraphDataID, g.GraphName, g.VersionUpdated, g.VersionOwnerContactID, g.VersionOwnerCompanyID, Translation = gt.FirstOrDefault() })
+                                                  .ToDictionary(f => f.GraphDataID, f => f.Translation == null ?
+                                                      new Translation(
+                                                        f.GraphName,
+                                                        f.VersionUpdated,
+                                                        f.VersionOwnerContactID,
+                                                        f.VersionOwnerCompanyID) :
+                                                      new Translation(
+                                                        f.GraphName,
+                                                        f.VersionUpdated,
+                                                        f.VersionOwnerContactID,
+                                                        f.VersionOwnerCompanyID,
+                                                        f.Translation.TranslationDataID,
+                                                        f.Translation.TranslationName,
+                                                        f.Translation.Translation
+                                                      ));
                             break;
                         case SearchType.Flow:
                             if (!CheckPermission(m.DocID.Value, ActionPermission.Read, typeof(GraphData)))
                                 return false;
                             m.TableType = d.GetTableName(typeof(GraphData));
-                            m.TranslationQueue = (from g in d.GraphData.Where(f=>f.GraphDataID == m.DocID)
+                            m.TranslationQueue = (from g in d.GraphData.Where(f=>f.GraphDataID == m.DocID && f.Version == 0 && f.VersionDeletedBy == null)
                                                   join t in d.TranslationData.Where(f => f.ReferenceID == m.DocID && f.TableType == m.TableType && f.TranslationCulture == m.TranslationCulture && f.Version == 0 && f.VersionDeletedBy == null)
                                                       on g.GraphDataID equals t.ReferenceID
                                                       into gt
@@ -1793,6 +1840,8 @@ namespace EXPEDIT.Flow.Services {
                                 {
                                     case SearchType.FlowGroup:
                                         break;
+                                    case SearchType.Flows:
+                                        break;
                                     case SearchType.Flow:
                                         translation.Value.OriginalText = (from o in d.GraphData where o.GraphDataID == m.DocID && o.VersionDeletedBy == null && o.Version == 0 select o.GraphContent).FirstOrDefault();
                                         break;
@@ -1820,7 +1869,7 @@ namespace EXPEDIT.Flow.Services {
                                     new KeyValuePair<string, string>("key", "AIzaSyA7mP-819Mgz4dy6X0NIlQ6SjyzDn5QEJA") ,
                                     //new KeyValuePair<string, string>("source", "en") ,
                                     new KeyValuePair<string, string>("target", lang.TwoLetterISOLanguageName),
-                                    new KeyValuePair<string, string>("q", translation.Value.OriginalName) 
+                                    new KeyValuePair<string, string>("q", translation.Value.HumanName) 
                                     });
                                     rName = client.PostAsync(translateURL, requestContent);
                                 }
@@ -1850,7 +1899,7 @@ namespace EXPEDIT.Flow.Services {
                                         {
                                             TranslationDataID = translation.Value.TranslationDataID.Value,
                                             TableType = m.TableType,
-                                            ReferenceID = m.DocID,
+                                            ReferenceID = translation.Key,
                                             ReferenceName = translation.Value.OriginalName,
                                             ReferenceUpdated = translation.Value.OriginalUpdated,
                                             OriginCulture = m.OriginCulture ?? "en-US",

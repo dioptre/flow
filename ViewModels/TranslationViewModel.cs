@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using NKD.Helpers;
 
 namespace EXPEDIT.Flow.ViewModels
 {
@@ -59,6 +60,7 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? OriginalCompany {get;set;}
         public string TranslatedName { get; set; }
         public string TranslatedText { get; set; }
+        public string HumanName { get { return SlugHelper.FromSlug(OriginalName); } }
 
         public Translation(string OriginalName = null, DateTime? OriginalUpdated = null, Guid? OriginalContact = null, Guid? OriginalCompany = null, Guid? TranslationDataID = null, string TranslatedName = null, string TranslatedText = null)
         {

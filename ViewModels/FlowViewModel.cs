@@ -14,6 +14,7 @@ namespace EXPEDIT.Flow.ViewModels
         Model,
         File,
         Flow,
+        Flows,
         FlowGroup,
         FlowLocation
     }
