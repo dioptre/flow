@@ -42,6 +42,11 @@ App.Router.map(function () {
     this.route('file');
     this.route('permission');
 
+    // Localisation
+    this.route('translate', { path: 'translate/:workflowID' });
+
+
+
     // User  Stuff
     this.route('login');
     this.route('signup');
@@ -108,6 +113,37 @@ App.HelpRoute = Ember.Route.extend({
     }
 });
 
+
+App.TranslateRoute = Ember.Route.extend({
+
+    model: function(params){
+        return Ember.RSVP.hash({
+            processes:  this.store.find('node', { groupid: params.workflowID }), // Load edges and nodes
+            translatedSteps: this.store.find('translation', {docid: params.workflowID, TranslationCulture:"it", DocType: 'flows'}),
+            translatedWorkflow: this.store.find('translation', {docid: params.workflowID, TranslationCulture:"it", DocType: 'workflow'}),
+            workflowID: params.workflowID
+        });
+    },
+    afterModel: function(m){
+        // Get all nodes
+        var nodes = App.Node.store.all('node').content;
+
+        //var edges = App.Edge.store.all("edge").content;
+        // var wfedges = Enumerable.From(edges).Where("f=>f.get('GroupID')==='" + m.workflowID + "'");
+        // var nodeids = wfedges.Select("f=>f.get('from')").Union(wfedges.Select("f=>f.get('to')")).Where("f=>f!==null").ToArray();
+        // var wfnodes = Enumerable.From(nodeids).Join(nodes, "", "f=>f.id", "f,g=>g").ToArray();
+
+        m.translateTodos = Enumerable.From(m.translatedSteps.content).Join(nodes, "f=>f.get('DocID')", "g=>g.id", "f,g=>{n:f,t:g}").ToArray();
+
+
+
+    }
+})
+
+
+App.TranslateController = Ember.Controller.extend({
+    queryParams: ['processID']
+})
 
 App.WorkflowRoute = Ember.Route.extend({
     actions: {
@@ -2054,7 +2090,7 @@ App.GraphController = Ember.ObjectController.extend({
             else
                 newWorkflow.set('name', this.get('workflowName'));
 
-            var updateDirtyProcesses = function () {                
+            var updateDirtyProcesses = function () {
                 Enumerable.From(App.Node.store.all('node').content).Where("f=>f.get('isDirty') && f.id !=='" + _this.get('model.selectedID') + "'").ForEach(
                     function (newNode) {
                         if (Enumerable.From(newNode.get('workflows').content.content).Any("f=>f.id=='" + _this.get('workflowID') + "'")) {
@@ -2087,7 +2123,7 @@ App.GraphController = Ember.ObjectController.extend({
                     });
                 }
                 else {
-                    updateDirtyProcesses();                    
+                    updateDirtyProcesses();
                 }
 
             };
@@ -2161,7 +2197,7 @@ App.GraphController = Ember.ObjectController.extend({
                 Messenger().post({ type: 'success', message: 'Successfully Added New Connection' });
                 _this.set('updateGraph', NewGUID());
             }, function (o) {
-                Messenger().post({type:'error', message:'Error Adding New Connection. No Permission. Can\'t connect to or from a node that is not in your permission list.'});                
+                Messenger().post({type:'error', message:'Error Adding New Connection. No Permission. Can\'t connect to or from a node that is not in your permission list.'});
                 _this.store.unloadRecord(newEdge);
             });
         },
@@ -2237,7 +2273,7 @@ App.GraphController = Ember.ObjectController.extend({
                     });
 
                     Messenger().post({ type: 'success', message: 'Successfully Updated Workflow Deletions' });
-                }               
+                }
 
 
             }, function (error) {
@@ -3018,6 +3054,9 @@ App.NodeSerializer = DS.RESTSerializer.extend({
         return this._super(store, type, payload, id, requestType);
     }
 });
+
+
+
 
 
 App.Node = DS.Model.extend({
@@ -3982,7 +4021,6 @@ App.MyprofilesController = Ember.ObjectController.extend({
     }
 });
 
-/////
 
 App.WorkflowController = Ember.ArrayController.extend({
 });

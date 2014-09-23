@@ -1466,6 +1466,30 @@
 </script>
 
 
+<script type="text/x-handlebars" id="translate">
+    <h1>Translation Interface</h1>
+
+    <div class='container-fluid'>
+        <div class="row">
+            <div class="col-md-3">
+                {{#each model.translateTodos}}
+                    test
+
+
+                {{/each}}
+
+            </div>
+            <div class="col-md-6">
+                test
+            </div>
+        </div>
+    </div>
+
+
+
+</script>
+
+
 <script type="text/x-handlebars" data-template-name="fileResults">
 
     {{#unless loading}}
@@ -2232,6 +2256,8 @@
         <script src="~/Modules/EXPEDIT.Flow/Static/AdminTheme/js/theme.js"></script>
 
         <script src="~/Modules/EXPEDIT.Flow/Scripts/flow.js?id=9"></script>
+
+        @*<script src="https://togetherjs.com/togetherjs-min.js"></script>*@
 
 
     </body>
