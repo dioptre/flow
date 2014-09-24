@@ -54,6 +54,7 @@ App.Router.map(function () {
 
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });
+    this.route('translateme', { path: 'translateTool' });
 
 
 
@@ -122,6 +123,21 @@ App.HelpRoute = Ember.Route.extend({
         return this.replaceWith('graph', '76be503d-4689-47f8-99fe-2f512f81d4d5', { queryParams: { workflowID: 'c65d9b93-d986-4f70-bc0a-3eb2c6c0ecdd' } });
     }
 });
+
+
+App.TranslatemeRoute = Ember.Route.extend({
+    model: function(){
+        return this.store.get('locale');
+    }
+})
+
+
+App.TranslatemeController = Ember.ObjectController.extend({
+    queryParams: ['item'],
+    needs: ['application'],
+    item: ''
+})
+
 
 
 App.TranslateRoute = Ember.Route.extend({
@@ -3290,6 +3306,7 @@ App.MySecurityList = DS.Model.extend({
 //  Don't need these
 // App.MyWhiteList = App.MySecurityList.extend({});
 // App.MyBlackList = App.MySecurityList.extend({});
+
 App.Myinfo = DS.Model.extend({
     Companies: DS.attr(''),
     ContactName: DS.attr(''),
@@ -3418,9 +3435,18 @@ App.Translation = DS.Model.extend({
     TranslationCulture: DS.attr(''),
     TranslationName: DS.attr(''),
     TranslationText: DS.attr(''),
-    Action: DS.attr(''),
     VersionUpdated: DS.attr(''),
     DocUpdated: DS.attr('')
+});
+
+
+App.Locale = DS.Model.extend({
+    TranslationCulture: DS.attr(''), // de
+    Label: DS.attr(''), //search.info.no_keyword  - (where,type.what)
+    OriginalText: DS.attr(''), // “Please add a keyword to start searching..."
+    OriginalCulture: DS.attr(''),  // en - always english for now, but just hardcoded for now
+    Translation: DS.attr(''), //  “Bitten ein Suchwort"
+    VersionUpdated: DS.attr('') // version number
 });
 
 App.Wikipedia = DS.Model.extend({

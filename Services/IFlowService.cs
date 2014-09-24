@@ -116,5 +116,17 @@ namespace EXPEDIT.Flow.Services
         bool DeleteTranslation(TranslationViewModel m);
 
 
+        [OperationContract]
+        bool GetLocale(LocaleViewModel m);
+
+        [OperationContract]
+        bool UpdateLocale(LocaleViewModel m);
+
+        [OperationContract]
+        bool DeleteLocale(LocaleViewModel m);
+
+        [OperationContract]
+        bool CreateLocale(LocaleViewModel m);
+
     }
 }

@@ -835,8 +835,8 @@
         <ul id="dashboard-menu">
             {{#view App.HomeNavView}}
                 {{#link-to 'search'}}
-                        <i class="icon-search"></i>
-                        <span>{{t "user.edit.title"}}</span>
+                    <i class="icon-search"></i>
+                    <span>Search</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
@@ -1474,11 +1474,14 @@
 
 </script>
 
+<script type="text/x-handlebars" id="translate">
+
+</script>
+
 
 <script type="text/x-handlebars" id="translate">
-    <h1>Workflow Translation</h1>
-
-    <div class='container-fluid translate'>
+    <div class='container-fluid translate processes'>
+        <h1>Translating
         <div class="row">
             <div class="col-md-3">
                 {{#each model.translateTodos}}
@@ -1504,20 +1507,20 @@
                                 </div>
                             {{else}}
                                 <div class="col-md-6">
-                                    Source language
+                                    <h1>Source language</h1>
 
                                     <hr>
 
                                     Label:
                                     {{model.selectedOriginal.n.label}}
 
-                                    <hr>
+
                                     Content:
                                     {{{model.selectedOriginal.n.content}}}
 
                                 </div>
                                 <div class="col-md-6">
-                                    Translated to <b>{{controllers.application.localSelectedDetails.niceName}}</b>
+                                    <h1>Translated to <i>{{controllers.application.localSelectedDetails.niceName}}</i></h1>
 
                                     {{eui-button label="Save Translation" action="saveTranslation" size='large' disabled=newContent style='primary'}}
                                     {{eui-button label="Reset to original Translation" action="resetTranslation" disabled=newContent size='large'}}

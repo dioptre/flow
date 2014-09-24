@@ -2085,5 +2085,223 @@ namespace EXPEDIT.Flow.Services {
                 return false;
             }
         }
+
+
+        public bool CreateLocale(LocaleViewModel m)
+        {
+            var contact = _users.ContactID;
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var tx = new TranslationData
+                    {
+                        TranslationDataID = m.TranslationDataID.Value,
+                        TableType = LocaleViewModel.DocType,
+                        //ReferenceID = translation.Key,
+                        ReferenceName = m.Label,
+                        //ReferenceUpdated = translation.Value.OriginalUpdated,
+                        OriginCulture = m.OriginalCulture ?? "en-US",
+                        TranslationCulture = m.TranslationCulture, //TODO could check real culture
+                        TranslationName = m.OriginalText,
+                        Translation = m.Translation,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionUpdatedBy = contact
+                    };
+                    d.TranslationData.AddObject(tx);
+                    d.SaveChanges();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool GetLocale(LocaleViewModel m)
+        {
+            var translateURL = @"https://www.googleapis.com/language/translate/v2";
+            try
+            {
+                var contact = _users.ContactID;
+                var application = _users.ApplicationID;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    m.LocaleQueue = (from o in d.TranslationData.Where(f=>f.TableType == LocaleViewModel.DocType && f.TranslationCulture == m.OriginalCulture && f.Version == 0 && f.VersionDeletedBy == null)
+                                     join t in d.TranslationData.Where(f =>f.TableType == LocaleViewModel.DocType && f.TranslationCulture == m.TranslationCulture && f.Version == 0 && f.VersionDeletedBy == null)
+                                                         on o.ReferenceName equals t.ReferenceName
+                                                         into gt
+                                     from tx in gt.DefaultIfEmpty()
+                                     select new {Original = o, Translation = tx}).Select(f=>
+                                     new LocaleViewModel
+                                     {
+                                         id = (f.Translation == null) ? (Guid?)null : f.Translation.TranslationDataID,
+                                         Label = f.Original.ReferenceName,
+                                         OriginalText = f.Original.TranslationName,
+                                         OriginalCulture = f.Original.OriginCulture ?? "en-US",
+                                         Translation = (f.Translation == null) ? null : f.Translation.Translation,
+                                         TranslationCulture = m.TranslationCulture,
+                                         VersionUpdated = (f.Translation == null) ? null : f.Translation.VersionUpdated
+                                     }).ToArray();
+
+
+                    var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
+                    var lang = cultures.FirstOrDefault(f => f.Name.StartsWith(m.TranslationCulture));
+                    
+                    if (!m.LocaleQueue.Any())
+                        return false; //ref didnt exist;
+                    else
+                    {
+                        LocaleViewModel[] translate;
+                        if (m.Refresh)
+                            translate = m.LocaleQueue;
+                        else
+                            translate = m.LocaleQueue.Where(f => f.Translation == null).ToArray();
+                        if (translate.Any())
+                        using (var client = new HttpClient())
+                        {
+                            client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "GET");
+                            foreach (var translation in translate)
+                            {
+                                Task<HttpResponseMessage> rText = null;
+                                Func<Task<HttpResponseMessage>, Task<string>> responseContent = async delegate(Task<HttpResponseMessage> responseAsync)
+                                {
+                                    var response = responseAsync.Result;
+                                    if (response.IsSuccessStatusCode)
+                                    {
+                                        dynamic json = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
+                                        return json.data.translations[0].translatedText ?? string.Empty;
+                                    }
+                                    else
+                                    {
+                                        return null;
+                                    }
+                                };
+
+                                client.DefaultRequestHeaders.Accept.Clear();
+                                var requestContent = new FormUrlEncodedContent(new[] { 
+                                    new KeyValuePair<string, string>("key", "AIzaSyA7mP-819Mgz4dy6X0NIlQ6SjyzDn5QEJA") ,
+                                    //new KeyValuePair<string, string>("source", "en") ,
+                                    new KeyValuePair<string, string>("target", lang.TwoLetterISOLanguageName),
+                                    new KeyValuePair<string, string>("q", translation.OriginalText) 
+                                });
+                                rText = client.PostAsync(translateURL, requestContent);
+                                
+                                
+                                if (rText != null)
+                                    translation.Translation = responseContent(rText).Result;
+                                if (!string.IsNullOrWhiteSpace(translation.Translation))
+                                {
+                                    if (!translation.TranslationDataID.HasValue)
+                                    {
+                                        translation.TranslationDataID = Guid.NewGuid();
+                                        //Insert
+                                        var tx = new TranslationData
+                                        {
+                                            TranslationDataID = translation.TranslationDataID.Value,
+                                            TableType = LocaleViewModel.DocType,
+                                            //ReferenceID = translation.Key,
+                                            ReferenceName = translation.Label,
+                                            //ReferenceUpdated = translation.Value.OriginalUpdated,
+                                            OriginCulture = m.OriginalCulture ?? "en-US",
+                                            TranslationCulture = lang.Name, //TODO could check real culture
+                                            TranslationName = translation.OriginalText,
+                                            Translation = translation.Translation,
+                                            VersionUpdated = DateTime.UtcNow,
+                                            VersionUpdatedBy = contact
+                                        };
+                                        d.TranslationData.AddObject(tx);
+                                    }
+                                    else
+                                    {
+                                        //Update
+                                        var tx = (from o in d.TranslationData where o.TranslationDataID == translation.TranslationDataID && o.VersionDeletedBy == null select o).Single();
+                                        tx.ReferenceName = translation.Label;
+                                        //tx.ReferenceUpdated = translation.Value.OriginalUpdated;
+                                        tx.OriginCulture = m.OriginalCulture ?? "en-US";
+                                        tx.TranslationCulture = lang.Name; //TODO could check real culture
+                                        tx.TranslationName = translation.OriginalText;
+                                        tx.Translation = translation.Translation;
+                                        tx.VersionUpdated = DateTime.UtcNow;
+                                        tx.VersionUpdatedBy = contact;
+                                    }
+                                }
+
+                            }
+                            d.SaveChanges();
+                        }
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+            return true;
+
+        }
+
+        public bool UpdateLocale(LocaleViewModel m)
+        {
+
+            try
+            {
+                var contact = _users.ContactID;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(TranslationData)))
+                        return false;                   
+                    //Update
+                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.VersionDeletedBy == null && o.TableType == LocaleViewModel.DocType select o).Single();
+                    tx.OriginCulture = m.OriginalCulture ?? "en-US";
+                    if (m.TranslationName != null)
+                        tx.TranslationName = m.TranslationName;
+                    if (m.Translation != null)
+                        tx.Translation = m.Translation;
+                    tx.VersionUpdated = DateTime.UtcNow;
+                    tx.VersionUpdatedBy = contact;
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool DeleteLocale(LocaleViewModel m)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(TranslationData)))
+                        return false;                  
+                    //Delete
+                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.VersionDeletedBy == null && o.TableType == LocaleViewModel.DocType select o).Single();
+                    d.TranslationData.DeleteObject(tx);
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+
+
     }
 }

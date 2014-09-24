@@ -621,7 +621,7 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
 
-
+        [Authorize]
         [Themed(false)]
         [HttpPost]
         [ActionName("Translations")]
@@ -631,6 +631,7 @@ namespace EXPEDIT.Flow.Controllers {
             return UpdateTranslation(m);
         }
 
+        [Authorize]
         [Themed(false)]
         [HttpPut]
         [ActionName("Translations")]
@@ -680,10 +681,11 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
         }
 
+        [Authorize]
         [Themed(false)]
         [HttpDelete]
         [ActionName("Translations")]
-        public ActionResult DeleteMySecurityLists(TranslationViewModel m)
+        public ActionResult DeleteTranslation(TranslationViewModel m)
         {
             if (!m.id.HasValue)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
@@ -693,6 +695,78 @@ namespace EXPEDIT.Flow.Controllers {
             else if (m.DocType == "workflow" || m.DocType == "E_GraphDataGroup")
                 m.SearchType = SearchType.FlowGroup;
             if (_Flow.DeleteTranslation(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+
+        }
+
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Locales")]
+        public ActionResult CreateLocale(LocaleViewModel m)
+        {
+            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+            if (m.locale != null)
+                m = m.locale;
+            if (_Flow.CreateLocale(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("Locales")]
+        public ActionResult UpdateLocale(LocaleViewModel m)
+        {
+            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+            if (m.locale != null && m.id != null)
+            {
+                m.locale.id = m.id;
+                m = m.locale;
+            }
+            if (_Flow.UpdateLocale(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+        }
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("Locales")]
+        public ActionResult GetLocale(LocaleViewModel m)
+        {
+            if (m.locale != null && m.locale.id != null)
+                m = m.locale;
+            if (!string.IsNullOrWhiteSpace(Request.Params["Refresh"]))
+            {
+                if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+                m.Refresh = true;
+            }          
+            if (_Flow.GetLocale(m))
+                return new JsonHelper.JsonNetResult(new { locales = m.LocaleQueue }, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("Locales")]
+        public ActionResult DeleteLocale(LocaleViewModel m)
+        {
+            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+            if (!m.id.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.DeleteLocale(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
