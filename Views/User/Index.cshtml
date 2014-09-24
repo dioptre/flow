@@ -737,7 +737,13 @@
             </a>
         </div>
 
+
         <ul class="nav navbar-nav pull-right"> <!--hidden-xs-->
+            <li class="hidden-xs ">
+                <div class='select2-localisation'>
+                    {{view Ember.Select content=localAvailable value=localSelected optionValuePath="content.language" optionLabelPath="content.niceName"}}
+                </div>
+            </li>
             <li class="hidden-xs ">
                 {{input action="transitionSearch" onEvent="insertNewline" class="search searchTransitionMenu" tabIndex="-1"}}
             </li>
@@ -830,7 +836,7 @@
             {{#view App.HomeNavView}}
                 {{#link-to 'search'}}
                         <i class="icon-search"></i>
-                        <span>Search</span>
+                        <span>{{t "user.edit.title"}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
@@ -999,6 +1005,9 @@
                     {{#if controllers.application.isLoggedIn}}
                         <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray' title="Edit Workflow">
                             <i class="icon-pencil"></i> {{!--Edit Workflow name--}}
+                        </span>
+                        <span {{action 'translateWorkflow' workflowID selectedID}} class='btn-flat gray' title="Translate Workflow">
+                            <i class="icon-globe"></i> {{!--Edit Workflow name--}}
                         </span>
                     {{/if}}
                 </h1>
@@ -1467,20 +1476,73 @@
 
 
 <script type="text/x-handlebars" id="translate">
-    <h1>Translation Interface</h1>
+    <h1>Workflow Translation</h1>
 
-    <div class='container-fluid'>
+    <div class='container-fluid translate'>
         <div class="row">
             <div class="col-md-3">
                 {{#each model.translateTodos}}
-                    test
-
-
+                    {{#link-to 'translate' (query-params selected=n.id) tagName="div" class="email-item"}}
+                        <h4>{{n.humanName}}</h4>
+                        <i>{{t.TranslationName}}</i>
+                    {{/link-to}}
                 {{/each}}
 
             </div>
-            <div class="col-md-6">
-                test
+            <div class="col-md-9">
+
+                <div class='container-fluid translate'>
+                    <div class="row">
+                        {{#unless selected}}
+                            <div class="col-md-12">
+                                <i>Not selected</i>
+                            </div>
+                        {{else}}
+                            {{#unless model.selectedOriginal.id}}
+                                 <div class="col-md-12">
+                                    <i>Query param "selected"={{selected}} doesn't exist. Select another item in the sidebar.</i>
+                                </div>
+                            {{else}}
+                                <div class="col-md-6">
+                                    Source language
+
+                                    <hr>
+
+                                    Label:
+                                    {{model.selectedOriginal.n.label}}
+
+                                    <hr>
+                                    Content:
+                                    {{{model.selectedOriginal.n.content}}}
+
+                                </div>
+                                <div class="col-md-6">
+                                    Translated to <b>{{controllers.application.localSelectedDetails.niceName}}</b>
+
+                                    {{eui-button label="Save Translation" action="saveTranslation" size='large' disabled=newContent style='primary'}}
+                                    {{eui-button label="Reset to original Translation" action="resetTranslation" disabled=newContent size='large'}}
+                                    {{eui-button label="Redo Autotranslate" action="redoTranslate" size='large'}}
+
+
+                                    {{#link-to 'graph' model.select (query-params workflowID=model.workflowID)}}
+                                        get workflow preview
+                                    {{/link-to}}
+
+                                    <hr>
+
+                                    Label:
+                                    {{eui-input valueBinding="model.selectedTranslation.TranslationName"}}
+
+
+                                    <hr>
+                                    Content:
+                                    {{tinymce-editor data=model.selectedTranslation.TranslationText disableWatchDataOnStartup=model.tinyReset}}
+                                </div>
+                            {{/unless}}
+                        {{/unless}}
+
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2231,6 +2293,9 @@
         <script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
 
 
+        <!-- https://github.com/jamesarosen/ember-i18n/tree/master/lib -->
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/cldr-1.0.0.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/i18n.js")"></script>
 
 
         <!-- js -->

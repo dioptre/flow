@@ -569,7 +569,8 @@ namespace EXPEDIT.Flow.Services {
                                     {
                                         GraphDataID = o[0] as Guid?,
                                         GraphName = o[1] as string,
-                                        GraphData = o[5] as string
+                                        GraphData = o[5] as string,
+                                        VersionUpdated = o[18] as DateTime?                                        
                                     });
                     result.Edges = (from o in dataset.Tables[edges].AsEnumerable()
                                     select new FlowEdgeViewModel
@@ -1761,7 +1762,8 @@ namespace EXPEDIT.Flow.Services {
                                                         f.VersionOwnerCompanyID,
                                                         f.Translation.TranslationDataID,
                                                         f.Translation.TranslationName,
-                                                        f.Translation.Translation
+                                                        f.Translation.Translation,
+                                                        f.Translation.VersionUpdated
                                                       ));
                             break;
                         case SearchType.Flows:
@@ -1792,35 +1794,74 @@ namespace EXPEDIT.Flow.Services {
                                                         f.VersionOwnerCompanyID,
                                                         f.Translation.TranslationDataID,
                                                         f.Translation.TranslationName,
-                                                        f.Translation.Translation
+                                                        f.Translation.Translation,
+                                                        f.Translation.VersionUpdated
                                                       ));
                             break;
                         case SearchType.Flow:
-                            if (!CheckPermission(m.DocID.Value, ActionPermission.Read, typeof(GraphData)))
-                                return false;
+                            if (m.id.HasValue)
+                            {
+                                if (m.Refresh && !CheckPermission(m.id.Value, ActionPermission.Update, typeof(TranslationData)))
+                                    return false;
+                                else if (!m.Refresh && !CheckPermission(m.id.Value, ActionPermission.Read, typeof(TranslationData)))
+                                    return false;
+                                m.TranslationQueue = (from t in d.TranslationData.Where(f => f.TranslationDataID == m.id && f.Version == 0 && f.VersionDeletedBy == null)
+                                                      join g in d.GraphData.Where(f =>f.Version == 0 && f.VersionDeletedBy == null)                                                      
+                                                          on t.ReferenceID equals g.GraphDataID
+                                                      select new { g.GraphDataID, g.GraphName, g.VersionUpdated, g.VersionOwnerContactID, g.VersionOwnerCompanyID, Translation = t })
+                                                      .ToDictionary(f => f.GraphDataID, f => f.Translation == null ?
+                                                          new Translation(
+                                                            f.GraphName,
+                                                            f.VersionUpdated,
+                                                            f.VersionOwnerContactID,
+                                                            f.VersionOwnerCompanyID) :
+                                                          new Translation(
+                                                            f.GraphName,
+                                                            f.VersionUpdated,
+                                                            f.VersionOwnerContactID,
+                                                            f.VersionOwnerCompanyID,
+                                                            f.Translation.TranslationDataID,
+                                                            f.Translation.TranslationName,
+                                                            f.Translation.Translation,
+                                                            f.Translation.VersionUpdated,
+                                                            f.Translation.TranslationCulture
+                                                          ));
+                                if (string.IsNullOrWhiteSpace(m.TranslationCulture))
+                                    m.TranslationCulture = m.TranslationQueue.Where(f => f.Value != null && !string.IsNullOrWhiteSpace(f.Value.TranslationCulture)).Select(f => f.Value.TranslationCulture).FirstOrDefault();
+                                if (!m.DocID.HasValue)
+                                    m.DocID = m.TranslationQueue.Select(f => f.Key).FirstOrDefault();
+                            }
+                            else
+                            {
+                                if (m.Refresh && !CheckPermission(m.id.Value, ActionPermission.Update, typeof(TranslationData)))
+                                    return false;
+                                if (!m.Refresh && !CheckPermission(m.DocID.Value, ActionPermission.Read, typeof(GraphData)))
+                                    return false;
+                                m.TranslationQueue = (from g in d.GraphData.Where(f => f.GraphDataID == m.DocID && f.Version == 0 && f.VersionDeletedBy == null)
+                                                      join t in d.TranslationData.Where(f => f.ReferenceID == m.DocID && f.TableType == m.TableType && f.TranslationCulture == m.TranslationCulture && f.Version == 0 && f.VersionDeletedBy == null)
+                                                          on g.GraphDataID equals t.ReferenceID
+                                                          into gt
+                                                      from tx in gt.DefaultIfEmpty()
+                                                      select new { g.GraphDataID, g.GraphName, g.VersionUpdated, g.VersionOwnerContactID, g.VersionOwnerCompanyID, Translation = gt.FirstOrDefault() })
+                                    //.Where(f => f.Translation == null || f.Translation.Translation == null)
+                                                  .ToDictionary(f => f.GraphDataID, f => f.Translation == null ?
+                                                      new Translation(
+                                                        f.GraphName,
+                                                        f.VersionUpdated,
+                                                        f.VersionOwnerContactID,
+                                                        f.VersionOwnerCompanyID) :
+                                                      new Translation(
+                                                        f.GraphName,
+                                                        f.VersionUpdated,
+                                                        f.VersionOwnerContactID,
+                                                        f.VersionOwnerCompanyID,
+                                                        f.Translation.TranslationDataID,
+                                                        f.Translation.TranslationName,
+                                                        f.Translation.Translation,
+                                                        f.Translation.VersionUpdated
+                                                      ));
+                            }
                             m.TableType = d.GetTableName(typeof(GraphData));
-                            m.TranslationQueue = (from g in d.GraphData.Where(f=>f.GraphDataID == m.DocID && f.Version == 0 && f.VersionDeletedBy == null)
-                                                  join t in d.TranslationData.Where(f => f.ReferenceID == m.DocID && f.TableType == m.TableType && f.TranslationCulture == m.TranslationCulture && f.Version == 0 && f.VersionDeletedBy == null)
-                                                      on g.GraphDataID equals t.ReferenceID
-                                                      into gt
-                                                  from tx in gt.DefaultIfEmpty()
-                                                  select new { g.GraphDataID, g.GraphName, g.VersionUpdated, g.VersionOwnerContactID, g.VersionOwnerCompanyID, Translation = gt.FirstOrDefault() })
-                                                //.Where(f => f.Translation == null || f.Translation.Translation == null)
-                                              .ToDictionary(f => f.GraphDataID, f => f.Translation == null ? 
-                                                  new Translation(
-                                                    f.GraphName,
-                                                    f.VersionUpdated,
-                                                    f.VersionOwnerContactID,
-                                                    f.VersionOwnerCompanyID) :
-                                                  new Translation(
-                                                    f.GraphName,
-                                                    f.VersionUpdated,
-                                                    f.VersionOwnerContactID,
-                                                    f.VersionOwnerCompanyID,
-                                                    f.Translation.TranslationDataID,
-                                                    f.Translation.TranslationName,
-                                                    f.Translation.Translation
-                                                  ));
                             break;
                         default:
                             return false;
@@ -1837,7 +1878,7 @@ namespace EXPEDIT.Flow.Services {
                             client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "GET");
                             foreach (var translation in m.TranslationQueue)
                             {
-                                if (translation.Value.TranslatedName != null && translation.Value.TranslatedText != null)
+                                if (!m.Refresh && (translation.Value.TranslatedName != null && translation.Value.TranslatedText != null))
                                     continue;
 
                                 switch (m.SearchType)
@@ -1866,7 +1907,7 @@ namespace EXPEDIT.Flow.Services {
                                         return null;
                                     }
                                 };
-                                if (string.IsNullOrWhiteSpace(translation.Value.TranslatedName) && !string.IsNullOrWhiteSpace(translation.Value.OriginalName))
+                                if (m.Refresh || (string.IsNullOrWhiteSpace(translation.Value.TranslatedName) && !string.IsNullOrWhiteSpace(translation.Value.OriginalName)))
                                 {
                                     client.DefaultRequestHeaders.Accept.Clear();
                                     var requestContent = new FormUrlEncodedContent(new[] { 
@@ -1877,7 +1918,7 @@ namespace EXPEDIT.Flow.Services {
                                     });
                                     rName = client.PostAsync(translateURL, requestContent);
                                 }
-                                if (string.IsNullOrWhiteSpace(translation.Value.TranslatedText) && !string.IsNullOrWhiteSpace(translation.Value.OriginalText))
+                                if (m.Refresh || (string.IsNullOrWhiteSpace(translation.Value.TranslatedText) && !string.IsNullOrWhiteSpace(translation.Value.OriginalText)))
                                 {
                                     client.DefaultRequestHeaders.Accept.Clear();
                                     var requestContent = new FormUrlEncodedContent(new[] { 
@@ -1946,7 +1987,9 @@ namespace EXPEDIT.Flow.Services {
                         id = o.Value.TranslationDataID,
                         DocID = o.Key,
                         DocType = m.TableType,
-                        DocName = o.Value.OriginalName
+                        DocName = o.Value.OriginalName,
+                        DocUpdated = o.Value.OriginalUpdated,
+                        VersionUpdated = o.Value.TranslationUpdated
                     }).ToArray();
 
                 }
@@ -1995,6 +2038,8 @@ namespace EXPEDIT.Flow.Services {
                         tx.Translation = m.TranslationText;
                     tx.VersionUpdated = DateTime.UtcNow;
                     tx.VersionUpdatedBy = contact;
+                    d.SaveChanges();
+                    return true;
                 }                       
 
             }
@@ -2002,8 +2047,43 @@ namespace EXPEDIT.Flow.Services {
             {
                 return false;
             }
-            return false;
         }
 
+        public bool DeleteTranslation(TranslationViewModel m)
+        {
+
+            try
+            {
+                var contact = _users.ContactID;
+                var application = _users.ApplicationID;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    switch (m.SearchType)
+                    {
+                        case SearchType.FlowGroup:
+                            if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(TranslationData)))
+                                return false;
+                            break;
+                        case SearchType.Flow:
+                            if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(TranslationData)))
+                                return false;
+                            break;
+                        default:
+                            return false;
+                    }
+                    //Delete
+                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.VersionDeletedBy == null select o).Single();
+                    d.TranslationData.DeleteObject(tx);                    
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }

@@ -636,8 +636,16 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Translations")]
         public ActionResult UpdateTranslation(TranslationViewModel m)
         {
-            if (m.translation != null && m.translation.id != null)
+            if (m.translation != null && m.id != null)
+            {
+                m.translation.id = m.id;
                 m = m.translation;
+            }
+            m.SearchType = SearchType.Flow;
+            if (string.IsNullOrWhiteSpace(m.DocType) || m.DocType == "undefined" || m.DocType == "process" || m.DocType == "E_GraphData")
+                m.SearchType = SearchType.Flow;
+            else if (m.DocType == "workflow" || m.DocType == "E_GraphDataGroup")
+                m.SearchType = SearchType.FlowGroup;
             if (_Flow.UpdateTranslation(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
@@ -651,6 +659,8 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (m.translation != null && m.translation.id != null)
                 m = m.translation;
+            if (!string.IsNullOrWhiteSpace(Request.Params["Refresh"]))
+                m.Refresh = true;
             m.SearchType = SearchType.Flow;
             if (string.IsNullOrWhiteSpace(m.DocType) || m.DocType == "undefined" || m.DocType == "process")
                 m.SearchType = SearchType.Flow;
@@ -664,10 +674,29 @@ namespace EXPEDIT.Flow.Controllers {
                 m.SearchType = SearchType.FlowGroup;
             else if (m.DocType == "flows")
                 m.SearchType = SearchType.Flows;
-            if (m.DocID.HasValue && _Flow.GetTranslation(m))
+            if ((m.id.HasValue || m.DocID.HasValue) && _Flow.GetTranslation(m))
                 return new JsonHelper.JsonNetResult(new { translations = m.TranslationResults }, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+        }
+
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("Translations")]
+        public ActionResult DeleteMySecurityLists(TranslationViewModel m)
+        {
+            if (!m.id.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            m.SearchType = SearchType.Flow;
+            if (string.IsNullOrWhiteSpace(m.DocType) || m.DocType == "undefined" || m.DocType == "process" || m.DocType == "E_GraphData")
+                m.SearchType = SearchType.Flow;
+            else if (m.DocType == "workflow" || m.DocType == "E_GraphDataGroup")
+                m.SearchType = SearchType.FlowGroup;
+            if (_Flow.DeleteTranslation(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+
         }
 
 

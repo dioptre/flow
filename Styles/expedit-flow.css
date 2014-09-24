@@ -960,3 +960,22 @@ color: red;
     text-align: right;
   }
 }
+
+
+/* For the translate page*/
+.translate {
+
+}
+
+.translate .email-item {
+  border: 1px solid black;
+}
+.translate .email-item.active {
+  border: 1px solid red;
+  background: #ccc;
+}
+
+.select2-localisation > select {
+  width: 100px;
+}
+

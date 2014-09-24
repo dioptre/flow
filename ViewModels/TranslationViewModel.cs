@@ -12,6 +12,9 @@ namespace EXPEDIT.Flow.ViewModels
     [JsonObject]
     public class TranslationViewModel 
     {
+        public bool Refresh { get; set; }
+        public DateTime? VersionUpdated { get; set; }
+        public DateTime? DocUpdated { get; set; }
         public string TranslationCulture { get; set; }
         public string OriginalText { get; set; } //Only in Output
         public string TranslationText { get; set; }
@@ -60,9 +63,11 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? OriginalCompany {get;set;}
         public string TranslatedName { get; set; }
         public string TranslatedText { get; set; }
+        public DateTime? TranslationUpdated { get; set; }
         public string HumanName { get { return SlugHelper.FromSlug(OriginalName); } }
+        public string TranslationCulture { get; set; }
 
-        public Translation(string OriginalName = null, DateTime? OriginalUpdated = null, Guid? OriginalContact = null, Guid? OriginalCompany = null, Guid? TranslationDataID = null, string TranslatedName = null, string TranslatedText = null)
+        public Translation(string OriginalName = null, DateTime? OriginalUpdated = null, Guid? OriginalContact = null, Guid? OriginalCompany = null, Guid? TranslationDataID = null, string TranslatedName = null, string TranslatedText = null, DateTime? TranslationUpdated = null, string TranslationCulture = null)
         {
             this.OriginalName = OriginalName;
             this.OriginalUpdated = OriginalUpdated;
@@ -71,6 +76,8 @@ namespace EXPEDIT.Flow.ViewModels
             this.TranslationDataID = TranslationDataID;
             this.TranslatedName = TranslatedName;
             this.TranslatedText = TranslatedText;
+            this.TranslationUpdated = TranslationUpdated;
+            this.TranslationCulture = TranslationCulture;
 
         }
     }

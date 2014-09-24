@@ -4,11 +4,21 @@ $(function () {
 
 Ember.FEATURES["query-params"] = true;
 
+// I8N Translations
+Ember.FEATURES.I18N_TRANSLATE_HELPER_SPAN = false;
+Ember.I18n.translations = {
+  'user.edit.title': 'Edit User',
+  'user.followers.title.one': 'One Follower',
+  'user.followers.title.other': 'All {{count}} Followers',
+  'button.add_user.title': 'Add a user',
+  'button.add_user.text': 'Add',
+  'button.add_user.disabled': 'Saving...'
+};
+
 function RedirectToLogin() {
     window.location.hash = '#/login'
     location.reload();
 }
-
 
 $.ajaxSetup({
     beforeSend: function (xhr, settings) {
@@ -115,34 +125,98 @@ App.HelpRoute = Ember.Route.extend({
 
 
 App.TranslateRoute = Ember.Route.extend({
-
+    queryParams: {
+        selected: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
+    },
     model: function(params){
+        var localSelected = App.get('localSelected')
         return Ember.RSVP.hash({
             processes:  this.store.find('node', { groupid: params.workflowID }), // Load edges and nodes
-            translatedSteps: this.store.find('translation', {docid: params.workflowID, TranslationCulture:"it", DocType: 'flows'}),
-            translatedWorkflow: this.store.find('translation', {docid: params.workflowID, TranslationCulture:"it", DocType: 'workflow'}),
-            workflowID: params.workflowID
+            translatedSteps: this.store.find('translation', {docid: params.workflowID, TranslationCulture:localSelected, DocType: 'flows'}),
+            translatedWorkflow: this.store.find('translation', {docid: params.workflowID, TranslationCulture:localSelected, DocType: 'workflow'}),
+            workflowID: params.workflowID,
+            select: params.selected,
+            tinyReset: "yes"
         });
     },
     afterModel: function(m){
         // Get all nodes
         var nodes = App.Node.store.all('node').content;
+        var translation = App.Translation.store.all('translation').content;
 
+        // get's this from query params on application route
+        var localSelected = App.get('localSelected')
+
+
+        // Get a list of all items with the code below:
         //var edges = App.Edge.store.all("edge").content;
         // var wfedges = Enumerable.From(edges).Where("f=>f.get('GroupID')==='" + m.workflowID + "'");
         // var nodeids = wfedges.Select("f=>f.get('from')").Union(wfedges.Select("f=>f.get('to')")).Where("f=>f!==null").ToArray();
         // var wfnodes = Enumerable.From(nodeids).Join(nodes, "", "f=>f.id", "f,g=>g").ToArray();
 
-        m.translateTodos = Enumerable.From(m.translatedSteps.content).Join(nodes, "f=>f.get('DocID')", "g=>g.id", "f,g=>{n:f,t:g}").ToArray();
+        m.translateTodos = Enumerable.From(m.translatedSteps.content).Join(nodes, "f=>f.get('DocID')", "g=>g.id", "f,g=>{t:f,n:g,id:g.id,DocType:'flows',}").ToArray();
 
+        if (m.select) {
+            // Get ccontent by pulling itme by ID
+            App.Node.store.find('translation', {docid: m.select, TranslationCulture:localSelected})
+            App.Node.store.find('node', {id: m.select});
 
-
+            // Depending on query params selected choose relevant item
+            m.selectedOriginal = Enumerable.From(m.translateTodos).Where("f=>f.id==='" + m.select + "'").FirstOrDefault();
+            m.selectedTranslation = Enumerable.From(translation).Where("f=>f.get('DocID')==='" + m.select + "' && f.get('TranslationCulture')==='" + localSelected + "'").FirstOrDefault();
+        }
+    },
+    willTransition: function(transition) {
+      if (this.controller.get('model.selectedTranslation.isDirty') &&
+          !confirm("Are you sure you want to abandon progress?")) {
+        transition.abort();
+      } else {
+        // Bubble the `willTransition` action so that
+        // parent routes can decide whether or not to abort.
+        return true;
+      }
     }
-})
+});
 
+App.TranslateController = Ember.ObjectController.extend({
+    queryParams: ['selected'],
+    needs: ['application'],
+    selected: null,
+    newContent: function(){
+        return !this.get("model.selectedTranslation.isDirty");
+    }.property('model.selectedTranslation.isDirty'),
+    actions: {
+        redoTranslate: function () {
+            var _this = this;
+            var translationID = this.get('model.selectedTranslation.id');
+            this.store.find('translation', { id: translationID, Refresh: true }).then(function () {
+                // location.reload();
+                // debugger;
+                // _this.
+                Messenger().post({ type: 'error', message: 'Succesfully reloaded translation!' });
+            }, function () {
+                Messenger().post({ type: 'error', message: 'Unknown transition error.' });
 
-App.TranslateController = Ember.Controller.extend({
-    queryParams: ['processID']
+            });
+
+        },
+        resetTranslation: function(){
+            var translation = this.get('model.selectedTranslation');
+
+            translation.rollback();
+        },
+        saveTranslation: function(){
+            var translation = this.get('model.selectedTranslation');
+            var language = this.get('controllers.application.localSelectedDetails.niceName')
+            translation.save().then(function(){
+                Messenger().post({ type: 'success', message: language + ' translation was saved.' });
+
+            }, function(){
+                Messenger().post({ type: 'error', message: 'Unknown transition error.' });
+
+            });
+        }
+    }
 })
 
 App.WorkflowRoute = Ember.Route.extend({
@@ -654,6 +728,12 @@ App.SignupController = Ember.Controller.extend({
 })
 
 App.ApplicationRoute = Ember.Route.extend({
+    queryParams: {
+        localSelected: { refreshModel: true }
+    },
+    model: function(params){
+        App.set('localSelected', params.localSelected)
+    },
     actions: {
         transitionSearch: function (a) {
             this.transitionTo('search', {queryParams: {keywords: a}})
@@ -689,6 +769,7 @@ App.ApplicationRoute = Ember.Route.extend({
 
 
 App.ApplicationController = Ember.Controller.extend({
+    queryParams: ['localSelected'],
     currentPathDidChange: function () {
         window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
         var currentPath = this.get('currentPath');
@@ -715,9 +796,14 @@ App.ApplicationController = Ember.Controller.extend({
     isLoggedIn: false,
     logoutModal: false,
     userProfile: '',
-    // getUserProfile: function(){
-
-    // },
+    localAvailable:[{"language": "af","niceName": "af"},{"language": "ar","niceName": "ar"},{"language": "az","niceName": "az"},{"language": "be","niceName": "be"},{"language": "bg","niceName": "bg"},{"language": "bn","niceName": "bn"},{"language": "bs","niceName": "bs"},{"language": "ca","niceName": "ca"},{"language": "ceb","niceName": "ceb"},{"language": "cs","niceName": "cs"},{"language": "cy","niceName": "cy"},{"language": "da","niceName": "da"},{"language": "de","niceName": "Deutsch (de)"},{"language": "el","niceName": "el"},{"language": "en","niceName": "English (en-US Default English)"},{"language": "eo","niceName": "eo"},{"language": "es","niceName": "es"},{"language": "et","niceName": "et"},{"language": "eu","niceName": "eu"},{"language": "fa","niceName": "fa"},{"language": "fi","niceName": "fi"},{"language": "fr","niceName": "Français (fr"},{"language": "ga","niceName": "ga"},{"language": "gl","niceName": "gl"},{"language": "gu","niceName": "gu"},{"language": "ha","niceName": "ha"},{"language": "hi","niceName": "hi"},{"language": "hmn","niceName": "hmn"},{"language": "hr","niceName": "hr"},{"language": "ht","niceName": "ht"},{"language": "hu","niceName": "hu"},{"language": "hy","niceName": "hy"},{"language": "id","niceName": "id"},{"language": "ig","niceName": "ig"},{"language": "is","niceName": "is"},{"language": "it","niceName": "it"},{"language": "iw","niceName": "iw"},{"language": "ja","niceName": "ja"},{"language": "jw","niceName": "jw"},{"language": "ka","niceName": "ka"},{"language": "km","niceName": "km"},{"language": "kn","niceName": "kn"},{"language": "ko","niceName": "ko"},{"language": "la","niceName": "la"},{"language": "lo","niceName": "lo"},{"language": "lt","niceName": "lt"},{"language": "lv","niceName": "lv"},{"language": "mi","niceName": "mi"},{"language": "mk","niceName": "mk"},{"language": "mn","niceName": "mn"},{"language": "mr","niceName": "mr"},{"language": "ms","niceName": "ms"},{"language": "mt","niceName": "mt"},{"language": "ne","niceName": "ne"},{"language": "nl","niceName": "nl"},{"language": "no","niceName": "no"},{"language": "pa","niceName": "pa"},{"language": "pl","niceName": "pl"},{"language": "pt","niceName": "pt"},{"language": "ro","niceName": "ro"},{"language": "ru","niceName": "ru"},{"language": "sk","niceName": "sk"},{"language": "sl","niceName": "sl"},{"language": "so","niceName": "so"},{"language": "sq","niceName": "sq"},{"language": "sr","niceName": "sr"},{"language": "sv","niceName": "sv"},{"language": "sw","niceName": "sw"},{"language": "ta","niceName": "ta"},{"language": "te","niceName": "te"},{"language": "th","niceName": "th"},{"language": "tl","niceName": "tl"},{"language": "tr","niceName": "tr"},{"language": "uk","niceName": "uk"},{"language": "ur","niceName": "ur"},{"language": "vi","niceName": "vi"},{"language": "yi","niceName": "yi"},{"language": "yo","niceName": "yo"},{"language": "zh","niceName": "zh"},{"language": "zh-TW","niceName": "zh-TW"},{"language": "zu","niceName": "zu"}],
+    localSelectedDetails: function(){
+        return Enumerable.From(this.get('localAvailable')).Where('f=>f.language==="' + this.get('localSelected') + '"').FirstOrDefault();
+    }.property('localSelected'),
+    localSelectedOberver: function(){
+        App.set('localSelected', this.get('localSelected')); // this way you can pull the what the language is at any point (like in the model of routes)
+    }.observes('localSelected').on('init'),
+    localSelected: "en",
     actions: {
         logoutUser: function(){
             var _this = this;
@@ -736,11 +822,11 @@ App.ApplicationController = Ember.Controller.extend({
 });
 
 
-
-
 App.ApplicationView = Ember.View.extend({
     didInsertElement: function () {
         var _this = this;
+
+
 
         if ($.cookie('showLoggedOutModal') === true) {
             $.cookie('showLoggedOutModal', false);
@@ -833,7 +919,7 @@ App.ApplicationView = Ember.View.extend({
 
 
         // EVERYTHING FROM HERE IS COPIED FROM THE MAIN TEMPLATE JS FILE
-
+        // Setup all jQuery plugins here!!!
 
         Ember.run.scheduleOnce('afterRender', this, function () {
             // navbar notification popups
@@ -872,9 +958,15 @@ App.ApplicationView = Ember.View.extend({
             //     });
             // });
 
+            // Setup localisation dropdown
+            $('.select2-localisation > select').select2({})
 
+
+            // Remove the preloading screen
             $('.preloader').remove();
 
+
+            // Setup the notifications dynamically
             $('.navbar-nav').on("click", "li.notification-dropdown > a.trigger", function(e){
 
                 var $el = $(this).parent();
@@ -2039,6 +2131,9 @@ App.GraphController = Ember.ObjectController.extend({
     }.property('validateWorkflowName', 'validateNewName', 'validateExistingName'),
 
     actions: {
+        translateWorkflow: function(workflowID, selectedID){
+            this.transitionTo('translate', workflowID, {queryParams: {selected: selectedID}});
+        },
         cancelWorkflowName: function (data, callback) {
             var wf = this.store.getById('workflow', this.get('workflowID'));
             if (typeof wf !== 'undefined' && wf && wf.currentState.parentState.dirtyType != 'created') {
@@ -3034,6 +3129,7 @@ App.NodeSerializer = DS.RESTSerializer.extend({
                 label: a.label,
                 content: a.content,
                 id: a.id,
+                VersionUpdated: a.VersionUpdated,
                 edges: a.edges,
                 workflows: a.workflows
             };
@@ -3078,7 +3174,7 @@ App.Node = DS.Model.extend({
         else
             return '';
     }.property('label'),
-    VersionUpdated: DS.attr('date')
+    VersionUpdated: DS.attr('')
 });
 
 
@@ -3117,7 +3213,7 @@ App.Edge = DS.Model.extend({
         else
             return null;
     }.property(),
-    Related: DS.attr('date'),
+    Related: DS.attr(''),
     RelationTypeID: DS.attr(),
     Weight: DS.attr(),
     Sequence: DS.attr(),
@@ -3321,7 +3417,10 @@ App.Translation = DS.Model.extend({
     DocName: DS.attr(''),
     TranslationCulture: DS.attr(''),
     TranslationName: DS.attr(''),
-    TranslationText: DS.attr('')
+    TranslationText: DS.attr(''),
+    Action: DS.attr(''),
+    VersionUpdated: DS.attr(''),
+    DocUpdated: DS.attr('')
 });
 
 App.Wikipedia = DS.Model.extend({
@@ -3765,6 +3864,7 @@ App.TinymceEditorComponent = Ember.Component.extend({
     editor: null,
     data: {},
     watchData: true,
+    disableWatchDataOnStartup: '',
     didInsertElement: function () {
         var _this = this;
 
@@ -3853,10 +3953,13 @@ App.TinymceEditorComponent = Ember.Component.extend({
 
                 })
 
-                //console.log(cleanData, ' clean-new ',newData);
                 _this.set('watchData', false);
-                if (newData) _this.set('data', cleanData);
+                if (newData && (_this.get('disableWatchDataOnStartup')!=="yes"))  {
+                    _this.set('data', cleanData);
+                }
                 _this.set('watchData', true);
+                _this.set('disableWatchDataOnStartup', "")
+
             });
 
         }

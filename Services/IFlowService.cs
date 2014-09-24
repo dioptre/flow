@@ -112,6 +112,9 @@ namespace EXPEDIT.Flow.Services
         [OperationContract]
         bool UpdateTranslation(TranslationViewModel m);
 
+        [OperationContract]
+        bool DeleteTranslation(TranslationViewModel m);
+
 
     }
 }
