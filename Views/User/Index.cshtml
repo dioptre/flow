@@ -836,54 +836,54 @@
             {{#view App.HomeNavView}}
                 {{#link-to 'search'}}
                     <i class="icon-search"></i>
-                    <span>Search</span>
+                    <span>{{model.t.fp_menu_link_search}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 <a class="dropdown-toggle" href="#">
                     <i class="icon-sitemap"></i>
-                    <span>Workflow</span>
+                    <span>{{model.t.fp_menu_link_workflow}}</span>
                     <i class="icon-chevron-down"></i>
                 </a>
                 <ul class="submenu">
-                    <li>{{#link-to 'workflow' 'undefined'}}New Workflow{{/link-to}}</li>
-                    <li>{{#link-to 'myworkflows'}}My Workflows{{/link-to}}</li>
+                    <li>{{#link-to 'workflow' 'undefined'}}{{model.t.fp_menu_link_newWorkflow}}{{/link-to}}</li>
+                    <li>{{#link-to 'myworkflows'}}{{model.t.fp_menu_link_myWorkflow}}{{/link-to}}</li>
                 </ul>
             {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'file'}}
                     <i class="icon-file"></i>
-                    <span>My Files</span>
+                    <span>{{model.t.fp_menu_link_myfiles}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'wikipedia' 'Special:Random'}}
                     <i class="icon-book"></i>
-                    <span>Wikipedia</span>
+                    <span>{{model.t.fp_menu_link_wikipedia}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'permission'}}
                     <i class="icon-lock"></i>
-                    <span>Permissions</span>
+                    <span>{{model.t.fp_menu_link_permission}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'mylicenses'}}
                     <i class="icon-tags"></i>
-                    <span>Licenses</span>
+                    <span>{{model.t.fp_menu_link_licenses}}</span>
                 {{/link-to}}
             {{/view}}
            {{#view App.HomeNavView}}
                 {{#link-to 'myprofiles'}}
                     <i class="icon-user"></i>
-                    <span>{{#if isLoggedIn}}{{userProfile.UserName}}{{else}}My Profile{{/if}}</span>
+                    <span>{{#if isLoggedIn}}{{userProfile.UserName}}{{else}}{{model.t.fp_menu_link_myprofile}}{{/if}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'help'}}
                     <i class="icon-question"></i>
-                    <span>Help</span>
+                    <span>{{model.t.fp_menu_link_help}}</span>
                 {{/link-to}}
             {{/view}}
             {{!--
@@ -1347,7 +1347,7 @@
                 {{/if}}
             {{else}}
                 <div class="col-md-12">
-                    <h4>Please add a keyword to start searching...</h4>
+                    <h4>{{controllers.application.model.t.fp_search_info_no_keyword}}</h4>
                 </div>
             {{/if}}
       </div>
@@ -1474,7 +1474,19 @@
 
 </script>
 
-<script type="text/x-handlebars" id="translate">
+<script type="text/x-handlebars" id="translateme">
+    <h1>Tanslate Me</h1>
+
+
+    {{eui-button label="Save" action="createItem" size='large'}}
+
+    <h4>Translation</h4>
+    {{eui-input valueBinding="translation"}}
+
+    <h4>label</h4>
+    {{eui-input valueBinding="label"}}
+
+
 
 </script>
 

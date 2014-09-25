@@ -127,7 +127,7 @@ App.HelpRoute = Ember.Route.extend({
 
 App.TranslatemeRoute = Ember.Route.extend({
     model: function(){
-        return this.store.get('locale');
+        // return this.store.get('locale');
     }
 })
 
@@ -135,7 +135,32 @@ App.TranslatemeRoute = Ember.Route.extend({
 App.TranslatemeController = Ember.ObjectController.extend({
     queryParams: ['item'],
     needs: ['application'],
-    item: ''
+    item: '',
+    label: "fp_menu_link_workflow",
+    translation: 'translation',
+    actions: {
+        createItem: function(){
+
+            var label = this.get('label');
+            var translation = this.get('translation')
+
+            var guid = NewGUID();
+            var a = this.store.createRecord('locale', {
+            id:guid,
+            TranslationCulture: 'en-US',
+                Label: this.get('label'),
+                OriginalText: translation,
+                OriginalCulture: 'en-US',
+                Translation: translation,
+            }) ;
+            a.save().then(function(){
+                 Messenger().post({ type: 'success', message: 'Saved' });
+            }, function(){
+                Messenger().post({ type: 'error', message: 'Error' });
+            });
+
+        }
+    }
 })
 
 
@@ -209,7 +234,7 @@ App.TranslateController = Ember.ObjectController.extend({
                 // location.reload();
                 // debugger;
                 // _this.
-                Messenger().post({ type: 'error', message: 'Succesfully reloaded translation!' });
+                Messenger().post({ type: 'success', message: 'Succesfully reloaded translation!' });
             }, function () {
                 Messenger().post({ type: 'error', message: 'Unknown transition error.' });
 
@@ -743,12 +768,29 @@ App.SignupController = Ember.Controller.extend({
     }
 })
 
+
+var updateLocale = function (context,locale) {
+    context.store.find('locale', { TranslationCulture: locale, OriginalCulture: 'en-US' }).then(function (m) {
+        Enumerable.From(m.content).ForEach(function (f) {
+            m[f.get('Label')] = f.get('Translation');
+        });
+        App.set('locale.t', m);
+    });
+}
 App.ApplicationRoute = Ember.Route.extend({
     queryParams: {
         localSelected: { refreshModel: true }
     },
     model: function(params){
-        App.set('localSelected', params.localSelected)
+        App.set('localSelected', params.localSelected);
+        if (!App.get('locale') || (App.get('locale').l !== params.localSelected)) {
+            App.set('locale', { l: params.localSelected });
+            Ember.run.scheduleOnce('sync', null, updateLocale, this, params.localSelected);
+        }
+        //return Ember.RSVP.hash({ l: params.localSelected });
+    },
+    afterModel: function (m) {
+        m.t = App.get('locale');
     },
     actions: {
         transitionSearch: function (a) {
@@ -1257,7 +1299,7 @@ App.SearchSerializer = DS.RESTSerializer.extend({
 App.SearchRoute = Ember.Route.extend({});
 // App.SearchController = Ember.ObjectController.extend({
 App.SearchController = Ember.Controller.extend({
-    needs: ['graphResults','mapResults','fileResults','workflowResults'],
+    needs: ['application', 'graphResults','mapResults','fileResults','workflowResults'],
     queryParams: ['keywords', 'tags', 'wf', 'graph', 'file', 'map', 'pageWorkflow', 'pageGraph', 'pageFile', 'pageMap', 'pageSize'],
     wf: false,
     graph: true,
@@ -3875,11 +3917,15 @@ App.HomeNavView = Ember.View.extend({
         var _this = this;
         $(window).on('hashchange', function () {
             _this.set('activeTagzz', false);
-            _this.$('a').each(function (i, j, y) {
-                if (j.getAttribute('href').replace(/^#\//, '') === window.location.hash.substring(2)) {
-                    _this.set('activeTagzz', true);
-                }
-            });
+            var a = _this.$('a');
+            if (typeof a !== 'undefined') {
+                a.each(function (i, j, y) {
+                    if (j.getAttribute('href').replace(/^#\//, '') === window.location.hash.substring(2)) {
+                        _this.set('activeTagzz', true);
+                    }
+                });
+            }
+
         }).trigger('hashchange')
     }.on('didInsertElement')
 });
