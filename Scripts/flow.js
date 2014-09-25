@@ -775,7 +775,7 @@ var updateLocale = function (context, locale) {
         Enumerable.From(m.content).ForEach(function (f) {
             m[f.get('Label')] = f.get('Translation');
         });
-        App.set('locale.t', m);
+        App.set('locale.t', Ember.Object.create(m));
         c.set('model', App.get('locale'));
     });
 }
@@ -785,8 +785,14 @@ App.ApplicationRoute = Ember.Route.extend({
     },
     model: function(params){
         App.set('localSelected', params.localSelected);
-        if (!App.get('locale') || (App.get('locale.l') !== params.localSelected)) {
-            App.set('locale', { l: params.localSelected });
+        var isNew = false;
+        if (!App.get('locale')) {
+            isNew = true;
+            App.set('locale', Ember.Object.create({ l: null }));
+        }
+        if (isNew || App.get('locale.l') !== params.localSelected)
+        {
+            App.set('locale.l', params.localSelected);
             //Ember.run.scheduleOnce('sync', null, updateLocale, this, params.localSelected);
             updateLocale(this, params.localSelected);
         }
@@ -3213,13 +3219,31 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 });
 
 
+var lcontext = 'en-US'
 DS.Model.reopen({
+    lnTrigger: DS.attr(''),
+    lnTriggerSetup: DS.attr(''),
     lname: function () {
-        return NewGUID();
-    }.property('controllers.application.model.l'),
+        var _this = this;        
+        if (!this.get('lnTriggerSetup')) {
+            App.get('locale').addObserver('l', lcontext, function () {
+                _this.set('lnTrigger', NewGUID());
+                _this.set('lnTriggerSetup', true)
+            });
+        }
+        var locale = App.get('locale.l');
+        if (lcontext !== locale) {
+            var promise = this.store.find('translation', { docid: this.get('id'), TranslationCulture: App.get('locale.l'), DocType: this.get('constructor.typeKey') })
+                .then(function (m) {
+                    return m;
+                });
+        }
+        else return this.get('humanName');
+    }.property('lnTrigger'),
     ltext: function () {
-        return NewGUID();
-    }.property('controllers.application.model.l')
+
+        return 
+    }.property('lnTrigger')
 });
 
 
