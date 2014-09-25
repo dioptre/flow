@@ -769,12 +769,14 @@ App.SignupController = Ember.Controller.extend({
 })
 
 
-var updateLocale = function (context,locale) {
+var updateLocale = function (context, locale) {
+    var c = context.controllerFor('application')
     context.store.find('locale', { TranslationCulture: locale, OriginalCulture: 'en-US' }).then(function (m) {
         Enumerable.From(m.content).ForEach(function (f) {
             m[f.get('Label')] = f.get('Translation');
         });
         App.set('locale.t', m);
+        c.set('model', App.get('locale'));
     });
 }
 App.ApplicationRoute = Ember.Route.extend({
@@ -783,15 +785,16 @@ App.ApplicationRoute = Ember.Route.extend({
     },
     model: function(params){
         App.set('localSelected', params.localSelected);
-        if (!App.get('locale') || (App.get('locale').l !== params.localSelected)) {
+        if (!App.get('locale') || (App.get('locale.l') !== params.localSelected)) {
             App.set('locale', { l: params.localSelected });
-            Ember.run.scheduleOnce('sync', null, updateLocale, this, params.localSelected);
+            //Ember.run.scheduleOnce('sync', null, updateLocale, this, params.localSelected);
+            updateLocale(this, params.localSelected);
         }
         //return Ember.RSVP.hash({ l: params.localSelected });
     },
-    afterModel: function (m) {
-        m.t = App.get('locale');
-    },
+    //setupController: function (controller, model) {
+    //    controller.set('model', App.get('locale'));
+    //},
     actions: {
         transitionSearch: function (a) {
             this.transitionTo('search', {queryParams: {keywords: a}})
@@ -3210,7 +3213,14 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 });
 
 
-
+DS.Model.reopen({
+    lname: function () {
+        return NewGUID();
+    }.property('controllers.application.model.l'),
+    ltext: function () {
+        return NewGUID();
+    }.property('controllers.application.model.l')
+});
 
 
 App.Node = DS.Model.extend({
