@@ -214,7 +214,7 @@ App.TranslateRoute = Ember.Route.extend({
 
 
             // Get ccontent by pulling itme by ID
-            App.Node.store.find('translation', {docid: m.select, TranslationCulture:localeSelected})
+            App.Node.store.find('translation', {docid: m.select, TranslationCulture:localeSelected, DocType: doctype})
             App.Node.store.find(doctype, {id: m.select});
 
             // Depending on query params selected choose relevant item
@@ -2006,7 +2006,7 @@ App.GraphRoute = Ember.Route.extend({
             m.label = '';
             m.editing = true;
             m.humanName = '';
-            m.workflow = this.store.getById('Workflow', m.params.workflowID);
+            m.workflow = this.store.getById('workflow', m.params.workflowID);
             if (!m.workflow) {
                 m.workflow = App.Workflow.store.createRecord('workflow', {
                     id: m.params.workflowID,
@@ -3250,7 +3250,14 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 });
 
 
-
+var refetchLocale = function (context) {
+    console.log('hi');
+    context.store.find('translation', { docid: context.get('id'), TranslationCulture: App.get('locale.l'), DocType: context.get('constructor.typeKey') })
+    .then(function (m) {
+        context.set('_localName', m.content[0].get('TranslationName'));
+        context.set('_localContent', m.content[0].get('TranslationText'));
+    });
+};
 DS.Model.reopen({
     _recordCreated: Date.now(),
     _localeTrigger: DS.attr(''),
@@ -3259,27 +3266,18 @@ DS.Model.reopen({
         var updateLocale = function () {
             var locale = App.get('locale.l');
             if (defaultLocale !== locale) {
-                _this.store.filter('translation', { docid: _this.get('id'), TranslationCulture: App.get('locale.l') }, function () { })
-                    .then(function (translations) {
-                        var refetchLocale = function () {
-                            _this.store.find('translation', { docid: _this.get('id'), TranslationCulture: App.get('locale.l'), DocType: _this.get('constructor.typeKey') })
-                            .then(function (m) {
-                                _this.set('_localName', m.content[0].get('TranslationName'));
-                                _this.set('_localContent', m.content[0].get('TranslationText'));
-                            });
-                        }
-                        if (translations.get('length') > 0) {
-                            var tx = translations.objectAt(0);
-                            if (!tx.get('Translation') || _this.get('_recordCreated') + 15000 < +Date.now())
-                                refetchLocale(); // get record again if text is null or old, helps with partially loaded records
-                            else {
-                                _this.set('_localName', tx.get('TranslationName'));
-                                _this.set('_localContent', tx.get('TranslationText'));
-                            }
-                        }
-                        else
-                            refetchLocale();
-                    });
+                var translations = Enumerable.From(_this.store.all('translation').content).Where("f=>f.get('DocID')==='" + _this.get('id') + "' && f.get('TranslationCulture') === '" + App.get('locale.l') + "'").ToArray();
+                if (translations.get('length') > 0) {
+                    var tx = translations.objectAt(0);
+                    if (!tx.get('Translation') || _this.get('_recordCreated') + 15000 < +Date.now())
+                        Ember.run.debounce(_this, refetchLocale, _this, 150, true); // get record again if text is null or old, helps with partially loaded records
+                    else {
+                        _this.set('_localName', tx.get('TranslationName'));
+                        _this.set('_localContent', tx.get('TranslationText'));
+                    }
+                }
+                else
+                    Ember.run.debounce(_this, refetchLocale, _this, 150, true);
             }
             else {
                 _this.set('_localName', _this.get('humanName'));

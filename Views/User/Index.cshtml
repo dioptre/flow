@@ -697,11 +697,11 @@
 <script type="text/x-handlebars" id="application">
         {{#eui-modal openBinding="logoutModal"}}
             <div style="padding: 50px; text-align: center;">
-                <h4> Do you really want to logout?</h4>
+                <h4>{{model.t.fp_general_actions_logoutConfirmation}}</h4>
 
                 <br>
-                {{eui-button label="Cancel" action="togglelogoutModal" size='large'}}
-                {{eui-button label="Logout" action="logoutUser" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                {{eui-button label=model.t.fp_general_actions_cancel action="togglelogoutModal" size='large'}}
+                {{eui-button label=model.t.fp_general_actions_logout action="logoutUser" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
              </div>
         {{/eui-modal}}
 
@@ -812,7 +812,7 @@
                 </li>
                 <li class="settings hidden-xs">
                      <a {{action 'togglelogoutModal'}}>
-                         Logout
+                         {{model.t.fp_general_actions_logout}}
                      </a>
                 </li>
             {{else}}
@@ -823,7 +823,7 @@
                 </li>
                 <li class="settings hidden-xs" title="Click to login.">
                     {{#link-to 'login'}}
-                        Login
+                        {{model.t.fp_general_actions_login}}
                     {{/link-to}}
                 </li>
             {{/if}}
@@ -998,7 +998,7 @@
                         {{#if workflowGte2}}
                             {{eui-select optionsBinding='workflowsOptionsArray' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='medium' width='300px'}}
                         {{else}}
-                            {{workflowName}}
+                            {{model.workflow.localName}}
                         {{/if}}
                     {{else}}
                         Current step has no workflow yet. Please choose a workflow name.
@@ -1503,8 +1503,7 @@
                 <div class="email-item-container">
                 {{#each model.translateTodos}}
                     {{#link-to 'translate' (query-params selected=id) tagName="div" class="email-item"}}
-                        <b>{{n.humanName}}{{w.humanName}}</b><br>
-                        <u>{{DocType}}123</u>
+                        <b>{{#if w}}Workflow {{/if}}{{#if n}}Step{{/if}} <u>{{n.humanName}}{{w.humanName}}</u></b><br>
                         <i>{{t.TranslationName}}</i>
                     {{/link-to}}
                 {{/each}}
