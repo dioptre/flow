@@ -4,16 +4,17 @@ $(function () {
 
 Ember.FEATURES["query-params"] = true;
 
-// I8N Translations
-Ember.FEATURES.I18N_TRANSLATE_HELPER_SPAN = false;
-Ember.I18n.translations = {
-  'user.edit.title': 'Edit User',
-  'user.followers.title.one': 'One Follower',
-  'user.followers.title.other': 'All {{count}} Followers',
-  'button.add_user.title': 'Add a user',
-  'button.add_user.text': 'Add',
-  'button.add_user.disabled': 'Saving...'
-};
+var defaultLocale = 'en-US';
+//// I8N Translations
+//Ember.FEATURES.I18N_TRANSLATE_HELPER_SPAN = false;
+//Ember.I18n.translations = {
+//  'user.edit.title': 'Edit User',
+//  'user.followers.title.one': 'One Follower',
+//  'user.followers.title.other': 'All {{count}} Followers',
+//  'button.add_user.title': 'Add a user',
+//  'button.add_user.text': 'Add',
+//  'button.add_user.disabled': 'Saving...'
+//};
 
 function RedirectToLogin() {
     window.location.hash = '#/login'
@@ -170,11 +171,12 @@ App.TranslateRoute = Ember.Route.extend({
         selected: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
     },
     model: function(params){
-        var localSelected = App.get('localSelected')
+        var localeSelected = App.get('localeSelected')
         return Ember.RSVP.hash({
+            workflow: this.store.find('workflow', params.workflowID),
             processes:  this.store.find('node', { groupid: params.workflowID }), // Load edges and nodes
-            translatedSteps: this.store.find('translation', {docid: params.workflowID, TranslationCulture:localSelected, DocType: 'flows'}),
-            translatedWorkflow: this.store.find('translation', {docid: params.workflowID, TranslationCulture:localSelected, DocType: 'workflow'}),
+            translatedSteps: this.store.find('translation', {docid: params.workflowID, TranslationCulture:localeSelected, DocType: 'flows'}),
+            translatedWorkflow: this.store.find('translation', {docid: params.workflowID, TranslationCulture:localeSelected, DocType: 'workflow'}),
             workflowID: params.workflowID,
             select: params.selected,
             tinyReset: "yes"
@@ -186,7 +188,7 @@ App.TranslateRoute = Ember.Route.extend({
         var translation = App.Translation.store.all('translation').content;
 
         // get's this from query params on application route
-        var localSelected = App.get('localSelected')
+        var localeSelected = App.get('localeSelected')
 
 
         // Get a list of all items with the code below:
@@ -195,16 +197,29 @@ App.TranslateRoute = Ember.Route.extend({
         // var nodeids = wfedges.Select("f=>f.get('from')").Union(wfedges.Select("f=>f.get('to')")).Where("f=>f!==null").ToArray();
         // var wfnodes = Enumerable.From(nodeids).Join(nodes, "", "f=>f.id", "f,g=>g").ToArray();
 
-        m.translateTodos = Enumerable.From(m.translatedSteps.content).Join(nodes, "f=>f.get('DocID')", "g=>g.id", "f,g=>{t:f,n:g,id:g.id,DocType:'flows',}").ToArray();
+        
+        m.translateTodos = Enumerable.From(m.translatedWorkflow.content)
+            .Where("f=>f.get('DocID')==='" + m.workflowID + "'")
+            .Select(function (f) {
+                return { t: f, w: m.workflow, id: m.workflow.id, DocType: 'workflow' };
+            });
+        m.translateTodos = m.translateTodos.Union(Enumerable.From(m.translatedSteps.content).Join(nodes, "f=>f.get('DocID')", "g=>g.id", "f,g=>{t:f,n:g,id:g.id,DocType:'node'}")).ToArray();
+
 
         if (m.select) {
+            
+            
+            var selectedObject = Enumerable.From(m.translateTodos).Where("f=>f.id==='" + m.select + "'").First();
+            var doctype = selectedObject.DocType;
+
+
             // Get ccontent by pulling itme by ID
-            App.Node.store.find('translation', {docid: m.select, TranslationCulture:localSelected})
-            App.Node.store.find('node', {id: m.select});
+            App.Node.store.find('translation', {docid: m.select, TranslationCulture:localeSelected})
+            App.Node.store.find(doctype, {id: m.select});
 
             // Depending on query params selected choose relevant item
             m.selectedOriginal = Enumerable.From(m.translateTodos).Where("f=>f.id==='" + m.select + "'").FirstOrDefault();
-            m.selectedTranslation = Enumerable.From(translation).Where("f=>f.get('DocID')==='" + m.select + "' && f.get('TranslationCulture')==='" + localSelected + "'").FirstOrDefault();
+            //m.selectedTranslation = Enumerable.From(translation).Where("f=>f.get('DocID')==='" + m.select + "' && f.get('TranslationCulture')==='" + localeSelected + "'").FirstOrDefault();
         }
     },
     willTransition: function(transition) {
@@ -224,12 +239,12 @@ App.TranslateController = Ember.ObjectController.extend({
     needs: ['application'],
     selected: null,
     newContent: function(){
-        return !this.get("model.selectedTranslation.isDirty");
-    }.property('model.selectedTranslation.isDirty'),
+        return !this.get("model.selectedOriginal.t.isDirty");
+    }.property('model.selectedOriginal.t.isDirty'),
     actions: {
         redoTranslate: function () {
             var _this = this;
-            var translationID = this.get('model.selectedTranslation.id');
+            var translationID = this.get('model.selectedOriginal.t.id');
             this.store.find('translation', { id: translationID, Refresh: true }).then(function () {
                 // location.reload();
                 // debugger;
@@ -242,13 +257,13 @@ App.TranslateController = Ember.ObjectController.extend({
 
         },
         resetTranslation: function(){
-            var translation = this.get('model.selectedTranslation');
+            var translation = this.get('model.selectedOriginal.t');
 
             translation.rollback();
         },
         saveTranslation: function(){
-            var translation = this.get('model.selectedTranslation');
-            var language = this.get('controllers.application.localSelectedDetails.niceName')
+            var translation = this.get('model.selectedOriginal.t');
+            var language = this.get('controllers.application.localeSelectedDetails.humanName')
             translation.save().then(function(){
                 Messenger().post({ type: 'success', message: language + ' translation was saved.' });
 
@@ -781,30 +796,22 @@ var updateLocale = function (context, locale) {
 }
 App.ApplicationRoute = Ember.Route.extend({
     queryParams: {
-        localSelected: { refreshModel: true }
+        localeSelected: { refreshModel: true }
     },
     model: function (params) {
-        if (typeof params.localSelected === 'undefined' || !params.localSelected) {
-            params.localSelected = defaultLocale;
-            this.set('queryParams.localSelected', defaultLocale);
-        }
-        App.set('localSelected', params.localSelected);
+
+        App.set('localeSelected', params.localeSelected);
         var isNew = false;
         if (!App.get('locale')) {
             isNew = true;
             App.set('locale', Ember.Object.create({ l: null }));
         }
-        if (isNew || App.get('locale.l') !== params.localSelected)
+        if (isNew || App.get('locale.l') !== params.localeSelected)
         {
-            App.set('locale.l', params.localSelected);
-            //Ember.run.scheduleOnce('sync', null, updateLocale, this, params.localSelected);
-            updateLocale(this, params.localSelected);
+            App.set('locale.l', params.localeSelected);
+            updateLocale(this, params.localeSelected);
         }
-        //return Ember.RSVP.hash({ l: params.localSelected });
     },
-    //setupController: function (controller, model) {
-    //    controller.set('model', App.get('locale'));
-    //},
     actions: {
         transitionSearch: function (a) {
             this.transitionTo('search', {queryParams: {keywords: a}})
@@ -840,7 +847,7 @@ App.ApplicationRoute = Ember.Route.extend({
 
 
 App.ApplicationController = Ember.Controller.extend({
-    queryParams: ['localSelected'],
+    queryParams: ['localeSelected'],
     currentPathDidChange: function () {
         window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
         var currentPath = this.get('currentPath');
@@ -867,30 +874,33 @@ App.ApplicationController = Ember.Controller.extend({
     isLoggedIn: false,
     logoutModal: false,
     userProfile: '',
-    localDic: {"af": "Afrikaans", "af-ZA": "Afrikaans (Suid-Afrika)", "am": "አማርኛ", "am-ET": "አማርኛ (ኢትዮጵያ)", "ar": "العربية", "ar-AE": "العربية (الإمارات العربية المتحدة)", "ar-BH": "العربية (البحرين)", "ar-DZ": "العربية (الجزائر)", "ar-EG": "العربية (مصر)", "ar-IQ": "العربية (العراق)", "ar-JO": "العربية (الأردن)", "ar-KW": "العربية (الكويت)", "ar-LB": "العربية (لبنان)", "ar-LY": "العربية (ليبيا)", "ar-MA": "العربية (المملكة المغربية)", "ar-OM": "العربية (عمان)", "ar-QA": "العربية (قطر)", "ar-SA": "العربية (المملكة العربية السعودية)", "ar-SY": "العربية (سوريا)", "ar-TN": "العربية (تونس)", "ar-YE": "العربية (اليمن)", "arn": "Mapudungun", "arn-CL": "Mapudungun ( )", "as": "অসমীয়া", "as-IN": "অসমীয়া (ভাৰত)", "az": "Azərbaycan­ılı", "az-Cyrl": "Азәрбајҹан дили", "az-Cyrl-AZ": "Азәрбајҹан (Азәрбајҹан)", "az-Latn": "Azərbaycan dili (Azərbaycan)", "az-Latn-AZ": "Azərbaycan dili (Azərbaycan)", "ba": "Башҡорт", "ba-RU": "Башҡорт (Рәсәй)", "be": "Беларуская", "be-BY": "Беларуская (Беларусь)", "bg": "български", "bg-BG": "български (България)", "bn": "বাংলা", "bn-BD": "বাংলা (বাংলাদেশ)", "bn-IN": "বাংলা (ভারত)", "bo": "བོད་ཡིག", "bo-CN": "བོད་ཡིག (ཀྲུང་ཧྭ་མི་དམངས་སྤྱི་མཐུན་རྒྱལ་ཁབ།)", "br": "brezhoneg", "br-FR": "brezhoneg (Frañs)", "bs": "bosanski", "bs-Cyrl": "босански", "bs-Cyrl-BA": "босански (Босна и Херцеговина)", "bs-Latn": "bosanski", "bs-Latn-BA": "bosanski (Bosna i Hercegovina)", "ca": "Català", "ca-ES": "Català (Català)", "ca-ES-valencia": "Valencià (Espanya)", "chr": "ᏣᎳᎩ", "chr-Cher": "ᏣᎳᎩ", "chr-Cher-US": "ᏣᎳᎩ (ᏣᎳᎩ)", "co": "Corsu", "co-FR": "Corsu (Francia)", "cs": "čeština", "cs-CZ": "čeština (Česká republika)", "cy": "Cymraeg", "cy-GB": "Cymraeg (Y Deyrnas Unedig)", "da": "dansk", "da-DK": "dansk (Danmark)", "de": "Deutsch", "de-AT": "Deutsch (Österreich)", "de-CH": "Deutsch (Schweiz)", "de-DE": "Deutsch (Deutschland)", "de-LI": "Deutsch (Liechtenstein)", "de-LU": "Deutsch (Luxemburg)", "dsb": "dolnoserbšćina", "dsb-DE": "dolnoserbšćina ( )", "dv": "ދިވެހިބަސް", "dv-MV": "ދިވެހިބަސް (ދިވެހި ރާއްޖެ)", "el": "Ελληνικά", "el-GR": "Ελληνικά (Ελλάδα)", "en-US": "English", "en-029": "English ( )", "en-AU": "English (Australia)", "en-BZ": "English (Belize)", "en-CA": "English (Canada)", "en-GB": "English (United Kingdom)", "en-HK": "English (Hong Kong)", "en-IE": "English (Ireland)", "en-IN": "English (India)", "en-JM": "English (Jamaica)", "en-MY": "English (Malaysia)", "en-NZ": "English (New Zealand)", "en-PH": "English (Philippines)", "en-SG": "English (Singapore)", "en-TT": "English (Trinidad and Tobago)", "en-US": "English (United States)", "en-ZA": "English (South Africa)", "en-ZW": "English (Zimbabwe)", "es": "español", "es-419": "español ( )", "es-AR": "español (Argentina)", "es-BO": "español (Bolivia)", "es-CL": "español (Chile)", "es-CO": "español (Colombia)", "es-CR": "español (Costa Rica)", "es-DO": "español (República Dominicana)", "es-EC": "español (Ecuador)", "es-ES": "español (España, alfabetización internacional)", "es-GT": "español (Guatemala)", "es-HN": "español (Honduras)", "es-MX": "español (México)", "es-NI": "español (Nicaragua)", "es-PA": "español (Panamá)", "es-PE": "español (Perú)", "es-PR": "español (Puerto Rico)", "es-PY": "español (Paraguay)", "es-SV": "español (El Salvador)", "es-US": "español (Estados Unidos)", "es-UY": "español (Uruguay)", "es-VE": "español (Republica Bolivariana de Venezuela)", "et": "eesti", "et-EE": "eesti (Eesti)", "eu": "euskara", "eu-ES": "euskara (euskara)", "fa": "فارسى", "fa-IR": "فارسى (ایران)", "ff": "Fulah", "ff-Latn": "Fulah", "ff-Latn-SN": "Fulah (Sénégal)", "fi": "suomi", "fi-FI": "suomi (Suomi)", "fil": "Filipino", "fil-PH": "Filipino ( )", "fo": "føroyskt", "fo-FO": "føroyskt (Føroyar)", "fr": "français", "fr-BE": "français (Belgique)", "fr-CA": "français (Canada)", "fr-CD": "français (Congo [RDC])", "fr-CH": "français (Suisse)", "fr-CI": "français (Côte d’Ivoire)", "fr-CM": "français (Cameroun)", "fr-FR": "français (France)", "fr-HT": "français (Haïti)", "fr-LU": "français (Luxembourg)", "fr-MA": "français (Maroc)", "fr-MC": "français (Principauté de Monaco)", "fr-ML": "français (Mali)", "fr-RE": "français (Réunion)", "fr-SN": "français (Sénégal)", "fy": "Frysk", "fy-NL": "Frysk (Nederlân)", "ga": "Gaeilge", "ga-IE": "Gaeilge (Éire)", "gd": "Gàidhlig", "gd-GB": "Gàidhlig (An Rìoghachd Aonaichte)", "gl": "galego", "gl-ES": "galego (galego)", "gn": "Guarani", "gn-PY": "Guarani (Paraguái)", "gsw": "Elsässisch", "gsw-FR": "Elsässisch ( )", "gu": "ગુજરાતી", "gu-IN": "ગુજરાતી (ભારત)", "ha": "Hausa", "ha-Latn": "Hausa", "ha-Latn-NG": "Hausa (Nijeriya)", "haw": "Hawaiʻi", "haw-US": "Hawaiʻi ( )", "he": "עברית", "he-IL": "עברית (ישראל)", "hi": "हिंदी", "hi-IN": "हिंदी (भारत)", "hr": "hrvatski", "hr-BA": "hrvatski (Bosna i Hercegovina)", "hr-HR": "hrvatski (Hrvatska)", "hsb": "hornjoserbšćina", "hsb-DE": "hornjoserbšćina ( )", "hu": "magyar", "hu-HU": "magyar (Magyarország)", "hy": "Հայերեն", "hy-AM": "Հայերեն (Հայաստան)", "id": "Bahasa Indonesia", "id-ID": "Bahasa Indonesia (Indonesia)", "ig": "Igbo", "ig-NG": "Igbo (Nigeria)", "ii": "ꆈꌠꁱꂷ", "ii-CN": "ꆈꌠꁱꂷ (ꍏꉸꏓꂱꇭꉼꇩ)", "is": "íslenska", "is-IS": "íslenska (Ísland)", "it": "italiano", "it-CH": "italiano (Svizzera)", "it-IT": "italiano (Italia)", "iu": "Inuktitut", "iu-Cans": "ᐃᓄᒃᑎᑐᑦ", "iu-Cans-CA": "ᐃᓄᒃᑎᑐᑦ (ᑲᓇᑕᒥ)", "iu-Latn": "Inuktitut", "iu-Latn-CA": "Inuktitut (Kanatami)", "ja": "日本語", "ja-JP": "日本語 (日本)", "jv": "Basa Jawa", "jv-Latn": "Basa Jawa", "jv-Latn-ID": "Basa Jawa (Indonesia)", "ka": "ქართული", "ka-GE": "ქართული (საქართველო)", "kk": "Қазақ", "kk-KZ": "Қазақ (Қазақстан)", "kl": "kalaallisut", "kl-GL": "kalaallisut (Kalaallit Nunaat)", "km": "ភាសាខ្មែរ", "km-KH": "ភាសាខ្មែរ (កម្ពុជា)", "kn": "ಕನ್ನಡ", "kn-IN": "ಕನ್ನಡ (ಭಾರತ)", "ko": "한국어", "ko-KR": "한국어(대한민국)", "kok": "कोंकणी", "kok-IN": "कोंकणी ( )", "ku": "کوردیی ناوەڕاست", "ku-Arab": "کوردیی ناوەڕاست", "ku-Arab-IQ": "کوردیی ناوەڕاست (کوردستان)", "ky": "Кыргыз", "ky-KG": "Кыргыз (Кыргызстан)", "lb": "Lëtzebuergesch", "lb-LU": "Lëtzebuergesch (Lëtzebuerg)", "lo": "ພາສາລາວ", "lo-LA": "ພາສາລາວ (ສປປ ລາວ)", "lt": "lietuvių", "lt-LT": "lietuvių (Lietuva)", "lv": "latviešu", "lv-LV": "latviešu (Latvija)", "mg": "Malagasy", "mg-MG": "Malagasy (Madagasikara)", "mi": "Reo Māori", "mi-NZ": "Reo Māori (Aotearoa)", "mk": "македонски јазик", "mk-MK": "македонски јазик (Македонија)", "ml": "മലയാളം", "ml-IN": "മലയാളം (ഭാരതം)", "mn": "Монгол хэл", "mn-Cyrl": "Монгол хэл", "mn-MN": "Монгол хэл (Монгол улс)", "mn-Mong": "ᠮᠤᠨᠭᠭᠤᠯ ᠬᠡᠯᠡ", "mn-Mong-CN": "ᠮᠤᠨᠭᠭᠤᠯ ᠬᠡᠯᠡ (ᠪᠦᠭᠦᠳᠡ ᠨᠠᠢᠷᠠᠮᠳᠠᠬᠤ ᠳᠤᠮᠳᠠᠳᠤ ᠠᠷᠠᠳ ᠣᠯᠣᠰ)", "mn-Mong-MN": "ᠮᠤᠨᠭᠭᠤᠯ ᠬᠡᠯᠡ (ᠮᠤᠨᠭᠭᠤᠯ ᠣᠯᠣᠰ)", "moh": "Kanien'kéha", "moh-CA": "Kanien'kéha ", "mr": "मराठी", "mr-IN": "मराठी (भारत)", "ms": "Bahasa Melayu", "ms-BN": "Bahasa Melayu (Brunei Darussalam)", "ms-MY": "Bahasa Melayu (Malaysia)", "mt": "Malti", "mt-MT": "Malti (Malta)", "my": "ဗမာ", "my-MM": "ဗမာ (မြန်မာ)", "nb": "norsk (bokmål)", "nb-NO": "norsk, bokmål (Norge)", "ne": "नेपाली", "ne-IN": "नेपाली (भारत)", "ne-NP": "नेपाली (नेपाल)", "nl": "Nederlands", "nl-BE": "Nederlands (België)", "nl-NL": "Nederlands (Nederland)", "nn": "norsk (nynorsk)", "nn-NO": "norsk, nynorsk (Noreg)", "no": "norsk", "nqo": "ߒߞߏ", "nqo-GN": "ߞߏ (ߖߌ߬ߣߍ߬ ߞߊ߲ߓߍ߲)", "nso": "Sesotho sa Leboa", "nso-ZA": "Sesotho sa Leboa (Afrika Borwa)", "oc": "Occitan", "oc-FR": "Occitan (França)", "om": "Oromoo", "om-ET": "Oromoo (Itoophiyaa)", "or": "ଓଡ଼ିଆ", "or-IN": "ଓଡ଼ିଆ (ଭାରତ)", "pa": "ਪੰਜਾਬੀ", "pa-Arab": "پنجابی", "pa-Arab-PK": "پنجابی (پاکستان)", "pa-IN": "ਪੰਜਾਬੀ (ਭਾਰਤ)", "pl": "polski", "pl-PL": "polski (Polska)", "prs": "درى", "prs-AF": "رى()", "ps": "پښتو", "ps-AF": "پښتو(افغانستان)", "pt": "português", "pt-AO": "português(Angola)", "pt-BR": "português(Brasil)", "pt-PT": "português(Portugal)", "qut": "Kiche", "qut-GT": "K(Guatemala)", "quz": "runasimi", "quz-BO": "runasimi()", "quz-EC": "runashimiEcuadorSuyu)", "quz-PE": "runasimi()", "rm": "Rumantsch", "rm-CH": "Rumantsch(Svizra)", "ro": "română", "ro-MD": "română(RepublicaMoldova)", "ro-RO": "română(România)", "ru": "русский", "ru-RU": "русский(Россия)", "rw": "Kinyarwanda", "rw-RW": "Kinyarwanda(Rwanda)", "sa": "संस्कृत", "sa-IN": "संस्कृत(भारतम्)", "sah": "Саха", "sah-RU": "Cаха", "sd": "سنڌي", "sd-Arab": "سنڌي", "sd-Arab-PK": "سنڌي(پاکستان)", "se": "davvisámegiella", "se-FI": "davvisámegiella(Suopma)", "se-NO": "davvisámegiella(Norga)", "se-SE": "davvisámegiella(Ruoŧŧa)", "si": "සිංහල", "si-LK": "සිංහල(ශ්‍රීලංකා)", "sk": "slovenčina", "sk-SK": "slovenčina(Slovenskárepublika)", "sl": "slovenščina", "sl-SI": "slovenščina(Slovenija)", "sma": "åarjelsaemiengïele", "sma-NO": "åarjelsaemiengïele()", "sma-SE": "åarjelsaemiengïele()", "smj": "julevusámegiella", "smj-NO": "julevusámegiella()", "smj-SE": "julevusámegiella()", "smn": "sämikielâ", "smn-FI": "sämikielâ()", "sms": "sää´mǩiõll", "sms-FI": "sää´mǩiõll()", "sn": "chiShona", "sn-Latn": "chiShona(Latin)", "sn-Latn-ZW": "chiShona(Latin Zimbabwe)", "so": "Soomaali", "so-SO": "Soomaali(Soomaaliya)", "sq": "Shqip", "sq-AL": "Shqip(Shqipëria)", "sr": "srpski", "sr-Cyrl": "српски", "sr-Cyrl-BA": "српски(БоснаиХерцеговина)", "sr-Cyrl-CS": "српски(СрбијаиЦрнаГора(Бивша))", "sr-Cyrl-ME": "српски(ЦрнаГора)", "sr-Cyrl-RS": "српски(Србија)", "sr-Latn": "srpski", "sr-Latn-BA": "srpski(BosnaiHercegovina)", "sr-Latn-CS": "srpski(SrbijaiCrnaGora(Bivša))", "sr-Latn-ME": "srpski(CrnaGora)", "sr-Latn-RS": "srpski(Srbija)", "st": "Sesotho", "st-ZA": "Sesotho(SouthAfrica)", "sv": "svenska", "sv-FI": "svenska(Finland)", "sv-SE": "svenska(Sverige)", "sw": "Kiswahili", "sw-KE": "Kiswahili(Kenya)", "syr": "ܣܘܪܝܝܐ", "syr-SY": "ܣܘܪܝܝܐ()", "ta": "தமிழ்", "ta-IN": "தமிழ்(இந்தியா)", "ta-LK": "தமிழ்(இலங்கை)", "te": "తెలుగు", "te-IN": "తెలుగు(భారతదేశం)", "tg": "Тоҷикӣ", "tg-Cyrl": "Тоҷикӣ", "tg-Cyrl-TJ": "Тоҷикӣ(Тоҷикистон)", "th": "ไทย", "th-TH": "ไทย(ไทย)", "ti": "ትግርኛ", "ti-ER": "ትግርኛ(ኤርትራ)", "ti-ET": "ትግርኛ(ኢትዮጵያ)", "tk": "Türkmendili", "tk-TM": "Türkmendili(Türkmenistan)", "tn": "Setswana", "tn-BW": "Setswana(Botswana)", "tn-ZA": "Setswana(AforikaBorwa)", "tr": "Türkçe", "tr-TR": "Türkçe(Türkiye)", "ts": "Xitsonga", "ts-ZA": "Xitsonga(SouthAfrica)", "tt": "Татар", "tt-RU": "Татар(Россия)", "tzm": "Tamazight", "tzm-Latn": "Tamazight", "tzm-Latn-DZ": "Tamazight(Djazaïr)", "tzm-Tfng": "ⵜⴰⵎⴰⵣⵉⵖⵜ", "tzm-Tfng-MA": "ⵜⴰⵎⴰⵣⵉⵖⵜ(ⵍⵎⵖⵔⵉⴱ)", "ug": "ئۇيغۇرچە", "ug-CN": "ئۇيغۇرچە(جۇڭخۇاخەلقجۇمھۇرىيىتى)", "uk": "українська", "uk-UA": "українська(Україна)", "ur": "اُردو", "ur-IN": "اردو(بھارت)", "ur-PK": "اُردو(پاکستان)", "uz": "O'zbekcha", "uz-Cyrl": "Ўзбекча", "uz-Cyrl-UZ": "Ўзбекча(ЎзбекистонРеспубликаси)", "uz-Latn": "O'zbekcha", "uz-Latn-UZ": "O'zbekcha(O'zbekistonRespublikasi)", "vi": "TiếngViệt", "vi-VN": "TiếngViệt(ViệtNam)", "wo": "Wolof", "wo-SN": "Wolof(Senegaal)", "xh": "isiXhosa", "xh-ZA": "isiXhosa(uMzantsiAfrika)", "yo": "Yoruba", "yo-NG": "Yoruba(Nigeria)", "zgh": "StandardMorrocanTamazight", "zgh-Tfng": "ⵜⴰⵎⴰⵣⵉⵖⵜ", "zgh-Tfng-MA": "ⵜⴰⵎⴰⵣⵉⵖⵜ(ⵍⵎⵖⵔⵉⴱ)", "zh": "中文", "zh-CN": "中文(中华人民共和国)", "zh-Hans": "中文(简体)", "zh-Hant": "中文(繁體)", "zh-HK": "中文(香港特別行政區)", "zh-MO": "中文(澳門特別行政區)", "zh-SG": "中文(新加坡)", "zh-TW": "中文(台灣)", "zu": "isiZulu", "zu-ZA": "isiZulu(iNingizimuAfrika)", "zh-CHS": "中文()旧版", "zh-CHT": "中文()舊版"},
-    localActivated: ["af","ar","az","be","bg","bn","bs","ca","ceb","cs","cy","da","de","el","en-US","eo","es","et","eu","fa","fi","fr","ga","gl","gu","ha","hi","hmn","hr","ht","hu","hy","id","ig","is","it","iw","ja","jw","ka","km","kn","ko","la","lo","lt","lv","mi","mk","mn","mr","ms","mt","ne","nl","no","pa","pl","pt","ro","ru","sk","sl","so","sq","sr","sv","sw","ta","te","th","tl","tr","uk","ur","vi","yi","yo","zh","zh-TW","zu"],
-    localAvailable:  function () {
-        var localdic = this.get('localDic');
-        var localactivated = this.get('localActivated');
+    localeDic: {"af": "Afrikaans", "af-ZA": "Afrikaans (Suid-Afrika)", "am": "አማርኛ", "am-ET": "አማርኛ (ኢትዮጵያ)", "ar": "العربية", "ar-AE": "العربية (الإمارات العربية المتحدة)", "ar-BH": "العربية (البحرين)", "ar-DZ": "العربية (الجزائر)", "ar-EG": "العربية (مصر)", "ar-IQ": "العربية (العراق)", "ar-JO": "العربية (الأردن)", "ar-KW": "العربية (الكويت)", "ar-LB": "العربية (لبنان)", "ar-LY": "العربية (ليبيا)", "ar-MA": "العربية (المملكة المغربية)", "ar-OM": "العربية (عمان)", "ar-QA": "العربية (قطر)", "ar-SA": "العربية (المملكة العربية السعودية)", "ar-SY": "العربية (سوريا)", "ar-TN": "العربية (تونس)", "ar-YE": "العربية (اليمن)", "arn": "Mapudungun", "arn-CL": "Mapudungun ( )", "as": "অসমীয়া", "as-IN": "অসমীয়া (ভাৰত)", "az": "Azərbaycan­ılı", "az-Cyrl": "Азәрбајҹан дили", "az-Cyrl-AZ": "Азәрбајҹан (Азәрбајҹан)", "az-Latn": "Azərbaycan dili (Azərbaycan)", "az-Latn-AZ": "Azərbaycan dili (Azərbaycan)", "ba": "Башҡорт", "ba-RU": "Башҡорт (Рәсәй)", "be": "Беларуская", "be-BY": "Беларуская (Беларусь)", "bg": "български", "bg-BG": "български (България)", "bn": "বাংলা", "bn-BD": "বাংলা (বাংলাদেশ)", "bn-IN": "বাংলা (ভারত)", "bo": "བོད་ཡིག", "bo-CN": "བོད་ཡིག (ཀྲུང་ཧྭ་མི་དམངས་སྤྱི་མཐུན་རྒྱལ་ཁབ།)", "br": "brezhoneg", "br-FR": "brezhoneg (Frañs)", "bs": "bosanski", "bs-Cyrl": "босански", "bs-Cyrl-BA": "босански (Босна и Херцеговина)", "bs-Latn": "bosanski", "bs-Latn-BA": "bosanski (Bosna i Hercegovina)", "ca": "Català", "ca-ES": "Català (Català)", "ca-ES-valencia": "Valencià (Espanya)", "chr": "ᏣᎳᎩ", "chr-Cher": "ᏣᎳᎩ", "chr-Cher-US": "ᏣᎳᎩ (ᏣᎳᎩ)", "co": "Corsu", "co-FR": "Corsu (Francia)", "cs": "čeština", "cs-CZ": "čeština (Česká republika)", "cy": "Cymraeg", "cy-GB": "Cymraeg (Y Deyrnas Unedig)", "da": "dansk", "da-DK": "dansk (Danmark)", "de": "Deutsch", "de-AT": "Deutsch (Österreich)", "de-CH": "Deutsch (Schweiz)", "de-DE": "Deutsch (Deutschland)", "de-LI": "Deutsch (Liechtenstein)", "de-LU": "Deutsch (Luxemburg)", "dsb": "dolnoserbšćina", "dsb-DE": "dolnoserbšćina ( )", "dv": "ދިވެހިބަސް", "dv-MV": "ދިވެހިބަސް (ދިވެހި ރާއްޖެ)", "el": "Ελληνικά", "el-GR": "Ελληνικά (Ελλάδα)", "en-US": "English", "en-029": "English ( )", "en-AU": "English (Australia)", "en-BZ": "English (Belize)", "en-CA": "English (Canada)", "en-GB": "English (United Kingdom)", "en-HK": "English (Hong Kong)", "en-IE": "English (Ireland)", "en-IN": "English (India)", "en-JM": "English (Jamaica)", "en-MY": "English (Malaysia)", "en-NZ": "English (New Zealand)", "en-PH": "English (Philippines)", "en-SG": "English (Singapore)", "en-TT": "English (Trinidad and Tobago)", "en-US": "English (United States)", "en-ZA": "English (South Africa)", "en-ZW": "English (Zimbabwe)", "es": "español", "es-419": "español ( )", "es-AR": "español (Argentina)", "es-BO": "español (Bolivia)", "es-CL": "español (Chile)", "es-CO": "español (Colombia)", "es-CR": "español (Costa Rica)", "es-DO": "español (República Dominicana)", "es-EC": "español (Ecuador)", "es-ES": "español (España, alfabetización internacional)", "es-GT": "español (Guatemala)", "es-HN": "español (Honduras)", "es-MX": "español (México)", "es-NI": "español (Nicaragua)", "es-PA": "español (Panamá)", "es-PE": "español (Perú)", "es-PR": "español (Puerto Rico)", "es-PY": "español (Paraguay)", "es-SV": "español (El Salvador)", "es-US": "español (Estados Unidos)", "es-UY": "español (Uruguay)", "es-VE": "español (Republica Bolivariana de Venezuela)", "et": "eesti", "et-EE": "eesti (Eesti)", "eu": "euskara", "eu-ES": "euskara (euskara)", "fa": "فارسى", "fa-IR": "فارسى (ایران)", "ff": "Fulah", "ff-Latn": "Fulah", "ff-Latn-SN": "Fulah (Sénégal)", "fi": "suomi", "fi-FI": "suomi (Suomi)", "fil": "Filipino", "fil-PH": "Filipino ( )", "fo": "føroyskt", "fo-FO": "føroyskt (Føroyar)", "fr": "français", "fr-BE": "français (Belgique)", "fr-CA": "français (Canada)", "fr-CD": "français (Congo [RDC])", "fr-CH": "français (Suisse)", "fr-CI": "français (Côte d’Ivoire)", "fr-CM": "français (Cameroun)", "fr-FR": "français (France)", "fr-HT": "français (Haïti)", "fr-LU": "français (Luxembourg)", "fr-MA": "français (Maroc)", "fr-MC": "français (Principauté de Monaco)", "fr-ML": "français (Mali)", "fr-RE": "français (Réunion)", "fr-SN": "français (Sénégal)", "fy": "Frysk", "fy-NL": "Frysk (Nederlân)", "ga": "Gaeilge", "ga-IE": "Gaeilge (Éire)", "gd": "Gàidhlig", "gd-GB": "Gàidhlig (An Rìoghachd Aonaichte)", "gl": "galego", "gl-ES": "galego (galego)", "gn": "Guarani", "gn-PY": "Guarani (Paraguái)", "gsw": "Elsässisch", "gsw-FR": "Elsässisch ( )", "gu": "ગુજરાતી", "gu-IN": "ગુજરાતી (ભારત)", "ha": "Hausa", "ha-Latn": "Hausa", "ha-Latn-NG": "Hausa (Nijeriya)", "haw": "Hawaiʻi", "haw-US": "Hawaiʻi ( )", "he": "עברית", "he-IL": "עברית (ישראל)", "hi": "हिंदी", "hi-IN": "हिंदी (भारत)", "hr": "hrvatski", "hr-BA": "hrvatski (Bosna i Hercegovina)", "hr-HR": "hrvatski (Hrvatska)", "hsb": "hornjoserbšćina", "hsb-DE": "hornjoserbšćina ( )", "hu": "magyar", "hu-HU": "magyar (Magyarország)", "hy": "Հայերեն", "hy-AM": "Հայերեն (Հայաստան)", "id": "Bahasa Indonesia", "id-ID": "Bahasa Indonesia (Indonesia)", "ig": "Igbo", "ig-NG": "Igbo (Nigeria)", "ii": "ꆈꌠꁱꂷ", "ii-CN": "ꆈꌠꁱꂷ (ꍏꉸꏓꂱꇭꉼꇩ)", "is": "íslenska", "is-IS": "íslenska (Ísland)", "it": "italiano", "it-CH": "italiano (Svizzera)", "it-IT": "italiano (Italia)", "iu": "Inuktitut", "iu-Cans": "ᐃᓄᒃᑎᑐᑦ", "iu-Cans-CA": "ᐃᓄᒃᑎᑐᑦ (ᑲᓇᑕᒥ)", "iu-Latn": "Inuktitut", "iu-Latn-CA": "Inuktitut (Kanatami)", "ja": "日本語", "ja-JP": "日本語 (日本)", "jv": "Basa Jawa", "jv-Latn": "Basa Jawa", "jv-Latn-ID": "Basa Jawa (Indonesia)", "ka": "ქართული", "ka-GE": "ქართული (საქართველო)", "kk": "Қазақ", "kk-KZ": "Қазақ (Қазақстан)", "kl": "kalaallisut", "kl-GL": "kalaallisut (Kalaallit Nunaat)", "km": "ភាសាខ្មែរ", "km-KH": "ភាសាខ្មែរ (កម្ពុជា)", "kn": "ಕನ್ನಡ", "kn-IN": "ಕನ್ನಡ (ಭಾರತ)", "ko": "한국어", "ko-KR": "한국어(대한민국)", "kok": "कोंकणी", "kok-IN": "कोंकणी ( )", "ku": "کوردیی ناوەڕاست", "ku-Arab": "کوردیی ناوەڕاست", "ku-Arab-IQ": "کوردیی ناوەڕاست (کوردستان)", "ky": "Кыргыз", "ky-KG": "Кыргыз (Кыргызстан)", "lb": "Lëtzebuergesch", "lb-LU": "Lëtzebuergesch (Lëtzebuerg)", "lo": "ພາສາລາວ", "lo-LA": "ພາສາລາວ (ສປປ ລາວ)", "lt": "lietuvių", "lt-LT": "lietuvių (Lietuva)", "lv": "latviešu", "lv-LV": "latviešu (Latvija)", "mg": "Malagasy", "mg-MG": "Malagasy (Madagasikara)", "mi": "Reo Māori", "mi-NZ": "Reo Māori (Aotearoa)", "mk": "македонски јазик", "mk-MK": "македонски јазик (Македонија)", "ml": "മലയാളം", "ml-IN": "മലയാളം (ഭാരതം)", "mn": "Монгол хэл", "mn-Cyrl": "Монгол хэл", "mn-MN": "Монгол хэл (Монгол улс)", "mn-Mong": "ᠮᠤᠨᠭᠭᠤᠯ ᠬᠡᠯᠡ", "mn-Mong-CN": "ᠮᠤᠨᠭᠭᠤᠯ ᠬᠡᠯᠡ (ᠪᠦᠭᠦᠳᠡ ᠨᠠᠢᠷᠠᠮᠳᠠᠬᠤ ᠳᠤᠮᠳᠠᠳᠤ ᠠᠷᠠᠳ ᠣᠯᠣᠰ)", "mn-Mong-MN": "ᠮᠤᠨᠭᠭᠤᠯ ᠬᠡᠯᠡ (ᠮᠤᠨᠭᠭᠤᠯ ᠣᠯᠣᠰ)", "moh": "Kanien'kéha", "moh-CA": "Kanien'kéha ", "mr": "मराठी", "mr-IN": "मराठी (भारत)", "ms": "Bahasa Melayu", "ms-BN": "Bahasa Melayu (Brunei Darussalam)", "ms-MY": "Bahasa Melayu (Malaysia)", "mt": "Malti", "mt-MT": "Malti (Malta)", "my": "ဗမာ", "my-MM": "ဗမာ (မြန်မာ)", "nb": "norsk (bokmål)", "nb-NO": "norsk, bokmål (Norge)", "ne": "नेपाली", "ne-IN": "नेपाली (भारत)", "ne-NP": "नेपाली (नेपाल)", "nl": "Nederlands", "nl-BE": "Nederlands (België)", "nl-NL": "Nederlands (Nederland)", "nn": "norsk (nynorsk)", "nn-NO": "norsk, nynorsk (Noreg)", "no": "norsk", "nqo": "ߒߞߏ", "nqo-GN": "ߞߏ (ߖߌ߬ߣߍ߬ ߞߊ߲ߓߍ߲)", "nso": "Sesotho sa Leboa", "nso-ZA": "Sesotho sa Leboa (Afrika Borwa)", "oc": "Occitan", "oc-FR": "Occitan (França)", "om": "Oromoo", "om-ET": "Oromoo (Itoophiyaa)", "or": "ଓଡ଼ିଆ", "or-IN": "ଓଡ଼ିଆ (ଭାରତ)", "pa": "ਪੰਜਾਬੀ", "pa-Arab": "پنجابی", "pa-Arab-PK": "پنجابی (پاکستان)", "pa-IN": "ਪੰਜਾਬੀ (ਭਾਰਤ)", "pl": "polski", "pl-PL": "polski (Polska)", "prs": "درى", "prs-AF": "رى()", "ps": "پښتو", "ps-AF": "پښتو(افغانستان)", "pt": "português", "pt-AO": "português(Angola)", "pt-BR": "português(Brasil)", "pt-PT": "português(Portugal)", "qut": "Kiche", "qut-GT": "K(Guatemala)", "quz": "runasimi", "quz-BO": "runasimi()", "quz-EC": "runashimiEcuadorSuyu)", "quz-PE": "runasimi()", "rm": "Rumantsch", "rm-CH": "Rumantsch(Svizra)", "ro": "română", "ro-MD": "română(RepublicaMoldova)", "ro-RO": "română(România)", "ru": "русский", "ru-RU": "русский(Россия)", "rw": "Kinyarwanda", "rw-RW": "Kinyarwanda(Rwanda)", "sa": "संस्कृत", "sa-IN": "संस्कृत(भारतम्)", "sah": "Саха", "sah-RU": "Cаха", "sd": "سنڌي", "sd-Arab": "سنڌي", "sd-Arab-PK": "سنڌي(پاکستان)", "se": "davvisámegiella", "se-FI": "davvisámegiella(Suopma)", "se-NO": "davvisámegiella(Norga)", "se-SE": "davvisámegiella(Ruoŧŧa)", "si": "සිංහල", "si-LK": "සිංහල(ශ්‍රීලංකා)", "sk": "slovenčina", "sk-SK": "slovenčina(Slovenskárepublika)", "sl": "slovenščina", "sl-SI": "slovenščina(Slovenija)", "sma": "åarjelsaemiengïele", "sma-NO": "åarjelsaemiengïele()", "sma-SE": "åarjelsaemiengïele()", "smj": "julevusámegiella", "smj-NO": "julevusámegiella()", "smj-SE": "julevusámegiella()", "smn": "sämikielâ", "smn-FI": "sämikielâ()", "sms": "sää´mǩiõll", "sms-FI": "sää´mǩiõll()", "sn": "chiShona", "sn-Latn": "chiShona(Latin)", "sn-Latn-ZW": "chiShona(Latin Zimbabwe)", "so": "Soomaali", "so-SO": "Soomaali(Soomaaliya)", "sq": "Shqip", "sq-AL": "Shqip(Shqipëria)", "sr": "srpski", "sr-Cyrl": "српски", "sr-Cyrl-BA": "српски(БоснаиХерцеговина)", "sr-Cyrl-CS": "српски(СрбијаиЦрнаГора(Бивша))", "sr-Cyrl-ME": "српски(ЦрнаГора)", "sr-Cyrl-RS": "српски(Србија)", "sr-Latn": "srpski", "sr-Latn-BA": "srpski(BosnaiHercegovina)", "sr-Latn-CS": "srpski(SrbijaiCrnaGora(Bivša))", "sr-Latn-ME": "srpski(CrnaGora)", "sr-Latn-RS": "srpski(Srbija)", "st": "Sesotho", "st-ZA": "Sesotho(SouthAfrica)", "sv": "svenska", "sv-FI": "svenska(Finland)", "sv-SE": "svenska(Sverige)", "sw": "Kiswahili", "sw-KE": "Kiswahili(Kenya)", "syr": "ܣܘܪܝܝܐ", "syr-SY": "ܣܘܪܝܝܐ()", "ta": "தமிழ்", "ta-IN": "தமிழ்(இந்தியா)", "ta-LK": "தமிழ்(இலங்கை)", "te": "తెలుగు", "te-IN": "తెలుగు(భారతదేశం)", "tg": "Тоҷикӣ", "tg-Cyrl": "Тоҷикӣ", "tg-Cyrl-TJ": "Тоҷикӣ(Тоҷикистон)", "th": "ไทย", "th-TH": "ไทย(ไทย)", "ti": "ትግርኛ", "ti-ER": "ትግርኛ(ኤርትራ)", "ti-ET": "ትግርኛ(ኢትዮጵያ)", "tk": "Türkmendili", "tk-TM": "Türkmendili(Türkmenistan)", "tn": "Setswana", "tn-BW": "Setswana(Botswana)", "tn-ZA": "Setswana(AforikaBorwa)", "tr": "Türkçe", "tr-TR": "Türkçe(Türkiye)", "ts": "Xitsonga", "ts-ZA": "Xitsonga(SouthAfrica)", "tt": "Татар", "tt-RU": "Татар(Россия)", "tzm": "Tamazight", "tzm-Latn": "Tamazight", "tzm-Latn-DZ": "Tamazight(Djazaïr)", "tzm-Tfng": "ⵜⴰⵎⴰⵣⵉⵖⵜ", "tzm-Tfng-MA": "ⵜⴰⵎⴰⵣⵉⵖⵜ(ⵍⵎⵖⵔⵉⴱ)", "ug": "ئۇيغۇرچە", "ug-CN": "ئۇيغۇرچە(جۇڭخۇاخەلقجۇمھۇرىيىتى)", "uk": "українська", "uk-UA": "українська(Україна)", "ur": "اُردو", "ur-IN": "اردو(بھارت)", "ur-PK": "اُردو(پاکستان)", "uz": "O'zbekcha", "uz-Cyrl": "Ўзбекча", "uz-Cyrl-UZ": "Ўзбекча(ЎзбекистонРеспубликаси)", "uz-Latn": "O'zbekcha", "uz-Latn-UZ": "O'zbekcha(O'zbekistonRespublikasi)", "vi": "TiếngViệt", "vi-VN": "TiếngViệt(ViệtNam)", "wo": "Wolof", "wo-SN": "Wolof(Senegaal)", "xh": "isiXhosa", "xh-ZA": "isiXhosa(uMzantsiAfrika)", "yo": "Yoruba", "yo-NG": "Yoruba(Nigeria)", "zgh": "StandardMorrocanTamazight", "zgh-Tfng": "ⵜⴰⵎⴰⵣⵉⵖⵜ", "zgh-Tfng-MA": "ⵜⴰⵎⴰⵣⵉⵖⵜ(ⵍⵎⵖⵔⵉⴱ)", "zh": "中文", "zh-CN": "中文(中华人民共和国)", "zh-Hans": "中文(简体)", "zh-Hant": "中文(繁體)", "zh-HK": "中文(香港特別行政區)", "zh-MO": "中文(澳門特別行政區)", "zh-SG": "中文(新加坡)", "zh-TW": "中文(台灣)", "zu": "isiZulu", "zu-ZA": "isiZulu(iNingizimuAfrika)", "zh-CHS": "中文()旧版", "zh-CHT": "中文()舊版"},
+    localeActivated: ["af","ar","az","be","bg","bn","bs","ca","ceb","cs","cy","da","de","el","en-US","eo","es","et","eu","fa","fi","fr","ga","gl","gu","ha","hi","hmn","hr","ht","hu","hy","id","ig","is","it","iw","ja","jw","ka","km","kn","ko","la","lo","lt","lv","mi","mk","mn","mr","ms","mt","ne","nl","no","pa","pl","pt","ro","ru","sk","sl","so","sq","sr","sv","sw","ta","te","th","tl","tr","uk","ur","vi","yi","yo","zh","zh-TW","zu"],
+    localeAvailable:  function () {
+        var localeDic = this.get('localeDic');
+        var localeAtivated = this.get('localeActivated');
 
         var ln = [];
         
-        localactivated.forEach(function (d, i) {
-            if (localdic[d])
-                ln.push({ value: d, label: localdic[d] });
+        localeAtivated.forEach(function (d, i) {
+            if (localeDic[d])
+                ln.push({ value: d, label: localeDic[d] });
         });
-
-        //console.log(ln)
        return ln;
 
-   }.property('localDic', 'localActivated'),
-    localSelectedDetails: function(){
-        return Enumerable.From(this.get('localAvailable')).Where('f=>f.value==="' + this.get('localSelected') + '"').FirstOrDefault();
-    }.property('localSelected'),
-    localSelectedOberver: function(){
-        App.set('localSelected', this.get('localSelected')); // this way you can pull the what the language is at any point (like in the model of routes)
-    }.observes('localSelected').on('init'),
-    localSelected: defaultLocale,
+   }.property('localeDic', 'localeActivated'),
+    localeSelectedDetails: function(){
+        return {humanName: this.get('localeDic')[this.get('localeSelected')]}
+    }.property('localeSelected'),
+    localeSelectedOberver: function () {
+        var selectedLocal = this.get('localeSelected');
+        if (-1 === $.inArray(selectedLocal, this.get('localeActivated'))) {
+            this.set('localeSelected', defaultLocale);
+            this.transitionTo({ queryParams: {localeSelected: defaultLocale}})
+        }
+        App.set('localeSelected', selectedLocal); // this way you can pull the what the language is at any point (like in the model of routes)
+    }.observes('localeSelected'),
+    localeSelected: defaultLocale,
     actions: {
         logoutUser: function(){
             var _this = this;
@@ -1331,9 +1341,9 @@ App.SearchRoute = Ember.Route.extend({});
 App.SearchController = Ember.Controller.extend({
     needs: ['application', 'graphResults','mapResults','fileResults','workflowResults'],
     queryParams: ['keywords', 'tags', 'wf', 'graph', 'file', 'map', 'pageWorkflow', 'pageGraph', 'pageFile', 'pageMap', 'pageSize'],
-    wf: false,
+    wf: true,
     graph: true,
-    file: true,
+    file: false,
     map: false,
     title: "Search",
     activeResultsClass: function(){
@@ -3240,7 +3250,7 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 });
 
 
-var defaultLocale = 'en-US'
+
 DS.Model.reopen({
     _recordCreated: Date.now(),
     _localeTrigger: DS.attr(''),

@@ -741,7 +741,8 @@
         <ul class="nav navbar-nav pull-right"> <!--hidden-xs-->
             <li class="hidden-xs ">
                 <div class='select2-localisation'>
-                    {{eui-select options=localAvailable value=localSelected size=medium required="true"}}
+                    {{eui-select options=localeAvailable value=localeSelected size=medium required="true"}}
+                    {{!-- old school handler --}}
                     {{!--view Ember.Select content=localAvailable value=localSelected optionValuePath="content.language" optionLabelPath="content.niceName"--}}
                 </div>
             </li>
@@ -1494,15 +1495,16 @@
 
 <script type="text/x-handlebars" id="translate">
     <div class='container-fluid translate'>
-        <h1>Translating {workflow} from {orignal language} to {{controllers.application.localSelectedDetails.niceName}}</h1>
+        <h1>Translating <u>{{model.workflow.humanName}}</u> from {{!--orignal language--}}<u>English</u> to <u>{{controllers.application.localeSelectedDetails.humanName}}</u></h1>
         <br>
         <br>
         <div class="row">
             <div class="col-md-3">
                 <div class="email-item-container">
                 {{#each model.translateTodos}}
-                    {{#link-to 'translate' (query-params selected=n.id) tagName="div" class="email-item"}}
-                        <b>{{n.humanName}}</b><br>
+                    {{#link-to 'translate' (query-params selected=id) tagName="div" class="email-item"}}
+                        <b>{{n.humanName}}{{w.humanName}}</b><br>
+                        <u>{{DocType}}123</u>
                         <i>{{t.TranslationName}}</i>
                     {{/link-to}}
                 {{/each}}
@@ -1535,35 +1537,44 @@
                                     <br>
                                     <br>
                     <div class="row">
-
+                                {{#if model.selectedOriginal.w}}
                                 <div class="col-md-6">
-                                    {{!-- <h4>Source language:</h4> --}}
-                                    {{!-- <b>{{model.selectedOriginal.n.lname}}</b>
-                                    <hr> --}}
+                                    <h4>Workflow Name:</h4>
 
+                                    {{!-- {{model.selectedOriginal.w.name}} --}}
+
+                                    {{eui-input valueBinding="model.selectedOriginal.w.name" disabled=true}}
+
+                                    <br>
+                                    <br>
+                                    <br>
+                                    <br>
+
+                                </div>
+                                <div class="col-md-6">
+                                    <h4>Workflow Name:</h4>
+                                    {{eui-input valueBinding="model.selectedOriginal.t.TranslationName"}}
+                                </div>
+                                {{/if}}
+
+                                 {{#if model.selectedOriginal.n}}
+                                  <div class="col-md-6">
                                     <h4>Label:</h4>
-                                    {{model.selectedOriginal.n.label}}
-
+                                    {{eui-input valueBinding="model.selectedOriginal.n.label" disabled=true}}
+                                    {{!-- {{model.selectedOriginal.n.label}} --}}
                                     <hr>
-
                                     <h4>Content:</h4>
                                     {{{model.selectedOriginal.n.content}}}
-
                                 </div>
                                 <div class="col-md-6">
-                                    {{!-- <h4>Translated language:</h4> --}}
-                                    {{!-- <b>{{controllers.application.localSelectedDetails.niceName}}</b>
-
-                                    <hr> --}}
-
                                     <h4>Label:</h4>
-                                    {{eui-input valueBinding="model.selectedTranslation.TranslationName"}}
-
-
+                                    {{eui-input valueBinding="model.selectedOriginal.t.TranslationName"}}
                                     <hr>
                                     <h4>Content:</h4>
-                                    {{tinymce-editor data=model.selectedTranslation.TranslationText disableWatchDataOnStartup=model.tinyReset}}
+                                    {{tinymce-editor data=model.selectedOriginal.t.TranslationText disableWatchDataOnStartup=model.tinyReset}}
                                 </div>
+                                {{/if}}
+
                                 </div>
                                 </div>
 
