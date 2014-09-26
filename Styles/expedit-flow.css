@@ -963,20 +963,39 @@ color: red;
   }
 }
 
+.select2-localisation {
+  margin-top: 10px;
+}
 
 /* For the translate page*/
 .translate {
 
 }
+.translate .email-container {
 
+}
 .translate .email-item {
   border: 1px solid black;
+  padding: 9px;
+  margin-bottom: -1px;
+  /*background: red !important;*/
 }
 .translate .email-item.active {
-  border: 1px solid red;
+  /*border: 1px solid green;*/
+  /*background: #ccc;*/
+  background: #2F5693;
+  color: white;
+}
+/*.translate .email-item.active:after {
+  position: relative;
+  right: 0;
+  content: '';
+  width: 10px;
+  height: 100%;
+  border: 1px solid purple;
   background: #ccc;
 }
-
+*/
 .select2-localisation > select {
   width: 100px;
 }
@@ -986,10 +1005,19 @@ color: red;
   font-weight: bold;
 }
 
-.translate .row {
-  background: #F4F4F4;
-  border: 1px solid #ccc;
-  padding: 8px;
+.translate-insert-header {
+  border: 1px solid rgb(231, 231, 231);
+  background: #F2F2F2;
+  margin-left: -16px;
+  margin-right: -16px;
+  padding: 15px;
+}
+.translate-insert {
+/*  background: #F4F4F4;
+  border: 1px solid #ccc;*/
+  background: rgba(250,250,250,1);
+  border: 1px solid rgb(231, 231, 231);
+  /*padding: 8px;*/
   margin-bottom: 10px;
 }
 

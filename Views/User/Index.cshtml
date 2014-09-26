@@ -741,7 +741,7 @@
         <ul class="nav navbar-nav pull-right"> <!--hidden-xs-->
             <li class="hidden-xs ">
                 <div class='select2-localisation'>
-                    {{eui-select options=localAvailable value=localSelected size=tiny}}
+                    {{eui-select options=localAvailable value=localSelected size=medium required="true"}}
                     {{!--view Ember.Select content=localAvailable value=localSelected optionValuePath="content.language" optionLabelPath="content.niceName"--}}
                 </div>
             </li>
@@ -1051,9 +1051,7 @@
                     <h4><small>Step</small></h4>
             {{/if}}
                <h1>
-                    {{#if model.selected}}{{model.selected.humanName}}{{/if}}
-
-                    {{#if model.selected}}{{model.selected.localName}}test{{/if}}
+                    {{#if model.selected}}{{model.selected.localName}}{{/if}}
                     {{#if controllers.application.isLoggedIn}}
                     {{#unless isPreview}}
                         <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit Step">
@@ -1142,7 +1140,7 @@
                 {{/eui-modal}}
 
                 <div class='pretty-content'>
-                    {{safehtml model.selected.content}}
+                    {{safehtml model.selected.localContent}}
 
                 </div>
 
@@ -1501,18 +1499,20 @@
         <br>
         <div class="row">
             <div class="col-md-3">
+                <div class="email-item-container">
                 {{#each model.translateTodos}}
                     {{#link-to 'translate' (query-params selected=n.id) tagName="div" class="email-item"}}
-                        <h4>{{n.humanName}}</h4>
+                        <b>{{n.humanName}}</b><br>
                         <i>{{t.TranslationName}}</i>
                     {{/link-to}}
                 {{/each}}
-
+                </div>
             </div>
             <div class="col-md-9">
 
-                <div class='container-fluid translate'>
+                <div class='container-fluid'>
                     <div class="row">
+                        <div class="translate-insert">
                         {{#unless selected}}
                             <div class="col-md-12">
                                 <i>Not selected</i>
@@ -1524,19 +1524,22 @@
                                 </div>
                             {{else}}
                                 <div class="col-md-12">
+                                    <div class="translate-insert-header">
                                     {{eui-button label="Save Translation" action="saveTranslation" size='small' disabled=newContent style='primary'}}
                                     {{eui-button label="Reset to original Translation" action="resetTranslation" disabled=newContent size='small'}}
                                     {{eui-button label="Redo Autotranslate" action="redoTranslate" size='small'}}
                                     {{#link-to 'graph' model.select (query-params workflowID=model.workflowID)}}
                                         get workflow preview
                                     {{/link-to}}
+                                    </div>
                                     <br>
                                     <br>
-                                </div>
+                    <div class="row">
+
                                 <div class="col-md-6">
-                                    <h4>Source language:</h4>
-                                    {{model.selectedOriginal.n.lname}}
-                                    <hr>
+                                    {{!-- <h4>Source language:</h4> --}}
+                                    {{!-- <b>{{model.selectedOriginal.n.lname}}</b>
+                                    <hr> --}}
 
                                     <h4>Label:</h4>
                                     {{model.selectedOriginal.n.label}}
@@ -1548,10 +1551,10 @@
 
                                 </div>
                                 <div class="col-md-6">
-                                    <h4>Translated language:</h4>
-                                    {{controllers.application.localSelectedDetails.niceName}}
+                                    {{!-- <h4>Translated language:</h4> --}}
+                                    {{!-- <b>{{controllers.application.localSelectedDetails.niceName}}</b>
 
-                                    <hr>
+                                    <hr> --}}
 
                                     <h4>Label:</h4>
                                     {{eui-input valueBinding="model.selectedTranslation.TranslationName"}}
@@ -1561,9 +1564,13 @@
                                     <h4>Content:</h4>
                                     {{tinymce-editor data=model.selectedTranslation.TranslationText disableWatchDataOnStartup=model.tinyReset}}
                                 </div>
+                                </div>
+                                </div>
+
                             {{/unless}}
                         {{/unless}}
 
+                        </div>
                     </div>
                 </div>
             </div>
