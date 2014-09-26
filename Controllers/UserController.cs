@@ -663,7 +663,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (!string.IsNullOrWhiteSpace(Request.Params["Refresh"]))
                 m.Refresh = true;
             m.SearchType = SearchType.Flow;
-            if (string.IsNullOrWhiteSpace(m.DocType) || m.DocType == "undefined" || m.DocType == "process")
+            if (m.DocType == "node" || string.IsNullOrWhiteSpace(m.DocType) || m.DocType == "undefined" || m.DocType == "process")
                 m.SearchType = SearchType.Flow;
             else if (m.DocType == "file")
                 m.SearchType = SearchType.File;

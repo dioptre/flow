@@ -376,6 +376,8 @@ div.row.processes {
 }
 
 
+
+
 .main-searchbox button.btn {
   margin-top: -3px;
 }
@@ -977,5 +979,17 @@ color: red;
 
 .select2-localisation > select {
   width: 100px;
+}
+
+.translate h1 {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.translate .row {
+  background: #F4F4F4;
+  border: 1px solid #ccc;
+  padding: 8px;
+  margin-bottom: 10px;
 }
 

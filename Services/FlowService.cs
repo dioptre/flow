@@ -1799,6 +1799,7 @@ namespace EXPEDIT.Flow.Services {
                                                       ));
                             break;
                         case SearchType.Flow:
+                            m.TableType = d.GetTableName(typeof(GraphData));
                             if (m.id.HasValue)
                             {
                                 if (m.Refresh && !CheckPermission(m.id.Value, ActionPermission.Update, typeof(TranslationData)))
@@ -1860,8 +1861,7 @@ namespace EXPEDIT.Flow.Services {
                                                         f.Translation.Translation,
                                                         f.Translation.VersionUpdated
                                                       ));
-                            }
-                            m.TableType = d.GetTableName(typeof(GraphData));
+                            }                            
                             break;
                         default:
                             return false;

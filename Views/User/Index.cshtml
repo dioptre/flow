@@ -741,7 +741,8 @@
         <ul class="nav navbar-nav pull-right"> <!--hidden-xs-->
             <li class="hidden-xs ">
                 <div class='select2-localisation'>
-                    {{view Ember.Select content=localAvailable value=localSelected optionValuePath="content.language" optionLabelPath="content.niceName"}}
+                    {{eui-select options=localAvailable value=localSelected size=tiny}}
+                    {{!--view Ember.Select content=localAvailable value=localSelected optionValuePath="content.language" optionLabelPath="content.niceName"--}}
                 </div>
             </li>
             <li class="hidden-xs ">
@@ -1050,7 +1051,9 @@
                     <h4><small>Step</small></h4>
             {{/if}}
                <h1>
-                    {{#if model.selected}}{{humanReadableName}}{{/if}}
+                    {{#if model.selected}}{{model.selected.humanName}}{{/if}}
+
+                    {{#if model.selected}}{{model.selected.localName}}test{{/if}}
                     {{#if controllers.application.isLoggedIn}}
                     {{#unless isPreview}}
                         <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit Step">
@@ -1492,8 +1495,10 @@
 
 
 <script type="text/x-handlebars" id="translate">
-    <div class='container-fluid translate processes'>
-        <h1>Translating
+    <div class='container-fluid translate'>
+        <h1>Translating {workflow} from {orignal language} to {{controllers.application.localSelectedDetails.niceName}}</h1>
+        <br>
+        <br>
         <div class="row">
             <div class="col-md-3">
                 {{#each model.translateTodos}}
@@ -1518,39 +1523,42 @@
                                     <i>Query param "selected"={{selected}} doesn't exist. Select another item in the sidebar.</i>
                                 </div>
                             {{else}}
+                                <div class="col-md-12">
+                                    {{eui-button label="Save Translation" action="saveTranslation" size='small' disabled=newContent style='primary'}}
+                                    {{eui-button label="Reset to original Translation" action="resetTranslation" disabled=newContent size='small'}}
+                                    {{eui-button label="Redo Autotranslate" action="redoTranslate" size='small'}}
+                                    {{#link-to 'graph' model.select (query-params workflowID=model.workflowID)}}
+                                        get workflow preview
+                                    {{/link-to}}
+                                    <br>
+                                    <br>
+                                </div>
                                 <div class="col-md-6">
-                                    <h1>Source language</h1>
+                                    <h4>Source language:</h4>
                                     {{model.selectedOriginal.n.lname}}
                                     <hr>
 
-                                    Label:
+                                    <h4>Label:</h4>
                                     {{model.selectedOriginal.n.label}}
 
+                                    <hr>
 
-                                    Content:
+                                    <h4>Content:</h4>
                                     {{{model.selectedOriginal.n.content}}}
 
                                 </div>
                                 <div class="col-md-6">
-                                    <h1>Translated to <i>{{controllers.application.localSelectedDetails.niceName}}</i></h1>
-
-                                    {{eui-button label="Save Translation" action="saveTranslation" size='large' disabled=newContent style='primary'}}
-                                    {{eui-button label="Reset to original Translation" action="resetTranslation" disabled=newContent size='large'}}
-                                    {{eui-button label="Redo Autotranslate" action="redoTranslate" size='large'}}
-
-
-                                    {{#link-to 'graph' model.select (query-params workflowID=model.workflowID)}}
-                                        get workflow preview
-                                    {{/link-to}}
+                                    <h4>Translated language:</h4>
+                                    {{controllers.application.localSelectedDetails.niceName}}
 
                                     <hr>
 
-                                    Label:
+                                    <h4>Label:</h4>
                                     {{eui-input valueBinding="model.selectedTranslation.TranslationName"}}
 
 
                                     <hr>
-                                    Content:
+                                    <h4>Content:</h4>
                                     {{tinymce-editor data=model.selectedTranslation.TranslationText disableWatchDataOnStartup=model.tinyReset}}
                                 </div>
                             {{/unless}}
