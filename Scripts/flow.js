@@ -1939,11 +1939,16 @@ App.GraphRoute = Ember.Route.extend({
         //});
         var currentLocale = App.get('localeSelected');
         var thisLoadedWorkflowLocale = params.workflowID + currentLocale;
-        if (this.get('lastLoadedWorkflowLocale') !== thisLoadedWorkflowLocale) {
+        if (currentLocale != defaultLocale && this.get('lastLoadedWorkflowLocale') !== thisLoadedWorkflowLocale) {
             this.set('lastLoadedWorkflowLocale', thisLoadedWorkflowLocale);
             var currentLocale = App.get('localeSelected');
             if (!Enumerable.From(this.store.all('translation').content).Any("f=>f.get('DocID') ==='" + params.workflowID + "' && f.get('TranslationCulture') ==='" + currentLocale +"'"))
-                this.store.find('translation', { docid: params.workflowID, TranslationCulture: currentLocale, DocType: 'flows' });
+                this.store.find('translation', { docid: params.workflowID, TranslationCulture: currentLocale, DocType: 'flows' })
+                    .then(function () { }, function () {
+                        params.localeSelected = defaultLocale;
+                        _this.replaceWith('graph', id, { queryParams: { localeSelected: defaultLocale, workflowID: params.workflowID } });
+                        return;
+                    });
         }
 
 
@@ -3269,11 +3274,18 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 
 
 var refetchLocale = function (context) {
-    context.store.find('translation', { docid: context.get('id'), TranslationCulture: App.get('locale.l'), DocType: context.get('constructor.typeKey') })
-    .then(function (m) {
-        context.set('_localName', m.content[0].get('TranslationName'));
-        context.set('_localContent', m.content[0].get('TranslationText'));
-    });
+    if (!context.get('isNew')) {
+        context.store.find('translation', { docid: context.get('id'), TranslationCulture: App.get('locale.l'), DocType: context.get('constructor.typeKey') })
+        .then(function (m) {
+            console.log(m.content[0].get('TranslationName'));
+            var name = m.content[0].get('TranslationName');
+            var content = m.content[0].get('TranslationText');
+            if (typeof name === 'undefined' || !name)
+                name = context.get('humanName');
+            context.set('_localName', name);
+            context.set('_localContent', content);
+        });
+    }
 };
 DS.Model.reopen({
     _recordCreated: Date.now(),

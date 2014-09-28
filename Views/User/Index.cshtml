@@ -931,13 +931,13 @@
   <script type="text/x-handlebars" id="components/viz-editor">
                 {{#eui-modal openBinding="existingNodeModal"}}
                     <div style="padding: 50px; text-align: center;">
-                        <h4>Add existing Step</h4>
+                        <h4>{{controllers.application.model.t.fp_workflow_add_existingStep}}</h4>
 
                         <br>
                         <p> You can add an existing steps by using the input box below: </p>
                         <br>
 
-                        <b>Add Step:</b><br>
+                        <b>{{controllers.application.model.t.fp_workflow_add_step}}:</b><br>
                         <input id="existingNodesel" style="width: 276px;" class='select2' type='hidden'/>
 
                         <br>
