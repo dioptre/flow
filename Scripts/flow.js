@@ -907,6 +907,13 @@ App.ApplicationController = Ember.Controller.extend({
         }
         App.set('localeSelected', selectedLocal); // this way you can pull the what the language is at any point (like in the model of routes)
     }.observes('localeSelected'),
+    localeAppObserver: function () {
+        var _this = this;
+        App.get('locale').addObserver('l', defaultLocale, function () {
+            _this.set('localeSelected',App.get('locale.l'));
+        });
+        _this.set('localeSelected', App.get('locale.l'));
+    }.on('init'),
     localeSelected: defaultLocale,
     actions: {
         logoutUser: function(){
@@ -1937,21 +1944,6 @@ App.GraphRoute = Ember.Route.extend({
         //        resolve();
         //    })
         //});
-        var currentLocale = App.get('localeSelected');
-        var thisLoadedWorkflowLocale = params.workflowID + currentLocale;
-        if (currentLocale != defaultLocale && this.get('lastLoadedWorkflowLocale') !== thisLoadedWorkflowLocale) {
-            this.set('lastLoadedWorkflowLocale', thisLoadedWorkflowLocale);
-            var currentLocale = App.get('localeSelected');
-            if (!Enumerable.From(this.store.all('translation').content).Any("f=>f.get('DocID') ==='" + params.workflowID + "' && f.get('TranslationCulture') ==='" + currentLocale +"'"))
-                this.store.find('translation', { docid: params.workflowID, TranslationCulture: currentLocale, DocType: 'flows' })
-                    .then(function () { }, function () {
-                        params.localeSelected = defaultLocale;
-                        _this.replaceWith('graph', id, { queryParams: { localeSelected: defaultLocale, workflowID: params.workflowID } });
-                        return;
-                    });
-        }
-
-
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
             workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
@@ -2016,6 +2008,20 @@ App.GraphRoute = Ember.Route.extend({
 
         } else { //NEW NODE
 
+            //TODO by default transition to en-US
+            var currentLocale = App.get('localeSelected');
+            var thisLoadedWorkflowLocale = m.params.workflowID + currentLocale;
+            if (IsGUID(m.params.workflowID) && currentLocale != defaultLocale && this.get('lastLoadedWorkflowLocale') !== thisLoadedWorkflowLocale) {
+                this.set('lastLoadedWorkflowLocale', thisLoadedWorkflowLocale);
+                if (!Enumerable.From(this.store.all('translation').content).Any("f=>f.get('DocID') ==='" + m.params.workflowID + "' && f.get('TranslationCulture') ==='" + currentLocale + "'"))
+                    this.store.find('translation', { docid: m.params.workflowID, TranslationCulture: currentLocale, DocType: 'flows' })
+                        .then(function () { }, function () {
+                            m.params.localeSelected = defaultLocale;
+                            _this.replaceWith('graph', m.params.id, { queryParams: { localeSelected: defaultLocale, workflowID: m.params.workflowID } });
+                            return;
+                        });
+            }
+
             // Before creating a new node, check if it already exists, because if it does, then must be a permission problem
             if (m.duplicateNode) {
                 Messenger().post({ type: 'error', message: 'Permission denied. Ensure you have permission and are logged in.' });
@@ -2060,7 +2066,7 @@ App.GraphRoute = Ember.Route.extend({
 
 App.GraphController = Ember.ObjectController.extend({
     needs: ['application'],
-    queryParams: ['workflowID', 'preview'],
+    queryParams: ['workflowID', 'preview', 'localeSelected'],
     title: function(){
         var name = this.get('selected.humanName') + ' Step';
         App.setTitle(name);
@@ -2105,6 +2111,7 @@ App.GraphController = Ember.ObjectController.extend({
     }.property('preview'),
     workflowID: null, // available ids will be in model
     preview: null,
+    localeSelected: null,
     currentURL: function () {
         return window.document.URL;
     }.property('workflowID', 'model.selected', 'preview', 'generatePreviewLink'),
@@ -2157,7 +2164,7 @@ App.GraphController = Ember.ObjectController.extend({
         //var found = false;
         //var edges = Enumerable.From(this.get('graphData').edges);
         //if (edges.Any("f=>f.from=='" + this.get('model.selectedID') + "'") || edges.Any("f=>f.to=='" + this.get('model.selectedID') + "'"))
-        this.transitionToRoute('graph', this.get('model.selectedID'));
+        this.transitionToRoute('graph', this.get('model.selectedID'), { queryParams: { localeSelected: App.get('localeSelected') } });
     }.observes('model.selectedID'),
     checkWorkflowName: function () {
         var _this = this;
@@ -2916,7 +2923,7 @@ App.VizEditorComponent = Ember.Component.extend({
 
             var waitForLocalePromises = function (nodes, edges) {
                 Enumerable.From(nodes).Select("$.get('localName')").ToArray();
-                if (Enumerable.From(nodes).Select("typeof $.get('_localePromise') === 'undefined'").Any("f=>f"))
+                if (Enumerable.From(nodes).Where("f=>f.get('isNew') == false").Select("typeof $.get('_localePromise') === 'undefined'").Any("f=>f"))
                     setTimeout(function () { waitForLocalePromises(nodes, edges) }, 150);
                 else
                     Ember.RSVP.allSettled(Enumerable.From(nodes).Select("$.get('_localePromise')").ToArray()).then(function (array) {
@@ -3290,15 +3297,10 @@ var refetchLocale = function (context) {
     if (!context.get('isNew')) {
         context.set('_localePromise', context.store.find('translation', { docid: context.get('id'), TranslationCulture: App.get('locale.l'), DocType: context.get('constructor.typeKey') })
         .then(function (m) {
-            //console.log(m.content[0].get('TranslationName'));
-            var name = m.content[0].get('TranslationName');
-            var content = m.content[0].get('TranslationText');
-            if (typeof name === 'undefined' || !name)
-                name = context.get('humanName');
-            context.set('_localName', name);
-            context.set('_localContent', content);
-        })
-        );
+            context.set('_localName', m.content[0].get('TranslationName'));
+            context.set('_localContent', m.content[0].get('TranslationText'));
+        }));
+        
     }
 };
 
@@ -3325,9 +3327,13 @@ DS.Model.reopen({
                     Ember.run.debounce(_this, refetchLocale, _this, 150, true);
             }
             else {
-                _this.set('_localName', _this.get('humanName'));
-                _this.set('_localContent', _this.get('humanContent'));
+                _this.set('_localePromise', new Promise(function (resolve, reject) {
+                    _this.set('_localName', _this.get('humanName'));
+                    _this.set('_localContent', _this.get('humanContent'));
+                    resolve(value);
+                }));
             }
+
         };
 
 
@@ -3340,16 +3346,16 @@ DS.Model.reopen({
         Ember.run.debounce(_this, updateLocale, _this, 150, true);
 
     }.property('humanName', 'humanContent', 'label', 'content', 'name'),
-    _localName: DS.attr('string', { defaultValue: '...' }),
-    _localContent: DS.attr('string', { defaultValue: '...' }),
+    _localName: DS.attr('', { defaultValue: '...' }),
+    _localContent: DS.attr('', { defaultValue: '...' }),
     localName: function (key, value, previousValue) {
         Ember.run.scheduleOnce('sync', this, this.get, '_locale');
         return this.get('_localName');
-    }.property('_localName'),
+    }.property('_localName', 'label', 'name', 'humanName'),
     localContent: function (key, value, previousValue) {
         Ember.run.scheduleOnce('sync', this, this.get, '_locale');
         return this.get('_localContent');
-    }.property('_localContent'),
+    }.property('_localContent', 'humanContent', 'content'),
 
 });
 
@@ -3740,6 +3746,7 @@ App.WikipediaRoute = Ember.Route.extend({
 
 
 App.WikipediaController = Ember.ObjectController.extend({
+    needs: ['application'],
     changeSelected: function () {
         //console.log('Selection changed, should redirect!')
         this.transitionToRoute('wikipedia', this.get('model.selected'));
@@ -4074,16 +4081,17 @@ App.HomeNavView = Ember.View.extend({
     tagThisMate: function () {
         var _this = this;
         $(window).on('hashchange', function () {
-            _this.set('activeTagzz', false);
-            var a = _this.$('a');
-            if (typeof a !== 'undefined') {
-                a.each(function (i, j, y) {
-                    if (j.getAttribute('href').replace(/^#\//, '') === window.location.hash.substring(2)) {
-                        _this.set('activeTagzz', true);
-                    }
-                });
+            if (_this.get('activeTagzz')) {
+                _this.set('activeTagzz', false);
+                var a = _this.$('a');
+                if (typeof a !== 'undefined') {
+                    a.each(function (i, j, y) {
+                        if (j.getAttribute('href').replace(/^#\//, '') === window.location.hash.substring(2)) {
+                            _this.set('activeTagzz', true);
+                        }
+                    });
+                }
             }
-
         }).trigger('hashchange')
     }.on('didInsertElement')
 });
@@ -4400,9 +4408,10 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
             }));
         });
 
-        Ember.RSVP.allSettled(promises).then(function (array) {
+
+        var updateGraph = function (nodes,edges) {
             var edges = Enumerable.From(App.Node.store.all('edge').content).Where("f=>f.get('GroupID')=='" + _this.data.wfid + "'").ToArray();
-            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: ToTitleCase(item.get('label').replace(/_/g, ' ')) }; });
+            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('localName') }; });
             edges = $.map(edges, function (item) { return { from: item.get('from'), to: item.get('to'), style: item.get('style'), widthSelectionMultiplier: item.get('widthSelectionMultiplier'), color: item.get('color') }; });
             Enumerable.From(nodes).ForEach(
                 function (value) {
@@ -4429,7 +4438,7 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
             };
             var network = new vis.Network(container, data, options);
             network.scale = 0.82; //Zoom out a little
-            $("#" + p.data.outlet).append('<h4>' + _this.data.wfname +' Workflow</h4>');
+            $("#" + p.data.outlet).append('<h4>' + _this.data.wfname + ' Workflow</h4>');
             network.on('click', function (data) {
                 if (data.nodes.length > 0) {
                     //_this.get('controller').send('transition');
@@ -4441,7 +4450,23 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
                         document.location.hash = '#/process/' + data.nodes[0] + '?workflowID=' + _this.data.wfid;
                 }
             });
+        };
+
+        var waitForLocalePromises = function (nodes, edges) {
+            Enumerable.From(nodes).Select("$.get('localName')").ToArray();
+            if (Enumerable.From(nodes).Select("typeof $.get('_localePromise') === 'undefined'").Any("f=>f"))
+                setTimeout(function () { waitForLocalePromises(nodes, edges) }, 150);
+            else
+                Ember.RSVP.allSettled(Enumerable.From(nodes).Select("$.get('_localePromise')").ToArray()).then(function (array) {
+                    updateGraph(nodes, edges);
+                });
+        };
+
+        Ember.RSVP.allSettled(promises).then(function (array) {
+            waitForLocalePromises(nodes, edges);
         });
+
+      
         //Ember.run.scheduleOnce('afterRender', this, getData);
 
 

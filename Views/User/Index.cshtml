@@ -1164,7 +1164,7 @@
                                     {{#if model.links.prev}}
                                         {{#each model.links.prev}}
                                             <div {{bind-attr class=color}}>
-                                                {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
+                                                {{#link-to 'graph' node.id (query-params workflowID=wfid localeSelected=localeSelected)}}
                                                     &#8592;  <!-- prev arrow -->
                                                     {{node.localName}}
                                                 {{/link-to}}
@@ -1176,7 +1176,7 @@
                                     {{#if model.links.next}}
                                         {{#each model.links.next}}
                                             <div {{bind-attr class=color}}>
-                                                {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
+                                                {{#link-to 'graph' node.id (query-params workflowID=wfid localeSelected=localeSelected)}}
                                                     {{node.localName}}
                                                     &#8594;<!-- next arrow -->
                                                 {{/link-to}}
@@ -1197,7 +1197,7 @@
                                     {{#if model.links.into}}
                                         {{#each model.links.into}}
                                             <div {{bind-attr class=color}}>
-                                                {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
+                                                {{#link-to 'graph' node.id (query-params workflowID=wfid localeSelected=localeSelected)}}
                                                     &#8592;  <!-- prev arrow -->
                                                     {{node.localName}} ({{wfname}})
                                                 {{/link-to}}
@@ -1209,7 +1209,7 @@
                                     {{#if model.links.out}}
                                         {{#each model.links.out}}
                                             <div {{bind-attr class=color}}>
-                                                {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
+                                                {{#link-to 'graph' node.id (query-params workflowID=wfid localeSelected=localeSelected)}}
                                                     {{node.localName}} ({{wfname}})
                                                     &#8594;<!-- next arrow -->
                                                 {{/link-to}}
