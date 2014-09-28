@@ -1936,47 +1936,65 @@ namespace EXPEDIT.Flow.Services {
                                     translation.Value.TranslatedText = responseContent(rText).Result;
                                 if (!string.IsNullOrWhiteSpace(translation.Value.TranslatedName) || !string.IsNullOrWhiteSpace(translation.Value.TranslatedText))
                                 {
-                                    if (!translation.Value.TranslationDataID.HasValue)
+                                    bool newRecord = !translation.Value.TranslationDataID.HasValue, failedCreate = false;
+                                    TranslationData tx = null;
+                                    if (newRecord)
                                     {
-                                        translation.Value.TranslationDataID = Guid.NewGuid();
-                                        //Insert
-                                        var tx = new TranslationData
+                                        try
                                         {
-                                            TranslationDataID = translation.Value.TranslationDataID.Value,
-                                            TableType = m.TableType,
-                                            ReferenceID = translation.Key,
-                                            ReferenceName = translation.Value.OriginalName,
-                                            ReferenceUpdated = translation.Value.OriginalUpdated,
-                                            OriginCulture = m.OriginCulture ?? "en-US",
-                                            TranslationCulture = lang.Name, //TODO could check real culture
-                                            TranslationName = translation.Value.TranslatedName,
-                                            Translation = translation.Value.TranslatedText,
-                                            VersionUpdated = DateTime.UtcNow,
-                                            VersionOwnerContactID = translation.Value.OriginalContact,
-                                            VersionOwnerCompanyID = translation.Value.OriginalCompany,
-                                            VersionUpdatedBy = contact
-                                        };
-                                        d.TranslationData.AddObject(tx);
+                                            translation.Value.TranslationDataID = Guid.NewGuid();
+                                            //Insert
+                                            tx = new TranslationData
+                                            {
+                                                TranslationDataID = translation.Value.TranslationDataID.Value,
+                                                TableType = m.TableType,
+                                                ReferenceID = translation.Key,
+                                                ReferenceName = translation.Value.OriginalName,
+                                                ReferenceUpdated = translation.Value.OriginalUpdated,
+                                                OriginCulture = m.OriginCulture ?? "en-US",
+                                                TranslationCulture = lang.Name, //TODO could check real culture
+                                                TranslationName = translation.Value.TranslatedName,
+                                                Translation = translation.Value.TranslatedText,
+                                                VersionUpdated = DateTime.UtcNow,
+                                                VersionOwnerContactID = translation.Value.OriginalContact,
+                                                VersionOwnerCompanyID = translation.Value.OriginalCompany,
+                                                VersionUpdatedBy = contact
+                                            };
+                                            d.TranslationData.AddObject(tx);
+                                            d.SaveChanges();
+                                        }
+                                        catch
+                                        {
+                                            failedCreate = true;
+                                            d.TranslationData.DeleteObject(tx);
+                                        }
                                     }
-                                    else
+                                    if (!newRecord || failedCreate)
                                     {
                                         //Update
-                                        var tx = (from o in d.TranslationData where o.TranslationDataID == translation.Value.TranslationDataID && o.VersionDeletedBy == null select o).Single();
+                                        if (!failedCreate)
+                                            tx = (from o in d.TranslationData where o.TranslationDataID == translation.Value.TranslationDataID && o.VersionDeletedBy == null select o).Single();
+                                        else
+                                            tx = (from o in d.TranslationData where 
+                                                      o.TableType == m.TableType && o.ReferenceID == translation.Key && o.ReferenceName == translation.Value.OriginalName 
+                                                      && o.TranslationCulture == lang.Name &&
+                                                      o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                                         tx.ReferenceName = translation.Value.OriginalName;
                                         tx.ReferenceUpdated = translation.Value.OriginalUpdated;
                                         tx.OriginCulture = m.OriginCulture ?? "en-US";
                                         tx.TranslationCulture = lang.Name; //TODO could check real culture
                                         tx.TranslationName = translation.Value.TranslatedName;
-                                        tx.Translation = translation.Value.TranslatedText;
+                                        if (rText != null)
+                                            tx.Translation = translation.Value.TranslatedText;
                                         tx.VersionUpdated = DateTime.UtcNow;
                                         tx.VersionUpdatedBy = contact;
-                                    }
-                                    if (!string.IsNullOrWhiteSpace(translation.Value.TranslatedText))
                                         d.SaveChanges();
+                                    }
+
                                 }
 
                             }
-                            d.SaveChanges();
+                           
                         }
                     }
 

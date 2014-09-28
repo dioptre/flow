@@ -742,9 +742,12 @@
             <li class="hidden-xs ">
                 {{input action="transitionSearch" onEvent="insertNewline" class="search searchTransitionMenu" tabIndex="-1"}}
             </li>
-            <li class="hidden-xs ">
+            <li class="hidden-xs">
                 <a class='select2-localisation'>
-                    {{eui-select options=localeAvailable value=localeSelected size=large required="true"}}
+                    <span class="settings">
+                        <i class="icon-globe"></i>
+                    </span>
+                    {{eui-select options=localeAvailable value=localeSelected size=large required="true" width='120px' style="primary"}}
 
                     {{!-- old school handler --}}
                     {{!--view Ember.Select content=localAvailable value=localSelected optionValuePath="content.language" optionLabelPath="content.niceName"--}}
@@ -1239,7 +1242,7 @@
 
 
   <script type="text/x-handlebars" id="search">
-        {{#map-modal  openBinding='mapModal' style="full"}}
+         {{#map-modal  openBinding='mapModal' style="full"}}
             <div style="padding: 50px; text-align: center;">
                 {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder=controllers.application.model.t.fp_search_location_enter}}
                 <br><br />
@@ -1496,9 +1499,9 @@
 
         <div class="col-md-6">
             {{!-- Doesn't work like this... gotta do it in the model-- --}}
-            {{#eachProperty controllers.application.model.t}}
+{{!--             {{#eachProperty controllers.application.model.t}}
               {{key}}: {{value}}<br/>
-            {{/eachProperty }}
+            {{/eachProperty }} --}}
         </div>
     </div>
 </script>

@@ -999,6 +999,22 @@ color: red;
 .select2-localisation > select {
   width: 100px;
 }
+.select2-localisation .eui-select {
+  font-size: 12px;
+  margin-top: -5px;
+}
+.select2-localisation:hover {
+  background: transparent !important;
+}
+
+.select2-localisation .eui-button-form{
+  background: rgba(181, 0, 255, 0) !important;
+}
+.select2-localisation .eui-wrapper {
+  padding-left: 8px !important;
+  background: #0f1217 !important;
+  border-color: transparent !important;
+}
 
 .translate h1 {
   font-size: 26px;
@@ -1020,4 +1036,5 @@ color: red;
   /*padding: 8px;*/
   margin-bottom: 10px;
 }
+
 
