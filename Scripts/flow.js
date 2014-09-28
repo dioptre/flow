@@ -3306,8 +3306,8 @@ var refetchLocale = function (context) {
 
 DS.Model.reopen({
     _recordCreated: Date.now(),
-    _localeTrigger: DS.attr('', { defaultValue: false }),
-    _localePromise : DS.attr(''),
+    _localeTrigger: false,
+    _localePromise : null,
     _locale: function () {
         var _this = this;
         var updateLocale = function () {
@@ -3346,8 +3346,8 @@ DS.Model.reopen({
         Ember.run.debounce(_this, updateLocale, _this, 150, true);
 
     }.property('humanName', 'humanContent', 'label', 'content', 'name'),
-    _localName: DS.attr('', { defaultValue: '...' }),
-    _localContent: DS.attr('', { defaultValue: '...' }),
+    _localName: '...',
+    _localContent: '...',
     localName: function (key, value, previousValue) {
         Ember.run.scheduleOnce('sync', this, this.get, '_locale');
         return this.get('_localName');
