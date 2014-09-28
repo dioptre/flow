@@ -2768,7 +2768,7 @@ App.VizEditorComponent = Ember.Component.extend({
         }
         var wfid = _this.get('workflowID');
 
-        var updateGraph = function (nodes, edges) {
+        var updateGraph = function (nodes, edges) {            
             nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('localName'), mass: 0.2, group: item.get('group') }; });
             edges = $.map(edges, function (item) { return { id: item.get('id'), from: item.get('from'), to: item.get('to'), style: item.get('style'), color: item.get('color') }; });
             Enumerable.From(nodes).ForEach(
@@ -2914,9 +2914,22 @@ App.VizEditorComponent = Ember.Component.extend({
             if (!Enumerable.From(nodes).Any("f=>f.id=='" + _this.get('selected') + "'"))
                 nodes.push(App.Node.store.getById('node', _this.get('selected')));
 
+            var waitForLocalePromises = function (nodes, edges) {
+                Enumerable.From(nodes).Select("$.get('localName')").ToArray();
+                if (Enumerable.From(nodes).Select("typeof $.get('_localePromise') === 'undefined'").Any("f=>f"))
+                    setTimeout(function () { waitForLocalePromises(nodes, edges) }, 150);
+                else
+                    Ember.RSVP.allSettled(Enumerable.From(nodes).Select("$.get('_localePromise')").ToArray()).then(function (array) {
+                        updateGraph(nodes, edges);
+                    });
+            };
+
             Ember.RSVP.allSettled(promises).then(function (array) {
                 edges = Enumerable.From(App.Node.store.all('edge').content).Where("f=>f.get('GroupID')=='" + wfid + "'").ToArray();
-                updateGraph(nodes,edges);
+                //Ember.run.schedule('afterRender', this, updateGraph, nodes, edges);
+                //updateGraph(nodes,edges);
+                waitForLocalePromises(nodes, edges);
+
             });
         }
 
@@ -3275,21 +3288,24 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 
 var refetchLocale = function (context) {
     if (!context.get('isNew')) {
-        context.store.find('translation', { docid: context.get('id'), TranslationCulture: App.get('locale.l'), DocType: context.get('constructor.typeKey') })
+        context.set('_localePromise', context.store.find('translation', { docid: context.get('id'), TranslationCulture: App.get('locale.l'), DocType: context.get('constructor.typeKey') })
         .then(function (m) {
-            console.log(m.content[0].get('TranslationName'));
+            //console.log(m.content[0].get('TranslationName'));
             var name = m.content[0].get('TranslationName');
             var content = m.content[0].get('TranslationText');
             if (typeof name === 'undefined' || !name)
                 name = context.get('humanName');
             context.set('_localName', name);
             context.set('_localContent', content);
-        });
+        })
+        );
     }
 };
+
 DS.Model.reopen({
     _recordCreated: Date.now(),
     _localeTrigger: DS.attr('', { defaultValue: false }),
+    _localePromise : DS.attr(''),
     _locale: function () {
         var _this = this;
         var updateLocale = function () {
