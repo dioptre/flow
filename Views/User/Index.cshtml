@@ -740,14 +740,15 @@
 
         <ul class="nav navbar-nav pull-right"> <!--hidden-xs-->
             <li class="hidden-xs ">
-                <div class='select2-localisation'>
-                    {{eui-select options=localeAvailable value=localeSelected size=medium required="true"}}
-                    {{!-- old school handler --}}
-                    {{!--view Ember.Select content=localAvailable value=localSelected optionValuePath="content.language" optionLabelPath="content.niceName"--}}
-                </div>
+                {{input action="transitionSearch" onEvent="insertNewline" class="search searchTransitionMenu" tabIndex="-1"}}
             </li>
             <li class="hidden-xs ">
-                {{input action="transitionSearch" onEvent="insertNewline" class="search searchTransitionMenu" tabIndex="-1"}}
+                <a class='select2-localisation'>
+                    {{eui-select options=localeAvailable value=localeSelected size=large required="true"}}
+
+                    {{!-- old school handler --}}
+                    {{!--view Ember.Select content=localAvailable value=localSelected optionValuePath="content.language" optionLabelPath="content.niceName"--}}
+                </a>
             </li>
             <li class="settings hidden-xs" title="Help">
                 {{#link-to 'help'}}
@@ -992,7 +993,7 @@
             {{#unless isPreview}}
 
             <div class="col-md-6 process-header">
-                <h4><small>Workflow</small></h4>
+                <h4><small>{{controllers.application.model.t.fp_menu_link_workflow}}</small></h4>
                 <h1>
                     {{#if workflowName }}
                         {{#if workflowGte2}}
@@ -1049,7 +1050,7 @@
                            /* margin-left: 177px;*/
                         }
                     </style>
-                    <h4><small>Step</small></h4>
+                    <h4><small>{{controllers.application.model.t.fp_general_step}}</small></h4>
             {{/if}}
                <h1>
                     {{#if model.selected}}{{model.selected.localName}}{{/if}}
@@ -1151,9 +1152,9 @@
                 <div class='next-steps'>
                     {{#unless previewNext}}
                         <hr>
-                        <h3>Where to go next</h3>
+                        <h3>{{controllers.application.model.t.fp_workflow_steps_whereNext}}</h3>
                         {{#unless nextSteps}}
-                            <p class="semi-transparent">No connections yet.</p>
+                            <p class="semi-transparent">{{controllers.application.model.t.fp_workflow_steps_noConnection}}</p>
                         {{else}}
                             <div class="row">
                                 <div class="col-md-6 next-steps-prev">
@@ -1162,7 +1163,7 @@
                                             <div {{bind-attr class=color}}>
                                                 {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
                                                     &#8592;  <!-- prev arrow -->
-                                                    {{node.humanName}}
+                                                    {{node.localName}}
                                                 {{/link-to}}
                                             </div>
                                         {{/each}}
@@ -1173,7 +1174,7 @@
                                         {{#each model.links.next}}
                                             <div {{bind-attr class=color}}>
                                                 {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
-                                                    {{node.humanName}}
+                                                    {{node.localName}}
                                                     &#8594;<!-- next arrow -->
                                                 {{/link-to}}
                                             </div>
@@ -1187,7 +1188,7 @@
 
                     {{#if nextWorkflowSteps}}
                         <div class="semi-transparent">
-                            <h3>Related next steps (other workflows)</h3>
+                            <h3>{{controllers.application.model.t.fp_workflow_steps_relatedNext}}</h3>
                             <div class="row">
                                 <div class="col-md-6 next-steps-prev">
                                     {{#if model.links.into}}
@@ -1195,7 +1196,7 @@
                                             <div {{bind-attr class=color}}>
                                                 {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
                                                     &#8592;  <!-- prev arrow -->
-                                                    {{node.humanName}} ({{wfname}})
+                                                    {{node.localName}} ({{wfname}})
                                                 {{/link-to}}
                                             </div>
                                         {{/each}}
@@ -1206,7 +1207,7 @@
                                         {{#each model.links.out}}
                                             <div {{bind-attr class=color}}>
                                                 {{#link-to 'graph' node.id (query-params workflowID=wfid)}}
-                                                    {{node.humanName}} ({{wfname}})
+                                                    {{node.localName}} ({{wfname}})
                                                     &#8594;<!-- next arrow -->
                                                 {{/link-to}}
                                             </div>
@@ -1240,20 +1241,20 @@
   <script type="text/x-handlebars" id="search">
         {{#map-modal  openBinding='mapModal' style="full"}}
             <div style="padding: 50px; text-align: center;">
-                {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder="Enter your location"}}
+                {{view Ember.TextField valueBinding="searchLocation" type='text' id='searchLocation' placeholder=controllers.application.model.t.fp_search_location_enter}}
                 <br><br />
                 <div id="mapmodalid" style="width: 80%; margin: 0 auto;" class="vh-65 map-result"></div>
                 <br><br>
-                {{eui-button label="Cancel" action="toggleMapModal" size='large'}}
-                {{eui-button label="Submit" action="addLocation" style='primary' size='large'}}
+                {{eui-button label=controllers.application.model.t.fp_general_actions_cancel action="toggleMapModal" size='large'}}
+                {{eui-button label=controllers.application.model.t.fp_general_actions_submit action="addLocation" style='primary' size='large'}}
             </div>
         {{/map-modal}}
 
         {{#eui-modal openBinding="dateModal" style="full"}}
             <div style="padding: 50px; text-align: center; margin-top: 100px;">
-                <p>Please choose a starting and ending date for the filter: </p>
-                {{eui-selectdate style="default" valueBinding='sched_date_from' placeholder="Starting date"}}
-                {{eui-selectdate style="default" valueBinding='sched_date_to' placeholder="Ending date" showNextMonth=false}}
+                <p>{{controllers.application.model.t.fp_search_filter_chooseRange}} </p>
+                {{eui-selectdate style="default" valueBinding='sched_date_from' placeholder=controllers.application.model.t.fp_search_filter_startDate}}
+                {{eui-selectdate style="default" valueBinding='sched_date_to' placeholder=controllers.application.model.t.fp_search_filter_endDate showNextMonth=false}}
                 <br /><br />
                 {{eui-button label="Cancel" action="toggleDateModal" size='large'}}
                 {{eui-button label="Submit" action="addDate" style='primary' size='large'}}
@@ -1262,21 +1263,24 @@
 
         {{#eui-modal openBinding="settingsModal"}}
             <div style="padding: 50px; text-align: center;">
-                <h4>Pagesize:</h4>
+                <h4>{{controllers.application.model.t.fp_general_pageSize}}: </h4>
                 {{view Ember.Select content=pageSizes value=pageSize }}
                 <br> <br> <br>
 
-                <h4>Categories to display:</h4><br />
-                Workflows:
+                <h4>
+                {{controllers.application.model.t.fp_search_categoriesToDisplay}}:
+
+                </h4><br />
+                {{controllers.application.model.t.fp_general_workflows}}:
                 {{view Ember.Checkbox checkedBinding='wf'}}
                 &nbsp;|&nbsp;
-                Steps:
+                {{controllers.application.model.t.fp_general_steps}}:
                 {{view Ember.Checkbox checkedBinding='graph'}}
                 &nbsp;|&nbsp;
-                Files:
+                {{controllers.application.model.t.fp_general_files}}:
                 {{view Ember.Checkbox checkedBinding='file'}}
                 &nbsp;|&nbsp;
-                Step Locations:
+                {{controllers.application.model.t.fp_general_step}} {{controllers.application.model.t.fp_general_location}}:
                 {{view Ember.Checkbox checkedBinding='map'}}
                 <br><br>
                 {{eui-button label="Done" action="toggleSettingsModal" style='primary' size='large'}}
@@ -1293,7 +1297,7 @@
               <span  {{action 'deleteTag' tag}} class="tag">{{tag.n}}</span> {{! add delete icon here}}
             {{/each}}
 
-            {{view Ember.TextField action='search' valueBinding="keywords" type='text' placeholder="Add keywords" autofocus="autofocus"}}
+            {{view Ember.TextField action='search' valueBinding="keywords" type='text' placeholder=controllers.application.model.t.fp_search_addKeywords autofocus="autofocus"}}
 
 
             <button {{action 'toggleMapModal'}} class="btn btn-default">
@@ -1312,7 +1316,7 @@
 
             &nbsp;
             <button {{action 'search'}} type="button" class="btn btn-primary">
-                <span class="glyphicon icon-search"></span>&nbsp;Search
+                <span class="glyphicon icon-search"></span>&nbsp;{{controllers.application.model.t.fp_menu_link_search}}
             </button>
 
             <br>
@@ -1349,7 +1353,7 @@
                 {{/if}}
             {{else}}
                 <div class="col-md-12">
-                    <h4>{{{controllers.application.model.t.fp_search_info_no_keyword}}}</h4>
+                    <h4>{{controllers.application.model.t.fp_search_info_no_keyword}}</h4>
                 </div>
             {{/if}}
       </div>
@@ -1372,21 +1376,21 @@
         {{#if results}}
           <ul class="pager pull-right">
               {{#if prev}}
-                 <li><a {{action 'prev' 'pageGraph'}}>Previous</a></li>
+                 <li><a {{action 'prev' 'pageGraph'}}>{{controllers.application.model.t.fp_general_previous}}</a></li>
               {{/if}}
               {{#if next}}
-                <li><a {{action 'next' 'pageGraph'}}>Next</a></li>
+                <li><a {{action 'next' 'pageGraph'}}>{{controllers.application.model.t.fp_general_next}}</a></li>
               {{/if}}
           </ul>
         {{/if}}
     {{/unless}}
 
-  <h3>Workflows</h3>
+  <h3>{{controllers.application.model.t.fp_general_workflows}}</h3>
 
 
   {{#if loading}}
 
-    Loading...
+    {{controllers.application.model.t.fp_general_loadingDotDotDot}}
 
   {{else}}
 
@@ -1395,9 +1399,9 @@
         <table class="table table-condensed table-hover">
             <thead>
               <tr>
-                <th>Title</th>
-                <th>Author</th>
-                <th>Updated</th>
+                <th>{{controllers.application.model.t.fp_general_title}}</th>
+                <th>{{controllers.application.model.t.fp_general_author}}</th>
+                <th>{{controllers.application.model.t.fp_general_updated}}</th>
               </tr>
             </thead>
             <tbody>
@@ -1413,7 +1417,7 @@
       </div>
     {{else}}
 
-        Sorry no results could be found.
+        {{controllers.application.model.t.fp_search_noResultsWarning}}
 
     {{/if}}
 
@@ -1426,21 +1430,21 @@
         {{#if results}}
           <ul class="pager pull-right">
               {{#if prev}}
-                 <li><a {{action 'prev' 'pageGraph'}}>Previous</a></li>
+                 <li><a {{action 'prev' 'pageGraph'}}>{{controllers.application.model.t.fp_general_previous}}</a></li>
               {{/if}}
               {{#if next}}
-                <li><a {{action 'next' 'pageGraph'}}>Next</a></li>
+                <li><a {{action 'next' 'pageGraph'}}>{{controllers.application.model.t.fp_general_next}}</a></li>
               {{/if}}
           </ul>
         {{/if}}
     {{/unless}}
 
-  <h3>Steps</h3>
+  <h3>{{controllers.application.model.t.fp_general_steps}}</h3>
 
 
   {{#if loading}}
 
-    Loading...
+    {{controllers.application.model.t.fp_general_loadingDotDotDot}}
 
   {{else}}
 
@@ -1468,7 +1472,7 @@
       </div>
     {{else}}
 
-        Sorry no results could be found.
+        {{controllers.application.model.t.fp_search_noResultsWarning}}
 
     {{/if}}
 
@@ -1477,19 +1481,26 @@
 </script>
 
 <script type="text/x-handlebars" id="translateme">
-    <h1>Tanslate Me</h1>
+    <h1>Translate FlowPro</h1>
 
+    <div class="row">
+        <div class="col-md-3">
 
-    {{eui-button label="Save" action="createItem" size='large'}}
+            {{eui-button label="Save" action="createItem" size='large'}}
+            <h4>Translation</h4>
+            {{eui-input valueBinding="translation"}}
 
-    <h4>Translation</h4>
-    {{eui-input valueBinding="translation"}}
+            <h4>Label</h4>
+            {{eui-input valueBinding="label"}}
+        </div>
 
-    <h4>label</h4>
-    {{eui-input valueBinding="label"}}
-
-
-
+        <div class="col-md-6">
+            {{!-- Doesn't work like this... gotta do it in the model-- --}}
+            {{#eachProperty controllers.application.model.t}}
+              {{key}}: {{value}}<br/>
+            {{/eachProperty }}
+        </div>
+    </div>
 </script>
 
 

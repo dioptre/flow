@@ -1587,7 +1587,7 @@ App.SearchView = Ember.View.extend({
 
 
 App.WorkflowResultsController = Ember.ObjectController.extend({
-    needs: 'search',
+    needs: ['application','search'],
     next: false,
     prev: false,
     loading: true,
@@ -1615,7 +1615,7 @@ App.WorkflowResultsController = Ember.ObjectController.extend({
 
 
 App.GraphResultsController = Ember.ObjectController.extend({
-    needs: 'search',
+    needs: ['application','search'],
     next: false,
     prev: false,
     loading: true,
@@ -1642,7 +1642,7 @@ App.GraphResultsController = Ember.ObjectController.extend({
 
 
 App.FileResultsController = Ember.ObjectController.extend({
-    needs: 'search',
+    needs: ['application', 'search'],
     next: false,
     prev: false,
     loading: true,
@@ -1683,7 +1683,7 @@ App.MapResultsController = Ember.Controller.extend({
         }
     }.observes('loading', 'results'),
     visi: true,
-    needs: 'search',
+    needs: ['application','search'],
     next: false,
     prev: false,
     loading: true,
@@ -1899,8 +1899,8 @@ function OnMapUpdate(map, event, center, viewport) {
    Ember.Handlebars.helper('map-modal', App.MapModal);
 }).call(this);
 
-
 App.GraphRoute = Ember.Route.extend({
+    lastLoadedWorkflowLocale: '',
     queryParams: {
         workflowID: {
             refreshModel: true
@@ -1931,6 +1931,16 @@ App.GraphRoute = Ember.Route.extend({
         //        resolve();
         //    })
         //});
+        var currentLocale = App.get('localeSelected');
+        var thisLoadedWorkflowLocale = params.workflowID + currentLocale;
+        if (this.get('lastLoadedWorkflowLocale') !== thisLoadedWorkflowLocale) {
+            this.set('lastLoadedWorkflowLocale', thisLoadedWorkflowLocale);            
+            var currentLocale = App.get('localeSelected');
+            if (!Enumerable.From(this.store.all('translation').content).Any("f=>f.get('DocID') ==='" + params.workflowID + "' && f.get('TranslationCulture') ==='" + currentLocale +"'"))
+                this.store.find('translation', { docid: params.workflowID, TranslationCulture: currentLocale, DocType: 'flows' });
+        }
+
+        
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
             workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
@@ -1952,7 +1962,7 @@ App.GraphRoute = Ember.Route.extend({
             editing: true,  // This gets passed to visjs to enable/disable editing dependig on context
             params: params,
             links: { prev: [], next: [], up: [], down: [] },
-            preview: params.preview
+            preview: params.preview           
         });
     },
     afterModel: function (m) {
@@ -2748,7 +2758,7 @@ App.VizEditorComponent = Ember.Component.extend({
         var wfid = _this.get('workflowID');
 
         var updateGraph = function (nodes, edges) {
-            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('humanName'), mass: 0.2, group: item.get('group') }; });
+            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('localName'), mass: 0.2, group: item.get('group') }; });
             edges = $.map(edges, function (item) { return { id: item.get('id'), from: item.get('from'), to: item.get('to'), style: item.get('style'), color: item.get('color') }; });
             Enumerable.From(nodes).ForEach(
                 function (value) {
@@ -3250,8 +3260,9 @@ App.NodeSerializer = DS.RESTSerializer.extend({
 });
 
 
+
+
 var refetchLocale = function (context) {
-    console.log('hi');
     context.store.find('translation', { docid: context.get('id'), TranslationCulture: App.get('locale.l'), DocType: context.get('constructor.typeKey') })
     .then(function (m) {
         context.set('_localName', m.content[0].get('TranslationName'));
@@ -3260,7 +3271,7 @@ var refetchLocale = function (context) {
 };
 DS.Model.reopen({
     _recordCreated: Date.now(),
-    _localeTrigger: DS.attr(''),
+    _localeTrigger: DS.attr('', { defaultValue: false }),
     _locale: function () {
         var _this = this;
         var updateLocale = function () {
@@ -3285,14 +3296,14 @@ DS.Model.reopen({
             }
         };
 
-
+        
         if (!this.get('_localeTrigger')) {
+            this.set('_localeTrigger', true);
             App.get('locale').addObserver('l', defaultLocale, function () {
-                updateLocale();
+                Ember.run.debounce(_this, updateLocale, _this, 150, true);
             });
         }
-
-        updateLocale();
+        Ember.run.debounce(_this, updateLocale, _this, 150, true);
 
     }.property('humanName', 'humanContent', 'label', 'content', 'name'),
     _localName: DS.attr('string', { defaultValue: '...' }),
@@ -3607,7 +3618,10 @@ App.Wikipedia = DS.Model.extend({
     }.property(),
     dataName: function () {
         return this.get('id').replace(/'/g, '\\\'');
-    }.property('label')
+    }.property('label'),
+    localName: function () {
+        return this.get('humanName');
+    }.property()
 });
 
 
@@ -3946,6 +3960,16 @@ function filterData(data) {
     return '<div class=\'filteredData\'>' + data + '</div>';
 }
 
+Ember.Handlebars.registerHelper('eachProperty', function (context, options) {
+    var ret = "";
+    var newContext = Ember.get(this, context);
+    for (var prop in newContext) {
+        if (newContext.hasOwnProperty(prop)) {
+            ret = ret + options.fn({ property: prop, value: newContext[prop] });
+        }
+    }
+    return ret;
+});
 
 Ember.Handlebars.helper('safehtml', function (item, options) {
     var escaped = '';
