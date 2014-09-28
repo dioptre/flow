@@ -137,7 +137,7 @@ App.TranslatemeController = Ember.ObjectController.extend({
     queryParams: ['item'],
     needs: ['application'],
     item: '',
-    label: "fp_menu_link_workflow",
+    label: "fp_menu_link_workflow", // naming convention sample
     translation: 'translation',
     actions: {
         createItem: function(){
@@ -197,7 +197,7 @@ App.TranslateRoute = Ember.Route.extend({
         // var nodeids = wfedges.Select("f=>f.get('from')").Union(wfedges.Select("f=>f.get('to')")).Where("f=>f!==null").ToArray();
         // var wfnodes = Enumerable.From(nodeids).Join(nodes, "", "f=>f.id", "f,g=>g").ToArray();
 
-        
+
         m.translateTodos = Enumerable.From(m.translatedWorkflow.content)
             .Where("f=>f.get('DocID')==='" + m.workflowID + "'")
             .Select(function (f) {
@@ -207,8 +207,8 @@ App.TranslateRoute = Ember.Route.extend({
 
 
         if (m.select) {
-            
-            
+
+
             var selectedObject = Enumerable.From(m.translateTodos).Where("f=>f.id==='" + m.select + "'").First();
             var doctype = selectedObject.DocType;
 
@@ -800,6 +800,10 @@ App.ApplicationRoute = Ember.Route.extend({
     },
     model: function (params) {
 
+        // Get the language from the browser settings;
+        var userLang = navigator.language || navigator.userLanguage
+
+
         App.set('localeSelected', params.localeSelected);
         var isNew = false;
         if (!App.get('locale')) {
@@ -881,11 +885,15 @@ App.ApplicationController = Ember.Controller.extend({
         var localeAtivated = this.get('localeActivated');
 
         var ln = [];
-        
+
         localeAtivated.forEach(function (d, i) {
-            if (localeDic[d])
+            if (localeDic[d] && d) {
+                console.log(d,localeDic[d]);
                 ln.push({ value: d, label: localeDic[d] });
+            }
         });
+
+
        return ln;
 
    }.property('localeDic', 'localeActivated'),
@@ -1934,13 +1942,13 @@ App.GraphRoute = Ember.Route.extend({
         var currentLocale = App.get('localeSelected');
         var thisLoadedWorkflowLocale = params.workflowID + currentLocale;
         if (this.get('lastLoadedWorkflowLocale') !== thisLoadedWorkflowLocale) {
-            this.set('lastLoadedWorkflowLocale', thisLoadedWorkflowLocale);            
+            this.set('lastLoadedWorkflowLocale', thisLoadedWorkflowLocale);
             var currentLocale = App.get('localeSelected');
             if (!Enumerable.From(this.store.all('translation').content).Any("f=>f.get('DocID') ==='" + params.workflowID + "' && f.get('TranslationCulture') ==='" + currentLocale +"'"))
                 this.store.find('translation', { docid: params.workflowID, TranslationCulture: currentLocale, DocType: 'flows' });
         }
 
-        
+
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
             workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
@@ -1962,7 +1970,7 @@ App.GraphRoute = Ember.Route.extend({
             editing: true,  // This gets passed to visjs to enable/disable editing dependig on context
             params: params,
             links: { prev: [], next: [], up: [], down: [] },
-            preview: params.preview           
+            preview: params.preview
         });
     },
     afterModel: function (m) {
@@ -3296,7 +3304,7 @@ DS.Model.reopen({
             }
         };
 
-        
+
         if (!this.get('_localeTrigger')) {
             this.set('_localeTrigger', true);
             App.get('locale').addObserver('l', defaultLocale, function () {
