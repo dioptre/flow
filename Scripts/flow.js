@@ -901,7 +901,7 @@ App.ApplicationController = Ember.Controller.extend({
     }.property('localeSelected'),
     localeSelectedOberver: function () {
         var selectedLocal = this.get('localeSelected');
-        if (-1 === $.inArray(selectedLocal, this.get('localeActivated'))) {
+        if (typeof selectedLocal !== 'undefined' && selectedLocal !== null && selectedLocal !== 'null' && -1 === $.inArray(selectedLocal, this.get('localeActivated'))) {
             this.set('localeSelected', defaultLocale);
             this.transitionTo({ queryParams: {localeSelected: defaultLocale}})
         }

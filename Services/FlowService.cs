@@ -1872,7 +1872,7 @@ namespace EXPEDIT.Flow.Services {
                     else
                     {
                         var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
-                        var lang = cultures.FirstOrDefault(f => f.Name.StartsWith(m.TranslationCulture));
+                        var lang = cultures.OrderBy(f=>f.Name).FirstOrDefault(f => f.Name.StartsWith(m.TranslationCulture));
                         using (var client = new HttpClient())
                         {
                             client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "GET");
@@ -2167,7 +2167,7 @@ namespace EXPEDIT.Flow.Services {
 
 
                     var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
-                    var lang = cultures.FirstOrDefault(f => f.Name.StartsWith(m.TranslationCulture));
+                    var lang = cultures.OrderBy(f=>f.Name).FirstOrDefault(f => f.Name.StartsWith(m.TranslationCulture));
                     
                     if (!m.LocaleQueue.Any())
                         return false; //ref didnt exist;
