@@ -56,6 +56,7 @@ App.Router.map(function () {
     // FlowPro v2
     this.route('todo');
     this.route('styleguide');
+    this.route('task', { path: 'task/:id' });
 
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });
@@ -2509,11 +2510,6 @@ App.GraphController = Ember.ObjectController.extend({
     }
 });
 
-var renderDynamic = function () {
-    window.cleanAlternative(this.$());
-    window.renderFunctions(this.$());
-};
-
 App.GraphView = Ember.View.extend({
     didInsertElement : function(){
         this._super();
@@ -2523,6 +2519,11 @@ App.GraphView = Ember.View.extend({
         Ember.run.debounce(this, renderDynamic, 150, false);
     }.observes('controller.model.selected.content'),
 });
+
+var renderDynamic = function () {
+    window.cleanAlternative(this.$());
+    window.renderFunctions(this.$());
+};
 
 function recurseGraphData(id, array, _this, depth, depthMax, nodeMax, store) {
     //AGTODO
@@ -3099,116 +3100,9 @@ App.VizEditorComponent = Ember.Component.extend({
     }
 });
 
-    // didInsertElement: function () {
-
-    //     var options = {
-    //         dataManipulation: true,
-    //         keyboard: true,
-    //         onAdd: function (data, callback) {
-    //             var span = document.getElementById('operation');
-    //             var idInput = document.getElementById('node-id');
-    //             var labelInput = document.getElementById('node-label');
-    //             var saveButton = document.getElementById('saveButton');
-    //             var cancelButton = document.getElementById('cancelButton');
-    //             var div = document.getElementById('graph-popUp');
-    //             span.innerHTML = "Add Node";
-    //             idInput.value = data.id;
-    //             labelInput.value = data.label;
-    //             saveButton.onclick = saveData.bind(this, data, callback);
-    //             cancelButton.onclick = clearPopUp.bind();
-    //             div.style.display = 'block';
-    //         },
-    //         onDelete: function (data, callback) {
-
-    //             // Delete all nodes
-    //             $.each(data.nodes, function (i, a) {
-    //                 //console.log("nodes: ", i, a)
-    //                 var node = App.Node.store.getById('node', a);
-    //                 node.deleteRecord();
-    //                 // node.save(); //not working, but should maybe need to connect to api first
-    //             })
-
-
-    //             // Delete all nodes
-    //             $.each(data.edges, function (i, a) {
-    //                 //console.log("edges: ", i, a)
-    //                 var edge = App.Edge.store.getById('edge', a);
-    //                 edge.deleteRecord();
-    //                 // edge.save();
-    //             })
-
-
-
-    //             callback(data);
-    //         },
-    //         onEdit: function (data, callback) {
-    //             var span = document.getElementById('operation');
-    //             var idInput = document.getElementById('node-id');
-    //             var labelInput = document.getElementById('node-label');
-    //             var saveButton = document.getElementById('saveButton');
-    //             var cancelButton = document.getElementById('cancelButton');
-    //             var div = document.getElementById('graph-popUp');
-    //             span.innerHTML = "Edit Node";
-    //             idInput.value = data.id;
-    //             labelInput.value = data.label;
-    //             saveButton.onclick = saveData.bind(this, data, callback);
-    //             cancelButton.onclick = clearPopUp.bind();
-    //             div.style.display = 'block';
-    //         },
-    //         onConnect: function (data, callback) {
-    //             function saveLink() {
-    //                 data.id = NewGUID();
-    //                 data.groupid = sessionGroupID;
-    //                 App.Node.store.createRecord('edge', data).save()
-    //                 callback(data);
-    //             }
-
-    //             if (data.from == data.to) {
-    //                 var r = confirm("Do you want to connect the node to itself?");
-    //                 if (r == true) {
-    //                     saveLink()
-    //                 }
-    //             }
-    //             else {
-    //                 saveLink()
-    //             }
-    //         }
-    //     };
-
-    //     var container = this.$().find('#mygraph')[0];
-
-    //     // Data was created in the route
-    //     graph = new vis.Graph(container, data, options);
-
-    //     $(window).resize(function(){
-    //         graph.redraw();
-    //     })
-
-    //     graph.on('click', function (data) {
-    //         //console.log(data, 'click event')
-    //         if (data.nodes.length > 0) {
-    //             App.Node.store.findQuery('node', { id: data.nodes[0] }).then(function (updated) {
-    //                 var c = updated.get('content');
-    //                 if (c && c[0]) {
-    //                     var record = App.Node.store.getById('node', data.nodes[0]);
-    //                     record.set('content', c[0].get('content'))
-    //                     $('#flowItem').html(filterData(record.get('content')));
-    //                     $('#flowEditLink').attr('href', '/flow/wiki/' + record.get('label'));
-    //                     $('#flowEditLink').html('Edit ' + record.get('label'));
-    //                     $('#flowEdit').show();
-
-    //                 }
-    //             });
-
-
-    //         }
-    //     })
-
-
-    // }
-
-
-
+App.TaskRoute = Ember.Route.extend({});
+App.TaskController = Ember.ObjectController.extend({});
+App.TaskView = Ember.View.extend({});
 
 DS.RESTAdapter.reopen({
     namespace: 'flow'
@@ -3646,6 +3540,17 @@ App.Locale = DS.Model.extend({
     VersionUpdated: DS.attr('') // version number
 });
 
+App.Project = DS.Model.extend({
+    ProjectName: DS.attr(''),
+    ProjectCode: DS.attr(''),
+    ProjectDatas: DS.hasMany('ProjectData'),
+})
+
+App.ProjectData = DS.Model.extend({
+    Project: DS.belongsTo('Project'),
+    Value: DS.attr(''),
+})
+
 App.Wikipedia = DS.Model.extend({
     label: DS.attr('string'),
     content: DS.attr('string'),
@@ -3838,7 +3743,12 @@ App.WikipediaAdapter = DS.Adapter.extend({
                    encodeURIComponent(randomURL) +
                    "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=?"
                  ).then(function (data) {
-                    Ember.run(null, reject, { redirect: 'wikipedia', id: data.query.results.resources.content.query.random.title });
+                     var title;
+                     if (data.query.results.resources.content.query) 
+                         title = data.query.results.resources.content.query.random.title;
+                     else
+                         title = data.query.results.resources.content.json.query.random.title;
+                    Ember.run(null, reject, { redirect: 'wikipedia', id: title });
                      //Ember.run(null, reject, { replaceWith: 'wikipedia', id: data.query.results.resources.content.query.random.title });
                      // _this.replaceWith('wikipedia', data.query.results.resources.content.query.random.title)
                  }, function (jqXHR) {
