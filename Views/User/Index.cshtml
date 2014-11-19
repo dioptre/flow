@@ -53,10 +53,11 @@
         <!-- more page specific styles -->
         <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/compiled/personal-info.css")" type="text/css" media="screen" />
         <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/compiled/signin.css")" type="text/css" media="screen" />
+        <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/compiled/tables.css")" type="text/css" media="screen" />
+
 
         <!-- open sans font -->
         <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
-        <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css' />
         <link href='https://fonts.googleapis.com/css?family=Libre+Baskerville:400,700,400italic' rel='stylesheet' type='text/css'>
 
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
@@ -857,6 +858,12 @@
                 </ul>
             {{/view}}
             {{#view App.HomeNavView}}
+                {{#link-to 'todo'}}
+                    <i class="icon-check"></i>
+                    <span>Todo</span>
+                {{/link-to}}
+            {{/view}}
+            {{#view App.HomeNavView}}
                 {{#link-to 'file'}}
                     <i class="icon-file"></i>
                     <span>{{model.t.fp_menu_link_myfiles}}</span>
@@ -1015,6 +1022,9 @@
                         <span {{action 'translateWorkflow' workflowID selectedID}} class='btn-flat gray' title="Translate Workflow">
                             <i class="icon-globe"></i> {{!--Edit Workflow name--}}
                         </span>
+                        <span {{action 'createWFinstance' workflowID }} class='btn-flat gray' title="Create WF instance">
+                            <i class="icon-play"></i> {{!--Edit Workflow name--}}
+                        </span>
                     {{/if}}
                 </h1>
                 <hr>
@@ -1066,7 +1076,7 @@
                            <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
                         </span>&nbsp;
                        <span {{action 'togglePreview' }} class='btn-flat gray' title="Preview step for sharing">
-                           <i class="icon-play"></i>
+                           <i class="icon-fullscreen"></i>
                        </span>
                     {{/unless}}
                     {{/if}}
@@ -1663,6 +1673,160 @@
 
 <script type="text/x-handlebars" id="components/map-result">
       <div {{bind-attr id='id'}} style="width: 100%;  min-height: 600px;  height: auto !important; height: 600px; height: 75vh; padding:12px;" class="map-result"></div>
+</script>
+
+
+<script type="text/x-handlebars" data-template-name="styleguide">
+
+    <h1>HTML Ipsum Presents</h1>
+
+    <p><strong>Pellentesque habitant morbi tristique</strong> senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. <em>Aenean ultricies mi vitae est.</em> Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, <code>commodo vitae</code>, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. <a href="#">Donec non enim</a> in turpis pulvinar facilisis. Ut felis.</p>
+
+    <h2>Header Level 2</h2>
+
+    <ol>
+       <li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</li>
+       <li>Aliquam tincidunt mauris eu risus.</li>
+    </ol>
+
+    <blockquote><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus magna. Cras in mi at felis aliquet congue. Ut a est eget ligula molestie gravida. Curabitur massa. Donec eleifend, libero at sagittis mollis, tellus est malesuada tellus, at luctus turpis elit sit amet quam. Vivamus pretium ornare est.</p></blockquote>
+
+    <h3>Header Level 3</h3>
+
+    <ul>
+       <li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</li>
+       <li>Aliquam tincidunt mauris eu risus.</li>
+    </ul>
+
+    <pre><code>
+    #header h1 a {
+        display: block;
+        width: 300px;
+        height: 80px;
+    }
+    </code></pre>
+
+</script>
+
+<script type="text/x-handlebars" data-template-name="todo">
+
+    Todo
+
+      <div class="table-wrapper products-table section">
+                <div class="row head">
+                    <div class="col-md-12">
+                        <h4>Products</h4>
+                    </div>
+                </div>
+
+                <div class="row filter-block">
+                    <div class="pull-right">
+                        {{eui-button label="Add Workflow Instance" action="" size='small' style='primary'}}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th class="col-md-3">
+                                    <input type="checkbox">
+                                    Product
+                                </th>
+                                <th class="col-md-3">
+                                    <span class="line"></span>Description
+                                </th>
+                                <th class="col-md-3">
+                                    <span class="line"></span>Status
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- row -->
+                            <tr class="first">
+                                <td>
+                                    <input type="checkbox">
+                                    <div class="img">
+                                        <img src="img/table-img.png" alt="pic" />
+                                    </div>
+                                    <a href="#" class="name">Generate Lorem </a>
+                                </td>
+                                <td class="description">
+                                    if you are going to use a passage of Lorem Ipsum.
+                                </td>
+                                <td>
+                                    <span class="label label-success">Active</span>
+                                    <ul class="actions">
+                                        <li><a href="#">Edit</a></li>
+                                        <li class="last"><a href="#">Delete</a></li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <!-- row -->
+                            <tr>
+                                <td>
+                                    <input type="checkbox">
+                                    <div class="img">
+                                        <img src="img/table-img.png" alt="pic" />
+                                    </div>
+                                    <a href="#" class="name">Internet tend</a>
+                                </td>
+                                <td class="description">
+                                    There are many variations of passages.
+                                </td>
+                                <td>
+                                    <ul class="actions">
+                                        <li><a href="#">Edit</a></li>
+                                        <li class="last"><a href="#">Delete</a></li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <!-- row -->
+                            <tr>
+                                <td>
+                                    <input type="checkbox">
+                                    <div class="img">
+                                        <img src="img/table-img.png" alt="pic" />
+                                    </div>
+                                    <a href="#" class="name">Generate Lorem </a>
+                                </td>
+                                <td class="description">
+                                    if you are going to use a passage of Lorem Ipsum.
+                                </td>
+                                <td>
+                                    <ul class="actions">
+                                        <li><a href="#">Edit</a></li>
+                                        <li class="last"><a href="#">Delete</a></li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <!-- row -->
+                            <tr>
+                                <td>
+                                    <input type="checkbox">
+                                    <div class="img">
+                                        <img src="img/table-img.png" alt="pic" />
+                                    </div>
+                                    <a href="#" class="name">Internet tend</a>
+                                </td>
+                                <td class="description">
+                                    There are many variations of passages.
+                                </td>
+                                <td>
+                                    <span class="label label-info">Standby</span>
+                                    <ul class="actions">
+                                        <li><a href="#">Edit</a></li>
+                                        <li class="last"><a href="#">Delete</a></li>
+                                    </ul>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- end products table -->
+
 </script>
 
 

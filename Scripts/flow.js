@@ -53,6 +53,10 @@ App.Router.map(function () {
     this.route('file');
     this.route('permission');
 
+    // FlowPro v2
+    this.route('todo');
+    this.route('styleguide');
+
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });
     this.route('translateme', { path: 'translateTool' });
@@ -2775,7 +2779,7 @@ App.VizEditorComponent = Ember.Component.extend({
         }
         var wfid = _this.get('workflowID');
 
-        var updateGraph = function (nodes, edges) {            
+        var updateGraph = function (nodes, edges) {
             nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('localName'), mass: 0.2, group: item.get('group') }; });
             edges = $.map(edges, function (item) { return { id: item.get('id'), from: item.get('from'), to: item.get('to'), style: item.get('style'), color: item.get('color') }; });
             Enumerable.From(nodes).ForEach(
@@ -3300,7 +3304,7 @@ var refetchLocale = function (context) {
             context.set('_localName', m.content[0].get('TranslationName'));
             context.set('_localContent', m.content[0].get('TranslationText'));
         }));
-        
+
     }
 };
 
@@ -4466,7 +4470,7 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
             waitForLocalePromises(nodes, edges);
         });
 
-      
+
         //Ember.run.scheduleOnce('afterRender', this, getData);
 
 
