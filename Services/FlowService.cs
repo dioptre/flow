@@ -708,9 +708,13 @@ namespace EXPEDIT.Flow.Services {
                 }
                 else
                 {
+                    (from o in d.GraphDataRelation where o.FromGraphDataID == m.GraphDataID || o.ToGraphDataID == m.GraphDataID select o).Delete();
                     (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
                     (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
-                    (from o in d.GraphDataContexts where o.GraphDataID == m.GraphDataID select o).Delete();
+                    (from o in d.GraphDataHistories where o.GraphDataID == m.GraphDataID select o).Delete();
+                    (from o in d.GraphDataTriggers where o.GraphDataID == m.GraphDataID select o).Delete();
+                    (from o in d.ProjectPlanTaskResponses where o.ActualGraphDataID == m.GraphDataID select o).Delete();
+                    (from o in d.Tasks where o.GraphDataID == m.GraphDataID select o).Delete();
                 }
 
                 //Forms
@@ -770,9 +774,13 @@ namespace EXPEDIT.Flow.Services {
             }
             else
             {
+                (from o in d.GraphDataRelation where o.FromGraphDataID == m.GraphDataID || o.ToGraphDataID == m.GraphDataID select o).Delete();
                 (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
                 (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
-                (from o in d.GraphDataContexts where o.GraphDataID == m.GraphDataID select o).Delete();
+                (from o in d.GraphDataHistories where o.GraphDataID == m.GraphDataID select o).Delete();
+                (from o in d.GraphDataTriggers where o.GraphDataID == m.GraphDataID select o).Delete();
+                (from o in d.ProjectPlanTaskResponses where o.ActualGraphDataID == m.GraphDataID select o).Delete();
+                (from o in d.Tasks where o.GraphDataID == m.GraphDataID select o).Delete();
             }
 
             //Default Group
@@ -888,7 +896,9 @@ namespace EXPEDIT.Flow.Services {
                 var g = (from o in d.GraphData where o.GraphDataID == mid select o).Single();
                 d.GraphDataHistories.Where(f => f.GraphDataID == mid).Delete();
                 d.GraphDataRelation.Where(f => f.FromGraphDataID == mid || f.ToGraphDataID == mid).Delete();
-                d.GraphDataContexts.Where(f => f.GraphDataID == mid).Delete();
+                d.GraphDataTriggers.Where(f => f.GraphDataID == mid).Delete();
+                d.ProjectPlanTaskResponses.Where(f => f.ActualGraphDataID == mid).Delete();
+                d.Tasks.Where(f => f.GraphDataID == mid).Delete();
                 d.GraphDataFileDatas.Where(f => f.GraphDataID == mid).Delete();
                 d.GraphDataLocations.Where(f => f.GraphDataID == mid).Delete();                            
                 d.GraphData.DeleteObject(g);
