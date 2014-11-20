@@ -56,9 +56,9 @@
         <link rel="stylesheet" href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/compiled/tables.css")" type="text/css" media="screen" />
 
 
-        <!-- open sans font -->
-        <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css' />
-        <link href='https://fonts.googleapis.com/css?family=Libre+Baskerville:400,700,400italic' rel='stylesheet' type='text/css'>
+        <!-- fonts -->
+        <!--<script src="//use.typekit.net/osa0vpd.js"></script>
+        <script>try{Typekit.load();}catch(e){}</script>-->
 
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui.css">
@@ -1678,54 +1678,120 @@
 
 <script type="text/x-handlebars" data-template-name="styleguide">
 
-    <h1>HTML Ipsum Presents</h1>
+    <h1>Styleguide</h1>
 
-    <p><strong>Pellentesque habitant morbi tristique</strong> senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. <em>Aenean ultricies mi vitae est.</em> Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, <code>commodo vitae</code>, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. <a href="#">Donec non enim</a> in turpis pulvinar facilisis. Ut felis.</p>
+    <p><strong>Stay cool.</strong> Use this guide to make sure the styling is sexy & consistent.
 
-    <h2>Header Level 2</h2>
+    <h2>Typography</h2>
 
+    <p>This is an overview of the different typography options in this theme.</p>
+
+    Basic unordered list:
     <ol>
-       <li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</li>
+       <li>Item 1 - This is awesome</li>
        <li>Aliquam tincidunt mauris eu risus.</li>
     </ol>
 
-    <blockquote><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus magna. Cras in mi at felis aliquet congue. Ut a est eget ligula molestie gravida. Curabitur massa. Donec eleifend, libero at sagittis mollis, tellus est malesuada tellus, at luctus turpis elit sit amet quam. Vivamus pretium ornare est.</p></blockquote>
+    <blockquote><p>Good design is pretty.</p></blockquote>
 
-    <h3>Header Level 3</h3>
+    <em>Aenean ultricies mi vitae est.</em> Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, <code>alert('hi')</code>, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. <a href="#">a link</a> in turpis pulvinar facilisis. Ut felis.</p>
+
+    <h2>Ember Components</h2>
 
     <ul>
        <li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</li>
        <li>Aliquam tincidunt mauris eu risus.</li>
     </ul>
 
-    <pre><code>
-    #header h1 a {
-        display: block;
-        width: 300px;
-        height: 80px;
-    }
-    </code></pre>
+    <h3>1. Input</h3>
+    <h4>Default</h4>
+    {{eui-input}}
+    <h4>Size => Tiny, small, medium, large</h4>
+    {{eui-input size='tiny'}}
+    {{eui-input size='small'}}
+    {{eui-input size='medium'}}
+    {{eui-input size='large'}}
+    <h4>Width</h4>
+    {{eui-input width='150px' placeholder='150px'}}
+    {{eui-input width='15em' placeholder='15em'}}
+    {{eui-input width='30%' placeholder='30%'}}
+    <h4>Value</h4>
+    {{eui-input value='john@example.com'}}
+    <h4>Placeholder</h4>
+
+
+    <h3>2. Button</h3>
+    <h4>Default</h4>
+    {{eui-button label='Simple Button'}}
+    <h4>Simple small primary</h4>
+    {{eui-button label='Simple Button' size='small' style='primary'}}
+    <h4>Size => Tiny, small, medium, large</h4>
+    {{eui-button label='Save Changes' size='tiny'}}
+    {{eui-button label='Save Changes' size='small'}}
+    {{eui-button label='Save Changes' size='medium'}}
+    {{eui-button label='Save Changes' size='large'}}
+    <h4>Styles => default, primary</h4>
+    {{eui-button label='Save Changes' style='default'}}
+    {{eui-button label='Save Changes' style='primary'}}
+    <h4>Disabled</h4>
+    {{eui-button label='Save Changes' disabled=true}}
+    <h4>Icon</h4>
+    {{eui-button label='Settings' icon='icon icon-cog'}}
+    {{eui-button icon='icon icon-cog'}}
+    <h4>Loading</h4>
+    {{eui-button label='Save Changes' loading=true}}
+
+
+    <h3>3. Modals</h3>
+    {{#eui-modal openBinding="showFirstModal" cancel="firstModalCancel"}}
+      <div style="padding: 50px; text-align: center;">
+        <p>
+          You may also press <em>esc</em> to close this modal.
+        </p>
+
+        {{eui-button label="Close Modal" size="small" action="toggleFirstModal"}}
+      </div>
+    {{/eui-modal}}
+
+    {{eui-button label='Open "default" Style Modal' action="toggleFirstModal"}}
+
+    <h3>4. Select<h3>
+    {{eui-select placeholder="Select a country" options=countries size='tiny'}}
+    {{eui-select placeholder="Select a country" options=countries size='small'}}
+    {{eui-select placeholder="Select a country" options=countries size='medium'}}
+    {{eui-select placeholder="Select a country" options=countries size='large'}}
+
+    <h3>5. Select Date</h3>
+    {{eui-selectdate}}
+    <a href='http://emberui.com/documentation/selectdate'>More info</a>
+
+    <h3>6. TinyMCE</h3>
+    {{tinymce-editor data='Sample Text'}}
+
+
+
 
 </script>
 
 <script type="text/x-handlebars" data-template-name="todo">
 
-    Todo
 
-      <div class="table-wrapper products-table section">
+
+      <div class="table-wrapper products-table">
                 <div class="row head">
                     <div class="col-md-12">
-                        <h4>Products</h4>
+                        <h1>To-do</h1>
+
+                        <div class="filter-block">
+                            <div class="">
+                                {{eui-button label="Add Workflow Instance" action=""}}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row filter-block">
-                    <div class="pull-right">
-                        {{eui-button label="Add Workflow Instance" action="" size='small' style='primary'}}
-                    </div>
-                </div>
-
-                <div class="row">
+                <h4>My Todos</h4>
+                <div class="">
                     <table class="table table-hover">
                         <thead>
                             <tr>
@@ -1826,6 +1892,9 @@
                 </div>
             </div>
             <!-- end products table -->
+
+            <h4>Unassigned Todos</h4>
+            <p>No Unassigned todos at this point :)</p>
 
 </script>
 
@@ -2504,6 +2573,7 @@
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/bootstrapvalidator/dist/js/bootstrapValidator.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/tiny-mce-custom-render-helper.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myformeditor/client.min.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myliveformeditor/client.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/locationpicker/client.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myfilepicker/client.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myworkflow/client.min.js")"></script>

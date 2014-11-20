@@ -1,9 +1,31 @@
 ﻿body {
     margin-top:0px !important;
-    font-family: "Avenir Next", 'Avenir', "Open Sans";
 }
 
+body, h1, h2, h3, h4, h5, h6 {
+  font-family: "Avenir Next", 'Avenir', "Open Sans";
+}
 
+h1, h2, h3, h4, h5, h6 {
+  font-weight: bold;
+
+}
+h1 {
+  font-size: 30px;
+}
+h2 {
+  font-size: 24px;
+}
+h3 {
+  font-size: 19px;
+}
+h4, #pad-wrapper h4 {
+  font-size: 15px;
+  font-variant: normal;
+}
+h5 {
+  font-size: 12px;
+}
 /* remove 300ms delay on click */
 html {
     -ms-touch-action: manipulation;
@@ -793,7 +815,7 @@ table thead {
 .pretty-content, #tinymce {
     font-size: 14px;
     line-height: 25px;
-    font-family: 'Georgia', serif;
+    /*font-family: 'Georgia', serif;*/
     font-weight: 400;
     line-height: 1.45;
     color: #333;
@@ -803,7 +825,7 @@ table thead {
 .pretty-content p, #tinymce p {margin-bottom: 1.3em;}
 
 .pretty-content h1, .pretty-content h2, .pretty-content h3, .pretty-content h4, .pretty-content h5, .pretty-content h6, #tinymce h1, #tinymce h2, #tinymce h3, #tinymce h4, #tinymce h5, #tinymce h6 {
-  font-family: 'Libre Baskerville', 'Georgia', serif;
+  /*font-family: 'Georgia', serif;*/
   margin: 1.414em 0 0.5em;
   font-weight: inherit;
   line-height: 1.2;
@@ -812,15 +834,15 @@ table thead {
 
 .pretty-content h1, #tinymce h1 {
   margin-top: 0;
-  font-size: 2.4em;
+  font-size: 1.6em;
 }
 
-.pretty-content h2, #tinymce h2 {font-size: 2em;}
+.pretty-content h2, #tinymce h2 {font-size: 1.4em;}
 
-.pretty-content h3, #tinymce h3 {font-size: 1.6em;}
+.pretty-content h3, #tinymce h3 {font-size: 1.3em;}
 
 .pretty-content h4, #tinymce h4 {
-  font-size: 1.25em;
+  font-size: 1.1em;
   font-variant: normal;
 }
 
