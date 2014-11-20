@@ -56,7 +56,7 @@ App.Router.map(function () {
     // FlowPro v2
     this.route('todo');
     this.route('styleguide');
-    this.route('task', { path: 'task/:id' });
+    this.route('step', { path: 'step/:id' });
 
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });
@@ -3100,9 +3100,17 @@ App.VizEditorComponent = Ember.Component.extend({
     }
 });
 
-App.TaskRoute = Ember.Route.extend({});
-App.TaskController = Ember.ObjectController.extend({});
-App.TaskView = Ember.View.extend({});
+App.StepRoute = Ember.Route.extend({
+    queryParams: {
+        selected: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
+    },
+});
+App.StepController = Ember.ObjectController.extend({
+    queryParams: ['ProjectID', 'WorkflowID', 'NodeID', 'TaskID'],
+    needs: ['application'],
+
+});
+App.StepView = Ember.View.extend({});
 
 DS.RESTAdapter.reopen({
     namespace: 'flow'
