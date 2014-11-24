@@ -804,12 +804,19 @@ namespace EXPEDIT.Flow.Controllers {
             if (Guid.TryParse(task, out ttid))
                 tid = ttid;
 
+            string includeContent = Request.Params["includeContent"];
+            bool? ic = null;
+            bool tic;
+            if (bool.TryParse(includeContent, out tic))
+                ic = tic;
+
+
             Guid? sid = null;
             Guid tsid;
             if (Guid.TryParse(id, out tsid))
                 sid = tsid;
 
-            var result = _Flow.GetStep(sid, pid, tid, nid, gid, sid.HasValue, false, false);
+            var result = _Flow.GetStep(sid, pid, tid, nid, gid, ic ?? sid.HasValue , false, false);
 
             if (result == null)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
