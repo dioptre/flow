@@ -66,7 +66,7 @@ namespace EXPEDIT.Flow.Services {
             }
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
-                var d = new NKDC(null, null);
+                var d = new NKDC(_users.ApplicationConnectionString, null);
                 var trigger = d.Triggers.FirstOrDefault(f => f.JsonProxyApplicationID == applicationID && f.JsonUsername == m.Username && f.JsonPassword == hashString && f.JsonMethod == method);
                 if (trigger == null)
                     return false;
@@ -78,41 +78,72 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
-        public bool Authorize(AutomationViewModel m, Guid gid, ActionPermission permission, Type typeToCheck)
+        public bool Authorize(AutomationViewModel m, Guid? gid, ActionPermission permission, Type typeToCheck)
         {
             var contact = m.ProxyContactID ?? _users.ContactID;
             var application = m.ProxyApplicationID ?? _users.ApplicationID;
             //var company = m.ProxyCompanyID ?? _users.DefaultContactCompanyID;
-            var d = new NKDC(_users.ApplicationConnectionString, null);
-            var table = d.GetTableName(typeToCheck);
-            return _users.CheckPermission(new SecuredBasic
+            using (new TransactionScope(TransactionScopeOption.Suppress))
             {
-                AccessorApplicationID = application,
-                AccessorContactID = contact,
-                OwnerTableType = table
-            }, permission);
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var table = d.GetTableName(typeToCheck);
+                if (gid.HasValue)
+                {
+                    return _users.CheckPermission(new SecuredBasic
+                    {
+                        AccessorApplicationID = application,
+                        AccessorContactID = contact,
+                        OwnerTableType = table,
+                        OwnerReferenceID = gid.Value
+                    }, permission);
+                }
+                else
+                {
+                    return _users.CheckPermission(new SecuredBasic
+                    {
+                        AccessorApplicationID = application,
+                        AccessorContactID = contact,
+                        OwnerTableType = table
+                    }, permission);
+                }
+            }
         }
 
         public bool DoNext(AutomationViewModel m)
         {
-            //If no projectID, instantiate workflow - need graphdatagroupid
-            //m.PreviousStep.ActualGraphDataID
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                //If no projectID, instantiate workflow - need graphdatagroupid
+                if (!m.ProjectID.HasValue && !d.ProjectPlanTaskResponses.Any(f=>f.ProjectPlanTaskResponseID == m.PreviousStepID))
+                {
+                    if (Authorize(m, m.GraphDataGroupID, ActionPermission.Read, typeof(GraphDataGroup))
+                        && Authorize(m, null, ActionPermission.Create, typeof(ProjectPlanTaskResponse)))
+                    {
+                        d.ProjectPlanTaskResponses.AddObject(m.PreviousStep);
+                        d.SaveChanges();
+                        return true;
+                    }
+                    else return false;
+                }
+                //m.PreviousStep.ActualGraphDataID
 
-            //if final transition send 000000-0000-00000000
+                //if final transition send 000000-0000-00000000
 
-            //if step (response) & graphdataid go through graphdatarelationconditions for next transition            
+                //if step (response) & graphdataid go through graphdatarelationconditions for next transition            
 
-            //run trigger on out
+                //run trigger on out
 
-            //always create an event if successful or not
+                //always create an event if successful or not
 
-            //run trigger on in
+                //run trigger on in
 
-            //always create an event if successful or not
+                //always create an event if successful or not
 
-            //update response
+                //update response
 
-            return false;
+                return false;
+            }
         }
 
         public bool SendEmail()

@@ -1529,21 +1529,33 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
-        public bool CheckPermission(Guid gid, ActionPermission permission, Type typeToCheck)
+        public bool CheckPermission(Guid? gid, ActionPermission permission, Type typeToCheck)
         {
             var contact = _users.ContactID;
             if (contact == null)
                 contact = Guid.NewGuid();
             var application = _users.ApplicationID;
-            var company = _users.DefaultContactCompanyID;
             var d = new NKDC(_users.ApplicationConnectionString, null);
             var table = d.GetTableName(typeToCheck);
-            return _users.CheckPermission(new SecuredBasic
+            if (gid.HasValue)
             {
-                AccessorApplicationID = _users.ApplicationID,
-                AccessorContactID = _users.ContactID,
-                OwnerTableType = table
-            }, permission);
+                return _users.CheckPermission(new SecuredBasic
+                {
+                    AccessorApplicationID = application,
+                    AccessorContactID = contact,
+                    OwnerTableType = table,
+                    OwnerReferenceID = gid.Value
+                }, permission);
+            }
+            else
+            {
+                return _users.CheckPermission(new SecuredBasic
+                {
+                    AccessorApplicationID = application,
+                    AccessorContactID = contact,
+                    OwnerTableType = table
+                }, permission);
+            }
         }
 
         public bool CheckWorkflowPermission(Guid gid, ActionPermission permission)
@@ -2340,27 +2352,29 @@ namespace EXPEDIT.Flow.Services {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (!CheckPermission(sid.Value, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
-                        return null;
-                    ProjectPlanTaskResponse step = d.ProjectPlanTaskResponses.Where(f=>f.ProjectPlanTaskResponseID == sid).SingleOrDefault();
-                    var taskID = step.ActualTaskID ?? (step.ProjectPlanTaskID.HasValue ? step.ProjectPlanTask.TaskID ?? tid : tid);
-                    NKD.Module.BusinessObjects.Task task = new NKD.Module.BusinessObjects.Task { };
+                    Guid? taskID = null;
                     AutomationViewModel m;
+                    NKD.Module.BusinessObjects.Task task = new NKD.Module.BusinessObjects.Task { };
+                    ProjectPlanTaskResponse step = d.ProjectPlanTaskResponses.Where(f=>f.ProjectPlanTaskResponseID == sid).SingleOrDefault();
                     if (step != null)
                     {
-                        
+                        if (!CheckPermission(sid, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
+                            return null;
+                        taskID = step.ActualTaskID ?? (step.ProjectPlanTaskID.HasValue ? step.ProjectPlanTask.TaskID : null) ?? tid;
                         if (taskID.HasValue)
-                            task = d.Tasks.Where(f => f.TaskID == taskID).SingleOrDefault();
+                            task = d.Tasks.Where(f => f.TaskID == taskID).SingleOrDefault();                    
 
                     }
                     //New Step
-                    else 
+                    else
                     {
                         step = new ProjectPlanTaskResponse { ProjectPlanTaskResponseID = sid ?? Guid.NewGuid(), ProjectID = pid, ActualTaskID = taskID, ActualGraphDataGroupID = gid, ActualGraphDataID = nid };
                         task = new NKD.Module.BusinessObjects.Task { GraphDataID = nid, GraphDataGroupID = gid, TaskID = taskID ?? Guid.NewGuid() };
                         m = new AutomationViewModel { PreviousStep = step, PreviousTask = task };
-                        CreateStep(m);
-                        return m;
+                        if (CreateStep(m))
+                            return m;
+                        else
+                            return null;
                     }
                     m = new AutomationViewModel { PreviousStep = step, PreviousTask = task };
                     return m;

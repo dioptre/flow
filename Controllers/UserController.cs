@@ -813,7 +813,7 @@ namespace EXPEDIT.Flow.Controllers {
 
             if (result == null)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
-            return new JsonHelper.JsonNetResult(result, JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(new { steps = new object[] {result} }, JsonRequestBehavior.AllowGet);
         }
 
         //[Themed(false)]

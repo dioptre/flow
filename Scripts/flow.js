@@ -2283,7 +2283,7 @@ App.GraphController = Ember.ObjectController.extend({
 
     actions: {
         createWorkflowInstance: function() {
-            this.transitionTo('step', null, { queryParams: { workflowID: this.get('workflowID') } });
+            this.transitionTo('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
         },
         translateWorkflow: function(workflowID, selectedID){
             this.transitionTo('translate', workflowID, {queryParams: {selected: selectedID}});
@@ -3141,7 +3141,7 @@ App.StepRoute = Ember.Route.extend({
         }
         //console.log(params.id);
         return Ember.RSVP.hash({
-            graphData: this.store.findQuery('step', params.id)
+            graphData: this.store.findQuery('step', { id: params.id, workflowID: params.workflowID })
         });
     }
 });

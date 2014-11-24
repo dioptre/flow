@@ -28,7 +28,7 @@ namespace EXPEDIT.Flow.Services
         bool Authenticate(AutomationViewModel m, string method);
 
         [OperationContract]
-        bool Authorize(AutomationViewModel m, Guid gid, ActionPermission permission, Type typeToCheck);
+        bool Authorize(AutomationViewModel m, Guid? gid, ActionPermission permission, Type typeToCheck);
 
     }
 }
