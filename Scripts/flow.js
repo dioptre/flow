@@ -114,6 +114,26 @@ App.setTitle = function(title) { // little utilitiy function, pretty useless atm
    document.title = title;
 };
 
+App.StyleguideRoute = Ember.Route.extend({
+    model: function(){
+        return {
+            countries: [
+              { label: 'Canada', value: 1 },
+              { label: 'United Sates', value: 2 },
+              { label: 'Mexico', value: 3 }
+            ]
+        }
+    },
+    actions: {
+        toggleFirstModal: function() {
+          this.toggleProperty('controller.showFirstModal');
+        },
+        firstModalCancel: function() {
+          console.log('You pressed ESC to close the first modal');
+        }
+    }
+});
+
 App.ErrorpageRoute = Ember.Route.extend({
     model: function(){
         return {currentpage: location.href}
@@ -4139,8 +4159,8 @@ App.TinymceEditorComponent = Ember.Component.extend({
         //});
 
         // Setup plugins and toolbar
-        config.plugins = ["locationpicker myfilepicker code link noneditable myformeditor myworkflow"];
-        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | code link | locationpicker myfilepicker myformeditor myworkflow"];
+        config.plugins = ["locationpicker myfilepicker code link noneditable myformeditor myliveformeditor myworkflow"];
+        config.toolbar = ["undo redo | styleselect | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | code link | locationpicker myfilepicker myformeditor myworkflow myliveformeditor"];
         config.schema = "html5";
         config.menubar = false;
         config.valid_elements = "*[*]";
