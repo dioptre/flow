@@ -273,8 +273,8 @@
 
 <!-- the form stuff (doesn't belong here I knowww) -->
 
-<script type="text/x-handlebars" id="task">
-    task
+<script type="text/x-handlebars" id="step">
+    hi
 </script>
 
 <script type="text/x-handlebars" id="permission">
@@ -1025,7 +1025,7 @@
                         <span {{action 'translateWorkflow' workflowID selectedID}} class='btn-flat gray' title="Translate Workflow">
                             <i class="icon-globe"></i> {{!--Edit Workflow name--}}
                         </span>
-                        <span {{action 'createWFinstance' workflowID }} class='btn-flat gray' title="Create WF instance">
+                        <span {{action 'createWorkflowInstance' workflowID }} class='btn-flat gray' title="Create WF instance">
                             <i class="icon-play"></i> {{!--Edit Workflow name--}}
                         </span>
                     {{/if}}

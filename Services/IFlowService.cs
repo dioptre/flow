@@ -128,5 +128,18 @@ namespace EXPEDIT.Flow.Services
         [OperationContract]
         bool CreateLocale(LocaleViewModel m);
 
+
+        [OperationContract]
+        AutomationViewModel GetStep(Guid? sid, Guid? pid, Guid? tid, Guid? nid, Guid? gid, bool includeContent = false, bool includeDisconnected = false, bool monitor = true);
+
+        [OperationContract]
+        bool CreateStep(AutomationViewModel flow);
+
+        [OperationContract]
+        bool UpdateStep(AutomationViewModel flow);
+
+        [OperationContract]
+        bool DeleteStep(Guid stepID);
+
     }
 }
