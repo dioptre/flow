@@ -2369,7 +2369,8 @@ namespace EXPEDIT.Flow.Services {
                     else
                     {
                         step = new ProjectPlanTaskResponse { ProjectPlanTaskResponseID = sid ?? Guid.NewGuid(), ProjectID = pid, ActualTaskID = taskID, ActualGraphDataGroupID = gid, ActualGraphDataID = nid };
-                        task = new NKD.Module.BusinessObjects.Task { GraphDataID = nid, GraphDataGroupID = gid, TaskID = taskID ?? Guid.NewGuid() };
+                        if (taskID.HasValue)
+                            task = new NKD.Module.BusinessObjects.Task { GraphDataID = nid, GraphDataGroupID = gid, TaskID = taskID.Value };
                         m = new AutomationViewModel { PreviousStep = step, PreviousTask = task };
                         if (CreateStep(m))
                             return m;

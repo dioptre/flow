@@ -14,40 +14,42 @@ namespace EXPEDIT.Flow.ViewModels
     [JsonObject]
     public class AutomationViewModel : FlowViewModel
     {
-        public new Guid? id { get { return _previousStep.ProjectPlanTaskResponseID; } }
-        public string TaskName { get { return _previousTask.TaskName; } }
-        public Guid? WorkTypeID { get { return _previousTask.WorkTypeID; } }
-        public Guid? WorkCompanyID { get { return _previousTask.WorkCompanyID; } }
-        public Guid? WorkContactID { get { return _previousTask.WorkContactID; } }
-        public Guid? GraphDataGroupID { get { return _previousTask.GraphDataGroupID; } }
-        public new Guid? GraphDataID { get { return _previousTask.GraphDataID; } }
-        public Guid? ProjectID { get { return _previousStep.ProjectID; } }
-        public Guid? ProjectPlanTaskID { get { return _previousStep.ProjectPlanTaskID; } }
-        public Guid? ResponsibleCompanyID { get { return _previousStep.ResponsibleCompanyID; } }
-        public Guid? ResponsibleContactID { get { return _previousStep.ResponsibleContactID; } }
-        public Guid? ActualTaskID { get { return _previousStep.ActualTaskID; } }
-        public Guid? ActualWorkTypeID { get { return _previousStep.ActualWorkTypeID; } }
-        public Guid? ActualGraphDataGroupID { get { return _previousStep.ActualGraphDataGroupID; } }
-        public Guid? ActualGraphDataID { get { return _previousStep.ActualGraphDataID; } }
-        public DateTime? Began { get { return _previousStep.Began; } }
-        public DateTime? Completed { get { return _previousStep.Completed; } }
-        public decimal? Hours { get { return _previousStep.Hours; } }
-        public decimal? EstimatedProRataUnits { get { return _previousStep.EstimatedProRataUnits; } }
-        public decimal? EstimatedProRataCost { get { return _previousStep.EstimatedProRataCost; } }
-        public decimal? EstimatedValue { get { return _previousStep.EstimatedValue; } }
-        public decimal? EstimatedDuration { get { return _previousTask.EstimatedDuration; } }
-        public Guid? EstimatedDurationUnitID { get { return _previousTask.EstimatedDurationUnitID; } }
-        public decimal? EstimatedLabourCosts { get { return _previousTask.EstimatedLabourCosts; } }
-        public decimal? EstimatedCapitalCosts { get { return _previousTask.EstimatedCapitalCosts; } }
-        public int DefaultPriority { get { return _previousTask.DefaultPriority; } }
-        public Guid? PerformanceMetricParameterID { get { return _previousStep.PerformanceMetricParameterID; } }
-        public decimal? PerformanceMetricQuantity { get { return _previousStep.PerformanceMetricQuantity; } }
-        public decimal? PerformanceMetricContributedPercent { get { return _previousStep.PerformanceMetricContributedPercent; } }
-        public decimal? ApprovedProRataUnits { get { return _previousStep.ApprovedProRataUnits; } }
-        public decimal? ApprovedProRataCost { get { return _previousStep.ApprovedProRataCost; } }
-        public DateTime? Approved { get { return _previousStep.Approved; } }
-        public Guid? ApprovedBy { get { return _previousStep.ApprovedBy; } }
-        public string Comments { get { return _previousStep.Comments; } }
+        public new Guid? id { get { return PreviousStep.ProjectPlanTaskResponseID; } }
+        public string TaskName { get { return PreviousTask.TaskName; } }
+        public Guid? WorkTypeID { get { return PreviousTask.WorkTypeID; } }
+        public Guid? WorkCompanyID { get { return PreviousTask.WorkCompanyID; } }
+        public Guid? WorkContactID { get { return PreviousTask.WorkContactID; } }
+        public Guid? GraphDataGroupID { get { return TaskID ?? PreviousStep.ActualGraphDataGroupID; } }
+        public new Guid? GraphDataID { get { return PreviousTask.GraphDataID ?? PreviousStep.ActualGraphDataID; } }
+        public Guid? ProjectID { get { return PreviousStep.ProjectID; } }
+        public Guid? ProjectPlanTaskID { get { return PreviousStep.ProjectPlanTaskID; } }
+        public Guid? ResponsibleCompanyID { get { return PreviousStep.ResponsibleCompanyID; } }
+        public Guid? ResponsibleContactID { get { return PreviousStep.ResponsibleContactID; } }
+        public Guid? ActualTaskID { get { return PreviousStep.ActualTaskID; } }
+        public Guid? ActualWorkTypeID { get { return PreviousStep.ActualWorkTypeID; } }
+        public Guid? ActualGraphDataGroupID { get { return PreviousStep.ActualGraphDataGroupID; } }
+        public Guid? ActualGraphDataID { get { return PreviousStep.ActualGraphDataID; } }
+        public DateTime? Began { get { return PreviousStep.Began; } }
+        public DateTime? Completed { get { return PreviousStep.Completed; } }
+        public decimal? Hours { get { return PreviousStep.Hours; } }
+        public decimal? EstimatedProRataUnits { get { return PreviousStep.EstimatedProRataUnits; } }
+        public decimal? EstimatedProRataCost { get { return PreviousStep.EstimatedProRataCost; } }
+        public decimal? EstimatedValue { get { return PreviousStep.EstimatedValue ?? PreviousTask.EstimatedValue; } }
+        public decimal? EstimatedDuration { get { return PreviousTask.EstimatedDuration; } }
+        public Guid? EstimatedDurationUnitID { get { return PreviousTask.EstimatedDurationUnitID; } }
+        public decimal? EstimatedLabourCosts { get { return PreviousTask.EstimatedLabourCosts; } }
+        public decimal? EstimatedCapitalCosts { get { return PreviousTask.EstimatedCapitalCosts; } }
+        public int DefaultPriority { get { return PreviousTask.DefaultPriority; } }
+        public Guid? PerformanceMetricParameterID { get { return PreviousStep.PerformanceMetricParameterID; } }
+        public decimal? PerformanceMetricQuantity { get { return PreviousStep.PerformanceMetricQuantity; } }
+        public decimal? PerformanceMetricContributedPercent { get { return PreviousStep.PerformanceMetricContributedPercent; } }
+        public decimal? ApprovedProRataUnits { get { return PreviousStep.ApprovedProRataUnits; } }
+        public decimal? ApprovedProRataCost { get { return PreviousStep.ApprovedProRataCost; } }
+        public DateTime? Approved { get { return PreviousStep.Approved; } }
+        public Guid? ApprovedBy { get { return PreviousStep.ApprovedBy; } }
+        public string Comments { get { return PreviousStep.Comments; } }
+
+        public Guid? TaskID { get { return (PreviousTask.TaskID == Guid.Empty) ? default(Guid?) : PreviousTask.TaskID; } }
 
 
         [JsonIgnore]

@@ -3374,6 +3374,13 @@ App.Step = App.Node.extend({
     NextStepID: DS.attr('string', { defaultValue: null })
 });
 
+App.Project = DS.Model.extend({
+    ProjectName: DS.attr('string', { defaultValue: null }),
+    ProjectCode: DS.attr('string', { defaultValue: null }),
+    ClientCompanyID: DS.attr('string', { defaultValue: null }),
+    ClientContactID: DS.attr('string', { defaultValue: null })
+});
+
 
 App.Edge = DS.Model.extend({
     from: DS.attr(),

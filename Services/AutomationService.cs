@@ -15,6 +15,8 @@ using System.Transactions;
 using NKD.Module.BusinessObjects;
 using NKD.Services;
 using NKD.Models;
+using NKD.Helpers;
+using EXPEDIT.Share.Helpers;
 
 namespace EXPEDIT.Flow.Services {
 
@@ -111,15 +113,71 @@ namespace EXPEDIT.Flow.Services {
 
         public bool DoNext(AutomationViewModel m)
         {
+            var contact = m.ProxyContactID ?? _users.ContactID;
+            var application = m.ProxyApplicationID ?? _users.ApplicationID;
+            var company = m.ProxyCompanyID ?? _users.DefaultContactCompanyID;
+            var now = DateTime.UtcNow;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
+                //if no stepid - lets make one
+                if (!m.PreviousStepID.HasValue)
+                    m.PreviousStep.ProjectPlanTaskResponseID = Guid.NewGuid();
                 //If no projectID, instantiate workflow - need graphdatagroupid
                 if (!m.ProjectID.HasValue && !d.ProjectPlanTaskResponses.Any(f=>f.ProjectPlanTaskResponseID == m.PreviousStepID))
                 {
+                    //We need workflowid
+                    if (!m.GraphDataGroupID.HasValue)
+                    {
+                        if (!m.TaskID.HasValue)
+                            return false;
+                        if (!m.PreviousTask.GraphDataGroupID.HasValue)                           
+                            m.PreviousTask = d.Tasks.Where(f => f.TaskID == m.TaskID.Value).Single();
+                        if (!m.GraphDataGroupID.HasValue)
+                            return false; //Can't work out wf
+                    }
+
+                    //Now let's check for start node
+                    if (!m.GraphDataID.HasValue || d.GraphDataRelation.Any(f=>f.ToGraphDataID == m.GraphDataID && f.GraphDataGroupID == m.GraphDataGroupID))
+                    {
+                        m.PreviousStep.ActualGraphDataID = (
+                                                            from o in d.GraphDataRelation.Where(f => f.GraphDataGroupID == m.GraphDataGroupID)
+                                                             join q in d.GraphDataRelation.Where(f=>f.GraphDataGroupID == m.GraphDataGroupID)
+                                                                on o.FromGraphDataID equals q.ToGraphDataID into oq
+                                                             from soq in oq.DefaultIfEmpty()                        
+                                                             where soq == null
+                                                             select o.FromGraphDataID
+                                                          ).FirstOrDefault();
+                        if (m.PreviousStep.ActualGraphDataID == null)
+                        {
+                            m.Error = "Couldn't identify distinct start in workflow.";
+                            return false;
+                        }
+                    }
+
                     if (Authorize(m, m.GraphDataGroupID, ActionPermission.Read, typeof(GraphDataGroup))
                         && Authorize(m, null, ActionPermission.Create, typeof(ProjectPlanTaskResponse)))
                     {
+                        m.PreviousStep.GraphDataGroup = d.GraphDataGroups.Where(f=>f.GraphDataGroupID == m.GraphDataGroupID).Single();
+                        m.PreviousStep.ProjectID = Guid.NewGuid();
+                        var project = new Project
+                        {
+                            ProjectID = m.PreviousStep.ProjectID.Value,
+                            ProjectName = string.Join("", string.Format("{0} @ {1}", string.Join("", string.Format("{0}", m.PreviousStep.GraphDataGroup.GraphDataGroupName).Take(28)), now.ToString("yyyy-MM-dd HH:mm:ss")).Take(50)),
+                            ProjectCode = string.Format("{0}-{1}", now.HexUnixTimestamp(), m.PreviousStep.ProjectID.Value.ToString().Substring(0, 4)),
+                            ProjectTypeID = ConstantsHelper.PROJECT_TYPE_FLOWPRO,
+                            VersionUpdatedBy = contact,
+                            VersionUpdated = now,
+                            VersionOwnerContactID = contact,
+                            VersionOwnerCompanyID = company,
+                            VersionAntecedentID = m.PreviousStepID
+                        };
+                        d.Projects.AddObject(project);
+                        m.PreviousStep.ResponsibleCompanyID = company;
+                        m.PreviousStep.ResponsibleContactID = contact;
+                        if (m.TaskID.HasValue)
+                            m.PreviousStep.ActualTaskID = m.TaskID;
+                        m.PreviousStep.Began = now;
                         d.ProjectPlanTaskResponses.AddObject(m.PreviousStep);
                         d.SaveChanges();
                         return true;
