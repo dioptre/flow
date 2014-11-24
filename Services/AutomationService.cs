@@ -69,7 +69,8 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                var trigger = d.Triggers.FirstOrDefault(f => f.JsonProxyApplicationID == applicationID && f.JsonUsername == m.Username && f.JsonPassword == hashString && f.JsonMethod == method);
+                var trigger = d.Triggers.FirstOrDefault(f => f.JsonProxyApplicationID == applicationID && f.JsonUsername == m.Username && f.JsonPassword == hashString && f.JsonMethod == method
+                    && f.VersionDeletedBy == null && f.Version == 0);
                 if (trigger == null)
                     return false;
                 m.ProxyApplicationID = applicationID;
@@ -124,25 +125,25 @@ namespace EXPEDIT.Flow.Services {
                 if (!m.PreviousStepID.HasValue)
                     m.PreviousStep.ProjectPlanTaskResponseID = Guid.NewGuid();
                 //If no projectID, instantiate workflow - need graphdatagroupid
-                if (!m.ProjectID.HasValue && !d.ProjectPlanTaskResponses.Any(f=>f.ProjectPlanTaskResponseID == m.PreviousStepID))
+                if (!m.ProjectID.HasValue && !d.ProjectPlanTaskResponses.Any(f => f.ProjectPlanTaskResponseID == m.PreviousStepID && f.VersionDeletedBy == null && f.Version == 0))
                 {
                     //We need workflowid
                     if (!m.GraphDataGroupID.HasValue)
                     {
                         if (!m.TaskID.HasValue)
                             return false;
-                        if (!m.PreviousTask.GraphDataGroupID.HasValue)                           
-                            m.PreviousTask = d.Tasks.Where(f => f.TaskID == m.TaskID.Value).Single();
+                        if (!m.PreviousTask.GraphDataGroupID.HasValue)
+                            m.PreviousTask = d.Tasks.Where(f => f.TaskID == m.TaskID.Value && f.VersionDeletedBy == null && f.Version == 0).Single();
                         if (!m.GraphDataGroupID.HasValue)
                             return false; //Can't work out wf
                     }
 
                     //Now let's check for start node
-                    if (!m.GraphDataID.HasValue || d.GraphDataRelation.Any(f=>f.ToGraphDataID == m.GraphDataID && f.GraphDataGroupID == m.GraphDataGroupID))
+                    if (!m.GraphDataID.HasValue || d.GraphDataRelation.Any(f => f.ToGraphDataID == m.GraphDataID && f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0))
                     {
                         m.PreviousStep.ActualGraphDataID = (
-                                                            from o in d.GraphDataRelation.Where(f => f.GraphDataGroupID == m.GraphDataGroupID)
-                                                             join q in d.GraphDataRelation.Where(f=>f.GraphDataGroupID == m.GraphDataGroupID)
+                                                            from o in d.GraphDataRelation.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
+                                                            join q in d.GraphDataRelation.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
                                                                 on o.FromGraphDataID equals q.ToGraphDataID into oq
                                                              from soq in oq.DefaultIfEmpty()                        
                                                              where soq == null
@@ -158,13 +159,13 @@ namespace EXPEDIT.Flow.Services {
                     if (Authorize(m, m.GraphDataGroupID, ActionPermission.Read, typeof(GraphDataGroup))
                         && Authorize(m, null, ActionPermission.Create, typeof(ProjectPlanTaskResponse)))
                     {
-                        m.PreviousStep.GraphDataGroup = d.GraphDataGroups.Where(f=>f.GraphDataGroupID == m.GraphDataGroupID).Single();
+                        m.PreviousStep.GraphDataGroup = d.GraphDataGroups.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0).Single();
                         m.PreviousStep.ProjectID = Guid.NewGuid();
                         var project = new Project
                         {
                             ProjectID = m.PreviousStep.ProjectID.Value,
                             ProjectName = string.Join("", string.Format("{0} @ {1}", string.Join("", string.Format("{0}", m.PreviousStep.GraphDataGroup.GraphDataGroupName).Take(28)), now.ToString("yyyy-MM-dd HH:mm:ss")).Take(50)),
-                            ProjectCode = string.Format("{0}-{1}", now.HexUnixTimestamp(), m.PreviousStep.ProjectID.Value.ToString().Substring(0, 4)),
+                            ProjectCode = string.Format("{0}-{1}", now.HexUnixTimestamp(), m.PreviousStep.ProjectID.Value.ToString().Substring(0, 4).ToUpperInvariant()),
                             ProjectTypeID = ConstantsHelper.PROJECT_TYPE_FLOWPRO,
                             VersionUpdatedBy = contact,
                             VersionUpdated = now,
@@ -173,8 +174,13 @@ namespace EXPEDIT.Flow.Services {
                             VersionAntecedentID = m.PreviousStepID
                         };
                         d.Projects.AddObject(project);
-                        m.PreviousStep.ResponsibleCompanyID = company;
-                        m.PreviousStep.ResponsibleContactID = contact;
+                        m.PreviousStep.ResponsibleCompanyID = m.PreviousTask.WorkCompanyID ?? company;
+                        m.PreviousStep.ResponsibleContactID = m.PreviousTask.WorkContactID ?? contact;
+                        m.PreviousStep.VersionUpdatedBy = contact;
+                        m.PreviousStep.VersionUpdated = now;
+                        m.PreviousStep.VersionOwnerContactID = contact;
+                        m.PreviousStep.VersionOwnerCompanyID = company;
+                        m.PreviousStep.VersionAntecedentID = m.PreviousStepID;
                         if (m.TaskID.HasValue)
                             m.PreviousStep.ActualTaskID = m.TaskID;
                         m.PreviousStep.Began = now;
