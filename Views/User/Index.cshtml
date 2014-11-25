@@ -2087,10 +2087,10 @@
                             <tr>
                                 <th class="col-md-3">
                                     <input type="checkbox">
-                                    Product
+                                    Case
                                 </th>
                                 <th class="col-md-3">
-                                    <span class="line"></span>Description
+                                    <span class="line"></span>Step
                                 </th>
                                 <th class="col-md-3">
                                     <span class="line"></span>Status
@@ -2098,84 +2098,27 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- row -->
-                            <tr class="first">
-                                <td>
-                                    <input type="checkbox">
-                                    <div class="img">
-                                        <img src="img/table-img.png" alt="pic" />
-                                    </div>
-                                    <a href="#" class="name">Generate Lorem </a>
-                                </td>
-                                <td class="description">
-                                    if you are going to use a passage of Lorem Ipsum.
-                                </td>
-                                <td>
-                                    <span class="label label-success">Active</span>
-                                    <ul class="actions">
-                                        <li><a href="#">Edit</a></li>
-                                        <li class="last"><a href="#">Delete</a></li>
-                                    </ul>
-                                </td>
-                            </tr>
-                            <!-- row -->
+                            {{#each steps}}
                             <tr>
                                 <td>
                                     <input type="checkbox">
                                     <div class="img">
                                         <img src="img/table-img.png" alt="pic" />
                                     </div>
-                                    <a href="#" class="name">Internet tend</a>
+                                    {{#link-to 'step' this.id}}{{this.projectCode}}{{/link-to}}
                                 </td>
                                 <td class="description">
-                                    There are many variations of passages.
+                                    &nbsp;{{this.humanName}}
                                 </td>
                                 <td>
+                                    {{this.VersionUpdated}} {{this.LastUpdatedBy}}
                                     <ul class="actions">
-                                        <li><a href="#">Edit</a></li>
-                                        <li class="last"><a href="#">Delete</a></li>
+                                        <li>{{#link-to 'step' this.id}}Checkout{{/link-to}}</li>
+                                        @*<li class="last"><a href="#">Delete</a></li>*@
                                     </ul>
                                 </td>
                             </tr>
-                            <!-- row -->
-                            <tr>
-                                <td>
-                                    <input type="checkbox">
-                                    <div class="img">
-                                        <img src="img/table-img.png" alt="pic" />
-                                    </div>
-                                    <a href="#" class="name">Generate Lorem </a>
-                                </td>
-                                <td class="description">
-                                    if you are going to use a passage of Lorem Ipsum.
-                                </td>
-                                <td>
-                                    <ul class="actions">
-                                        <li><a href="#">Edit</a></li>
-                                        <li class="last"><a href="#">Delete</a></li>
-                                    </ul>
-                                </td>
-                            </tr>
-                            <!-- row -->
-                            <tr>
-                                <td>
-                                    <input type="checkbox">
-                                    <div class="img">
-                                        <img src="img/table-img.png" alt="pic" />
-                                    </div>
-                                    <a href="#" class="name">Internet tend</a>
-                                </td>
-                                <td class="description">
-                                    There are many variations of passages.
-                                </td>
-                                <td>
-                                    <span class="label label-info">Standby</span>
-                                    <ul class="actions">
-                                        <li><a href="#">Edit</a></li>
-                                        <li class="last"><a href="#">Delete</a></li>
-                                    </ul>
-                                </td>
-                            </tr>
+                            {{/each}}
 
                         </tbody>
                     </table>

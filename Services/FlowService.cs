@@ -2344,6 +2344,67 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
+        public AutomationViewModel[] GetMySteps()
+        {
+            var contact = _users.ContactID;
+            var application = _users.ApplicationID;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                return (from o in d.E_SP_GetSteps(null, contact, application, null, null, null, null, null, null, null, null)
+                         select new AutomationViewModel
+                         {
+                             PreviousStep = new ProjectPlanTaskResponse
+                             {
+                                 ProjectPlanTaskResponseID = o.ProjectPlanTaskResponseID,
+                                 ProjectID = o.ProjectID,
+                                 ProjectPlanTaskID = o.ProjectPlanTaskID,
+                                 ResponsibleCompanyID = o.ResponsibleCompanyID,
+                                 ResponsibleContactID = o.ResponsibleContactID,
+                                 ActualTaskID = o.ActualTaskID,
+                                 ActualWorkTypeID = o.ActualWorkTypeID,
+                                 ActualGraphDataGroupID = o.ActualGraphDataGroupID,
+                                 ActualGraphDataID = o.ActualGraphDataID,
+                                 Began = o.Began,
+                                 Completed = o.Completed,
+                                 Hours = o.Hours,
+                                 EstimatedProRataUnits = o.EstimatedProRataUnits,
+                                 EstimatedProRataCost = o.EstimatedProRataCost,
+                                 EstimatedValue = o.EstimatedValue,
+                                 PerformanceMetricParameterID = o.PerformanceMetricParameterID,
+                                 PerformanceMetricQuantity = o.PerformanceMetricQuantity,
+                                 PerformanceMetricContributedPercent = o.PerformanceMetricContributedPercent,
+                                 ApprovedProRataUnits = o.ApprovedProRataUnits,
+                                 ApprovedProRataCost = o.ApprovedProRataCost,
+                                 Approved = o.Approved,
+                                 ApprovedBy = o.ApprovedBy,
+                                 Comments = o.Comments,
+                                 Version = o.Version,
+                                 VersionAntecedentID = o.VersionAntecedentID,
+                                 VersionCertainty = o.VersionCertainty,
+                                 VersionWorkflowInstanceID = o.VersionWorkflowInstanceID,
+                                 VersionUpdatedBy = o.VersionUpdatedBy,
+                                 VersionDeletedBy = o.VersionDeletedBy,
+                                 VersionOwnerContactID = o.VersionOwnerContactID,
+                                 VersionOwnerCompanyID = o.VersionOwnerCompanyID,
+                                 VersionUpdated = o.VersionUpdated,
+
+                             },
+                             label = o.GraphName,
+                             Row = o.Row,
+                             TotalRows = o.TotalRows,
+                             Score = o.Score,
+                             ProjectName = o.ProjectName,
+                             ProjectCode = o.ProjectCode,
+                             GraphDataGroupName = o.GraphDataGroupName,
+                             GraphName = o.GraphName,
+                             GraphContent = o.GraphContent,
+                             LastEditedBy = o.LastEditedBy
+                         }
+                    ).ToArray();                        
+            }
+
+        }
 
         public AutomationViewModel GetStep(Guid? sid, Guid? pid, Guid? tid, Guid? nid, Guid? gid, bool includeContent = false, bool includeDisconnected = false, bool monitor = true)
         {
@@ -2355,15 +2416,15 @@ namespace EXPEDIT.Flow.Services {
                     Guid? taskID = null;
                     AutomationViewModel m;
                     NKD.Module.BusinessObjects.Task task = new NKD.Module.BusinessObjects.Task { };
-                    ProjectPlanTaskResponse step = d.ProjectPlanTaskResponses.Where(f=>f.ProjectPlanTaskResponseID == sid).SingleOrDefault();
+                    ProjectPlanTaskResponse step = d.ProjectPlanTaskResponses.Where(f => f.ProjectPlanTaskResponseID == sid && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
                     if (step != null)
                     {
                         if (!CheckPermission(sid, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
                             return null;
                         taskID = step.ActualTaskID ?? (step.ProjectPlanTaskID.HasValue ? step.ProjectPlanTask.TaskID : null) ?? tid;
                         if (taskID.HasValue)
-                            task = d.Tasks.Where(f => f.TaskID == taskID).SingleOrDefault();                    
-
+                            task = d.Tasks.Where(f => f.TaskID == taskID && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
+                        m = new AutomationViewModel { PreviousStep = step, PreviousTask = task, IncludeContent = includeContent };
                     }
                     //New Step
                     else
@@ -2371,13 +2432,17 @@ namespace EXPEDIT.Flow.Services {
                         step = new ProjectPlanTaskResponse { ProjectPlanTaskResponseID = sid ?? Guid.NewGuid(), ProjectID = pid, ActualTaskID = taskID, ActualGraphDataGroupID = gid, ActualGraphDataID = nid };
                         if (taskID.HasValue)
                             task = new NKD.Module.BusinessObjects.Task { GraphDataID = nid, GraphDataGroupID = gid, TaskID = taskID.Value };
-                        m = new AutomationViewModel { PreviousStep = step, PreviousTask = task };
-                        if (CreateStep(m))
-                            return m;
-                        else
+                        m = new AutomationViewModel { PreviousStep = step, PreviousTask = task, IncludeContent = includeContent };
+                        if (!CreateStep(m))
                             return null;
                     }
-                    m = new AutomationViewModel { PreviousStep = step, PreviousTask = task };
+                    if (m.IncludeContent ?? false)
+                    {
+                        var g = (from o in d.GraphData.Where(f => f.GraphDataID == m.GraphDataID && f.Version == 0 && f.VersionDeletedBy == null)
+                                 select new { o.GraphContent, o.GraphName }).SingleOrDefault();
+                        m.label = g.GraphName;
+                        m.content = g.GraphContent;
+                    }
                     return m;
                 }
 
@@ -2424,6 +2489,88 @@ namespace EXPEDIT.Flow.Services {
 
         public bool DeleteStep(Guid stepID) { return false; }
 
+
+
+        public ProjectViewModel GetProject(Guid pid)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(pid, ActionPermission.Read, typeof(Project)))
+                        return null;
+                    var m = (from o in d.Projects.Where(f => f.ProjectID == pid && f.Version == 0 && f.VersionDeletedBy == null)
+                             select new ProjectViewModel
+                             {
+                                 id = o.ProjectID,
+                                 ProjectCode = o.ProjectCode,
+                                 ProjectName = o.ProjectName,
+                                 ClientCompanyID = o.ClientCompanyID,
+                                 ClientContactID = o.ClientContactID
+                             }).Single();
+                    m.ProjectData = (from o in d.ProjectDatas.Where(f=>f.ProjectID == pid && f.Version == 0 && f.VersionDeletedBy == null) select o.ProjectDataID).ToArray();
+
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        public ProjectDataViewModel[] GetProjectData(Guid[] pdids)
+        {
+            if (pdids == null || pdids.Length == 0)
+                return new ProjectDataViewModel[] { };
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var pdid = pdids[0];
+                    var pid = d.ProjectDatas.Single(g=> g.ProjectDataID == pdid && g.Version == 0 && g.VersionDeletedBy == null).ProjectID;
+                    if (pid == null || !CheckPermission(pid, ActionPermission.Read, typeof(Project)))
+                        return null;
+                    var m = (from o in d.ProjectDatas.Where(f=> f.VersionDeletedBy == null  && f.Version == 0 
+                        && f.ProjectID ==  pid)
+                             join p in d.ProjectDataTemplates.Where(h=> h.Version == 0 && h.VersionDeletedBy == null)
+                             on o.ProjectDataTemplateID equals p.ProjectDataTemplateID into tp
+                             from t in tp.DefaultIfEmpty()
+                             select new ProjectDataViewModel
+                             {
+                                id = o.ProjectDataID,
+                                CommonName = t.CommonName,
+                                UniqueID = t.UniqueID ,
+                                UniqueIDSystemDataType = t.UniqueIDSystemDataType ,
+                                TemplateStructure = t.TemplateStructure ,
+                                TemplateStructureChecksum = t.TemplateStructureChecksum ,
+                                TemplateActions = t.TemplateActions ,
+                                TemplateType = t.TemplateType ,
+                                TemplateMulti = t.TemplateMulti ,
+                                TemplateSingle = t.TemplateSingle ,
+                                TableType = t.TableType ,
+                                ReferenceID = t.ReferenceID  ,
+                                UserDataType = t.UserDataType ,
+                                SystemDataType = t.SystemDataType ,
+                                IsReadOnly = t.IsReadOnly ,
+                                IsVisible = t.IsVisible ,
+                                ProjectDataTemplateID = o.ProjectDataTemplateID ,
+                                ProjectID = o.ProjectID ,
+                                ProjectPlanTaskResponseID = o.ProjectPlanTaskResponseID ,
+                                Value = o.Value  
+                             }).ToArray();                    
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
 
 
     }

@@ -112,6 +112,8 @@
     <Reference Include="System">
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Activities" />
+    <Reference Include="System.Activities.DurableInstancing" />
     <Reference Include="System.Data">
       <Private>True</Private>
     </Reference>
@@ -129,9 +131,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.DurableInstancing" />
     <Reference Include="System.ServiceModel">
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.ServiceModel.Activities" />
     <Reference Include="System.Transactions">
       <Private>True</Private>
     </Reference>
@@ -160,6 +164,7 @@
     <Reference Include="System.Web.Routing">
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml">
       <Private>True</Private>
     </Reference>
@@ -1277,6 +1282,10 @@
       <Project>{380151d5-c92f-404a-8b89-b788f574d228}</Project>
       <Name>NKD.Module.BusinessObjects</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\NKD.Workflow\NKD.Workflow.csproj">
+      <Project>{233623a5-0ca3-45cd-801f-daea668200ad}</Project>
+      <Name>NKD.Workflow</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Orchard\Orchard.Framework.csproj">
       <Project>{2D1D92BB-4555-4CBE-8D0E-63563D6CE4C6}</Project>
       <Name>Orchard.Framework</Name>
@@ -1321,7 +1330,11 @@
     <Compile Include="Services\IAutomationService.cs" />
     <Compile Include="Services\IFlowService.cs" />
     <Compile Include="Services\FlowService.cs" />
+    <Compile Include="Services\IMetadataWorkflowService.cs" />
+    <Compile Include="Services\MetadataWorkflowService.cs" />
     <Compile Include="Services\XmlRpcHandler.cs" />
+    <Compile Include="ViewModels\ProjectDataViewModel.cs" />
+    <Compile Include="ViewModels\ProjectViewModel.cs" />
     <Compile Include="ViewModels\AutomationViewModel.cs" />
     <Compile Include="ViewModels\LocaleViewModel.cs" />
     <Compile Include="ViewModels\TranslationViewModel.cs" />

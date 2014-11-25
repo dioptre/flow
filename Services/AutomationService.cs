@@ -25,14 +25,17 @@ namespace EXPEDIT.Flow.Services {
     {
         private readonly IOrchardServices _services;
         private readonly IUsersService _users;
+        private readonly IMetadataWorkflowService _metadata;
 
         public AutomationService(
             IOrchardServices orchardServices,
-            IUsersService users
+            IUsersService users,
+            IMetadataWorkflowService metadata
             )
         {
             _users = users;
             _services = orchardServices;
+            _metadata = metadata;
 
         }
 
@@ -114,6 +117,10 @@ namespace EXPEDIT.Flow.Services {
 
         public bool DoNext(AutomationViewModel m)
         {
+            //var l = new Dictionary<string,object>();
+            //l.Add("RecordState", "Open");
+            //var guid = _metadata.AssignMetadata(null, l);
+            //_metadata.GetMetadata<string>(guid, "RecordState");
             var contact = m.ProxyContactID ?? _users.ContactID;
             var application = m.ProxyApplicationID ?? _users.ApplicationID;
             var company = m.ProxyCompanyID ?? _users.DefaultContactCompanyID;
@@ -131,11 +138,17 @@ namespace EXPEDIT.Flow.Services {
                     if (!m.GraphDataGroupID.HasValue)
                     {
                         if (!m.TaskID.HasValue)
+                        {
+                            m.Error = "Couldn't determine task workflow.";
                             return false;
+                        }
                         if (!m.PreviousTask.GraphDataGroupID.HasValue)
                             m.PreviousTask = d.Tasks.Where(f => f.TaskID == m.TaskID.Value && f.VersionDeletedBy == null && f.Version == 0).Single();
                         if (!m.GraphDataGroupID.HasValue)
-                            return false; //Can't work out wf
+                        {
+                            m.Error = "Couldn't determine workflow.";
+                            return false;
+                        }
                     }
 
                     //Now let's check for start node
@@ -186,10 +199,16 @@ namespace EXPEDIT.Flow.Services {
                         m.PreviousStep.Began = now;
                         d.ProjectPlanTaskResponses.AddObject(m.PreviousStep);
                         d.SaveChanges();
+                        //TODO: Should checkout
                         return true;
                     }
-                    else return false;
+                    else
+                    {
+                        m.Error = "Unauthorized access";
+                        return false;
+                    }
                 }
+                //TODO: Prob should check whether its checked out
                 //m.PreviousStep.ActualGraphDataID
 
                 //if final transition send 000000-0000-00000000

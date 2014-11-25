@@ -3789,7 +3789,7 @@ App.StepRoute = Ember.Route.extend({
         }
         //console.log(params.id);
         return Ember.RSVP.hash({
-            graphData: this.store.findQuery('step', { id: params.id, workflowID: params.workflowID })
+            steps: this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true })
         });
     }
 });
@@ -3804,6 +3804,19 @@ App.StepController = Ember.ObjectController.extend({
 });
 
 
+App.TodoRoute = Ember.Route.extend({
+    model: function (params, data) {
+        return Ember.RSVP.hash({
+            steps: this.store.findQuery('step')
+        });
+    },
+    afterModel: function (model) {
+        //debugger;
+    }
+
+});
+
+App.TodoController = Ember.ObjectController.extend({});
 
 
 DS.RESTAdapter.reopen({
@@ -3988,50 +4001,89 @@ App.Node = DS.Model.extend({
 
 
 App.Step = App.Node.extend({
-    TaskName: DS.attr('string', { defaultValue: null }),
-    WorkTypeID: DS.attr('string', { defaultValue: null }),
-    WorkCompanyID: DS.attr('string', { defaultValue: null }),
-    WorkContactID: DS.attr('string', { defaultValue: null }),
-    GraphDataGroupID: DS.attr('string', { defaultValue: null }),
-    GraphDataID: DS.attr('string', { defaultValue: null }),
-    ProjectID: DS.attr('string', { defaultValue: null }),
-    ProjectPlanTaskID: DS.attr('string', { defaultValue: null }),
-    ResponsibleCompanyID: DS.attr('string', { defaultValue: null }),
-    ResponsibleContactID: DS.attr('string', { defaultValue: null }),
-    ActualTaskID: DS.attr('string', { defaultValue: null }),
-    ActualWorkTypeID: DS.attr('string', { defaultValue: null }),
-    ActualGraphDataGroupID: DS.attr('string', { defaultValue: null }),
-    ActualGraphDataID: DS.attr('string', { defaultValue: null }),
-    Began: DS.attr('string', { defaultValue: null }),
-    Completed: DS.attr('string', { defaultValue: null }),
-    Hours: DS.attr('string', { defaultValue: null }),
-    EstimatedProRataUnits: DS.attr('string', { defaultValue: null }),
-    EstimatedProRataCost: DS.attr('string', { defaultValue: null }),
-    EstimatedValue: DS.attr('string', { defaultValue: null }),
-    EstimatedDuration: DS.attr('string', { defaultValue: null }),
+    TaskName: DS.attr('string'),
+    WorkTypeID: DS.attr('string'),
+    WorkCompanyID: DS.attr('string'),
+    WorkContactID: DS.attr('string'),
+    GraphDataGroupID: DS.attr('string'),
+    GraphDataID: DS.attr('string'),
+    ProjectID: DS.attr('string'),
+    ProjectPlanTaskID: DS.attr('string'),
+    ResponsibleCompanyID: DS.attr('string'),
+    ResponsibleContactID: DS.attr('string'),
+    ActualTaskID: DS.attr('string'),
+    ActualWorkTypeID: DS.attr('string'),
+    ActualGraphDataGroupID: DS.attr('string'),
+    ActualGraphDataID: DS.attr('string'),
+    Began: DS.attr('string'),
+    Completed: DS.attr('string'),
+    Hours: DS.attr('string'),
+    EstimatedProRataUnits: DS.attr('string'),
+    EstimatedProRataCost: DS.attr('string'),
+    EstimatedValue: DS.attr('string'),
+    EstimatedDuration: DS.attr('string'),
     EstimatedDurationUnitID: DS.attr('string', { defaultValue: '0D542D4C-DACE-4702-83B0-3C9BA85D4183' }), //hours
-    EstimatedLabourCosts: DS.attr('string', { defaultValue: null }),
-    EstimatedCapitalCosts: DS.attr('string', { defaultValue: null }),
-    DefaultPriority: DS.attr('string', { defaultValue: null }),
-    PerformanceMetricParameterID: DS.attr('string', { defaultValue: null }),
-    PerformanceMetricQuantity: DS.attr('string', { defaultValue: null }),
-    PerformanceMetricContributedPercent: DS.attr('string', { defaultValue: null }),
-    ApprovedProRataUnits: DS.attr('string', { defaultValue: null }),
-    ApprovedProRataCost: DS.attr('string', { defaultValue: null }),
-    Approved: DS.attr('string', { defaultValue: null }),
-    ApprovedBy: DS.attr('string', { defaultValue: null }),
-    Comments: DS.attr('string', { defaultValue: null }),
-    PreviousStepID: DS.attr('string', { defaultValue: null }),
-    NextStepID: DS.attr('string', { defaultValue: null })
+    EstimatedLabourCosts: DS.attr('string'),
+    EstimatedCapitalCosts: DS.attr('string'),
+    DefaultPriority: DS.attr('string'),
+    PerformanceMetricParameterID: DS.attr('string'),
+    PerformanceMetricQuantity: DS.attr('string'),
+    PerformanceMetricContributedPercent: DS.attr('string'),
+    ApprovedProRataUnits: DS.attr('string'),
+    ApprovedProRataCost: DS.attr('string'),
+    Approved: DS.attr('string'),
+    ApprovedBy: DS.attr('string'),
+    Comments: DS.attr('string'),
+    PreviousStepID: DS.attr('string'),
+    NextStepID: DS.attr('string'),
+    Project: DS.belongsTo('project', { async: true }),
+    Row :  DS.attr('string'),
+    TotalRows :  DS.attr('string'),
+    Score :  DS.attr('string'),
+    ProjectName :  DS.attr('string'),
+    ProjectCode :  DS.attr('string'),
+    GraphDataGroupName :  DS.attr('string'),
+    GraphName :  DS.attr('string'),
+    GraphContent :  DS.attr('string'),
+    LastEditedBy: DS.attr('string'),
+    projectCode: function () {
+        return this.get('ProjectCode');
+    }.property('ProjectCode')
 });
 
 App.Project = DS.Model.extend({
     ProjectName: DS.attr('string', { defaultValue: null }),
     ProjectCode: DS.attr('string', { defaultValue: null }),
     ClientCompanyID: DS.attr('string', { defaultValue: null }),
-    ClientContactID: DS.attr('string', { defaultValue: null })
+    ClientContactID: DS.attr('string', { defaultValue: null }),
+    ProjectData: DS.hasMany('projectDatum', { async: true }),
+    Steps: DS.hasMany('step', { async: true }),
 });
 
+App.ProjectDatum = DS.Model.extend({
+    Label: '',
+    Options: null,
+    Type: 'text',
+    CommonName: DS.attr('string', { defaultValue: null }),
+    UniqueID: DS.attr('string', { defaultValue: null }),
+    UniqueIDSystemDataType: DS.attr('string', { defaultValue: null }),
+    TemplateStructure: DS.attr('string', { defaultValue: null }),
+    TemplateStructureChecksum: DS.attr('string', { defaultValue: null }),
+    TemplateActions: DS.attr('string', { defaultValue: null }),
+    TemplateType: DS.attr('string', { defaultValue: null }),
+    TemplateMulti: DS.attr('string', { defaultValue: null }),
+    TemplateSingle: DS.attr('string', { defaultValue: null }),
+    TableType: DS.attr('string', { defaultValue: null }),
+    ReferenceID: DS.attr('string', { defaultValue: null }),
+    UserDataType: DS.attr('string', { defaultValue: null }),
+    SystemDataType: DS.attr('string', { defaultValue: null }),
+    IsReadOnly: DS.attr('string', { defaultValue: null }),
+    IsVisible: DS.attr('string', { defaultValue: null }),
+    ProjectDataTemplateID: DS.attr('string', { defaultValue: null }),
+    ProjectID: DS.attr('string', { defaultValue: null }),
+    ProjectPlanTaskResponseID: DS.attr('string', { defaultValue: null }),
+    Value: DS.attr('string', { defaultValue: null })
+})
 
 App.Edge = DS.Model.extend({
     from: DS.attr(),
@@ -4287,16 +4339,7 @@ App.Locale = DS.Model.extend({
     VersionUpdated: DS.attr('') // version number
 });
 
-App.Project = DS.Model.extend({
-    ProjectName: DS.attr(''),
-    ProjectCode: DS.attr(''),
-    ProjectDatas: DS.hasMany('ProjectData'),
-})
 
-App.ProjectData = DS.Model.extend({
-    Project: DS.belongsTo('Project'),
-    Value: DS.attr(''),
-})
 
 App.Wikipedia = DS.Model.extend({
     label: DS.attr('string'),
