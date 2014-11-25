@@ -53,6 +53,8 @@ namespace EXPEDIT.Flow.ViewModels
 
         public bool? IncludeContent { get; set; }
 
+        public Guid? Project { get { return ProjectID; } }
+
         [JsonIgnore]
         private Task _previousTask = null;
         [JsonIgnore]

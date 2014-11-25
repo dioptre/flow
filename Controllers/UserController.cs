@@ -823,60 +823,41 @@ namespace EXPEDIT.Flow.Controllers {
             return new JsonHelper.JsonNetResult(new { steps = new object[] {result} }, JsonRequestBehavior.AllowGet);
         }
 
-        //[Themed(false)]
-        //[HttpPost]
-        //[ActionName("Steps")]
-        //public ActionResult CreateStep(FlowViewModel m)
-        //{
-        //    //if (!User.Identity.IsAuthenticated)
-        //    //    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
-        //    if (m.step != null)
-        //    {
-        //        if (m.GraphDataID.HasValue)
-        //            m.step.GraphDataID = m.GraphDataID;
-        //        m = m.step;
-        //    }
-        //    if (_Flow.CreateStep(m))
-        //        return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
-        //    else
-        //        return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
-        //}
 
-        //[Themed(false)]
-        //[HttpPut]
-        //[ActionName("Steps")]
-        //public ActionResult UpdateStep(FlowViewModel m)
-        //{
-        //    //if (!User.Identity.IsAuthenticated)
-        //    //    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
-        //    if (m.step != null)
-        //    {
-        //        if (m.GraphDataID.HasValue)
-        //            m.step.GraphDataID = m.GraphDataID;
-        //        m = m.step;
-        //    }
-        //    if (_Flow.UpdateStep(m))
-        //        return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
-        //    else
-        //        return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
-        //}
 
-        //[Themed(false)]
-        //[HttpDelete]
-        //[ActionName("Steps")]
-        //public ActionResult DeleteStep(FlowViewModel m)
-        //{
-        //    //if (!User.Identity.IsAuthenticated)
-        //    //    return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
-        //    if (m.step != null && m.step.id != null)
-        //        m = m.step;
-        //    if (!m.GraphDataID.HasValue)
-        //        return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
-        //    if (_Flow.UnlinkStep(m.GraphDataID.Value, m.workflows.FirstOrDefault()))
-        //        return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
-        //    else
-        //        return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
-        //}
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("Projects")]
+        public ActionResult GetProject(string id)
+        {
+            var result = _Flow.GetProject(Guid.Parse(id));
+
+            if (result == null)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+            return new JsonHelper.JsonNetResult(new { projects = new object[] { result } }, JsonRequestBehavior.AllowGet);
+        }
+
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("ProjectData")]
+        public ActionResult GetProjectData(string id)
+        {
+            var ids = Request.Params["ids[]"];
+            ProjectDataViewModel[] result = new ProjectDataViewModel[] {};
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                result = _Flow.GetProjectData(new Guid[] {Guid.Parse(id)});
+
+            } else if (!string.IsNullOrWhiteSpace(ids))
+            {
+               result = _Flow.GetProjectData((from o in ids.Split(',') select Guid.Parse(o)).ToArray());
+            }
+
+            if (result == null)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+            return new JsonHelper.JsonNetResult(new { projectData = result }, JsonRequestBehavior.AllowGet);
+        }
 
     }
 }

@@ -2430,5 +2430,87 @@ namespace EXPEDIT.Flow.Services {
 
 
 
+        public ProjectViewModel GetProject(Guid pid)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(pid, ActionPermission.Read, typeof(Project)))
+                        return null;
+                    var m = (from o in d.Projects.Where(f => f.ProjectID == pid && f.Version == 0 && f.VersionDeletedBy == null)
+                             select new ProjectViewModel
+                             {
+                                 id = o.ProjectID,
+                                 ProjectCode = o.ProjectCode,
+                                 ProjectName = o.ProjectName,
+                                 ClientCompanyID = o.ClientCompanyID,
+                                 ClientContactID = o.ClientContactID
+                             }).Single();
+                    m.ProjectData = (from o in d.ProjectDatas.Where(f=>f.ProjectID == pid && f.Version == 0 && f.VersionDeletedBy == null) select o.ProjectDataID).ToArray();
+
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        public ProjectDataViewModel[] GetProjectData(Guid[] pdids)
+        {
+            if (pdids == null || pdids.Length == 0)
+                return new ProjectDataViewModel[] { };
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var pdid = pdids[0];
+                    var pid = d.ProjectDatas.Single(g=> g.ProjectDataID == pdid && g.Version == 0 && g.VersionDeletedBy == null).ProjectID;
+                    if (pid == null || !CheckPermission(pid, ActionPermission.Read, typeof(Project)))
+                        return null;
+                    var m = (from o in d.ProjectDatas.Where(f=> f.VersionDeletedBy == null  && f.Version == 0 
+                        && f.ProjectID ==  pid)
+                             join p in d.ProjectDataTemplates.Where(h=> h.Version == 0 && h.VersionDeletedBy == null)
+                             on o.ProjectDataTemplateID equals p.ProjectDataTemplateID into tp
+                             from t in tp.DefaultIfEmpty()
+                             select new ProjectDataViewModel
+                             {
+                                id = o.ProjectDataID,
+                                CommonName = t.CommonName,
+                                UniqueID = t.UniqueID ,
+                                UniqueIDSystemDataType = t.UniqueIDSystemDataType ,
+                                TemplateStructure = t.TemplateStructure ,
+                                TemplateStructureChecksum = t.TemplateStructureChecksum ,
+                                TemplateActions = t.TemplateActions ,
+                                TemplateType = t.TemplateType ,
+                                TemplateMulti = t.TemplateMulti ,
+                                TemplateSingle = t.TemplateSingle ,
+                                TableType = t.TableType ,
+                                ReferenceID = t.ReferenceID  ,
+                                UserDataType = t.UserDataType ,
+                                SystemDataType = t.SystemDataType ,
+                                IsReadOnly = t.IsReadOnly ,
+                                IsVisible = t.IsVisible ,
+                                ProjectDataTemplateID = o.ProjectDataTemplateID ,
+                                ProjectID = o.ProjectID ,
+                                ProjectPlanTaskResponseID = o.ProjectPlanTaskResponseID ,
+                                Value = o.Value  
+                             }).ToArray();                    
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
     }
 }

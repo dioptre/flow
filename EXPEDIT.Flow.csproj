@@ -1333,6 +1333,8 @@
     <Compile Include="Services\IMetadataWorkflowService.cs" />
     <Compile Include="Services\MetadataWorkflowService.cs" />
     <Compile Include="Services\XmlRpcHandler.cs" />
+    <Compile Include="ViewModels\ProjectDataViewModel.cs" />
+    <Compile Include="ViewModels\ProjectViewModel.cs" />
     <Compile Include="ViewModels\AutomationViewModel.cs" />
     <Compile Include="ViewModels\LocaleViewModel.cs" />
     <Compile Include="ViewModels\TranslationViewModel.cs" />

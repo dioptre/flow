@@ -3123,13 +3123,6 @@ App.VizEditorComponent = Ember.Component.extend({
     }
 });
 
-App.ProjectData = DS.Model.extend({
-    Label: '',
-    Options: null,
-    Type: 'text',
-    Value: DS.attr('string')
-});
-
 App.StepRoute = Ember.Route.extend({
     queryParams: {
         workflowID: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
@@ -3371,16 +3364,43 @@ App.Step = App.Node.extend({
     ApprovedBy: DS.attr('string', { defaultValue: null }),
     Comments: DS.attr('string', { defaultValue: null }),
     PreviousStepID: DS.attr('string', { defaultValue: null }),
-    NextStepID: DS.attr('string', { defaultValue: null })
+    NextStepID: DS.attr('string', { defaultValue: null }),
+    Project: DS.belongsTo('project', { async: true })
 });
 
 App.Project = DS.Model.extend({
     ProjectName: DS.attr('string', { defaultValue: null }),
     ProjectCode: DS.attr('string', { defaultValue: null }),
     ClientCompanyID: DS.attr('string', { defaultValue: null }),
-    ClientContactID: DS.attr('string', { defaultValue: null })
+    ClientContactID: DS.attr('string', { defaultValue: null }),
+    ProjectData: DS.hasMany('projectDatum', { async: true }),
+    Steps: DS.hasMany('step', { async: true }),
 });
 
+App.ProjectDatum = DS.Model.extend({
+    Label: '',
+    Options: null,
+    Type: 'text',
+    CommonName: DS.attr('string', { defaultValue: null }),
+    UniqueID: DS.attr('string', { defaultValue: null }),
+    UniqueIDSystemDataType: DS.attr('string', { defaultValue: null }),
+    TemplateStructure: DS.attr('string', { defaultValue: null }),
+    TemplateStructureChecksum: DS.attr('string', { defaultValue: null }),
+    TemplateActions: DS.attr('string', { defaultValue: null }),
+    TemplateType: DS.attr('string', { defaultValue: null }),
+    TemplateMulti: DS.attr('string', { defaultValue: null }),
+    TemplateSingle: DS.attr('string', { defaultValue: null }),
+    TableType: DS.attr('string', { defaultValue: null }),
+    ReferenceID: DS.attr('string', { defaultValue: null }),
+    UserDataType: DS.attr('string', { defaultValue: null }),
+    SystemDataType: DS.attr('string', { defaultValue: null }),
+    IsReadOnly: DS.attr('string', { defaultValue: null }),
+    IsVisible: DS.attr('string', { defaultValue: null }),
+    ProjectDataTemplateID: DS.attr('string', { defaultValue: null }),
+    ProjectID: DS.attr('string', { defaultValue: null }),
+    ProjectPlanTaskResponseID: DS.attr('string', { defaultValue: null }),
+    Value: DS.attr('string', { defaultValue: null })
+})
 
 App.Edge = DS.Model.extend({
     from: DS.attr(),
@@ -3636,16 +3656,7 @@ App.Locale = DS.Model.extend({
     VersionUpdated: DS.attr('') // version number
 });
 
-App.Project = DS.Model.extend({
-    ProjectName: DS.attr(''),
-    ProjectCode: DS.attr(''),
-    ProjectDatas: DS.hasMany('ProjectData'),
-})
 
-App.ProjectData = DS.Model.extend({
-    Project: DS.belongsTo('Project'),
-    Value: DS.attr(''),
-})
 
 App.Wikipedia = DS.Model.extend({
     label: DS.attr('string'),

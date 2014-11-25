@@ -141,5 +141,13 @@ namespace EXPEDIT.Flow.Services
         [OperationContract]
         bool DeleteStep(Guid stepID);
 
+
+        [OperationContract]
+        ProjectViewModel GetProject(Guid pid);
+
+        [OperationContract]
+        ProjectDataViewModel[] GetProjectData(Guid[] pdid);
+
+
     }
 }
