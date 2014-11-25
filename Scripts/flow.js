@@ -3134,7 +3134,7 @@ App.StepRoute = Ember.Route.extend({
         }
         //console.log(params.id);
         return Ember.RSVP.hash({
-            graphData: this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true })
+            steps: this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true })
         });
     }
 });
@@ -3147,6 +3147,16 @@ App.StepController = Ember.ObjectController.extend({
     taskID: null
 });
 App.StepView = Ember.View.extend({});
+
+
+App.TodoRoute = Ember.Route.extend({
+    model: function (params, data) {
+        return Ember.RSVP.hash({
+            steps: this.store.findQuery('step')
+        });
+    }
+});
+
 
 DS.RESTAdapter.reopen({
     namespace: 'flow'
