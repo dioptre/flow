@@ -818,14 +818,13 @@ namespace EXPEDIT.Flow.Controllers {
             if (sid.HasValue || pid.HasValue || tid.HasValue || gid.HasValue)
             {
                 var result = _Flow.GetStep(sid, pid, tid, nid, gid, ic ?? sid.HasValue, false, false);
-
                 if (result == null)
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
                 return new JsonHelper.JsonNetResult(new { steps = new object[] { result } }, JsonRequestBehavior.AllowGet);
             }
             else
             {
-                return new JsonHelper.JsonNetResult(new { steps = new object[] {} }, JsonRequestBehavior.AllowGet);
+                return new JsonHelper.JsonNetResult(new { steps = _Flow.GetMySteps() }, JsonRequestBehavior.AllowGet);
             }
         }
 

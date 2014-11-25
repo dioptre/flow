@@ -55,6 +55,16 @@ namespace EXPEDIT.Flow.ViewModels
 
         public Guid? Project { get { return ProjectID; } }
 
+        public long? Row { get; set; }
+        public int? TotalRows { get; set; }
+        public int? Score { get; set; }
+        public string ProjectName { get; set; }
+        public string ProjectCode { get; set; }
+        public string GraphDataGroupName { get; set; }
+        public string GraphName { get { return label; } set { label = value; } }
+        public string GraphContent { get { return content; } set { content = value; } }
+        public string LastEditedBy { get; set; }
+
         [JsonIgnore]
         private Task _previousTask = null;
         [JsonIgnore]
@@ -166,7 +176,7 @@ namespace EXPEDIT.Flow.ViewModels
             get
             {
                 //dynamic task = JObject.Parse(new StreamReader(Request.InputStream).ReadToEnd());
-                if (_lookup == null)
+                if (_lookup == null && !string.IsNullOrWhiteSpace(JSON))
                     _lookup = JsonConvert.DeserializeObject<Dictionary<string, string>>(JSON);
                 if (_lookup == null)
                     _lookup = new Dictionary<string, string>();

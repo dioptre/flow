@@ -2344,6 +2344,67 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
+        public AutomationViewModel[] GetMySteps()
+        {
+            var contact = _users.ContactID;
+            var application = _users.ApplicationID;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                return (from o in d.E_SP_GetSteps(null, contact, application, null, null, null, null, null, null, null, null)
+                         select new AutomationViewModel
+                         {
+                             PreviousStep = new ProjectPlanTaskResponse
+                             {
+                                 ProjectPlanTaskResponseID = o.ProjectPlanTaskResponseID,
+                                 ProjectID = o.ProjectID,
+                                 ProjectPlanTaskID = o.ProjectPlanTaskID,
+                                 ResponsibleCompanyID = o.ResponsibleCompanyID,
+                                 ResponsibleContactID = o.ResponsibleContactID,
+                                 ActualTaskID = o.ActualTaskID,
+                                 ActualWorkTypeID = o.ActualWorkTypeID,
+                                 ActualGraphDataGroupID = o.ActualGraphDataGroupID,
+                                 ActualGraphDataID = o.ActualGraphDataID,
+                                 Began = o.Began,
+                                 Completed = o.Completed,
+                                 Hours = o.Hours,
+                                 EstimatedProRataUnits = o.EstimatedProRataUnits,
+                                 EstimatedProRataCost = o.EstimatedProRataCost,
+                                 EstimatedValue = o.EstimatedValue,
+                                 PerformanceMetricParameterID = o.PerformanceMetricParameterID,
+                                 PerformanceMetricQuantity = o.PerformanceMetricQuantity,
+                                 PerformanceMetricContributedPercent = o.PerformanceMetricContributedPercent,
+                                 ApprovedProRataUnits = o.ApprovedProRataUnits,
+                                 ApprovedProRataCost = o.ApprovedProRataCost,
+                                 Approved = o.Approved,
+                                 ApprovedBy = o.ApprovedBy,
+                                 Comments = o.Comments,
+                                 Version = o.Version,
+                                 VersionAntecedentID = o.VersionAntecedentID,
+                                 VersionCertainty = o.VersionCertainty,
+                                 VersionWorkflowInstanceID = o.VersionWorkflowInstanceID,
+                                 VersionUpdatedBy = o.VersionUpdatedBy,
+                                 VersionDeletedBy = o.VersionDeletedBy,
+                                 VersionOwnerContactID = o.VersionOwnerContactID,
+                                 VersionOwnerCompanyID = o.VersionOwnerCompanyID,
+                                 VersionUpdated = o.VersionUpdated,
+
+                             },
+                             label = o.GraphName,
+                             Row = o.Row,
+                             TotalRows = o.TotalRows,
+                             Score = o.Score,
+                             ProjectName = o.ProjectName,
+                             ProjectCode = o.ProjectCode,
+                             GraphDataGroupName = o.GraphDataGroupName,
+                             GraphName = o.GraphName,
+                             GraphContent = o.GraphContent,
+                             LastEditedBy = o.LastEditedBy
+                         }
+                    ).ToArray();                        
+            }
+
+        }
 
         public AutomationViewModel GetStep(Guid? sid, Guid? pid, Guid? tid, Guid? nid, Guid? gid, bool includeContent = false, bool includeDisconnected = false, bool monitor = true)
         {

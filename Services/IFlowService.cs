@@ -131,6 +131,8 @@ namespace EXPEDIT.Flow.Services
 
         [OperationContract]
         AutomationViewModel GetStep(Guid? sid, Guid? pid, Guid? tid, Guid? nid, Guid? gid, bool includeContent = false, bool includeDisconnected = false, bool monitor = true);
+        [OperationContract]
+        AutomationViewModel[] GetMySteps();
 
         [OperationContract]
         bool CreateStep(AutomationViewModel flow);
@@ -147,6 +149,8 @@ namespace EXPEDIT.Flow.Services
 
         [OperationContract]
         ProjectDataViewModel[] GetProjectData(Guid[] pdid);
+
+       
 
 
     }

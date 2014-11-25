@@ -3375,7 +3375,16 @@ App.Step = App.Node.extend({
     Comments: DS.attr('string', { defaultValue: null }),
     PreviousStepID: DS.attr('string', { defaultValue: null }),
     NextStepID: DS.attr('string', { defaultValue: null }),
-    Project: DS.belongsTo('project', { async: true })
+    Project: DS.belongsTo('project', { async: true }),
+    Row :  DS.attr('string', { defaultValue: null }),
+    TotalRows :  DS.attr('string', { defaultValue: null }),
+    Score :  DS.attr('string', { defaultValue: null }),
+    ProjectName :  DS.attr('string', { defaultValue: null }),
+    ProjectCode :  DS.attr('string', { defaultValue: null }),
+    GraphDataGroupName :  DS.attr('string', { defaultValue: null }),
+    GraphName :  DS.attr('string', { defaultValue: null }),
+    GraphContent :  DS.attr('string', { defaultValue: null }),
+    LastEditedBy :  DS.attr('string', { defaultValue: null })
 });
 
 App.Project = DS.Model.extend({
