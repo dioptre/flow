@@ -52,17 +52,20 @@ namespace EXPEDIT.Flow.Services {
         public static Guid FLOW_MODEL_ID = new Guid("1DB0B648-D8A7-4FB9-8F3F-B2846822258C");
         public const string FS_FLOW_CONTACT_ID = "{0}:ValidFlowUser";
 
+        private readonly IAutomationService _automation;
         private readonly IUsersService _users;
         private readonly IOrchardServices _services;
         public ILogger Logger { get; set; }
 
         public FlowService(
             IOrchardServices orchardServices,
-            IUsersService users
+            IUsersService users,
+            IAutomationService automation
             )
         {
             _users = users;
             _services = orchardServices;
+            _automation = automation;
             T = NullLocalizer.Instance;
             Logger = NullLogger.Instance;
         }
@@ -1526,21 +1529,33 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
-        public bool CheckPermission(Guid gid, ActionPermission permission, Type typeToCheck)
+        public bool CheckPermission(Guid? gid, ActionPermission permission, Type typeToCheck)
         {
             var contact = _users.ContactID;
             if (contact == null)
                 contact = Guid.NewGuid();
             var application = _users.ApplicationID;
-            var company = _users.DefaultContactCompanyID;
             var d = new NKDC(_users.ApplicationConnectionString, null);
             var table = d.GetTableName(typeToCheck);
-            return _users.CheckPermission(new SecuredBasic
+            if (gid.HasValue)
             {
-                AccessorApplicationID = _users.ApplicationID,
-                AccessorContactID = _users.ContactID,
-                OwnerTableType = table
-            }, permission);
+                return _users.CheckPermission(new SecuredBasic
+                {
+                    AccessorApplicationID = application,
+                    AccessorContactID = contact,
+                    OwnerTableType = table,
+                    OwnerReferenceID = gid.Value
+                }, permission);
+            }
+            else
+            {
+                return _users.CheckPermission(new SecuredBasic
+                {
+                    AccessorApplicationID = application,
+                    AccessorContactID = contact,
+                    OwnerTableType = table
+                }, permission);
+            }
         }
 
         public bool CheckWorkflowPermission(Guid gid, ActionPermission permission)
@@ -2328,6 +2343,86 @@ namespace EXPEDIT.Flow.Services {
                 return false;
             }
         }
+
+
+        public AutomationViewModel GetStep(Guid? sid, Guid? pid, Guid? tid, Guid? nid, Guid? gid, bool includeContent = false, bool includeDisconnected = false, bool monitor = true)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    Guid? taskID = null;
+                    AutomationViewModel m;
+                    NKD.Module.BusinessObjects.Task task = new NKD.Module.BusinessObjects.Task { };
+                    ProjectPlanTaskResponse step = d.ProjectPlanTaskResponses.Where(f=>f.ProjectPlanTaskResponseID == sid).SingleOrDefault();
+                    if (step != null)
+                    {
+                        if (!CheckPermission(sid, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
+                            return null;
+                        taskID = step.ActualTaskID ?? (step.ProjectPlanTaskID.HasValue ? step.ProjectPlanTask.TaskID : null) ?? tid;
+                        if (taskID.HasValue)
+                            task = d.Tasks.Where(f => f.TaskID == taskID).SingleOrDefault();                    
+
+                    }
+                    //New Step
+                    else
+                    {
+                        step = new ProjectPlanTaskResponse { ProjectPlanTaskResponseID = sid ?? Guid.NewGuid(), ProjectID = pid, ActualTaskID = taskID, ActualGraphDataGroupID = gid, ActualGraphDataID = nid };
+                        if (taskID.HasValue)
+                            task = new NKD.Module.BusinessObjects.Task { GraphDataID = nid, GraphDataGroupID = gid, TaskID = taskID.Value };
+                        m = new AutomationViewModel { PreviousStep = step, PreviousTask = task };
+                        if (CreateStep(m))
+                            return m;
+                        else
+                            return null;
+                    }
+                    m = new AutomationViewModel { PreviousStep = step, PreviousTask = task };
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
+
+        public bool CreateStep(AutomationViewModel m)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.PreviousStepID.Value, ActionPermission.Create, typeof(ProjectPlanTaskResponse)))
+                        return false;
+                    if (d.ProjectPlanTaskResponses.Any(f => f.ProjectPlanTaskResponseID == m.PreviousStepID))
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return _automation.DoNext(m);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                m.Error = ex.Message;
+                return false;
+            }
+        }
+
+
+
+        public bool UpdateStep(AutomationViewModel m) { return false; }
+
+
+
+        public bool DeleteStep(Guid stepID) { return false; }
 
 
 

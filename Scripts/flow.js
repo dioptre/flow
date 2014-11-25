@@ -2273,6 +2273,9 @@ App.GraphController = Ember.ObjectController.extend({
     }.property('validateWorkflowName', 'validateNewName', 'validateExistingName'),
 
     actions: {
+        createWorkflowInstance: function() {
+            this.transitionTo('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
+        },
         translateWorkflow: function(workflowID, selectedID){
             this.transitionTo('translate', workflowID, {queryParams: {selected: selectedID}});
         },
@@ -3768,19 +3771,36 @@ App.AwesomeView = Ember.View.extend({
   }.observes('controller.model.html').on('init')
 });
 
+App.ProjectData = DS.Model.extend({
+    Label: '',
+    Options: null,
+    Type: 'text',
+    Value: DS.attr('string')
+});
+
 App.StepRoute = Ember.Route.extend({
     queryParams: {
-        selected: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
+        workflowID: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
     },
-    model: function(){
-        return { content:'Awesome', data: 'one two three', html: '<div data-json="123">HTML</div>'};
-        return { content:'Awesome', data: 'one two three', html: '<p>&nbsp;<br></p><div data-json="{&quot;fields&quot;:[{&quot;label&quot;:&quot;Untitled&quot;,&quot;field_type&quot;:&quot;text&quot;,&quot;required&quot;:true,&quot;field_options&quot;:{&quot;size&quot;:&quot;small&quot;},&quot;cid&quot;:&quot;c2&quot;}],&quot;emails&quot;:&quot;&quot;,&quot;heading&quot;:&quot;&quot;,&quot;id&quot;:&quot;ae09ab55-f0cb-474d-be31-0606d4b1a33a&quot;}" id="ae09ab55-f0cb-474d-be31-0606d4b1a33a" class="tiny tiny-live-form mceNonEditable disable-user-select" type="tiny-form" data-mce-contenteditable="false"> <ul class="nav nav-tabs" role="tablist"> <li class="active"><a href="#form-frm-ae09ab55-f0cb-474d-be31-0606d4b1a33a">Form</a></li> <li><a href="#results-frm-ae09ab55-f0cb-474d-be31-0606d4b1a33a" class="results">Results</a></li> </ul> <div class="tab-content"> <div class="tab-pane active" id="form-frm-ae09ab55-f0cb-474d-be31-0606d4b1a33a"> <form id="frm-ae09ab55-f0cb-474d-be31-0606d4b1a33a"> <div class="form-group "> <label for="c2-Untitled">Untitled</label> <input type="text" class="form-control " name="c2-Untitled" id="c2-Untitled" data-bv-notempty="true"> <span class="help-block"></span> </div> <div class="btn btn-primary tiny-form-submit">submit</div></form> </div> <div class="tab-pane" id="results-frm-ae09ab55-f0cb-474d-be31-0606d4b1a33a"> <div id="resultstable-frm-ae09ab55-f0cb-474d-be31-0606d4b1a33a" class="form-results" data-id="frm-ae09ab55-f0cb-474d-be31-0606d4b1a33a"></div> </div> </div> </div><p><br>&nbsp;</p>'};
+    model: function (params, data) {
+        if (typeof params !== 'undefined' && params.id && params.id.indexOf('undefined') > -1) {
+            debugger;
+            
+        }
+        //console.log(params.id);
+        return Ember.RSVP.hash({
+            graphData: this.store.findQuery('step', { id: params.id, workflowID: params.workflowID })
+        });
     }
 });
 App.StepController = Ember.ObjectController.extend({
-    queryParams: ['ProjectID', 'WorkflowID', 'NodeID', 'TaskID'],
+    queryParams: ['projectID', 'workflowID', 'nodeID', 'taskID'],
     needs: ['application'],
     templater: Ember.computed.alias('model.html'), // Just in case we later change where the value is pulled from
+    workflowID: null,
+    projectID: null,
+    nodeID: null,
+    taskID: null
 });
 
 
@@ -3967,6 +3987,52 @@ App.Node = DS.Model.extend({
 });
 
 
+App.Step = App.Node.extend({
+    TaskName: DS.attr('string', { defaultValue: null }),
+    WorkTypeID: DS.attr('string', { defaultValue: null }),
+    WorkCompanyID: DS.attr('string', { defaultValue: null }),
+    WorkContactID: DS.attr('string', { defaultValue: null }),
+    GraphDataGroupID: DS.attr('string', { defaultValue: null }),
+    GraphDataID: DS.attr('string', { defaultValue: null }),
+    ProjectID: DS.attr('string', { defaultValue: null }),
+    ProjectPlanTaskID: DS.attr('string', { defaultValue: null }),
+    ResponsibleCompanyID: DS.attr('string', { defaultValue: null }),
+    ResponsibleContactID: DS.attr('string', { defaultValue: null }),
+    ActualTaskID: DS.attr('string', { defaultValue: null }),
+    ActualWorkTypeID: DS.attr('string', { defaultValue: null }),
+    ActualGraphDataGroupID: DS.attr('string', { defaultValue: null }),
+    ActualGraphDataID: DS.attr('string', { defaultValue: null }),
+    Began: DS.attr('string', { defaultValue: null }),
+    Completed: DS.attr('string', { defaultValue: null }),
+    Hours: DS.attr('string', { defaultValue: null }),
+    EstimatedProRataUnits: DS.attr('string', { defaultValue: null }),
+    EstimatedProRataCost: DS.attr('string', { defaultValue: null }),
+    EstimatedValue: DS.attr('string', { defaultValue: null }),
+    EstimatedDuration: DS.attr('string', { defaultValue: null }),
+    EstimatedDurationUnitID: DS.attr('string', { defaultValue: '0D542D4C-DACE-4702-83B0-3C9BA85D4183' }), //hours
+    EstimatedLabourCosts: DS.attr('string', { defaultValue: null }),
+    EstimatedCapitalCosts: DS.attr('string', { defaultValue: null }),
+    DefaultPriority: DS.attr('string', { defaultValue: null }),
+    PerformanceMetricParameterID: DS.attr('string', { defaultValue: null }),
+    PerformanceMetricQuantity: DS.attr('string', { defaultValue: null }),
+    PerformanceMetricContributedPercent: DS.attr('string', { defaultValue: null }),
+    ApprovedProRataUnits: DS.attr('string', { defaultValue: null }),
+    ApprovedProRataCost: DS.attr('string', { defaultValue: null }),
+    Approved: DS.attr('string', { defaultValue: null }),
+    ApprovedBy: DS.attr('string', { defaultValue: null }),
+    Comments: DS.attr('string', { defaultValue: null }),
+    PreviousStepID: DS.attr('string', { defaultValue: null }),
+    NextStepID: DS.attr('string', { defaultValue: null })
+});
+
+App.Project = DS.Model.extend({
+    ProjectName: DS.attr('string', { defaultValue: null }),
+    ProjectCode: DS.attr('string', { defaultValue: null }),
+    ClientCompanyID: DS.attr('string', { defaultValue: null }),
+    ClientContactID: DS.attr('string', { defaultValue: null })
+});
+
+
 App.Edge = DS.Model.extend({
     from: DS.attr(),
     to: DS.attr(),
@@ -4031,7 +4097,6 @@ App.Workflow = DS.Model.extend({
             return null;
     }.property('name')
 });
-
 
 App.MyWorkflow = App.Search.extend({});
 App.MyNode = App.Search.extend({});

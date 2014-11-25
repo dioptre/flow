@@ -70,6 +70,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\lib\impromptu\ImpromptuInterface.dll</HintPath>
     </Reference>
+    <Reference Include="Jint">
+      <HintPath>..\..\..\..\lib\jint\Jint.dll</HintPath>
+    </Reference>
     <Reference Include="LumiSoft.Net">
       <HintPath>..\..\..\..\lib\LumiSoft.Net\Net\Net\bin\Debug\LumiSoft.Net.dll</HintPath>
     </Reference>
@@ -77,6 +80,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.SqlServer.Types, Version=11.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Vsa, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="MigraDoc.DocumentObjectModel">
       <HintPath>..\..\..\..\lib\pdfsharp\MigraDoc.DocumentObjectModel.dll</HintPath>
     </Reference>
@@ -1307,14 +1311,18 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\WebMethodController.cs" />
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Models\ICheckPayment.cs" />
     <Compile Include="Models\LinqModels.cs" />
     <Compile Include="ResourceManifest.cs" />
     <Compile Include="Route.cs" />
+    <Compile Include="Services\AutomationService.cs" />
+    <Compile Include="Services\IAutomationService.cs" />
     <Compile Include="Services\IFlowService.cs" />
     <Compile Include="Services\FlowService.cs" />
     <Compile Include="Services\XmlRpcHandler.cs" />
+    <Compile Include="ViewModels\AutomationViewModel.cs" />
     <Compile Include="ViewModels\LocaleViewModel.cs" />
     <Compile Include="ViewModels\TranslationViewModel.cs" />
     <Compile Include="ViewModels\UserProfileViewModel.cs" />
