@@ -2274,10 +2274,10 @@ App.GraphController = Ember.ObjectController.extend({
 
     actions: {
         createWorkflowInstance: function() {
-            this.transitionTo('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
+            this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
         },
         translateWorkflow: function(workflowID, selectedID){
-            this.transitionTo('translate', workflowID, {queryParams: {selected: selectedID}});
+            this.transitionToRoute('translate', workflowID, {queryParams: {selected: selectedID}});
         },
         cancelWorkflowName: function (data, callback) {
             var wf = this.store.getById('workflow', this.get('workflowID'));
