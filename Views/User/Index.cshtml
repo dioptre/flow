@@ -1800,10 +1800,10 @@
                             <tr>
                                 <th class="col-md-3">
                                     <input type="checkbox">
-                                    Product
+                                    Case
                                 </th>
                                 <th class="col-md-3">
-                                    <span class="line"></span>Description
+                                    <span class="line"></span>Step
                                 </th>
                                 <th class="col-md-3">
                                     <span class="line"></span>Status
@@ -1811,22 +1811,23 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {{#each model.steps}}
+                            {{#each steps}}
                             <tr>
                                 <td>
                                     <input type="checkbox">
                                     <div class="img">
                                         <img src="img/table-img.png" alt="pic" />
                                     </div>
-                                    {{#link-to 'step' this.id}}{{{this.id}}}{{/link-to}}
+                                    {{#link-to 'step' this.id}}{{this.projectCode}}{{/link-to}}
                                 </td>
                                 <td class="description">
-                                    There are many variations of passages.
+                                    &nbsp;{{this.humanName}}
                                 </td>
                                 <td>
+                                    {{this.VersionUpdated}} {{this.LastUpdatedBy}}
                                     <ul class="actions">
-                                        <li><a href="#">Edit</a></li>
-                                        <li class="last"><a href="#">Delete</a></li>
+                                        <li>{{#link-to 'step' this.id}}Checkout{{/link-to}}</li>
+                                        @*<li class="last"><a href="#">Delete</a></li>*@
                                     </ul>
                                 </td>
                             </tr>
