@@ -3729,47 +3729,28 @@ var renderDynamic = function () {
 
 /* Step
 -------------------------------------------------- */
-App.AwesomeView = Ember.View.extend({
+App.HandlebarsLiveComponent = Ember.Component.extend({
   template: '',
   setupTemplate: function(){
 
+    var template = this.get('templatestring');
 
-    // Create template from parsing content
-    // #TODO
-
-
-    // 1. Clean the JSON strings using the existing code
-
-    // 2. Go through content and extract data JSON
-
-    // 3. Put the JSON into an array that can be binded to
-    // {
-    //     guid: {value: (value), settings: (settings to draw the form)},
-    //     guid: {value: (value), settings: (settings to draw the form)}
-    // }
-
-    // 4. Do a text replace. Put the appropriate handlebars into the content string
-
-    // 5. Move all the actions into components instead of having akward jquery plugin with heaps of dom scans
-
-
-
-    //window.renderFunctions(this.$());
-
-
-    this.set('template', Ember.Handlebars.compile(this.get('controller.templater')));
-    this.rerender();
+    // Render template with Handelbar and set it to the current view
+    this.set('template', Ember.Handlebars.compile(template));
+    this.rerender(this); // this is necessary to make sure the dom actually gets updated :)
 
     // After rerender should initalise all the jQuery plugins
     Ember.run.scheduleOnce('afterRender', this, function(){
-        window.cleanAlternative(this.$());
-        window.renderFunctions(this.$());
+        //window.cleanAlternative(this.$());
+        //window.renderFunctions(this.$());
         $('body').fitVids();
 
     });
 
-  }.observes('controller.model.html').on('init')
+  }.observes('templatestring').on('init')
 });
+
+
 
 App.ProjectData = DS.Model.extend({
     Label: '',
@@ -3792,8 +3773,75 @@ App.StepRoute = Ember.Route.extend({
 App.StepController = Ember.ObjectController.extend({
     queryParams: ['projectID', 'workflowID', 'nodeID', 'taskID'],
     needs: ['application'],
+    html: Ember.computed.alias('model.steps.firstObject.content'), // Just in case we later change where the value is pulled from
+    contextData: {},
+    templatestring: function(){
 
-    templater: Ember.computed.alias('model.steps.firstObject.content'), // Just in case we later change where the value is pulled from
+        var template = this.get('html')
+        // Create template from parsing content
+        // #TODO
+
+        // template = "{{lform-text}}" + template;
+
+
+        // 1. Clean the JSON strings using the existing code
+        // NOT FOR NOW
+
+        var contextData = {};
+
+        // 2. Go through content and extract data JSON
+        $template = $(template);
+        $template.find('*').andSelf().filter('.tiny').each(function () {
+            var $this = $(this)
+            var type = $this.attr('type');
+            if (type == "tiny-form") {
+
+                var data = $this.data('json');
+                var id = $this.attr('id');
+
+                // var text = '{{#lform-wrapper}}';
+                var text ='';
+
+
+                $.each(data.fields, function (i, d) {
+                     text += "{{lform-" + d.field_type + " s=contextData." + id +" testvar=testVar}}"
+                    
+                    contextData[id] = { d: d, value: ""}
+
+                
+                })
+                
+                // text += ' {{/lform-wrapper}}';
+
+                // text += "This should be a varialbel : {{testVar}} {{id}}!!!!!"
+                $this.html(text);
+            }
+        });
+
+
+        this.set("contextData", contextData);
+
+        // 3. Put the JSON into an array that can be binded to
+        // {
+        //     guid: {value: (value), settings: (settings to draw the form)},
+        //     guid: {value: (value), settings: (settings to draw the form)}
+        // }
+
+        // 4. Do a text replace. Put the appropriate handlebars into the content string
+
+        // 5. Move all the actions into components instead of having akward jquery plugin with heaps of dom scans
+
+
+
+        //window.renderFunctions(this.$());
+
+        // Convert jQuery object into plain html string
+        template = $('<div>').html($template).html()
+
+
+        return template;
+    }.property('html'),
+    sampleVarControllerLevel: '123-sampleVarControllerLevel',
     workflowID: null,
     projectID: null,
     nodeID: null,
