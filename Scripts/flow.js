@@ -3783,20 +3783,17 @@ App.StepRoute = Ember.Route.extend({
         workflowID: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
     },
     model: function (params, data) {
-        if (typeof params !== 'undefined' && params.id && params.id.indexOf('undefined') > -1) {
-            debugger;
-            
-        }
-        //console.log(params.id);
         return Ember.RSVP.hash({
             steps: this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true })
         });
     }
+   
 });
 App.StepController = Ember.ObjectController.extend({
     queryParams: ['projectID', 'workflowID', 'nodeID', 'taskID'],
     needs: ['application'],
-    templater: Ember.computed.alias('model.html'), // Just in case we later change where the value is pulled from
+
+    templater: Ember.computed.alias('model.steps.firstObject.content'), // Just in case we later change where the value is pulled from
     workflowID: null,
     projectID: null,
     nodeID: null,
