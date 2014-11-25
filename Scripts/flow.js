@@ -3804,9 +3804,11 @@ App.StepController = Ember.ObjectController.extend({
 
 
                 $.each(data.fields, function (i, d) {
-                     text += "{{lform-" + d.field_type + " s=contextData." + id +" testvar=testVar}}"
+                     var uniqueID = id + '-' + i; // unique ID for each field
+
+                     text += "{{lform-" + d.field_type + " s=contextData." + uniqueID +" testvar=testVar}} <br>"
                     
-                    contextData[id] = { d: d, value: ""}
+                    contextData[uniqueID] = { d: d, value: ""}
 
                 
                 })
@@ -3814,7 +3816,9 @@ App.StepController = Ember.ObjectController.extend({
                 // text += ' {{/lform-wrapper}}';
 
                 // text += "This should be a varialbel : {{testVar}} {{id}}!!!!!"
-                $this.html(text);
+                $this.data('json', '').html(text);
+
+
             }
         });
 

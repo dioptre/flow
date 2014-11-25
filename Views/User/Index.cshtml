@@ -272,13 +272,13 @@
 </script>
 
 <script type="text/x-handlebars" data-template-name="components/lform-text">
+    <div>
+        <label>{{s.d.label}}</label><br>
+        {{eui-input value=s.value}}
 
-    <label>{{s.d.label}}</label>
-    {{eui-input value=s.value}}
+        {{s.value}}
 
-    {{s.value}}
-
-  </div>
+    </div>
 </script>
 
 <script type="text/x-handlebars" data-template-name="components/lform-wrapper">
