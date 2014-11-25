@@ -117,10 +117,10 @@ namespace EXPEDIT.Flow.Services {
 
         public bool DoNext(AutomationViewModel m)
         {
-            var l = new Dictionary<string,object>();
-            l.Add("RecordState", "Open");
-            var guid = _metadata.AssignMetadata(null, l);
-            _metadata.GetMetadata<string>(guid, "RecordState");
+            //var l = new Dictionary<string,object>();
+            //l.Add("RecordState", "Open");
+            //var guid = _metadata.AssignMetadata(null, l);
+            //_metadata.GetMetadata<string>(guid, "RecordState");
             var contact = m.ProxyContactID ?? _users.ContactID;
             var application = m.ProxyApplicationID ?? _users.ApplicationID;
             var company = m.ProxyCompanyID ?? _users.DefaultContactCompanyID;

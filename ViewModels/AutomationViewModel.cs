@@ -51,6 +51,7 @@ namespace EXPEDIT.Flow.ViewModels
 
         public Guid? TaskID { get { return (PreviousTask.TaskID == Guid.Empty) ? default(Guid?) : PreviousTask.TaskID; } }
 
+        public bool? IncludeContent { get; set; }
 
         [JsonIgnore]
         private Task _previousTask = null;

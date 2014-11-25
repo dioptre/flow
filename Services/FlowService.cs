@@ -2355,15 +2355,15 @@ namespace EXPEDIT.Flow.Services {
                     Guid? taskID = null;
                     AutomationViewModel m;
                     NKD.Module.BusinessObjects.Task task = new NKD.Module.BusinessObjects.Task { };
-                    ProjectPlanTaskResponse step = d.ProjectPlanTaskResponses.Where(f=>f.ProjectPlanTaskResponseID == sid).SingleOrDefault();
+                    ProjectPlanTaskResponse step = d.ProjectPlanTaskResponses.Where(f => f.ProjectPlanTaskResponseID == sid && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
                     if (step != null)
                     {
                         if (!CheckPermission(sid, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
                             return null;
                         taskID = step.ActualTaskID ?? (step.ProjectPlanTaskID.HasValue ? step.ProjectPlanTask.TaskID : null) ?? tid;
                         if (taskID.HasValue)
-                            task = d.Tasks.Where(f => f.TaskID == taskID).SingleOrDefault();                    
-
+                            task = d.Tasks.Where(f => f.TaskID == taskID && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
+                        m = new AutomationViewModel { PreviousStep = step, PreviousTask = task, IncludeContent = includeContent };
                     }
                     //New Step
                     else
@@ -2371,13 +2371,17 @@ namespace EXPEDIT.Flow.Services {
                         step = new ProjectPlanTaskResponse { ProjectPlanTaskResponseID = sid ?? Guid.NewGuid(), ProjectID = pid, ActualTaskID = taskID, ActualGraphDataGroupID = gid, ActualGraphDataID = nid };
                         if (taskID.HasValue)
                             task = new NKD.Module.BusinessObjects.Task { GraphDataID = nid, GraphDataGroupID = gid, TaskID = taskID.Value };
-                        m = new AutomationViewModel { PreviousStep = step, PreviousTask = task };
-                        if (CreateStep(m))
-                            return m;
-                        else
+                        m = new AutomationViewModel { PreviousStep = step, PreviousTask = task, IncludeContent = includeContent };
+                        if (!CreateStep(m))
                             return null;
                     }
-                    m = new AutomationViewModel { PreviousStep = step, PreviousTask = task };
+                    if (m.IncludeContent ?? false)
+                    {
+                        var g = (from o in d.GraphData.Where(f => f.GraphDataID == m.GraphDataID && f.Version == 0 && f.VersionDeletedBy == null)
+                                 select new { o.GraphContent, o.GraphName }).SingleOrDefault();
+                        m.label = g.GraphName;
+                        m.content = g.GraphContent;
+                    }
                     return m;
                 }
 

@@ -3141,7 +3141,7 @@ App.StepRoute = Ember.Route.extend({
         }
         //console.log(params.id);
         return Ember.RSVP.hash({
-            graphData: this.store.findQuery('step', { id: params.id, workflowID: params.workflowID })
+            graphData: this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true })
         });
     }
 });
