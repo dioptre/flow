@@ -3771,13 +3771,6 @@ App.AwesomeView = Ember.View.extend({
   }.observes('controller.model.html').on('init')
 });
 
-App.ProjectData = DS.Model.extend({
-    Label: '',
-    Options: null,
-    Type: 'text',
-    Value: DS.attr('string')
-});
-
 App.StepRoute = Ember.Route.extend({
     queryParams: {
         workflowID: { refreshModel: true }  // this ensure that new data is loaded if another element is selected

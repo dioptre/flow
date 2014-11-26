@@ -2573,5 +2573,106 @@ namespace EXPEDIT.Flow.Services {
         }
 
 
+        public bool CreateProjectData(ProjectDataViewModel m)
+        {
+            var contact = _users.ContactID;
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.ProjectID, ActionPermission.Read, typeof(Project)))
+                        return false;
+                    var pdt = new ProjectDataTemplate{
+                        ProjectDataTemplateID = m.ProjectDataTemplateID.Value,
+                        CommonName = m.CommonName,
+                        UniqueID = m.UniqueID,
+                        UniqueIDSystemDataType = m.UniqueIDSystemDataType,
+                        TemplateStructure = m.TemplateStructure,
+                        TemplateStructureChecksum = m.TemplateStructureChecksum,
+                        TemplateActions = m.TemplateActions,
+                        TemplateType = m.TemplateType,
+                        TemplateMulti = m.TemplateMulti,
+                        TemplateSingle = m.TemplateSingle,
+                        TableType = m.TableType,
+                        ReferenceID = m.ReferenceID,
+                        UserDataType = m.UserDataType,
+                        SystemDataType = m.SystemDataType,
+                        IsReadOnly = m.IsReadOnly,
+                        IsVisible = m.IsVisible
+                    };
+                    d.ProjectDataTemplates.AddObject(pdt);
+                    var pd = new ProjectData
+                    {
+                        ProjectDataID = m.id.Value,
+                        ProjectDataTemplateID = m.ProjectDataTemplateID,
+                        ProjectID = m.ProjectID,
+                        ProjectPlanTaskResponseID = m.ProjectPlanTaskResponseID,
+                        Value = m.Value,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionUpdatedBy = contact
+                    };
+                    d.ProjectDatas.AddObject(pd);
+                    d.SaveChanges();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool UpdateProjectData(ProjectDataViewModel m)
+        {
+
+            try
+            {
+                var contact = _users.ContactID;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(ProjectData)))
+                        return false;
+                    //Update
+                    var pd = (from o in d.ProjectDatas where o.ProjectDataID == m.id && o.VersionDeletedBy == null select o).Single();
+                    pd.Value = m.Value;
+                    pd.VersionUpdated = DateTime.UtcNow;
+                    pd.VersionUpdatedBy = contact;
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool DeleteProjectData(ProjectDataViewModel m)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(ProjectData)))
+                        return false;
+                    //Delete
+                    var pd = (from o in d.ProjectDatas where o.ProjectDataID == m.id && o.VersionDeletedBy == null select o).Single();
+                    d.ProjectDatas.DeleteObject(pd);
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+
     }
 }
