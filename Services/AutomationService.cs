@@ -17,6 +17,7 @@ using NKD.Services;
 using NKD.Models;
 using NKD.Helpers;
 using EXPEDIT.Share.Helpers;
+using EXPEDIT.Share.Services;
 
 namespace EXPEDIT.Flow.Services {
 
@@ -25,15 +26,17 @@ namespace EXPEDIT.Flow.Services {
     {
         private readonly IOrchardServices _services;
         private readonly IUsersService _users;
+        private readonly IWorkflowService _wf;
 
         public AutomationService(
             IOrchardServices orchardServices,
-            IUsersService users
+            IUsersService users,
+            IWorkflowService wf
             )
         {
             _users = users;
             _services = orchardServices;
-
+            _wf = wf;
         }
 
 
@@ -180,6 +183,36 @@ namespace EXPEDIT.Flow.Services {
                             VersionAntecedentID = m.PreviousStepID
                         };
                         d.Projects.AddObject(project);
+                        var wfid = Guid.NewGuid();
+                        var wf = new WorkflowInstance
+                        {
+                            WorkflowInstanceID = Guid.NewGuid() ,
+                            WorkflowID = ConstantsHelper.WORKFLOW_APP_FLOWPRO ,
+                            RunStateTypeID =  null,
+                            TableType = ConstantsHelper.REFERENCE_TYPE_PROJECTPLANTASKRESPONSE ,
+                            ReferenceID = m.id ,
+                            ExecutionStatus = "RUNNING" ,
+                            ExecutionTimeoutSeconds = null ,
+                            Began = now ,
+                            CanResume = true ,
+                            Resumed = null ,
+                            ResumeTriggers = true ,
+                            ResumeAttempts = ConstantsHelper.WORKFLOW_INSTANCE_RESUME_ATTEMPTS_LEFT,
+                            Pending = null ,
+                            Idle = null ,
+                            IdleTimeoutSeconds = ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS ,
+                            CanCancel =  true,
+                            Cancelled =  null,
+                            Completed =  null,
+                            VersionAntecedentID =  wfid,
+                            VersionUpdatedBy =  contact,
+                            VersionOwnerContactID =  contact,
+                            VersionOwnerCompanyID =  company,
+                            VersionUpdated =  now
+                        };
+                        d.WorkflowInstances.AddObject(wf);
+                        
+                        m.PreviousStep.VersionWorkflowInstanceID = wfid;
                         m.PreviousStep.ResponsibleCompanyID = m.PreviousTask.WorkCompanyID ?? company;
                         m.PreviousStep.ResponsibleContactID = m.PreviousTask.WorkContactID ?? contact;
                         m.PreviousStep.VersionUpdatedBy = contact;
@@ -191,6 +224,7 @@ namespace EXPEDIT.Flow.Services {
                             m.PreviousStep.ActualTaskID = m.TaskID;
                         m.PreviousStep.Began = now;
                         d.ProjectPlanTaskResponses.AddObject(m.PreviousStep);
+
                         d.SaveChanges();
                         //TODO: Should checkout
                         return true;
@@ -202,11 +236,14 @@ namespace EXPEDIT.Flow.Services {
                     }
                 }
                 //TODO: Prob should check whether its checked out
+
                 //m.PreviousStep.ActualGraphDataID
 
                 //if final transition send 000000-0000-00000000
 
                 //if step (response) & graphdataid go through graphdatarelationconditions for next transition            
+
+                //Transition & change owner to responsibleowner if task exists
 
                 //run trigger on out
 
