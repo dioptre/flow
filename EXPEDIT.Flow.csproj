@@ -112,8 +112,6 @@
     <Reference Include="System">
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Activities" />
-    <Reference Include="System.Activities.DurableInstancing" />
     <Reference Include="System.Data">
       <Private>True</Private>
     </Reference>
@@ -131,11 +129,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Runtime.DurableInstancing" />
     <Reference Include="System.ServiceModel">
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.ServiceModel.Activities" />
     <Reference Include="System.Transactions">
       <Private>True</Private>
     </Reference>
@@ -1330,8 +1326,6 @@
     <Compile Include="Services\IAutomationService.cs" />
     <Compile Include="Services\IFlowService.cs" />
     <Compile Include="Services\FlowService.cs" />
-    <Compile Include="Services\IMetadataWorkflowService.cs" />
-    <Compile Include="Services\MetadataWorkflowService.cs" />
     <Compile Include="Services\XmlRpcHandler.cs" />
     <Compile Include="ViewModels\ProjectDataViewModel.cs" />
     <Compile Include="ViewModels\ProjectViewModel.cs" />
