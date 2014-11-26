@@ -220,6 +220,9 @@ namespace EXPEDIT.Flow.Services {
                         m.PreviousStep.VersionOwnerContactID = contact;
                         m.PreviousStep.VersionOwnerCompanyID = company;
                         m.PreviousStep.VersionAntecedentID = m.PreviousStepID;
+
+                        m.LastEditedBy = d.Contacts.Where(f => f.ContactID == contact).Select(f => f.Username).FirstOrDefault();
+
                         if (m.TaskID.HasValue)
                             m.PreviousStep.ActualTaskID = m.TaskID;
                         m.PreviousStep.Began = now;
