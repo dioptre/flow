@@ -199,7 +199,7 @@ namespace EXPEDIT.Flow.Services {
                             ResumeTriggers = true ,
                             ResumeAttempts = ConstantsHelper.WORKFLOW_INSTANCE_RESUME_ATTEMPTS_LEFT,
                             Pending = null ,
-                            Idle = null ,
+                            Idle = now.AddSeconds(ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS) ,
                             IdleTimeoutSeconds = ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS ,
                             CanCancel =  true,
                             Cancelled =  null,
@@ -238,25 +238,29 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     }
                 }
-                //TODO: Prob should check whether its checked out
+                //OK its an existing WF
+                else {
+                    //TODO: Prob should check whether its checked out
 
-                //m.PreviousStep.ActualGraphDataID
+                    //m.PreviousStep.ActualGraphDataID
 
-                //if final transition send 000000-0000-00000000
+                    //if final transition send 000000-0000-00000000
 
-                //if step (response) & graphdataid go through graphdatarelationconditions for next transition            
+                    //if step (response) & graphdataid go through graphdatarelationconditions for next transition            
 
-                //Transition & change owner to responsibleowner if task exists
+                    //Transition & change owner to responsibleowner if task exists
 
-                //run trigger on out
+                    //run trigger on out
 
-                //always create an event if successful or not
+                    //always create an event if successful or not
 
-                //run trigger on in
+                    //run trigger on in
 
-                //always create an event if successful or not
+                    //always create an event if successful or not
 
-                //update response
+                    //update response
+                }
+
 
                 return false;
             }

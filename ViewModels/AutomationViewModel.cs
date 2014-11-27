@@ -73,6 +73,21 @@ namespace EXPEDIT.Flow.ViewModels
         public string LastEditedBy { get; set; }
 
         [JsonIgnore]
+        private WorkflowInstance _previousWorkflowInstance = null;
+        [JsonIgnore]
+        public WorkflowInstance PreviousWorkflowInstance
+        {
+            get
+            {
+                if (_previousWorkflowInstance == null)
+                    _previousWorkflowInstance = lookup.Materialize<WorkflowInstance>();
+                return _previousWorkflowInstance;
+            }
+            set { _previousWorkflowInstance = value; }
+        }
+
+
+        [JsonIgnore]
         private Task _previousTask = null;
         [JsonIgnore]
         public Task PreviousTask

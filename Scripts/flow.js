@@ -3802,27 +3802,7 @@ App.HandlebarsLiveComponent = Ember.Component.extend({
   }.observes('templatestring').on('init')
 });
 
-<<<<<<< .mine
 
-
-App.ProjectData = DS.Model.extend({
-    Label: '',
-    Options: null,
-    Type: 'text',
-    Value: DS.attr('string')
-});
-
-=======
-
-
-
-
-
-
-
-
-
->>>>>>> .theirs
 App.StepRoute = Ember.Route.extend({
     queryParams: {
         workflowID: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
