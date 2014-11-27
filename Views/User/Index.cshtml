@@ -69,6 +69,7 @@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/colorbox.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/expedit-flow.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger.css">
+        
 
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger-theme-flat.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger-theme-flat.css">
@@ -76,6 +77,7 @@
 
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/select2.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/jquery.dataTables.css">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/liquid-fire-0.15.0.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/dataTables.responsive.css">
     </head>
     <body>
@@ -289,7 +291,9 @@
 </script>
 
 <!-- the form stuff (doesn't belong here I knowww) -->
-
+<script type="text/x-handlebars" id="debugz">
+    Debugz
+</script>
 
 
 <script type="text/x-handlebars" id="permission">
@@ -714,6 +718,8 @@
 </script>
 
 <script type="text/x-handlebars" id="application">
+
+
         {{#eui-modal openBinding="logoutModal"}}
             <div style="padding: 50px; text-align: center;">
                 <h4>{{model.t.fp_general_actions_logoutConfirmation}}</h4>
@@ -723,6 +729,8 @@
                 {{eui-button label=model.t.fp_general_actions_logout action="logoutUser" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
              </div>
         {{/eui-modal}}
+
+      
 
      <!-- navbar -->
     <header class="navbar navbar-inverse" role="banner">
@@ -759,14 +767,18 @@
 
         <ul class="nav navbar-nav pull-right"> <!--hidden-xs-->
             <li class="hidden-xs ">
+
                 {{input action="transitionSearch" onEvent="insertNewline" class="search searchTransitionMenu" tabIndex="-1"}}
+       
             </li>
             <li class="hidden-xs">
                 <a class='select2-localisation'>
                     <span class="settings">
                         <i class="icon-globe"></i>
                     </span>
+             
                     {{eui-select options=localeAvailable value=localeSelected size=large required="true" width='120px' style="primary"}}
+                
 
                     {{!-- old school handler --}}
                     {{!--view Ember.Select content=localAvailable value=localSelected optionValuePath="content.language" optionLabelPath="content.niceName"--}}
@@ -887,12 +899,15 @@
                     <span>{{model.t.fp_menu_link_myfiles}}</span>
                 {{/link-to}}
             {{/view}}
+            {{!--
             {{#view App.HomeNavView}}
                 {{#link-to 'wikipedia' 'Special:Random'}}
                     <i class="icon-book"></i>
                     <span>{{model.t.fp_menu_link_wikipedia}}</span>
                 {{/link-to}}
             {{/view}}
+
+            --}}
             {{#view App.HomeNavView}}
                 {{#link-to 'permission'}}
                     <i class="icon-lock"></i>
@@ -945,12 +960,24 @@
     <!-- main container -->
     <div class="content">
         <div id="pad-wrapper">
-            {{outlet}}
+            {{liquid-modal}}
+
+            <hr>
+
+            {{liquid-outlet}}
+
+          
         </div>
     </div>
 </script>
 
+<script type="text/x-handlebars" id="components/amazing-moda">
+       FIRST MODAL
 
+       <br>
+
+       ONE MORE TWO
+</script>
 
 
   <script type="text/x-handlebars" id="components/viz-editor">
@@ -1031,9 +1058,24 @@
                 <h2>Contextual Info</h2>
                 <p>
                     Workflow Instance <a href="">#321543</a><br>
-                    Created by Paul Knittel<br>
-                    <i>17 mins ago</i>
+                    // project // projectCode
+                    {{model.steps.projectCode}}
+
+                    <br>
+
+                    // project // projectData -- contextual variables will be here
+
+                    {{model.steps.projectData}}
+                    Last edited by {{#if model.steps.LastEditedBy}}{{model.steps.LastEditedBy}}{{else}}Nobody{{/if}}<br>
+                    <i>{{model.steps.VersionUpdated}} mins ago</i>
+
+
+
+
                 </p>
+                <hr>
+                {{handlebars-live templatestring=formtemplatestring}}
+
             </div>
         </div>
     </div>
@@ -2044,6 +2086,8 @@
     {{eui-button label='Save Changes' loading=true}}
 
 
+
+
     <h3>3. Modals</h3>
     {{#eui-modal openBinding="showFirstModal" cancel="firstModalCancel"}}
       <div style="padding: 50px; text-align: center;">
@@ -2056,6 +2100,9 @@
     {{/eui-modal}}
 
     {{eui-button label='Open "default" Style Modal' action="toggleFirstModal"}}
+
+    Category
+    {{input value=category}}
 
     <h3>4. Select<h3>
     {{eui-select placeholder="Select a country" options=countries size='tiny'}}
@@ -2780,8 +2827,9 @@
         @*<script src="http://builds.emberjs.com/canary/ember.js"></script>*@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/ember-data.js")"></script>
         @* map function currently missing
-        <script src="http://builds.emberjs.com/canary/ember-data.js"></script>*@
+        <script src="http://builds.emberjs.com/canary/ember-data-beta12.js"></script>*@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/ember-list-view.min.js")"></script>
+        @*<script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/list-view-latest.js")"></script>*@
         @*<script src="http://builds.emberjs.com/list-view/list-view-latest.js"></script>*@
         <script src="@Url.Content("~/Modules/NKD/Scripts/NKD.utils.js")"></script>
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/jquery.cookie.js")"></script>
@@ -2808,6 +2856,7 @@
             //ic.ajax.request.OVERRIDE_REST_ADAPTER = false;
         </script>*@
         <script src="~/Modules/EXPEDIT.Share/Scripts/emberui.js"></script>
+        @*<script src="~/Modules/EXPEDIT.Share/Scripts/emberui-4.js"></script>*@
         @*<script src="https://s3.amazonaws.com/emberui/dist/main.js"></script>*@
         <script src="@Url.Content("~/Modules/EXPEDIT.Share/Scripts/tinymce/tinymce.min.js")"></script>
         <script src="@Url.Content("~/Modules/Orchard.jQuery/Scripts/jquery.colorbox.js")"></script>
@@ -2829,6 +2878,7 @@
         <!-- https://github.com/jamesarosen/ember-i18n/tree/master/lib -->
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/cldr-1.0.0.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/i18n.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/liquid-fire-0.15.0.js")"></script>
 
 
         <!-- js -->

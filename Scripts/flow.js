@@ -32,20 +32,65 @@ App.ResetScroll = Ember.Mixin.create({
   }
 });
 
+LiquidFire.defineTransition('rotateBelow', function (oldView, insertNewView, opts) {
+  var direction = 1;
+  if (opts && opts.direction === 'cw') {
+    direction = -1;
+  }
+  LiquidFire.stop(oldView);
+  return insertNewView().then(function(newView) {
+    oldView.$().css('transform-origin', '50% 150%');
+    newView.$().css('transform-origin', '50% 150%');
+    return LiquidFire.Promise.all([
+      LiquidFire.animate(oldView, { rotateZ: -90*direction + 'deg' }, opts),
+      LiquidFire.animate(newView, { rotateZ: ['0deg', 90*direction+'deg'] }, opts),
+    ]);
+  });
+});
+
+LiquidFire.map(function(){
+    this.transition(
+        this.fromRoute('todo'),
+        this.toRoute('step'),
+        this.use('toLeft'),
+        this.reverse('toRight')
+    );
+
+    this.transition(
+        this.fromRoute('search'),
+        this.toRoute('graph'),
+        this.use('toLeft'),
+        this.reverse('toRight')
+    );
+})
+
 App.Router.map(function () {
     // App & Features
     this.route('graph', { path: 'process/:id' });
     this.route('workflow', { path: 'workflow/:id' });
     this.route('wikipedia', { path: "/wikipedia/:id" });
-    this.route('search');
+
+    this.route('debugz');
+
+
+    this.route('search', { path: "search" }, function(){
+
+    });
     this.route('myworkflows');
     this.route('mylicenses');
     this.route('file');
     this.route('permission');
 
+
+
+
     // FlowPro v2
     this.route('todo');
-    this.route('styleguide'); // Internal only
+    this.route('styleguide', {path:"styleguide"}, function(){
+        this.modal('amazing-moda', {
+          withParams: ['category']
+        });
+    }); // Internal only
     this.route('editor', { path: 'editor/:id' }); // - editing executable workflows
     this.route('step', { path: 'step/:id' }); // - executing
 
@@ -70,6 +115,8 @@ App.Router.map(function () {
     // 404 page
     this.route('errorpage', {path: '/*wildcard'})
 });
+
+
 
 
 // This is used to setup Title - http://www.jrhe.co.uk/setting-the-document-title-in-ember-js-apps/ - http://emberjs.jsbin.com/furabo/1/edit
@@ -124,6 +171,11 @@ App.StyleguideRoute = Ember.Route.extend({
         }
     }
 });
+
+App.StyleguideController = Ember.Controller.extend({
+  queryParams: ['category'],
+  category: null
+})
 
 App.ErrorpageRoute = Ember.Route.extend({
     model: function(){
@@ -3775,6 +3827,7 @@ App.StepController = Ember.ObjectController.extend({
     needs: ['application'],
     html: Ember.computed.alias('model.steps.firstObject.content'), // Just in case we later change where the value is pulled from
     contextData: {},
+    formtemplatestring: '',
     templatestring: function(){
 
         var template = this.get('html')
@@ -3789,7 +3842,9 @@ App.StepController = Ember.ObjectController.extend({
 
         var contextData = {};
 
+        var templateString = '';
         // 2. Go through content and extract data JSON
+
         $template = $(template);
         $template.find('*').andSelf().filter('.tiny').each(function () {
             var $this = $(this)
@@ -3816,13 +3871,15 @@ App.StepController = Ember.ObjectController.extend({
                 // text += ' {{/lform-wrapper}}';
 
                 // text += "This should be a varialbel : {{testVar}} {{id}}!!!!!"
+
+                templateString += text;
                 $this.data('json', '').html(text);
 
 
             }
         });
 
-
+        this.set('formtemplatestring', templateString)
         this.set("contextData", contextData);
 
         // 3. Put the JSON into an array that can be binded to
@@ -5289,3 +5346,16 @@ function uploadPhoto(event) {
         }
     });
 }
+
+
+Ember.HelloModalComponent = Ember.Component.extend({
+    classNames: ['hello-modal'],
+     actions: {
+       gotIt: function() {
+         this.sendAction('dismiss');
+       },
+       change: function() {
+         this.sendAction('changeSalutation');
+       }
+     }
+})
