@@ -41,7 +41,7 @@ namespace EXPEDIT.Flow.ViewModels
         public string Error { get; set; }
 
 
-        public ProjectDataViewModel projectData { get; set; }
+        public ProjectDataViewModel projectDatum { get; set; }
 
     }
 

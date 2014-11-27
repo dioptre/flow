@@ -872,8 +872,8 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
-            if (m.projectData != null)
-                m = m.projectData;
+            if (m.projectDatum != null)
+                m = m.projectDatum;
             if (_Flow.CreateProjectData(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
@@ -888,10 +888,10 @@ namespace EXPEDIT.Flow.Controllers {
         {
             if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
-            if (m.projectData != null && m.id != null)
+            if (m.projectDatum != null && m.id != null)
             {
-                m.projectData.id = m.id;
-                m = m.projectData;
+                m.projectDatum.id = m.id;
+                m = m.projectDatum;
             }
             if (_Flow.UpdateProjectData(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
