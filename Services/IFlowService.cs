@@ -149,7 +149,9 @@ namespace EXPEDIT.Flow.Services
 
         [OperationContract]
         ProjectDataViewModel[] GetProjectData(Guid[] pdid);
-
+        bool CreateProjectData(ProjectDataViewModel m);
+        bool UpdateProjectData(ProjectDataViewModel m);
+        bool DeleteProjectData(ProjectDataViewModel m);
        
 
 

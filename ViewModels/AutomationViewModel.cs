@@ -49,6 +49,13 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? ApprovedBy { get { return PreviousStep.ApprovedBy; } }
         public string Comments { get { return PreviousStep.Comments; } }
 
+        public Guid? VersionAntecedentID { get { return PreviousStep.VersionAntecedentID; } }
+        public Guid? VersionUpdatedBy { get { return PreviousStep.VersionUpdatedBy; } }
+        public Guid? VersionOwnerContactID { get { return PreviousStep.VersionOwnerContactID; } }
+        public Guid? VersionOwnerCompanyID { get { return PreviousStep.VersionOwnerCompanyID; } }
+        public DateTime? VersionUpdated { get { return PreviousStep.VersionUpdated; } }
+
+
         public Guid? TaskID { get { return (PreviousTask.TaskID == Guid.Empty) ? default(Guid?) : PreviousTask.TaskID; } }
 
         public bool? IncludeContent { get; set; }

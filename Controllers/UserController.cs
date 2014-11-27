@@ -864,5 +864,60 @@ namespace EXPEDIT.Flow.Controllers {
             return new JsonHelper.JsonNetResult(new { projectData = result }, JsonRequestBehavior.AllowGet);
         }
 
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("ProjectData")]
+        public ActionResult CreateProjectData(ProjectDataViewModel m)
+        {
+            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+            if (m.projectData != null)
+                m = m.projectData;
+            if (_Flow.CreateProjectData(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("ProjectData")]
+        public ActionResult UpdateProjectData(ProjectDataViewModel m)
+        {
+            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+            if (m.projectData != null && m.id != null)
+            {
+                m.projectData.id = m.id;
+                m = m.projectData;
+            }
+            if (_Flow.UpdateProjectData(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("ProjectData")]
+        public ActionResult DeleteProjectData(ProjectDataViewModel m)
+        {
+            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+            if (!m.id.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.DeleteProjectData(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+
+        }
+
+
+
+
     }
 }
