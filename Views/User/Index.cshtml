@@ -1051,6 +1051,8 @@
                 {{!--view 'awesome'--}}
                 {{handlebars-live templatestring=templatestring}}
             </div>
+            <hr>
+            {{eui-button label="Next Step" action="nextStep" size="large" style='primary'}}
         </div>
 
         <div class="col-md-6">
@@ -2138,9 +2140,9 @@
                         </div>
                     </div>
                 </div>
-
-                <h4>My Todos</h4>
-                <div class="">
+                {{#if controllers.application.isLoggedIn}}
+                    <h4>My Todos</h4>
+                    <div class="">
                     <table class="table table-hover">
                         <thead>
                             <tr>
@@ -2181,7 +2183,10 @@
 
                         </tbody>
                     </table>
-                </div>
+                    </div>
+                {{else}}
+                    You need to be logged in :)
+                {{/if}}
             </div>
             <!-- end products table -->
 

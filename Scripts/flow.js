@@ -3807,10 +3807,25 @@ App.StepRoute = Ember.Route.extend({
     queryParams: {
         workflowID: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
     },
+    steps: '',
     model: function (params, data) {
-        return Ember.RSVP.hash({
-            steps: this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true })
-        });
+        var _this = this;
+        return this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true }).then(function(a){
+                // debugger;
+                    _this.set('steps', a);
+                    
+                return a.content[0].get('Project')
+            }).then(function (b) {
+                // debugger;
+                return b.get('ProjectData')
+            }).then(function (c){
+                // debugger;
+                return {
+                    steps: _this.get('steps'),
+                    data: c
+                }
+            });
+    
     }
    
 });
@@ -3852,6 +3867,8 @@ App.StepController = Ember.ObjectController.extend({
 
                 $.each(data.fields, function (i, d) {
                      var uniqueID = id + '-' + i; // unique ID for each field
+
+
 
                      text += "{{lform-" + d.field_type + " s=contextData." + uniqueID +" testvar=testVar}} <br>"
                     
@@ -3897,8 +3914,40 @@ App.StepController = Ember.ObjectController.extend({
     sampleVarControllerLevel: '123-sampleVarControllerLevel',
     workflowID: null,
     projectID: null,
+    stepID: function(){
+        return this.get('model.steps.firstObject.id');
+    }.property('model.steps.firstObject.id'),
     nodeID: null,
-    taskID: null
+    taskID: null,
+    actions: {
+        nextStep: function(){
+
+            var _this = this;
+
+            var context = this.get('contextData');
+            console.log(context);
+
+            Enumerable.From(context).ForEach(function(d){
+                
+                var formData = d.Value.d;
+                var formVal = d.Value.value;
+
+                // ANDY FIX HERE - SAVING PROJECT DATA
+                var newRecord = _this.store.createRecord('projectDatum', {
+                    // ProjectDataTemplateID: formVal.uid,
+                    ProjectPlanTaskResponseID: _this.get('stepID'),
+                    Value: formVal
+                })
+
+                newRecord.save().then(function(){
+                     Messenger().post({ type: 'success', message: 'Saved' });
+                }, function(){
+                    Messenger().post({ type: 'error', message: 'Error' });
+                });
+            });
+
+        }
+    }
 });
 
 
@@ -3914,7 +3963,9 @@ App.TodoRoute = Ember.Route.extend({
 
 });
 
-App.TodoController = Ember.ObjectController.extend({});
+App.TodoController = Ember.ObjectController.extend({
+    needs: ['application']
+});
 
 
 DS.RESTAdapter.reopen({
