@@ -4158,10 +4158,7 @@ App.Project = DS.Model.extend({
     Steps: DS.hasMany('step', { async: true }),
 });
 
-App.ProjectDatum = DS.Model.extend({
-    Label: '',
-    Options: null,
-    Type: 'text',
+App.ProjectDataTemplate = DS.Model.extend({
     CommonName: DS.attr('string', { defaultValue: null }),
     UniqueID: DS.attr('string', { defaultValue: null }),
     UniqueIDSystemDataType: DS.attr('string', { defaultValue: null }),
@@ -4177,7 +4174,13 @@ App.ProjectDatum = DS.Model.extend({
     SystemDataType: DS.attr('string', { defaultValue: null }),
     IsReadOnly: DS.attr('string', { defaultValue: null }),
     IsVisible: DS.attr('string', { defaultValue: null }),
-    ProjectDataTemplateID: DS.attr('string', { defaultValue: null }),
+    ProjectDataTemplateID: DS.attr('string', { defaultValue: null })
+});
+
+App.ProjectDatum = App.ProjectDataTemplate.extend({
+    Label: '',
+    Options: null,
+    Type: 'text',
     ProjectID: DS.attr('string', { defaultValue: null }),
     ProjectPlanTaskResponseID: DS.attr('string', { defaultValue: null }),
     Value: DS.attr('string', { defaultValue: null })

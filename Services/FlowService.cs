@@ -2414,34 +2414,21 @@ namespace EXPEDIT.Flow.Services {
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
                     Guid? taskID = null;
-                    AutomationViewModel m;
-                    NKD.Module.BusinessObjects.Task task = new NKD.Module.BusinessObjects.Task { };
-                    ProjectPlanTaskResponse step = d.ProjectPlanTaskResponses.Where(f => f.ProjectPlanTaskResponseID == sid && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
-                    if (step != null)
-                    {
-                        if (!CheckPermission(sid, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
-                            return null;
-                        taskID = step.ActualTaskID ?? (step.ProjectPlanTaskID.HasValue ? step.ProjectPlanTask.TaskID : null) ?? tid;
-                        if (taskID.HasValue)
-                            task = d.Tasks.Where(f => f.TaskID == taskID && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
-                        m = new AutomationViewModel { PreviousStep = step, PreviousTask = task, IncludeContent = includeContent };
-                    }
+                    AutomationViewModel m = null;
+                    if (sid.HasValue)
+                        m = _automation.GetStep(d, sid.Value, tid, includeContent);
                     //New Step
-                    else
+                    if (m == null)
                     {
-                        step = new ProjectPlanTaskResponse { ProjectPlanTaskResponseID = sid ?? Guid.NewGuid(), ProjectID = pid, ActualTaskID = taskID, ActualGraphDataGroupID = gid, ActualGraphDataID = nid };
-                        if (taskID.HasValue)
-                            task = new NKD.Module.BusinessObjects.Task { GraphDataID = nid, GraphDataGroupID = gid, TaskID = taskID.Value };
-                        m = new AutomationViewModel { PreviousStep = step, PreviousTask = task, IncludeContent = includeContent };
+                        m = new AutomationViewModel {};
+                        m.IncludeContent = includeContent;
+                        m.PreviousStep = new ProjectPlanTaskResponse { ProjectPlanTaskResponseID = sid ?? Guid.NewGuid(), ProjectID = pid, ActualTaskID = taskID, ActualGraphDataGroupID = gid, ActualGraphDataID = nid };
+                        if (tid.HasValue)
+                            m.PreviousTask = new NKD.Module.BusinessObjects.Task { GraphDataID = nid, GraphDataGroupID = gid, TaskID = tid.Value };
+                        else
+                            m.PreviousTask = new NKD.Module.BusinessObjects.Task { };
                         if (!CreateStep(m))
                             return null;
-                    }
-                    if (m.IncludeContent ?? false)
-                    {
-                        var g = (from o in d.GraphData.Where(f => f.GraphDataID == m.GraphDataID && f.Version == 0 && f.VersionDeletedBy == null)
-                                 select new { o.GraphContent, o.GraphName }).SingleOrDefault();
-                        m.label = g.GraphName;
-                        m.content = g.GraphContent;
                     }
                     return m;
                 }
