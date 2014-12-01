@@ -585,7 +585,8 @@ namespace EXPEDIT.Flow.Services {
                                         Weight = o[4] as decimal?,
                                         RelationTypeID = o[5] as Guid?,
                                         Related = o[6] as DateTime?,
-                                        Sequence = o[7] as int?
+                                        Sequence = o[7] as int?,
+                                        EdgeConditionsText = o[17] as string
                                     });
                     result.Workflows = (from o in dataset.Tables[groups].AsEnumerable()
                                         select new FlowEdgeWorkflowViewModel
@@ -1064,6 +1065,7 @@ namespace EXPEDIT.Flow.Services {
                 id = CheckNodePrivileges(d, null, edge.ToGraphDataID, companies, company, ActionPermission.Delete, out isNew);
                 if (id == null || isNew)
                     return false;
+                d.GraphDataRelationConditions.Where(f => f.GraphDataRelationID == edge.GraphDataRelationID).Delete();
                 d.GraphDataRelation.DeleteObject(edge);
                 d.SaveChanges();
                 return true;
@@ -2648,7 +2650,9 @@ namespace EXPEDIT.Flow.Services {
                         UserDataType = m.UserDataType,
                         SystemDataType = m.SystemDataType,
                         IsReadOnly = m.IsReadOnly,
-                        IsVisible = m.IsVisible
+                        IsVisible = m.IsVisible,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionUpdatedBy = contact
                     };
                     d.ProjectDataTemplates.AddObject(pdt);
                     var pd = new ProjectData
@@ -2685,10 +2689,13 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     //Update
                     var pd = (from o in d.ProjectDatas where o.ProjectDataID == m.id && o.VersionDeletedBy == null select o).Single();
-                    pd.Value = m.Value;
-                    pd.VersionUpdated = DateTime.UtcNow;
-                    pd.VersionUpdatedBy = contact;
-                    d.SaveChanges();
+                    if (pd.Value != null && pd.Value != m.Value)
+                    {
+                        pd.Value = m.Value;
+                        pd.VersionUpdated = DateTime.UtcNow;
+                        pd.VersionUpdatedBy = contact;
+                        d.SaveChanges();
+                    }
                     return true;
                 }
 
@@ -2721,6 +2728,164 @@ namespace EXPEDIT.Flow.Services {
                 return false;
             }
         }
+
+
+
+        public EdgeConditionViewModel[] GetEdgeCondition(Guid[] mids)
+        {
+            if (mids == null || mids.Length == 0)
+                return new EdgeConditionViewModel[] { };
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var mid = mids[0];
+                    var id = d.GraphDataRelationConditions.Single(g => g.GraphDataRelationConditionID == mid && g.Version == 0 && g.VersionDeletedBy == null).GraphDataRelationID;
+                    if (id == null || !CheckPermission(id, ActionPermission.Read, typeof(GraphDataRelation)))
+                        return null;
+                    var m = (from o in d.GraphDataRelationConditions.Where(f => f.VersionDeletedBy == null && f.Version == 0 && f.GraphDataRelationID == id)
+                             join c in d.Precondition.Where(h => h.Version == 0 && h.VersionDeletedBy == null)
+                             on o.ConditionID equals c.ConditionID
+                             select new EdgeConditionViewModel
+                             {
+                                 id = o.GraphDataRelationConditionID,
+                                 OverrideProjectDataWithJsonCustomVars = c.OverrideProjectDataWithJsonCustomVars,
+                                 Condition = c.Condition,
+                                 Grouping = o.Grouping,
+                                 Sequence = o.Sequence,
+                                 JoinedBy = o.JoinedBy,
+                                 ConditionID = c.ConditionID,
+                                 GraphDataRelationID = o.GraphDataRelationID
+                             }).ToArray();
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
+        public bool CreateEdgeCondition(EdgeConditionViewModel m)
+        {
+            var contact = _users.ContactID;
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.GraphDataRelationID, ActionPermission.Update, typeof(GraphDataRelation)))
+                        return false;
+                    var c = new Precondition
+                    {
+                        ConditionID = m.ConditionID.Value,
+                        Condition = m.Condition,
+                        OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionUpdatedBy = contact
+                    };
+                    d.Precondition.AddObject(c);
+                    var gdrc = new GraphDataRelationCondition
+                    {
+                        GraphDataRelationConditionID = m.id.Value,
+                        GraphDataRelationID = m.GraphDataRelationID,
+                        ConditionID = m.ConditionID,
+                        Grouping = m.Grouping,
+                        Sequence = m.Sequence,
+                        JoinedBy = m.JoinedBy,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionUpdatedBy = contact
+                    };
+                    d.GraphDataRelationConditions.AddObject(gdrc);
+                    d.SaveChanges();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool UpdateEdgeCondition(EdgeConditionViewModel m)
+        {
+
+            try
+            {
+                var contact = _users.ContactID;
+                var now = DateTime.Now;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(GraphDataRelationCondition)))
+                        return false;
+                    //Update
+                    var gdrc = (from o in d.GraphDataRelationConditions where o.GraphDataRelationConditionID == m.id && o.VersionDeletedBy == null select o).Single();
+                    if (gdrc.Condition.Condition != null && gdrc.Condition.Condition != m.Condition)
+                        gdrc.Condition.Condition = m.Condition;
+                    if (gdrc.Condition.OverrideProjectDataWithJsonCustomVars != null && gdrc.Condition.OverrideProjectDataWithJsonCustomVars != m.OverrideProjectDataWithJsonCustomVars)
+                        gdrc.Condition.OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars;
+                    if (gdrc.Grouping != null && gdrc.Grouping != m.Grouping)
+                        gdrc.Grouping = m.Grouping;
+                    if (gdrc.Sequence != null && gdrc.Sequence != m.Sequence)
+                        gdrc.Sequence = m.Sequence;
+                    if (gdrc.JoinedBy != null && gdrc.JoinedBy != m.JoinedBy)
+                        gdrc.JoinedBy = m.JoinedBy;
+                    if (gdrc.Condition.EntityState == EntityState.Modified)
+                    {
+                        gdrc.Condition.VersionUpdated = now;
+                        gdrc.Condition.VersionUpdatedBy = contact;
+                    }
+                    if (gdrc.EntityState == EntityState.Modified)
+                    {
+                        gdrc.VersionUpdated = now;
+                        gdrc.VersionUpdatedBy = contact;
+                    }
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool DeleteEdgeCondition(EdgeConditionViewModel m)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(GraphDataRelationCondition)))
+                        return false;
+                    //Delete
+                    var pd = (from o in d.GraphDataRelationConditions where o.GraphDataRelationConditionID == m.id && o.VersionDeletedBy == null select o).Single();
+                    if (pd != null && pd.ConditionID != null)
+                    {
+                        try
+                        {
+                            d.Precondition.DeleteObject(pd.Condition);
+                        }
+                        catch { }
+                    }
+                    d.GraphDataRelationConditions.DeleteObject(pd);
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
 
 
     }

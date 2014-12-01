@@ -451,6 +451,24 @@ namespace EXPEDIT.Flow
                         },
                         new MvcRouteHandler())
                 },
+                 new RouteDescriptor {
+                    Priority = 15,
+                    Route = new Route(
+                        "Flow/WebMethod/{id}/{reference}",
+                        new RouteValueDictionary {
+                            {"area", "EXPEDIT.Flow"},
+                            {"controller", "WebMethod"},
+                            {"action", "ExecuteMethod"}
+                        },
+                        new RouteValueDictionary {
+                            {"area", "EXPEDIT.Flow"},
+                            {"controller", "WebMethod"}
+                        },
+                        new RouteValueDictionary {
+                            {"area", "EXPEDIT.Flow"}
+                        },
+                        new MvcRouteHandler())
+                },
                 new RouteDescriptor {
                         Priority = 5,
                         Route = new Route(
@@ -489,6 +507,21 @@ namespace EXPEDIT.Flow
                                 {"area", "EXPEDIT.Flow"},
                                 {"controller", "User"},
                                 {"action", "projectData"}
+                            },
+                            null,
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"}
+                            },
+                            new MvcRouteHandler())
+                },                
+                new RouteDescriptor {
+                        Priority = 5,
+                        Route = new Route(
+                            "Flow/EdgeConditions",
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"},
+                                {"controller", "User"},
+                                {"action", "EdgeConditions"}
                             },
                             null,
                             new RouteValueDictionary {

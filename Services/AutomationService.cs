@@ -231,10 +231,17 @@ namespace EXPEDIT.Flow.Services {
             var application = ApplicationID;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
-                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var d = new NKDC(_users.ApplicationConnectionString, null);                
                 //if no stepid - lets make one
-                if (!m.PreviousStepID.HasValue)
-                    m.PreviousStep.ProjectPlanTaskResponseID = Guid.NewGuid();
+                if (!m.PreviousStepID.HasValue || m.PreviousStepID == Guid.Empty)
+                {
+                    if (m.ReferenceID.HasValue)
+                        m.PreviousStep.ProjectPlanTaskResponseID = m.ReferenceID.Value;
+                    else
+                        m.PreviousStep.ProjectPlanTaskResponseID = Guid.NewGuid();
+                }
+                    
+                
                 //If no projectID, instantiate workflow - need graphdatagroupid
                 if (!m.ProjectID.HasValue && !d.ProjectPlanTaskResponses.Any(f => f.ProjectPlanTaskResponseID == m.PreviousStepID)) //&& f.VersionDeletedBy == null && f.Version == 0 removed this to enable continuation of flows after edits
                 {
@@ -373,7 +380,7 @@ namespace EXPEDIT.Flow.Services {
                     //Quench Model
                     if (!QuenchStep(d, m))
                     {
-                        m.Error = "Could not quench existing step. Permission error or may not exist.";
+                        m.Error = "Could not quench existing step. Permission error or does not exist.";
                         return false;
                     }
                     //Prob should check whether its checked out

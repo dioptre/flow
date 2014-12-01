@@ -75,6 +75,22 @@ namespace EXPEDIT.Flow.ViewModels
         public DateTime? Related { get; set; }
         public int? Sequence { get; set; }
         [JsonIgnore]
+        public string EdgeConditionsText { get; set; }
+        public Guid[] EdgeConditions
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(EdgeConditionsText))
+                {
+                    return EdgeConditionsText.Split(',').Select(f => Guid.Parse(f)).ToArray();
+                }
+                else
+                {
+                    return new Guid[] { };
+                }
+            }
+        }
+        [JsonIgnore]
         public IEnumerable<FlowEdgeWorkflowViewModel> Workflows { get; set; }
 
     }

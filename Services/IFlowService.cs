@@ -149,10 +149,21 @@ namespace EXPEDIT.Flow.Services
 
         [OperationContract]
         ProjectDataViewModel[] GetProjectData(Guid[] pdid);
+        [OperationContract]
         bool CreateProjectData(ProjectDataViewModel m);
+        [OperationContract]
         bool UpdateProjectData(ProjectDataViewModel m);
+        [OperationContract]
         bool DeleteProjectData(ProjectDataViewModel m);
-       
+
+        [OperationContract]
+        EdgeConditionViewModel[] GetEdgeCondition(Guid[] pdid);
+        [OperationContract]
+        bool CreateEdgeCondition(EdgeConditionViewModel m);
+        [OperationContract]
+        bool UpdateEdgeCondition(EdgeConditionViewModel m);
+        [OperationContract]
+        bool DeleteEdgeCondition(EdgeConditionViewModel m);
 
 
     }

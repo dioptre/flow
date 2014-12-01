@@ -866,21 +866,25 @@ App.ApplicationRoute = Ember.Route.extend({
     },
     model: function (params) {
 
+        if (params.localeSelected == 'null')
+            params.localeSelected = App.get('locale.l');
+
         // Get the language from the browser settings;
-        var userLang = navigator.language || navigator.userLanguage
+        var userLang = params.localeSelected || navigator.language || navigator.userLanguage;
 
-
-        App.set('localeSelected', params.localeSelected);
         var isNew = false;
         if (!App.get('locale')) {
             isNew = true;
             App.set('locale', Ember.Object.create({ l: null }));
         }
-        if (isNew || App.get('locale.l') !== params.localeSelected)
+        if (isNew || App.get('locale.l') !== userLang)
         {
-            App.set('locale.l', params.localeSelected);
-            updateLocale(this, params.localeSelected);
+            App.set('locale.l', userLang);
+            updateLocale(this, userLang);
         }
+
+        App.set('localeSelected', userLang);
+
     },
     actions: {
         transitionSearch: function (a) {
@@ -975,12 +979,12 @@ App.ApplicationController = Ember.Controller.extend({
     }.observes('localeSelected'),
     localeAppObserver: function () {
         var _this = this;
-        App.get('locale').addObserver('l', defaultLocale, function () {
+        App.get('locale').addObserver('l', this, function () {
             _this.set('localeSelected',App.get('locale.l'));
         });
-        _this.set('localeSelected', App.get('locale.l'));
+        _this.set('localeSelected', App.get('locale.l') || defaultLocale);
     }.on('init'),
-    localeSelected: defaultLocale,
+    localeSelected: null, //fixed not translating back to english
     actions: {
         logoutUser: function(){
             var _this = this;
@@ -4336,7 +4340,22 @@ App.Edge = DS.Model.extend({
     RelationTypeID: DS.attr(),
     Weight: DS.attr(),
     Sequence: DS.attr(),
+    EdgeConditions: DS.hasMany('edgeCondition', { async: true }),
 });
+
+App.Condition = DS.Model.extend({
+    OverrideProjectDataWithJsonCustomVars: DS.attr(''),
+    Condition: DS.attr('')
+})
+
+App.EdgeCondition = App.Condition.extend({
+    Grouping: DS.attr(''),
+    Sequence: DS.attr(''),
+    JoinedBy: DS.attr(''),
+    ConditionID: DS.attr(''),
+    GraphDataRelationID: DS.attr('')
+});
+
 
 App.Workflow = DS.Model.extend({
     name: DS.attr('string'),
