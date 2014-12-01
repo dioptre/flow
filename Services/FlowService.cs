@@ -2750,6 +2750,7 @@ namespace EXPEDIT.Flow.Services {
                              select new EdgeConditionViewModel
                              {
                                  id = o.GraphDataRelationConditionID,
+                                 JSON = c.JSON,
                                  OverrideProjectDataWithJsonCustomVars = c.OverrideProjectDataWithJsonCustomVars,
                                  Condition = c.Condition,
                                  Grouping = o.Grouping,
@@ -2783,6 +2784,7 @@ namespace EXPEDIT.Flow.Services {
                     {
                         ConditionID = m.ConditionID.Value,
                         Condition = m.Condition,
+                        JSON = m.JSON,
                         OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
                         VersionUpdated = DateTime.UtcNow,
                         VersionUpdatedBy = contact
@@ -2824,15 +2826,17 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     //Update
                     var gdrc = (from o in d.GraphDataRelationConditions where o.GraphDataRelationConditionID == m.id && o.VersionDeletedBy == null select o).Single();
-                    if (gdrc.Condition.Condition != null && gdrc.Condition.Condition != m.Condition)
+                    if (m.JSON != null && gdrc.Condition.JSON != m.JSON)
+                        gdrc.Condition.JSON = m.JSON;
+                    if (m.Condition != null && gdrc.Condition.Condition != m.Condition)
                         gdrc.Condition.Condition = m.Condition;
-                    if (gdrc.Condition.OverrideProjectDataWithJsonCustomVars != null && gdrc.Condition.OverrideProjectDataWithJsonCustomVars != m.OverrideProjectDataWithJsonCustomVars)
+                    if (m.OverrideProjectDataWithJsonCustomVars != null && gdrc.Condition.OverrideProjectDataWithJsonCustomVars != m.OverrideProjectDataWithJsonCustomVars)
                         gdrc.Condition.OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars;
-                    if (gdrc.Grouping != null && gdrc.Grouping != m.Grouping)
+                    if (m.Grouping != null && gdrc.Grouping != m.Grouping)
                         gdrc.Grouping = m.Grouping;
-                    if (gdrc.Sequence != null && gdrc.Sequence != m.Sequence)
+                    if (m.Sequence != null && gdrc.Sequence != m.Sequence)
                         gdrc.Sequence = m.Sequence;
-                    if (gdrc.JoinedBy != null && gdrc.JoinedBy != m.JoinedBy)
+                    if (m.JoinedBy != null && gdrc.JoinedBy != m.JoinedBy)
                         gdrc.JoinedBy = m.JoinedBy;
                     if (gdrc.Condition.EntityState == EntityState.Modified)
                     {

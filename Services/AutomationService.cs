@@ -18,6 +18,8 @@ using NKD.Models;
 using NKD.Helpers;
 using EXPEDIT.Share.Helpers;
 using EXPEDIT.Share.Services;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace EXPEDIT.Flow.Services {
 
@@ -221,6 +223,43 @@ namespace EXPEDIT.Flow.Services {
             else return null;
         }
 
+        public async System.Threading.Tasks.Task<bool> EquateAsync(string js)
+        {
+
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(100);
+            try
+            {
+                System.Threading.Tasks.Task<bool> task = System.Threading.Tasks.Task.Run<bool>(() => Equate(js), cts.Token);
+                return await task;
+
+            }
+            // *** If cancellation is requested, an OperationCanceledException results. 
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public bool EquatePseudoSync(string js)
+        {
+            var task = System.Threading.Tasks.Task.Factory.StartNew(() => EquateAsync(js));
+            task.Wait();
+            return task.Result.Result;
+        }
+
+        public bool Equate(string js)
+        {
+            return new Engine()
+                    .Execute(js)
+                    .GetCompletionValue() // get the latest statement completion value
+                    .AsBoolean();   
+        }
+
 
 
         public bool DoNext(AutomationViewModel m)
@@ -384,8 +423,54 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     }
                     //Prob should check whether its checked out
+                    if (m.PreviousWorkflowInstance != null)
+                    {
+                        if (m.PreviousWorkflowInstance.Completed.HasValue)
+                        {
+                            m.Error = "Workflow Completed";
+                            return false;
+                        }
+                        if (m.PreviousWorkflowInstance.Idle.HasValue && m.PreviousWorkflowInstance.Idle > now && m.PreviousWorkflowInstance.VersionOwnerContactID != contact)
+                        {
+                            m.Error = "Workflow Busy";
+                            return false;
+                        }
+                        if (m.PreviousWorkflowInstance.Cancelled.HasValue)
+                        {
+                            m.Error = "Workflow Cancelled";
+                            return false;
+                        }
+                    }
+
+                    var isCompleted = false;
+                    var options = d.GraphDataRelation.Where(f=>f.FromGraphDataID == m.ActualGraphDataID && f.VersionDeletedBy == null && f.Version == 0)
+                        .OrderByDescending(f=>f.Weight)
+                        .OrderByDescending(f=>f.VersionUpdated);
+                    if (options.Count() == 0)
+                    {
+                        m.Error = "Workflow Completed";
+                        isCompleted = true;
+                    }
+
+                    var data = (from o in d.ProjectDatas.Where(f => f.ProjectID == m.ProjectID && f.VersionDeletedBy == null && f.Version == 0).OrderByDescending(f => f.VersionUpdated)
+                                join t in d.ProjectDataTemplates on o.ProjectDataTemplateID equals t.ProjectDataTemplateID
+                                select new { t.CommonName, o.Value, t.SystemDataType }
+                                    ).GroupBy(f => f.CommonName, f => f, (key, g) => g.FirstOrDefault());
+                    var dict = data.ToDictionary(f => f.CommonName, f => f.Value);
+                    foreach (var option in options)
+                    {
+                        var correct = false;
+                        foreach (var condition in option.Condition)
+                        {
+                            if (!EquatePseudoSync(condition.Condition.Condition))
+                            {
+                                correct = false;
+                                break;
+                            }
+                        }
+                    }
                    
-                    //m.PreviousStep.ActualGraphDataID
+
 
                     //if final transition send 000000-0000-00000000
 
