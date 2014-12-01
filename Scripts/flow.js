@@ -3880,6 +3880,27 @@ App.TriggerSetupComponent = Ember.Component.extend({
             }
         ]
     },
+    configEvaluation: function(){
+        var c = this.get('config');
+
+        var s = ''; // this is the magic string later
+
+        if (!c.triggerConditions)
+            return s // if the trigger condition is false just return nothing
+
+        fields.forEach(function(i, a){
+            var l = ''
+            if (a.matchSelect == 'contains') {
+                l = '==' + a.matchInput;
+            }
+            s += '( ' + '{{' + a.varSelect + '}}' + l + ')' 
+        })
+
+        return s
+        
+
+
+    },
     defaultConfigItem: {        
                 type: {
                     varSelect: '',
@@ -3889,7 +3910,24 @@ App.TriggerSetupComponent = Ember.Component.extend({
     },
     actions: {
         'saveConditions': function(context){
-            this.get('edge');
+            this.get('edge').get('EdgeConditions').then(function(a){
+                 if (a) {
+                    // edit a
+                 } else {
+                    // create a new one and save to it
+
+                    var newCondition = createRecord('edgeCondition', {
+                        ConditionID: GUID(),
+                        GraphDataRelationID: this.get('edgeID'),
+                        JSON:  this.get('config')// paul super easy array
+                        Condition: // andy's js condition
+                    }).save()
+
+                    this.get('edge.edgeConditions').appendObject(newCondition)
+
+
+                 }
+            });
         },
         'addRow': function (context) {
             var positionCurrent = this.get('config.fields').indexOf(context.itemInsertAfter) + 1;
