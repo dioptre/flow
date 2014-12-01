@@ -3808,20 +3808,21 @@ App.StepRoute = Ember.Route.extend({
         workflowID: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
     },
     steps: '',
+    project: '',
     model: function (params, data) {
         var _this = this;
         return this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true }).then(function(a){
-                // debugger;
-                    _this.set('steps', a);
-                    
+                _this.set('steps', a);                
                 return a.content[0].get('Project')
             }).then(function (b) {
                 // debugger;
+                _this.set('project', b)
                 return b.get('ProjectData')
             }).then(function (c){
                 // debugger;
                 return {
                     steps: _this.get('steps'),
+                    project: _this.get('project'),
                     data: c
                 }
             });
