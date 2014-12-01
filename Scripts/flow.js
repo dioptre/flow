@@ -87,9 +87,7 @@ App.Router.map(function () {
     // FlowPro v2
     this.route('todo');
     this.route('styleguide', {path:"styleguide"}, function(){
-        this.modal('amazing-moda', {
-          withParams: ['category']
-        });
+        this.modal('first-modal', {withParams: 'foo'});
     }); // Internal only
     this.route('editor', { path: 'editor/:id' }); // - editing executable workflows
     this.route('step', { path: 'step/:id' }); // - executing
@@ -173,8 +171,8 @@ App.StyleguideRoute = Ember.Route.extend({
 });
 
 App.StyleguideController = Ember.Controller.extend({
-  queryParams: ['category'],
-  category: null
+  queryParams: ['foo'],
+  foo: null
 })
 
 App.ErrorpageRoute = Ember.Route.extend({
@@ -2216,18 +2214,6 @@ App.GraphController = Ember.ObjectController.extend({
             $('body').fitVids();
         })
     }.observes('model.content'),
-    //humanReadableName: function () {
-    //    var temp = this.get('model.selected.label');
-    //    if (temp)
-    //        return ToTitleCase(temp.replace(/_/g, ' '));
-    //    else
-    //        return null;
-    //}.property('model.selected.label'),
-
-    // Do something if the s
-    graphDataTrigger : function () {
-
-    }.observes('model', 'model.selected', 'model.@each.workflows'),
     changeSelected: function () {
         //var found = false;
         //var edges = Enumerable.From(this.get('graphData').edges);
@@ -2324,6 +2310,22 @@ App.GraphController = Ember.ObjectController.extend({
             return (typeof this.get('validateExistingName') === 'string') || (typeof this.get('validateWorkflowName') === 'string');
     }.property('validateWorkflowName', 'validateNewName', 'validateExistingName'),
 
+    selectedData: {},
+    selectedDataisSingleEdgeError: '',
+    selectedDataisSingleEdge: function(){
+        var a = this.get('selectedData.edges');
+        if (a && a.length == 1) {
+            return true;
+        }
+        if (a && a.length == 0) {
+            this.set('selectedDataisSingleEdgeError', 'No edge selected');
+        } else {
+            this.set('selectedDataisSingleEdgeError', 'More than one edge selected');
+        }
+
+        return false;
+    }.property('selectedData','selectedData.edges', 'selectedData.nodes'),
+    
     actions: {
         createWorkflowInstance: function() {
             this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
@@ -2661,7 +2663,17 @@ App.VizEditorComponent = Ember.Component.extend({
     selected: '',
     selectedName: '',
     workflowID: '',
+    selectedData: {},
     isSelected: false,
+    isSelectedEdge: function() {
+        var a = this.get('selectedData.edges');
+        console.log('1')
+        if (a && a.length == 1) {
+            // this.set('')
+            return true;
+        }
+        return false;
+    }.property('selectedData','selectedData.edges', 'selectedData.nodes'),
     isWorkflow: function () {
         return IsGUID(this.get('selected'));
     }.property(),
@@ -2765,11 +2777,16 @@ App.VizEditorComponent = Ember.Component.extend({
         this.graph = new vis.Network(container, data, options);
         // This sets the new selected item on click
         this.graph.on('click', function (data) {
+            
+            // Set the value on the component - used by a few computed properties including edit edge conditions...
+            _this.set('selectedData', data);
+            
             if (data.nodes.length > 0) {
                 var wfid = _this.get('workflowID'); // has to be synched with data
-                if (!IsGUID(data.nodes[0])
-                    || Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  (f.get('from') === '" + data.nodes[0] + "' || f.get('to') === '" + data.nodes[0] + "')")
-                    || !Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' && f.get('to') !== null")
+                // either wikipedia OR node is part of workflow confirmed by store OR first node
+                if (!IsGUID(data.nodes[0]) // wikipedia???
+                    || Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  (f.get('from') === '" + data.nodes[0] + "' || f.get('to') === '" + data.nodes[0] + "')") // existsin the edge store - not sure why relevant
+                    || !Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' && f.get('to') !== null") // or the beginning node
                     //|| !Enumerable.From(App.Node.store.all('edge').content).Any("f=>f.get('GroupID')==='" + wfid + "' &&  ((f.get('from') === '" + _this.get('selected') + "' && f.get('to') !== null) || f.get('to') === '" + _this.get('selected') + "' )")
                     ) {
                     _this.set('selected', data.nodes[0]);
