@@ -1040,6 +1040,23 @@
   </script>
 
 
+<script type="text/x-handlebars" data-template-name="components/trigger-setup">
+    Match {{eui-select required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
+    
+    <br>
+    <br>
+
+    {{#each con in config}}
+        {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium' labelPath='value'}}
+        {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
+        {{eui-input  value=con.type.matchInput size="medium" placeholder=''}}
+        {{eui-button icon='icon icon-minus' action='deleteRow' itemToDelete=con}}
+        {{eui-button icon='icon icon-plus' action='addRow' itemInsertAfter=con}}
+        <br>
+    {{/each}}
+
+</script>
+
 <!---- Step - Executing WF -->
 <!------------------------------>
 <script type="text/x-handlebars" id="step">
