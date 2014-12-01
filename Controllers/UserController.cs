@@ -917,6 +917,79 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
 
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("EdgeConditions")]
+        public ActionResult GetEdgeCondition(string id)
+        {
+            var ids = Request.Params["ids[]"];
+            EdgeConditionViewModel[] result = new EdgeConditionViewModel[] {};
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                result = _Flow.GetEdgeCondition(new Guid[] {Guid.Parse(id)});
+
+            } else if (!string.IsNullOrWhiteSpace(ids))
+            {
+               result = _Flow.GetEdgeCondition((from o in ids.Split(',') select Guid.Parse(o)).ToArray());
+            }
+
+            if (result == null)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+            return new JsonHelper.JsonNetResult(new { edgeConditions = result }, JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("EdgeConditions")]
+        public ActionResult CreateEdgeCondition(EdgeConditionViewModel m)
+        {
+            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+            if (m.edgeCondition != null)
+                m = m.edgeCondition;
+            if (_Flow.CreateEdgeCondition(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("EdgeConditions")]
+        public ActionResult UpdateEdgeCondition(EdgeConditionViewModel m)
+        {
+            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+            if (m.edgeCondition != null && m.id != null)
+            {
+                m.edgeCondition.id = m.id;
+                m = m.edgeCondition;
+            }
+            if (_Flow.UpdateEdgeCondition(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("EdgeConditions")]
+        public ActionResult DeleteEdgeCondition(EdgeConditionViewModel m)
+        {
+            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+            if (!m.id.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.DeleteEdgeCondition(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+
+        }
+
 
 
     }

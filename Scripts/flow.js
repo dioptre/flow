@@ -4277,7 +4277,22 @@ App.Edge = DS.Model.extend({
     RelationTypeID: DS.attr(),
     Weight: DS.attr(),
     Sequence: DS.attr(),
+    EdgeConditions: DS.hasMany('edgeCondition', { async: true }),
 });
+
+App.Condition = DS.Model.extend({
+    OverrideProjectDataWithJsonCustomVars: DS.attr(''),
+    Condition: DS.attr('')
+})
+
+App.EdgeCondition = App.Condition.extend({
+    Grouping: DS.attr(''),
+    Sequence: DS.attr(''),
+    JoinedBy: DS.attr(''),
+    ConditionID: DS:attr(''),
+    GraphDataRelationID: DS.attr('')
+});
+
 
 App.Workflow = DS.Model.extend({
     name: DS.attr('string'),
