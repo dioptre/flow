@@ -655,7 +655,10 @@ namespace EXPEDIT.Flow.Services {
                         if (match.Success)
                             files.Add(Guid.Parse(match.Groups[1].Value));
                     }
-                    (from o in d.GraphDataFileDatas where !files.Contains(o.FileDataID.Value) && o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
+                    if (files.Count > 0)
+                        (from o in d.GraphDataFileDatas where !files.Contains(o.FileDataID.Value) && o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
+                    else
+                        (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
                     var fd = (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).AsEnumerable();
                     foreach (var file in files)
                     {
@@ -711,13 +714,13 @@ namespace EXPEDIT.Flow.Services {
                 }
                 else
                 {
-                    (from o in d.GraphDataRelation where o.FromGraphDataID == m.GraphDataID || o.ToGraphDataID == m.GraphDataID select o).Delete();
+                    //(from o in d.GraphDataRelation where o.FromGraphDataID == m.GraphDataID || o.ToGraphDataID == m.GraphDataID select o).Delete();
                     (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
                     (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
-                    (from o in d.GraphDataHistories where o.GraphDataID == m.GraphDataID select o).Delete();
-                    (from o in d.GraphDataTriggers where o.GraphDataID == m.GraphDataID select o).Delete();
-                    (from o in d.ProjectPlanTaskResponses where o.ActualGraphDataID == m.GraphDataID select o).Delete();
-                    (from o in d.Tasks where o.GraphDataID == m.GraphDataID select o).Delete();
+                    //(from o in d.GraphDataHistories where o.GraphDataID == m.GraphDataID select o).Delete();
+                    //(from o in d.GraphDataTriggers where o.GraphDataID == m.GraphDataID select o).Delete();
+                    //(from o in d.ProjectPlanTaskResponses where o.ActualGraphDataID == m.GraphDataID select o).Delete();
+                    //(from o in d.Tasks where o.GraphDataID == m.GraphDataID select o).Delete();
                 }
 
                 //Forms
@@ -774,16 +777,75 @@ namespace EXPEDIT.Flow.Services {
                         }
                     }
                 }
+
+                //ProjectDataTemplate
+                var pdts = doc.DocumentNode.SelectNodes("//*[contains(@class,'tiny-form')]");
+                if (pdts != null)
+                {
+                    var json = pdts.Select(p => p.GetAttributeValue("data-json", null))
+                        .Where(f => f != null)
+                        .ToList();
+                    foreach (var js in json)
+                    {
+                        dynamic form = Newtonsoft.Json.Linq.JObject.Parse(HttpUtility.HtmlDecode(js));                       
+                        Guid formID = Guid.Parse(form.id.Value);
+                        if (form.fields.Type == Newtonsoft.Json.Linq.JTokenType.Array)
+                        {
+                            foreach (dynamic pdt in form.fields)
+                            {
+                                string pdtStructure = JsonConvert.SerializeObject(pdt);
+                                Guid pdtID = Guid.Parse(pdt.uid.Value);
+                                string pdtName = null;
+                                if (pdt.label != null)
+                                    pdtName = pdt.label.Value;
+                                string pdtHash = null;
+                                if (!string.IsNullOrWhiteSpace(pdtStructure))
+                                    pdtHash = pdtStructure.ComputeHash();
+                                else
+                                    pdtHash = null;
+                                ProjectDataTemplate template = d.ProjectDataTemplates.SingleOrDefault(f => f.ProjectDataTemplateID == pdtID);
+                                if (template == null)
+                                {
+                                    template = new ProjectDataTemplate
+                                    {
+                                        ProjectDataTemplateID = pdtID,
+                                        FormID = formID,
+                                        CommonName = pdtName,
+                                        TemplateStructure = pdtStructure,
+                                        TemplateStructureChecksum = pdtHash,
+                                        VersionOwnerContactID = creatorContact,
+                                        VersionOwnerCompanyID = creatorCompany,
+                                        VersionUpdated = DateTime.UtcNow,
+                                        VersionUpdatedBy = contact
+                                    };
+                                    d.ProjectDataTemplates.AddObject(template);
+                                }
+                                else
+                                {
+                                    if (pdtHash != template.TemplateStructureChecksum || pdtName != template.CommonName)
+                                    {
+                                        template.CommonName = pdtName;
+                                        template.TemplateStructureChecksum = pdtHash;
+                                        template.TemplateStructure = pdtStructure;
+                                        template.VersionUpdated = DateTime.UtcNow;
+                                        template.VersionUpdatedBy = contact;
+                                    }
+                                }
+                            }
+                        }
+                        
+                    }
+                }
             }
             else
             {
-                (from o in d.GraphDataRelation where o.FromGraphDataID == m.GraphDataID || o.ToGraphDataID == m.GraphDataID select o).Delete();
+                //(from o in d.GraphDataRelation where o.FromGraphDataID == m.GraphDataID || o.ToGraphDataID == m.GraphDataID select o).Delete();
                 (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
                 (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
-                (from o in d.GraphDataHistories where o.GraphDataID == m.GraphDataID select o).Delete();
-                (from o in d.GraphDataTriggers where o.GraphDataID == m.GraphDataID select o).Delete();
-                (from o in d.ProjectPlanTaskResponses where o.ActualGraphDataID == m.GraphDataID select o).Delete();
-                (from o in d.Tasks where o.GraphDataID == m.GraphDataID select o).Delete();
+                //(from o in d.GraphDataHistories where o.GraphDataID == m.GraphDataID select o).Delete();
+                //(from o in d.GraphDataTriggers where o.GraphDataID == m.GraphDataID select o).Delete();
+                //(from o in d.ProjectPlanTaskResponses where o.ActualGraphDataID == m.GraphDataID select o).Delete();
+                //(from o in d.Tasks where o.GraphDataID == m.GraphDataID select o).Delete();
             }
 
             //Default Group
