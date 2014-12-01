@@ -3803,6 +3803,48 @@ App.HandlebarsLiveComponent = Ember.Component.extend({
 });
 
 
+
+App.TriggerSetupComponent = Ember.Component.extend({
+    defaultRow: {},
+    tSmatchesRules: [{value: 'All'}, {value: 'Any'}],
+    tSvariables: [{value: 'Test'}, {value:'Awesome'}],
+    tSmatches: [{value: 'contains'}, {value:'does not contain'}, {value:'is'}, {value:'is not'}, {value:'begins with'}, {value:'ends with'}],
+    config: [
+        {        
+            type: {
+                varSelect: '',
+                matchSelect: '',
+                matchInput: ''
+            }
+        },
+        {        
+            type: {
+                varSelect: '',
+                matchSelect: '',
+                matchInput: ''
+            }
+        }
+    ],
+    defaultConfigItem: {        
+                type: {
+                    varSelect: '',
+                    matchSelect: '',
+                    matchInput: ''
+                }
+    },
+    actions: {
+        'addRow': function (context) {
+            var positionCurrent = this.get('config').indexOf(context.itemInsertAfter) + 1;
+            this.get('config').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
+
+        },
+        'deleteRow': function(context) {
+            this.get('config').removeObject(context.itemToDelete);
+        }                                             
+    }
+});
+
+
 App.StepRoute = Ember.Route.extend({
     queryParams: {
         workflowID: { refreshModel: true }  // this ensure that new data is loaded if another element is selected
