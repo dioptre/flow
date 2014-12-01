@@ -868,11 +868,12 @@ App.ApplicationRoute = Ember.Route.extend({
     },
     model: function (params) {
 
+        if (params.localeSelected == 'null')
+            params.localeSelected = App.get('locale.l');
+
         // Get the language from the browser settings;
-        var userLang = params.localeSelected || navigator.language || navigator.userLanguage
+        var userLang = params.localeSelected || navigator.language || navigator.userLanguage;
 
-
-        App.set('localeSelected', userLang);
         var isNew = false;
         if (!App.get('locale')) {
             isNew = true;
@@ -883,6 +884,9 @@ App.ApplicationRoute = Ember.Route.extend({
             App.set('locale.l', userLang);
             updateLocale(this, userLang);
         }
+
+        App.set('localeSelected', userLang);
+
     },
     actions: {
         transitionSearch: function (a) {
@@ -4331,7 +4335,7 @@ App.EdgeCondition = App.Condition.extend({
     Grouping: DS.attr(''),
     Sequence: DS.attr(''),
     JoinedBy: DS.attr(''),
-    ConditionID: DS:attr(''),
+    ConditionID: DS.attr(''),
     GraphDataRelationID: DS.attr('')
 });
 
