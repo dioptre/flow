@@ -70,18 +70,25 @@ namespace EXPEDIT.Flow.Controllers {
         [HttpGet]
         [ActionName("ExecuteMethod")]
         //[ValidateAntiForgeryToken]
-        public ActionResult ExecuteMethod(string id)
+        public ActionResult ExecuteMethod(string id, string reference = null)
         {
             var result = false;
             if (string.IsNullOrWhiteSpace(id))
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.MethodNotAllowed);
-            var json = new StreamReader(Request.InputStream).ReadToEnd();         
+            var json = new StreamReader(Request.InputStream).ReadToEnd();
             if (string.IsNullOrWhiteSpace(json))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            {
+                if (string.IsNullOrWhiteSpace(reference))
+                    return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest); 
+                json = string.Format("{{ ReferenceID: '{0}'}}", reference);
+            }
             var m = new AutomationViewModel
             {
                 JSON = json
             };
+            Guid trid;
+            if (Guid.TryParse(reference, out trid))
+                m.ReferenceID = trid;
             var method = id.ToUpperInvariant();
             if (!User.Identity.IsAuthenticated)
             {

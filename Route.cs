@@ -451,6 +451,24 @@ namespace EXPEDIT.Flow
                         },
                         new MvcRouteHandler())
                 },
+                 new RouteDescriptor {
+                    Priority = 15,
+                    Route = new Route(
+                        "Flow/WebMethod/{id}/{reference}",
+                        new RouteValueDictionary {
+                            {"area", "EXPEDIT.Flow"},
+                            {"controller", "WebMethod"},
+                            {"action", "ExecuteMethod"}
+                        },
+                        new RouteValueDictionary {
+                            {"area", "EXPEDIT.Flow"},
+                            {"controller", "WebMethod"}
+                        },
+                        new RouteValueDictionary {
+                            {"area", "EXPEDIT.Flow"}
+                        },
+                        new MvcRouteHandler())
+                },
                 new RouteDescriptor {
                         Priority = 5,
                         Route = new Route(

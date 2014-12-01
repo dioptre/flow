@@ -2816,6 +2816,7 @@ namespace EXPEDIT.Flow.Services {
             try
             {
                 var contact = _users.ContactID;
+                var now = DateTime.Now;
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -2833,6 +2834,16 @@ namespace EXPEDIT.Flow.Services {
                         gdrc.Sequence = m.Sequence;
                     if (gdrc.JoinedBy != null && gdrc.JoinedBy != m.JoinedBy)
                         gdrc.JoinedBy = m.JoinedBy;
+                    if (gdrc.Condition.EntityState == EntityState.Modified)
+                    {
+                        gdrc.Condition.VersionUpdated = now;
+                        gdrc.Condition.VersionUpdatedBy = contact;
+                    }
+                    if (gdrc.EntityState == EntityState.Modified)
+                    {
+                        gdrc.VersionUpdated = now;
+                        gdrc.VersionUpdatedBy = contact;
+                    }
                     d.SaveChanges();
                     return true;
                 }
@@ -2855,6 +2866,14 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     //Delete
                     var pd = (from o in d.GraphDataRelationConditions where o.GraphDataRelationConditionID == m.id && o.VersionDeletedBy == null select o).Single();
+                    if (pd != null && pd.ConditionID != null)
+                    {
+                        try
+                        {
+                            d.Precondition.DeleteObject(pd.Condition);
+                        }
+                        catch { }
+                    }
                     d.GraphDataRelationConditions.DeleteObject(pd);
                     d.SaveChanges();
                     return true;
