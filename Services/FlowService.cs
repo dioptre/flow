@@ -2793,8 +2793,8 @@ namespace EXPEDIT.Flow.Services {
                     var gdrc = new GraphDataRelationCondition
                     {
                         GraphDataRelationConditionID = m.id.Value,
-                        GraphDataRelationID = m.GraphDataRelationID,
-                        ConditionID = m.ConditionID,
+                        GraphDataRelationID = m.GraphDataRelationID.Value,
+                        ConditionID = m.ConditionID.Value,
                         Grouping = m.Grouping,
                         Sequence = m.Sequence,
                         JoinedBy = m.JoinedBy,
