@@ -1041,19 +1041,33 @@
 
 
 <script type="text/x-handlebars" data-template-name="components/trigger-setup">
-    Match {{eui-select required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
-    
+
+    {{eui-checkbox label='Trigger Conditions' value=config.triggerConditions}}
+
     <br>
     <br>
 
-    {{#each con in config}}
-        {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium' labelPath='value'}}
-        {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
-        {{eui-input  value=con.type.matchInput size="medium" placeholder=''}}
-        {{eui-button icon='icon icon-minus' action='deleteRow' itemToDelete=con}}
-        {{eui-button icon='icon icon-plus' action='addRow' itemInsertAfter=con}}
+    {{#if config.triggerConditions}}
+        Match {{eui-select value=config.matchSelect required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
+        
         <br>
-    {{/each}}
+        <br>
+
+        {{#each con in config.fields}}
+            {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium' labelPath='value'}}
+            {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
+            {{eui-input  value=con.type.matchInput size="medium" placeholder=''}}
+            {{eui-button icon='icon icon-minus' action='deleteRow' itemToDelete=con}}
+            {{eui-button icon='icon icon-plus' action='addRow' itemInsertAfter=con}}
+            <br>
+            <br>
+        {{/each}}
+    {{else}}
+        No condition. Will change to next step either way.
+    {{/if}}
+
+
+    {{eui-button label='Save Conditions'}}
 
 </script>
 
@@ -1395,7 +1409,7 @@
 
                 {{#if selectedDataisSingleEdge}}
                     {{selectedData.edges.firstObject}}
-                    {{trigger-setup}}
+                    {{trigger-setup edgeID=selectedSingleEdgeID}}
                     
                 {{else}}
 

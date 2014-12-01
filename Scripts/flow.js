@@ -2316,11 +2316,16 @@ App.GraphController = Ember.ObjectController.extend({
 
     selectedData: {},
     selectedDataisSingleEdgeError: '',
+    selectedSingleEdgeID: 'none',
     selectedDataisSingleEdge: function(){
         var a = this.get('selectedData.edges');
         if (a && a.length == 1) {
+            this.set('selectedSingleEdgeID', a[0])
             return true;
+        } else {
+            this.set('selectedSingleEdgeID', 'none')  
         }
+
         if (a && a.length == 0) {
             this.set('selectedDataisSingleEdgeError', 'No edge selected');
         } else {
@@ -3828,24 +3833,53 @@ App.HandlebarsLiveComponent = Ember.Component.extend({
 App.TriggerSetupComponent = Ember.Component.extend({
     defaultRow: {},
     tSmatchesRules: [{value: 'All'}, {value: 'Any'}],
-    tSvariables: [{value: 'Test'}, {value:'Awesome'}],
+    tSvariables: [{value: 'Test'}, {value:'Awesome'}], // - this should be loaded from the variables on the current page context
     tSmatches: [{value: 'contains'}, {value:'does not contain'}, {value:'is'}, {value:'is not'}, {value:'begins with'}, {value:'ends with'}],
-    config: [
-        {        
-            type: {
-                varSelect: '',
-                matchSelect: '',
-                matchInput: ''
-            }
-        },
-        {        
-            type: {
-                varSelect: '',
-                matchSelect: '',
-                matchInput: ''
-            }
+    edgeID: '', // this is the edge ID on the item we are editing
+    edge: '',
+    loading: true,
+    setup: function(){
+        var edgeID = this.get('edgeID');
+
+       
+
+        if (IsGUID(edgeID)){
+
+            var store = this.get('targetObject.store');
+            var edge = store.getById('edge', edgeID);
+           
+            this.set('edge', edge); 
+            var conditions = edge.get('EdgeConditions').then(function(a){
+                 debugger;  
+            })
+         
+                 
         }
-    ],
+
+
+
+
+    }.observes('edgeID').on('didInsertElement'),
+    config: {
+        matchSelect: 'All',
+        triggerConditions: true,
+        fields: [
+            {        
+                type: {
+                    varSelect: '',
+                    matchSelect: '',
+                    matchInput: ''
+                }
+            },
+            {        
+                type: {
+                    varSelect: '',
+                    matchSelect: '',
+                    matchInput: ''
+                }
+            }
+        ]
+    },
     defaultConfigItem: {        
                 type: {
                     varSelect: '',
@@ -3854,13 +3888,16 @@ App.TriggerSetupComponent = Ember.Component.extend({
                 }
     },
     actions: {
+        'saveConditions': function(context){
+            this.get('edge');
+        },
         'addRow': function (context) {
-            var positionCurrent = this.get('config').indexOf(context.itemInsertAfter) + 1;
-            this.get('config').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
+            var positionCurrent = this.get('config.fields').indexOf(context.itemInsertAfter) + 1;
+            this.get('config.fields').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
 
         },
         'deleteRow': function(context) {
-            this.get('config').removeObject(context.itemToDelete);
+            this.get('config.fields').removeObject(context.itemToDelete);
         }                                             
     }
 });
@@ -4345,7 +4382,8 @@ App.Edge = DS.Model.extend({
 
 App.Condition = DS.Model.extend({
     OverrideProjectDataWithJsonCustomVars: DS.attr(''),
-    Condition: DS.attr('')
+    Condition: DS.attr(''),
+    JSON: DS.attr('')
 })
 
 App.EdgeCondition = App.Condition.extend({
