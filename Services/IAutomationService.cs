@@ -9,6 +9,7 @@ using EXPEDIT.Flow.ViewModels;
 using EXPEDIT.Share.ViewModels;
 using System.Data;
 using NKD.Models;
+using NKD.Module.BusinessObjects;
 
 namespace EXPEDIT.Flow.Services
 {
@@ -29,6 +30,10 @@ namespace EXPEDIT.Flow.Services
 
         [OperationContract]
         bool Authorize(AutomationViewModel m, Guid? gid, ActionPermission permission, Type typeToCheck);
+
+        AutomationViewModel GetStep(NKDC d, Guid sid, Guid? tid = null, bool includeContent = false);
+
+        bool QuenchStep(NKDC d, AutomationViewModel m);
 
     }
 }

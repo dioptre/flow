@@ -72,20 +72,18 @@ namespace EXPEDIT.Flow.ViewModels
         public string GraphContent { get { return content; } set { content = value; } }
         public string LastEditedBy { get; set; }
 
-        [JsonIgnore]
-        private WorkflowInstance _previousWorkflowInstance = null;
-        [JsonIgnore]
-        public WorkflowInstance PreviousWorkflowInstance
+        public Guid? PreviousWorkflowInstanceID
         {
             get
             {
-                if (_previousWorkflowInstance == null)
-                    _previousWorkflowInstance = lookup.Materialize<WorkflowInstance>();
-                return _previousWorkflowInstance;
+                if (PreviousWorkflowInstance != null)
+                    return PreviousWorkflowInstance.WorkflowInstanceID;
+                else
+                    return null;
             }
-            set { _previousWorkflowInstance = value; }
         }
-
+        [JsonIgnore]
+        public WorkflowInstance PreviousWorkflowInstance { get; set; }
 
         [JsonIgnore]
         private Task _previousTask = null;

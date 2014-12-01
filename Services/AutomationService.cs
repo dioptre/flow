@@ -27,6 +27,62 @@ namespace EXPEDIT.Flow.Services {
         private readonly IOrchardServices _services;
         private readonly IUsersService _users;
         private readonly IWorkflowService _wf;
+        private Guid? contactID = null;
+        private Guid? companyID = null;
+        private Guid? applicationID = null;
+
+
+        private Guid? ApplicationID
+        {
+            get
+            {
+                if (!applicationID.HasValue)
+                {
+                    if (_services.WorkContext.CurrentUser != null)
+                        applicationID = _users.ApplicationID;
+                }
+                return applicationID;
+            }
+            set
+            {
+                applicationID = value;
+            }
+        }
+
+        private Guid? ContactID
+        {
+            get
+            {
+                if (!contactID.HasValue)
+                {
+                    if (_services.WorkContext.CurrentUser != null)
+                        contactID = _users.ContactID;
+                }
+                return contactID;
+            }
+            set
+            {
+                contactID = value;
+            }
+        }
+
+
+        private Guid? CompanyID
+        {
+            get
+            {
+                if (!companyID.HasValue)
+                {
+                    if (_services.WorkContext.CurrentUser != null)
+                        companyID = _users.DefaultContactCompanyID;
+                }
+                return companyID;
+            }
+            set
+            {
+                companyID = value;
+            }
+        }
 
         public AutomationService(
             IOrchardServices orchardServices,
@@ -76,19 +132,27 @@ namespace EXPEDIT.Flow.Services {
                     && f.VersionDeletedBy == null && f.Version == 0);
                 if (trigger == null)
                     return false;
-                m.ProxyApplicationID = applicationID;
-                m.ProxyCompanyID = trigger.JsonProxyCompanyID;
-                m.ProxyContactID = trigger.JsonProxyContactID;
+                ApplicationID = applicationID;
+                ContactID = trigger.JsonProxyContactID;
+                CompanyID = trigger.JsonProxyCompanyID;
                 return true;
 
             }
         }
 
+
         public bool Authorize(AutomationViewModel m, Guid? gid, ActionPermission permission, Type typeToCheck)
         {
-            var contact = m.ProxyContactID ?? _users.ContactID;
-            var application = m.ProxyApplicationID ?? _users.ApplicationID;
+            return Authorize(gid, permission, typeToCheck);
+        }
+
+        public bool Authorize(Guid? gid, ActionPermission permission, Type typeToCheck)
+        {
+            //var contact = overrideContactID ?? _users.ContactID;
+            //var application = overrideApplicationID ?? _users.ApplicationID;
             //var company = m.ProxyCompanyID ?? _users.DefaultContactCompanyID;
+            var contact = ContactID;
+            var application = ApplicationID;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -115,12 +179,56 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
+        public bool QuenchStep(NKDC d, AutomationViewModel m)
+        {
+            m.PreviousStep = d.ProjectPlanTaskResponses.Where(f => f.ProjectPlanTaskResponseID == m.PreviousStepID && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
+            if (m.PreviousStep != null)
+            {
+                //TODO: Refactor - all queries should be aggregated into one query
+                if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
+                    return false;
+                var taskID = m.PreviousStep.ActualTaskID ?? (m.PreviousStep.ProjectPlanTaskID.HasValue ? m.PreviousStep.ProjectPlanTask.TaskID : null) ?? (m.PreviousTask != null ? m.PreviousTask.TaskID : default(Guid?));
+                if (taskID.HasValue)
+                    m.PreviousTask = d.Tasks.Where(f => f.TaskID == taskID && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
+                if (m.PreviousStep.VersionWorkflowInstanceID.HasValue)
+                    m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID).Single();
+                if (m.IncludeContent ?? false)
+                    m.content = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID).Select(f => f.GraphContent).FirstOrDefault();
+                return true;
+            }
+            else return false;
+        }
+
+
+        public AutomationViewModel GetStep(NKDC d, Guid sid, Guid? tid = null, bool includeContent = false)
+        {
+            AutomationViewModel m = new AutomationViewModel { IncludeContent = includeContent };
+            m.PreviousStep = d.ProjectPlanTaskResponses.Where(f => f.ProjectPlanTaskResponseID == sid && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
+            if (m.PreviousStep != null)
+            {
+                //TODO: Refactor - all queries should be aggregated into one query
+                if (!Authorize(sid, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
+                    return null;
+                var taskID = m.PreviousStep.ActualTaskID ?? (m.PreviousStep.ProjectPlanTaskID.HasValue ? m.PreviousStep.ProjectPlanTask.TaskID : null) ?? tid;
+                if (taskID.HasValue)
+                    m.PreviousTask = d.Tasks.Where(f => f.TaskID == taskID && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
+                if (m.PreviousStep.VersionWorkflowInstanceID.HasValue)
+                    m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID).Single();
+                if (includeContent)
+                    m.content = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID).Select(f => f.GraphContent).FirstOrDefault();
+                return m;
+            }
+            else return null;
+        }
+
+
+
         public bool DoNext(AutomationViewModel m)
         {
-            var contact = m.ProxyContactID ?? _users.ContactID;
-            var application = m.ProxyApplicationID ?? _users.ApplicationID;
-            var company = m.ProxyCompanyID ?? _users.DefaultContactCompanyID;
             var now = DateTime.UtcNow;
+            var contact = ContactID;
+            var company = CompanyID;
+            var application = ApplicationID;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -128,7 +236,7 @@ namespace EXPEDIT.Flow.Services {
                 if (!m.PreviousStepID.HasValue)
                     m.PreviousStep.ProjectPlanTaskResponseID = Guid.NewGuid();
                 //If no projectID, instantiate workflow - need graphdatagroupid
-                if (!m.ProjectID.HasValue && !d.ProjectPlanTaskResponses.Any(f => f.ProjectPlanTaskResponseID == m.PreviousStepID && f.VersionDeletedBy == null && f.Version == 0))
+                if (!m.ProjectID.HasValue && !d.ProjectPlanTaskResponses.Any(f => f.ProjectPlanTaskResponseID == m.PreviousStepID)) //&& f.VersionDeletedBy == null && f.Version == 0 removed this to enable continuation of flows after edits
                 {
                     //We need workflowid
                     if (!m.GraphDataGroupID.HasValue)
@@ -150,14 +258,31 @@ namespace EXPEDIT.Flow.Services {
                     //Now let's check for start node
                     if (!m.GraphDataID.HasValue || d.GraphDataRelation.Any(f => f.ToGraphDataID == m.GraphDataID && f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0))
                     {
-                        m.PreviousStep.ActualGraphDataID = (
+                        if (m.IncludeContent ?? false)
+                        {
+                            var gd = (
+                                    from o in d.GraphDataRelation.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
+                                    join q in d.GraphDataRelation.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
+                                        on o.FromGraphDataID equals q.ToGraphDataID into oq
+                                    from soq in oq.DefaultIfEmpty()
+                                    where soq == null
+                                    join p in d.GraphData on o.FromGraphDataID equals p.GraphDataID
+                                    select p
+                                  ).FirstOrDefault();
+                            m.PreviousStep.ActualGraphDataID = gd.GraphDataID;
+                            m.content = gd.GraphContent;
+                        }
+                        else
+                        {
+                            m.PreviousStep.ActualGraphDataID = (
                                                             from o in d.GraphDataRelation.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
                                                             join q in d.GraphDataRelation.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
                                                                 on o.FromGraphDataID equals q.ToGraphDataID into oq
-                                                             from soq in oq.DefaultIfEmpty()                        
-                                                             where soq == null
-                                                             select o.FromGraphDataID
+                                                            from soq in oq.DefaultIfEmpty()
+                                                            where soq == null
+                                                            select o.FromGraphDataID
                                                           ).FirstOrDefault();
+                        }
                         if (m.PreviousStep.ActualGraphDataID == null)
                         {
                             m.Error = "Couldn't identify distinct start in workflow.";
@@ -240,8 +365,19 @@ namespace EXPEDIT.Flow.Services {
                 }
                 //OK its an existing WF
                 else {
-                    //TODO: Prob should check whether its checked out
-
+                    if (!Authorize(m, m.id, ActionPermission.Update, typeof(ProjectPlanTaskResponse)))
+                    {
+                        m.Error = "No permission to update task.";
+                        return false;
+                    }
+                    //Quench Model
+                    if (!QuenchStep(d, m))
+                    {
+                        m.Error = "Could not quench existing step. Permission error or may not exist.";
+                        return false;
+                    }
+                    //Prob should check whether its checked out
+                   
                     //m.PreviousStep.ActualGraphDataID
 
                     //if final transition send 000000-0000-00000000
