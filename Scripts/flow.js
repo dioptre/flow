@@ -869,19 +869,19 @@ App.ApplicationRoute = Ember.Route.extend({
     model: function (params) {
 
         // Get the language from the browser settings;
-        var userLang = navigator.language || navigator.userLanguage
+        var userLang = params.localeSelected || navigator.language || navigator.userLanguage
 
 
-        App.set('localeSelected', params.localeSelected);
+        App.set('localeSelected', userLang);
         var isNew = false;
         if (!App.get('locale')) {
             isNew = true;
             App.set('locale', Ember.Object.create({ l: null }));
         }
-        if (isNew || App.get('locale.l') !== params.localeSelected)
+        if (isNew || App.get('locale.l') !== userLang)
         {
-            App.set('locale.l', params.localeSelected);
-            updateLocale(this, params.localeSelected);
+            App.set('locale.l', userLang);
+            updateLocale(this, userLang);
         }
     },
     actions: {
@@ -977,12 +977,12 @@ App.ApplicationController = Ember.Controller.extend({
     }.observes('localeSelected'),
     localeAppObserver: function () {
         var _this = this;
-        App.get('locale').addObserver('l', defaultLocale, function () {
+        App.get('locale').addObserver('l', this, function () {
             _this.set('localeSelected',App.get('locale.l'));
         });
-        _this.set('localeSelected', App.get('locale.l'));
+        _this.set('localeSelected', App.get('locale.l') || defaultLocale);
     }.on('init'),
-    localeSelected: defaultLocale,
+    localeSelected: null, //fixed not translating back to english
     actions: {
         logoutUser: function(){
             var _this = this;
