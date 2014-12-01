@@ -1068,4 +1068,11 @@ color: red;
   margin-bottom: 10px;
 }
 
-
+/*Liquid Fire Fixes*/
+.liquid-container {
+  position: inherit !important; 
+  overflow: hidden !important;
+  -webkit-transform: none !important; 
+  -moz-transform: none !important;
+  transform: none !important; 
+}
