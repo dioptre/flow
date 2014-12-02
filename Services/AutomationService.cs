@@ -20,6 +20,7 @@ using EXPEDIT.Share.Helpers;
 using EXPEDIT.Share.Services;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace EXPEDIT.Flow.Services {
 
@@ -268,6 +269,7 @@ namespace EXPEDIT.Flow.Services {
             var contact = ContactID;
             var company = CompanyID;
             var application = ApplicationID;
+            m.Status = "";
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);                
@@ -442,54 +444,68 @@ namespace EXPEDIT.Flow.Services {
                         }
                     }
 
-                    var isCompleted = false;
-                    var options = d.GraphDataRelation.Where(f=>f.FromGraphDataID == m.ActualGraphDataID && f.VersionDeletedBy == null && f.Version == 0)
+                    bool isCompleted = false, isDefault = false;
+                    var nextStep = Guid.Empty;
+                    var options = d.GraphDataRelation.Where(f=>
+                        f.FromGraphDataID == m.ActualGraphDataID 
+                        && f.VersionDeletedBy == null 
+                        && f.ToGraphDataID != m.ActualGraphDataID
+                        && f.ToGraphDataID != null 
+                        && f.Version == 0)
                         .OrderByDescending(f=>f.Weight)
                         .OrderByDescending(f=>f.VersionUpdated);
                     if (options.Count() == 0)
                     {
-                        m.Error = "Workflow Completed";
+                        m.Status += "Workflow Completed;";
                         isCompleted = true;
                     }
-
+                    //if step (response) & graphdataid go through graphdatarelationconditions for next transition   
                     var data = (from o in d.ProjectDatas.Where(f => f.ProjectID == m.ProjectID && f.VersionDeletedBy == null && f.Version == 0).OrderByDescending(f => f.VersionUpdated)
                                 join t in d.ProjectDataTemplates on o.ProjectDataTemplateID equals t.ProjectDataTemplateID
                                 select new { t.CommonName, o.Value, t.SystemDataType }
                                     ).GroupBy(f => f.CommonName, f => f, (key, g) => g.FirstOrDefault());
-                    var dict = data.ToDictionary(f => f.CommonName, f => f.Value);
+                    var dict = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => f.Value);
                     foreach (var option in options)
                     {
                         var correct = false;
+                        if (option.Condition == null)
+                        {
+                            nextStep = option.ToGraphDataID.Value;
+                            isDefault = true;
+                            m.Status += "Transition Default;";
+                            break;
+                        }
                         foreach (var condition in option.Condition)
                         {
-                            if (!EquatePseudoSync(condition.Condition.Condition))
+                            var toCheck = condition.Condition.Condition;
+                            if (string.IsNullOrWhiteSpace(toCheck))
+                                continue;
+                            foreach (var lookup in dict)
+                                toCheck.Replace(lookup.Key, lookup.Value);
+                            if (ConstantsHelper.REGEX_JS_CLEANER.IsMatch(toCheck))
+                            {
+                                m.Error = "Illegal string in your conditions.";
+                                return false;
+                            }
+                            if (!EquatePseudoSync(toCheck))
                             {
                                 correct = false;
+                                m.Status += "Failed:" + toCheck;
                                 break;
                             }
                         }
+                        if (correct)
+                        {
+                            nextStep = option.ToGraphDataID.Value;
+                            break;
+                        }
                     }
-                   
-
-
-                    //if final transition send 000000-0000-00000000
-
-                    //if step (response) & graphdataid go through graphdatarelationconditions for next transition            
-
-                    //Transition & change owner to responsibleowner if task exists
-
-                    //run trigger on out
-
-                    //always create an event if successful or not
-
-                    //run trigger on in
-
-                    //always create an event if successful or not
-
-                    //update response
+                    if (nextStep != Guid.Empty || isCompleted)
+                    {
+                        return true;
+                    }    
                 }
-
-
+                m.Error = "Could not find a valid transition.";
                 return false;
             }
         }

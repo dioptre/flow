@@ -353,6 +353,23 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
         }
 
+
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("Edges")]
+        public ActionResult UpdateEdge(FlowEdgeViewModel m)
+        {
+            if (m.edge != null && m.id != null)
+            {
+                m.edge.id = m.id;
+                m = m.edge;
+            }
+            if (_Flow.UpdateEdge(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
+        }
+
         [Themed(false)]
         [HttpDelete]
         [ActionName("Edges")]
@@ -870,8 +887,6 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("ProjectData")]
         public ActionResult CreateProjectData(ProjectDataViewModel m)
         {
-            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
             if (m.projectDatum != null)
                 m = m.projectDatum;
             if (_Flow.CreateProjectData(m))
@@ -886,8 +901,6 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("ProjectData")]
         public ActionResult UpdateProjectData(ProjectDataViewModel m)
         {
-            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
             if (m.projectDatum != null && m.id != null)
             {
                 m.projectDatum.id = m.id;
@@ -944,8 +957,7 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("EdgeConditions")]
         public ActionResult CreateEdgeCondition(EdgeConditionViewModel m)
         {
-            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
+
             if (m.edgeCondition != null)
                 m = m.edgeCondition;
             if (_Flow.CreateEdgeCondition(m))
@@ -960,8 +972,6 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("EdgeConditions")]
         public ActionResult UpdateEdgeCondition(EdgeConditionViewModel m)
         {
-            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
             if (m.edgeCondition != null && m.id != null)
             {
                 m.edgeCondition.id = m.id;
@@ -979,8 +989,6 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("EdgeConditions")]
         public ActionResult DeleteEdgeCondition(EdgeConditionViewModel m)
         {
-            if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
             if (!m.id.HasValue)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
             if (_Flow.DeleteEdgeCondition(m))

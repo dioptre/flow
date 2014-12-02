@@ -141,6 +141,8 @@ namespace EXPEDIT.Flow.ViewModels
 
         public string Error { get; set; }
 
+        public string Status { get; set; }
+
         public Guid? ProxyApplicationID { get; set; }
 
         public Guid? ProxyCompanyID { get; set; }

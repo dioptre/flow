@@ -1045,6 +1045,42 @@ namespace EXPEDIT.Flow.Services {
                 return true;
             }
         }
+        public bool UpdateEdge(FlowEdgeViewModel m)
+        {
+
+            try
+            {
+                var contact = _users.ContactID;
+                var now = DateTime.Now;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(GraphDataRelation)))
+                        return false;
+                    //Update
+                    var gdrc = (from o in d.GraphDataRelation where o.GraphDataRelationID == m.id && o.VersionDeletedBy == null select o).Single();
+                    if (m.Weight != null && gdrc.Weight != m.Weight)
+                        gdrc.Weight = m.Weight;
+                    if (m.Sequence != null && gdrc.Sequence != m.Sequence)
+                        gdrc.Sequence = m.Sequence;
+                    if (m.RelationTypeID != null && gdrc.RelationTypeID != m.RelationTypeID)
+                        gdrc.RelationTypeID = m.RelationTypeID;
+                    if (gdrc.EntityState == EntityState.Modified)
+                    {
+                        gdrc.VersionUpdated = now;
+                        gdrc.VersionUpdatedBy = contact;
+                    }
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+        }
 
         public bool DeleteEdge(Guid mid)
         {
