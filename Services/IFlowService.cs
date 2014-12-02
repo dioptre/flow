@@ -166,6 +166,8 @@ namespace EXPEDIT.Flow.Services
         [OperationContract]
         bool DeleteEdgeCondition(EdgeConditionViewModel m);
 
+        ContextVariableViewModel[] GetContextNames(Guid wfid);
+
 
     }
 }

@@ -998,7 +998,23 @@ namespace EXPEDIT.Flow.Controllers {
 
         }
 
+        [Authorize]
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("ContextNames")]
+        public ActionResult GetContextNames(string wfid)
+        {
 
+            ContextVariableViewModel[] result = null;
+            if (!string.IsNullOrWhiteSpace(wfid))
+            {
+                result = _Flow.GetContextNames(Guid.Parse(wfid));
+
+            } 
+            if (result == null)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+            return new JsonHelper.JsonNetResult(new { contextNames = result }, JsonRequestBehavior.AllowGet);
+        }
 
     }
 }
