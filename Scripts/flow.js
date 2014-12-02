@@ -2706,22 +2706,22 @@ App.VizEditorComponent = Ember.Component.extend({
             //    enabled: true
             //},
             //configurePhysics: true,
-            labels:{
-                  add:"Add Step",
-                  edit:"Edit",
-                  link:"Add Connection",
-                  del:"Delete selected",
-                  editNode:"Edit Step",
-                  back:"Back",
-                  addDescription:"Click the empty space to create a Step.",
-                  linkDescription:"Connect Steps by dragging.",
-                  addError:"The function for add does not support two arguments (data,callback).",
-                  linkError:"The function for connect does not support two arguments (data,callback).",
-                  editError:"The function for edit does not support two arguments (data, callback).",
-                  editBoundError:"No edit function has been bound to this button.",
-                  deleteError:"The function for delete does not support two arguments (data, callback).",
-                  deleteClusterError:"Clusters cannot be deleted."
-            },
+            // labels:{
+            //       add:"Add Step",
+            //       edit:"Edit",
+            //       link:"Add Connection",
+            //       del:"Delete selected",
+            //       editNode:"Edit Step",
+            //       back:"Back",
+            //       addDescription:"Click the empty space to create a Step.",
+            //       linkDescription:"Connect Steps by dragging.",
+            //       addError:"The function for add does not support two arguments (data,callback).",
+            //       linkError:"The function for connect does not support two arguments (data,callback).",
+            //       editError:"The function for edit does not support two arguments (data, callback).",
+            //       editBoundError:"No edit function has been bound to this button.",
+            //       deleteError:"The function for delete does not support two arguments (data, callback).",
+            //       deleteClusterError:"Clusters cannot be deleted."
+            // },
             //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}},
             smoothCurves: false,
             //hierarchicalLayout: {enabled:true},
@@ -3841,8 +3841,8 @@ App.TriggerSetupComponent = Ember.Component.extend({
     setup: function(){
         var edgeID = this.get('edgeID');
 
-       
-
+       var _this = this;
+        this.set('loading', true);
         if (IsGUID(edgeID)){
 
             var store = this.get('targetObject.store');
@@ -3850,7 +3850,23 @@ App.TriggerSetupComponent = Ember.Component.extend({
            
             this.set('edge', edge); 
             var conditions = edge.get('EdgeConditions').then(function(a){
-                 debugger;  
+                // here you need to set the this.config :) - 
+                _this.set('loading', false);
+
+                if (a.get('length') == 1) {
+                //debugger;  
+
+                    _this.set('config', JSON.parse(a.get('firstObject.JSON')))
+                }
+                if (a.get('length') < 1) {
+                    _this.set('config', _this.get('defaultConfig'));
+                }
+
+                 if (a.get('length') > 1) {
+                    Messenger().post({ type: 'error', message: 'There should only be one edge condition. Please contact support!' });
+                    
+                }
+
             })
          
                  
@@ -3860,17 +3876,11 @@ App.TriggerSetupComponent = Ember.Component.extend({
 
 
     }.observes('edgeID').on('didInsertElement'),
-    config: {
+    config: {},
+    defaultConfig: {
         matchSelect: 'All',
-        triggerConditions: true,
+        triggerConditions: false,
         fields: [
-            {        
-                type: {
-                    varSelect: '',
-                    matchSelect: '',
-                    matchInput: ''
-                }
-            },
             {        
                 type: {
                     varSelect: '',
@@ -3880,21 +3890,54 @@ App.TriggerSetupComponent = Ember.Component.extend({
             }
         ]
     },
-    configEvaluation: function(){
-        var c = this.get('config');
+    configEvaluation: function(config){
+        var c = config;
 
         var s = ''; // this is the magic string later
 
         if (!c.triggerConditions)
-            return s // if the trigger condition is false just return nothing
+          return s; // if the trigger condition is false just return nothing
 
-        fields.forEach(function(i, a){
-            var l = ''
-            if (a.matchSelect == 'contains') {
-                l = '==' + a.matchInput;
+        // Loop through each line in the condition array
+        if (c.fields.length > 0) {
+          $.each(c.fields, function(i, a){
+    
+            if (a.type != null) {
+              b = a.type
+
+              // Create the comparions part 
+              var l = '';
+              if (b.matchSelect == 'contains') {
+                l = '.indexOf(' + b.matchInput + ')  != -1'; // index of == -1 if it's not contained
+              }
+              if (b.matchSelect == 'does not contain') {
+                l = '.indexOf(' + b.matchInput + ')  == -1';
+              }
+              if (b.matchSelect == 'is') {
+                l = '==' + b.matchInput;
+              }
+              if (b.matchSelect == 'is not') {
+                l = '!=' + b.matchInput;
+              }
+              if (b.matchSelect == 'begins with') {
+                l = '.indexOf(' + b.matchInput + ')  == 0';
+              }
+              if (b.matchSelect == 'ends with') {
+                l = '.match(/' + b.matchInput + '$/ig) != null'; // "abc".match(/cdf$/ig) != null
+              }
+
+
+              var comparison = ''; // this will be either AND, OR (or empty for the last line ;)
+              if (i != (c.fields.length - 1)) {
+                comparison = (c.matchSelect == 'All' ? ' && ' : ' || ');
+              }
+
+              // Put it all together
+              s += '( ' + '{{' + b.varSelect + '}}' + l  + ')' + comparison; 
+
             }
-            s += '( ' + '{{' + a.varSelect + '}}' + l + ')' 
-        })
+          });
+        }
 
         return s
         
@@ -3910,21 +3953,46 @@ App.TriggerSetupComponent = Ember.Component.extend({
     },
     actions: {
         'saveConditions': function(context){
+            var _this = this;
             this.get('edge').get('EdgeConditions').then(function(a){
-                 if (a) {
+                
+                 if (a.get('length') != 0) {
                     // edit a
+                    z = a.get('firstObject');
+                    z.set('JSON', JSON.stringify(_this.get('config')));
+
+                    var conditionStr =  _this.get('configEvaluation')(_this.get('config'));
+                    z.set('Condition', conditionStr);
+
+                    z.save().then(function(){
+                         Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+
+                    }, function(){
+                         Messenger().post({ type: 'error', message: 'Error saving edge conditions' });
+
+                    });
                  } else {
                     // create a new one and save to it
+                    var store = _this.get('targetObject.store');
+                    var newCondition = store.createRecord('edgeCondition', {
+                        ConditionID: NewGUID(),
+                        GraphDataRelationID: _this.get('edgeID'),
+                        JSON: JSON.stringify(_this.get('config')),// paul super easy array
+                        Condition: _this.get('configEvaluation')(_this) // andy's js condition
+                    })
 
-                    var newCondition = createRecord('edgeCondition', {
-                        ConditionID: GUID(),
-                        GraphDataRelationID: this.get('edgeID'),
-                        JSON:  this.get('config')// paul super easy array
-                        Condition: // andy's js condition
-                    }).save()
+                    _this.get('edge.EdgeConditions').addObject(newCondition);
 
-                    this.get('edge.edgeConditions').appendObject(newCondition)
+                    // newCondition.save().then(function(){
+                    //     return _this.get('edge').save()
+                    // }).then(function(){
+                    //      Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+                    //     alert('Successful save!!!')
+                    // })
 
+                     newCondition.save().then(function(){
+                         Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+                    })
 
                  }
             });
