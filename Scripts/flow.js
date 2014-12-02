@@ -4435,7 +4435,7 @@ App.Trigger = DS.Model.extend({
     TriggerID: DS.attr('string'),
     CommonName: DS.attr('string'),
     TriggerType: DS.attr('string'),
-    JsonMethod: DS.attr('string'),
+    JsonMethod: DS.attr('string'), //
     JsonProxyApplicationID: DS.attr('string'),
     JsonProxyContactID: DS.attr('string'),
     JsonProxyCompanyID: DS.attr('string'),
@@ -4443,12 +4443,14 @@ App.Trigger = DS.Model.extend({
     JsonUsername: DS.attr('string'),
     JsonPassword: DS.attr('string'),
     JsonPasswordType: DS.attr('string'),
+    JSON: DS.attr('string'), //
     SystemMethod: DS.attr('string'),
-    ConditionID: DS.attr('string'),
-    ExternalUrl: DS.attr('string'),
-    ExternalRequestMethod: DS.attr('string'),
-    ExternalFormType: DS.attr('string'),
-    PassThroughProjectData: DS.attr('string')
+    ConditionID: DS.attr('string'), //
+    ExternalUrl: DS.attr('string'), //http://dothis/rest/url
+    ExternalRequestMethod: DS.attr('string', { defaultValue: 'GET' }),
+    ExternalFormType: DS.attr('string', { defaultValue: 'JSON' }), 
+    PassThrough: DS.attr('string', { defaultValue: false }), 
+    condition: DS.belongsTo('condition', { async: true }),
 });
 
 
