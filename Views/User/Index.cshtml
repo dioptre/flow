@@ -279,8 +279,7 @@
 <script type="text/x-handlebars" data-template-name="components/lform-text">
     <div>
         <label>{{s.d.label}}</label><br>
-        {{eui-input value=s.value}}
-
+        {{eui-input value=s.value disabled=s.d.readOnly}}
         @*{{s.value}}*@
 
     </div>
@@ -290,9 +289,9 @@
     <div>
         <label>{{s.d.label}}</label><br>
         {{#if s.d.field_options.include_blank_option}}
-            {{eui-select value=s.value options=s.d.field_options.options required=true}}
+            {{eui-select value=s.value options=s.d.field_options.options labelPath='label' valuePath='label' required=true disabled=s.d.readOnly}}
         {{else}}
-            {{eui-select value=s.value options=s.d.field_options.options labelPath='label' valuePath='label'}}
+            {{eui-select value=s.value options=s.d.field_options.options labelPath='label' valuePath='label' disabled=s.d.readOnly}}
         {{/if}}
         @*{{s.value}}*@
     </div>

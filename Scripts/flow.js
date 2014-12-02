@@ -4073,7 +4073,7 @@ App.StepController = Ember.ObjectController.extend({
 
         var templateString = '';
         // 2. Go through content and extract data JSON
-
+        var projectData = Enumerable.From(this.store.all('projectDatum').content);
         $template = $(template);
         $template.find('*').andSelf().filter('.tiny').each(function () {
             var $this = $(this)
@@ -4092,9 +4092,14 @@ App.StepController = Ember.ObjectController.extend({
 
 
 
-                     text += "{{lform-" + d.field_type + " s=contextData." + uniqueID +" testvar=testVar}} <br>"
-                    
-                    contextData[uniqueID] = { d: d, value: ""}
+                    text += "{{lform-" + d.field_type + " s=contextData." + uniqueID +" testvar=testVar}} <br>"
+                    var oldValue = projectData.Where("f=>f.get('CommonName') === '" + d.label + "'").FirstOrDefault();
+                    if (oldValue)
+                        oldValue = oldValue.get('Value');
+                    else
+                        oldValue = "";
+                    // ember data here
+                    contextData[uniqueID] = { d: d, value: oldValue}
 
                 
                 })
@@ -4109,6 +4114,18 @@ App.StepController = Ember.ObjectController.extend({
 
             }
         });
+        var currentNames = Enumerable.From(contextData).Select("{cn : $.Value.d.label}");
+        var pds = projectData.Select("{ cn: $.get('CommonName'), o: $}").Except(currentNames, "$.cn").Select("$.o").ForEach(
+            function (m) {
+                var mid = m.get('id');
+                var ctx = { d: JSON.parse(m.get('TemplateStructure')), value: m.get('Value') };
+                ctx.d.readOnly = true;
+                contextData[mid] = ctx;
+                templateString += "{{lform-" + ctx.d.field_type + " s=contextData." + mid + " testvar=testVar}} <br>"
+            });
+
+        // prepernd template string with other form on other pages
+
 
         this.set('formtemplatestring', templateString)
         this.set("contextData", contextData);
@@ -4157,7 +4174,7 @@ App.StepController = Ember.ObjectController.extend({
                 var formData = d.Value.d;
                 var formVal = d.Value.value;
 
-                // ANDY FIX HERE - SAVING PROJECT DATA
+
                 var newRecord = _this.store.createRecord('projectDatum', {
                     ProjectID: _this.get('model.steps.firstObject.ProjectID'),
                     ProjectDataTemplateID: formData.uid,
