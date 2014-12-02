@@ -358,7 +358,7 @@ namespace EXPEDIT.Flow.Services {
                         var wfid = Guid.NewGuid();
                         var wf = new WorkflowInstance
                         {
-                            WorkflowInstanceID = Guid.NewGuid() ,
+                            WorkflowInstanceID = wfid,
                             WorkflowID = ConstantsHelper.WORKFLOW_APP_FLOWPRO ,
                             RunStateTypeID =  null,
                             TableType = ConstantsHelper.REFERENCE_TYPE_PROJECTPLANTASKRESPONSE ,

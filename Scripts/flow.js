@@ -4133,7 +4133,7 @@ App.StepController = Ember.ObjectController.extend({
 
             var context = this.get('contextData');
             console.log(context);
-
+            var promises = [];
             Enumerable.From(context).ForEach(function(d){
                 
                 var formData = d.Value.d;
@@ -4146,12 +4146,28 @@ App.StepController = Ember.ObjectController.extend({
                     Value: formVal
                 })
 
-                newRecord.save().then(function(){
-                     Messenger().post({ type: 'success', message: 'Saved' });
+                promises.push(newRecord.save().then(function(){
+                    Messenger().post({ type: 'success', message: 'Saved' });
                 }, function(){
                     Messenger().post({ type: 'error', message: 'Error' });
-                });
+                }));
             });
+
+            Ember.RSVP.allSettled(promises).then(function (p) {
+                $.ajax({
+                    url: "/flow/WebMethod/DoNext/" + _this.get('stepID'),
+                    type: "GET"
+                }).then(function (response) {
+                    _this.store.findQuery('step', { id: _this.get('stepID') }).then(function (m) {
+                        //_this.transitionToRoute('step', { id: _this.get('stepID') });
+                        //Messenger().post({ type: 'success', message: 'Transitioned' });
+                    });
+                });
+
+
+            });
+
+
 
         }
     }
