@@ -281,7 +281,7 @@
         <label>{{s.d.label}}</label><br>
         {{eui-input value=s.value}}
 
-        {{s.value}}
+        @*{{s.value}}*@
 
     </div>
 </script>
@@ -294,13 +294,7 @@
         {{else}}
             {{eui-select value=s.value options=s.d.field_options.options labelPath='label' valuePath='label'}}
         {{/if}}
-        {{s.value}}
-        @*{{view "select"
-       content=s.d.field_options.options
-       optionValuePath="content.id"
-       optionLabelPath="content.firstName"
-       value=currentProgrammer.id}}*@
-
+        @*{{s.value}}*@
     </div>
 </script>
 
