@@ -480,7 +480,7 @@ namespace EXPEDIT.Flow.Services {
                             if (string.IsNullOrWhiteSpace(toCheck))
                                 continue;
                             foreach (var lookup in dict)
-                                toCheck.Replace(lookup.Key, "\"" + lookup.Value + "\"");
+                                toCheck = toCheck.Replace(lookup.Key, "\"" + lookup.Value + "\"");
                             if (ConstantsHelper.REGEX_JS_CLEANER.IsMatch(toCheck))
                             {
                                 m.Error = "Illegal string in your conditions.";
@@ -515,6 +515,7 @@ namespace EXPEDIT.Flow.Services {
                     }    
                 }
                 m.Error = "Could not find a valid transition.";
+                m.Error += m.Status;
                 return false;
             }
         }

@@ -2672,27 +2672,35 @@ namespace EXPEDIT.Flow.Services {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
                     if (!CheckPermission(m.ProjectID, ActionPermission.Read, typeof(Project)))
                         return false;
-                    var pdt = new ProjectDataTemplate{
-                        ProjectDataTemplateID = m.ProjectDataTemplateID.Value,
-                        CommonName = m.CommonName,
-                        UniqueID = m.UniqueID,
-                        UniqueIDSystemDataType = m.UniqueIDSystemDataType,
-                        TemplateStructure = m.TemplateStructure,
-                        TemplateStructureChecksum = m.TemplateStructureChecksum,
-                        TemplateActions = m.TemplateActions,
-                        TemplateType = m.TemplateType,
-                        TemplateMulti = m.TemplateMulti,
-                        TemplateSingle = m.TemplateSingle,
-                        TableType = m.TableType,
-                        ReferenceID = m.ReferenceID,
-                        UserDataType = m.UserDataType,
-                        SystemDataType = m.SystemDataType,
-                        IsReadOnly = m.IsReadOnly,
-                        IsVisible = m.IsVisible,
-                        VersionUpdated = DateTime.UtcNow,
-                        VersionUpdatedBy = contact
-                    };
-                    d.ProjectDataTemplates.AddObject(pdt);
+
+                    ProjectDataTemplate pdt = null;
+                    if (m.ProjectDataTemplateID.HasValue)
+                        pdt = (from o in d.ProjectDataTemplates where o.ProjectDataTemplateID == m.ProjectDataTemplateID.Value select o).FirstOrDefault();
+                    if (pdt == null)
+                    {
+                        pdt = new ProjectDataTemplate
+                        {
+                            ProjectDataTemplateID = m.ProjectDataTemplateID.Value,
+                            CommonName = m.CommonName,
+                            UniqueID = m.UniqueID,
+                            UniqueIDSystemDataType = m.UniqueIDSystemDataType,
+                            TemplateStructure = m.TemplateStructure,
+                            TemplateStructureChecksum = m.TemplateStructureChecksum,
+                            TemplateActions = m.TemplateActions,
+                            TemplateType = m.TemplateType,
+                            TemplateMulti = m.TemplateMulti,
+                            TemplateSingle = m.TemplateSingle,
+                            TableType = m.TableType,
+                            ReferenceID = m.ReferenceID,
+                            UserDataType = m.UserDataType,
+                            SystemDataType = m.SystemDataType,
+                            IsReadOnly = m.IsReadOnly,
+                            IsVisible = m.IsVisible,
+                            VersionUpdated = DateTime.UtcNow,
+                            VersionUpdatedBy = contact
+                        };
+                        d.ProjectDataTemplates.AddObject(pdt);
+                    }
                     var pd = new ProjectData
                     {
                         ProjectDataID = m.id.Value,

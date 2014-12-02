@@ -3848,7 +3848,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
 
         // Load available variables
         var contextName = store.findQuery('contextName', {wfid: workflowID}).then(function(al){
-            var test = Enumerable.From(al.content).Select('i=>{value:i.id, label:i.get("CommonName")}').ToArray();
+            var test = Enumerable.From(al.content).Select('i=>{value:i.get("CommonName"), label:i.get("CommonName")}').Distinct().ToArray();
             _this.set('tSvariables', test);
         })
 
@@ -3894,6 +3894,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
         fields: [
             {        
                 type: {
+                    varLabel: '',
                     varSelect: '',
                     matchSelect: '',
                     matchInput: ''
@@ -3919,19 +3920,19 @@ App.TriggerSetupComponent = Ember.Component.extend({
               // Create the comparions part 
               var l = '';
               if (b.matchSelect == 'contains') {
-                l = '.indexOf(' + b.matchInput + ')  != -1'; // index of == -1 if it's not contained
+                  l = '.match(/' + b.matchInput + '/ig) != null';
               }
               if (b.matchSelect == 'does not contain') {
-                l = '.indexOf(' + b.matchInput + ')  == -1';
+                  l = '.match(/' + b.matchInput + '/ig) == null';
               }
               if (b.matchSelect == 'is') {
-                l = '==' + b.matchInput;
+                  l = '.match(/^' + b.matchInput + '$/ig) != null';
               }
               if (b.matchSelect == 'is not') {
-                l = '!=' + b.matchInput;
+                  l = '.match(/^' + b.matchInput + '$/ig) == null';
               }
               if (b.matchSelect == 'begins with') {
-                l = '.indexOf(' + b.matchInput + ')  == 0';
+                  l = '.match(/^' + b.matchInput + '/ig) != null';
               }
               if (b.matchSelect == 'ends with') {
                 l = '.match(/' + b.matchInput + '$/ig) != null'; // "abc".match(/cdf$/ig) != null
@@ -3956,11 +3957,12 @@ App.TriggerSetupComponent = Ember.Component.extend({
 
     },
     defaultConfigItem: {        
-                type: {
-                    varSelect: '',
-                    matchSelect: '',
-                    matchInput: ''
-                }
+        type: {
+            varLabel: '',
+            varSelect: '',
+            matchSelect: '',
+            matchInput: ''
+        }
     },
     actions: {
         'saveConditions': function(context){
@@ -4152,7 +4154,8 @@ App.StepController = Ember.ObjectController.extend({
 
                 // ANDY FIX HERE - SAVING PROJECT DATA
                 var newRecord = _this.store.createRecord('projectDatum', {
-                    // ProjectDataTemplateID: formVal.uid,
+                    ProjectID: _this.get('model.steps.firstObject.ProjectID'),
+                    ProjectDataTemplateID: formData.uid,
                     ProjectPlanTaskResponseID: _this.get('stepID'),
                     Value: formVal
                 })
