@@ -86,15 +86,14 @@ App.Router.map(function () {
 
     // FlowPro v2
     this.route('todo');
-    this.route('styleguide', {path:"styleguide"}, function(){
-        this.modal('first-modal', {withParams: 'foo'});
-    }); // Internal only
-    this.route('editor', { path: 'editor/:id' }); // - editing executable workflows
+    this.route('styleguide', {path:"styleguide"}); // Internal only
+    // this.route('editor', { path: 'editor/:id' }); // - editing executable workflows
     this.route('step', { path: 'step/:id' }); // - executing
+    this.route('report')
 
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });
-    this.route('translateme', { path: 'translateTool' }); // Internal only
+    this.route('translateme', { path: 'translateme' }); // Internal only
 
 
 

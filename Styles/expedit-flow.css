@@ -269,9 +269,55 @@ div.table_description {
     /*width: 100vw;*/
 }
 
+
+/*....... VIS Component*/
+
 .vis-component {
-  height: 80vh;
+  /*height: 80vh;*/
+  display: inline;
 }
+
+.vis-component > div {
+    height: 100%;
+    width: 100%;
+    display: block;
+    padding-bottom: 35px;
+    max-height: 720px;
+    min-height: 200px;
+    height: 75vh;
+}
+  /*margin-top: -21px;*/
+  /*margin-top: -21px;*/
+.networkColumn {
+  margin-top: -21px;
+  /*border: 2px solid red;*/
+ 
+
+}
+
+/* Userful helpers for vertical viewport height with fallback */
+.vh-75 {
+  min-height: 380px;
+  height: 75vh;
+}
+
+/*Probably should work on this once I got the slider implemented*/
+/*@media all and (max-height: 400px) {
+.vh-75.networkColumn {
+  max-height: 480px;
+  height: 20vh;
+}
+}*/
+
+
+
+.vh-65 {
+  min-height: 320px;
+  height: 65vh;
+}
+
+
+
 .network-frame {
     background: rgba(250,250,250,1) !important;
     border: 1px rgb(231, 231, 231) solid;
@@ -392,6 +438,7 @@ div.row.processes {
 }
 .process-header {
   /* margin-top: -30px; */
+  padding-top: 13px;
   margin-bottom: 90px;
 }
 .process-header small {
@@ -458,34 +505,7 @@ text-transform: capitalize;
 }
 
 
-/* Userful helpers for vertical viewport height with fallback */
-.vh-75 {
-  min-height: 380px;
-  height: 75vh;
-}
 
-/*Probably should work on this once I got the slider implemented*/
-/*@media all and (max-height: 400px) {
-.vh-75.networkColumn {
-  max-height: 480px;
-  height: 20vh;
-}
-}*/
-
-
-
-.vh-65 {
-  min-height: 320px;
-  height: 65vh;
-}
-
-.vis-component > div {
-    height: 100%;
-    width: 100%;
-    display: block;
-    padding-bottom: 35px;
-    max-height: 720px;
-}
 
 
 
@@ -610,7 +630,7 @@ text-transform: capitalize;
   text-align: left;
   background: #F2F2F2;
   /* background: transparent; */
-  margin-top: -21px;
+  /*margin-top: -21px;*/
   padding: 9px 13px;
   padding-bottom: 6px;
   margin-bottom: -1px;

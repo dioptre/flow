@@ -305,9 +305,17 @@
 </script>
 
 <!-- the form stuff (doesn't belong here I knowww) -->
+
+
 <script type="text/x-handlebars" id="debugz">
-    Debugz
+    Debug. Loads nothing but FlowPro basics.
 </script>
+
+
+<script type="text/x-handlebars" id="report">
+    <h1>Report</h1>
+</script>
+
 
 
 <script type="text/x-handlebars" id="permission">
@@ -923,6 +931,12 @@
 
             --}}
             {{#view App.HomeNavView}}
+                {{#link-to 'report'}}
+                    <i class="icon-book"></i>
+                    <span>{{model.t.fp_menu_link_report}}</span>
+                {{/link-to}}
+            {{/view}}
+            {{#view App.HomeNavView}}
                 {{#link-to 'permission'}}
                     <i class="icon-lock"></i>
                     <span>{{model.t.fp_menu_link_permission}}</span>
@@ -1464,17 +1478,20 @@
                     {{/if}}
                 </h1>
                 <hr>
-                <div class="vh-75 networkColumn">
+                <div class="networkColumn">
                     {{viz-editor t=controllers.application.model.t workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=controllers.application.isLoggedIn toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems' selectedData=selectedData}}
                 </div>
 
+                <br>
 
-                {{!-- Showing the edge triggers --}}
-                {{#if selectedDataisSingleEdge}}
-                    {{trigger-setup edgeID=selectedSingleEdgeID workflowID=workflowID}} 
-                {{else}}
-                    {{selectedDataisSingleEdgeError}}
-                {{/if}}
+                <div>
+                    {{!-- Showing the edge triggers --}}
+                    {{#if selectedDataisSingleEdge}}
+                        {{trigger-setup edgeID=selectedSingleEdgeID workflowID=workflowID}} 
+                    {{else}}
+                        {{selectedDataisSingleEdgeError}}
+                    {{/if}}
+                </div>
 
             </div>
             {{/unless}}
