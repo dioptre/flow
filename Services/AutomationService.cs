@@ -35,6 +35,7 @@ namespace EXPEDIT.Flow.Services {
         private Guid? applicationID = null;
 
 
+
         private Guid? ApplicationID
         {
             get
@@ -228,37 +229,55 @@ namespace EXPEDIT.Flow.Services {
         }
 
 
-
         public bool Equate(string js)
         {
+            return new Engine()
+                .Execute(js)
+                .GetCompletionValue() // get the latest statement completion value
+                .AsBoolean();
+        }
+        public bool EquateAsync(string js)
+        {
+            int cancelms = 1000;
             CancellationTokenSource cts = new CancellationTokenSource();
-            cts.CancelAfter(100);
-
-            System.Threading.Tasks.Task<bool> task = System.Threading.Tasks.Task.Run<bool>(() =>
+            cts.CancelAfter(cancelms);
+            try
             {
-                try
+                System.Threading.Tasks.Task<bool> task = System.Threading.Tasks.Task.Run<bool>(() =>
                 {
-                    return new Engine()
-                        .Execute(js)
-                        .GetCompletionValue() // get the latest statement completion value
-                        .AsBoolean();
-                }
-                // *** If cancellation is requested, an OperationCanceledException results. 
-                catch (OperationCanceledException)
+                    try
+                    {
+                        Thread t = Thread.CurrentThread;
+                        using (cts.Token.Register(t.Abort))
+                        {
+                            return Equate(js);
+                        }
+
+                    }
+                    // *** If cancellation is requested, an OperationCanceledException results. 
+                    catch (OperationCanceledException)
+                    {
+                        return false;
+                    }
+                    catch (Exception)
+                    {
+                        return false;
+                    }
+                }, cts.Token);
+                task.Wait(cancelms + 20);
+                if (!task.IsCompleted)
                 {
+
+                    cts.Cancel();
                     return false;
                 }
-                catch (Exception)
-                {
-                    return false;
-                }
-            }, cts.Token);
-            task.Wait(100);
-            if (!task.IsCompleted)
-                cts.Cancel();
-            return task.Result;
-
-
+                return task.Result;
+            }
+            catch
+            {
+                return false;
+            }
+            
 
         }
 
@@ -492,10 +511,8 @@ namespace EXPEDIT.Flow.Services {
                     {
                         if (option.Condition == null || !option.Condition.Any())
                         {
-                            nextStep = option.ToGraphDataID.Value;
-                            isDefault = true;
-                            m.Status += " Transition Default.";
-                            break;
+                            //Dont take the deafult yet
+                            continue;
                         }
                         var correct = false;
                         foreach (var condition in option.Condition)
@@ -510,7 +527,7 @@ namespace EXPEDIT.Flow.Services {
                                 m.Error = "Illegal string in your conditions.";
                                 return false;
                             }
-                            if (!Equate(toCheck))
+                            if (!EquateAsync(toCheck))
                             {
                                 correct = false;
                                 m.Status += " Failed:" + toCheck;
@@ -530,6 +547,18 @@ namespace EXPEDIT.Flow.Services {
                             nextStep = option.ToGraphDataID.Value;
                             break;
                         }
+                    }
+                    if (nextStep == Guid.Empty)
+                    {
+                        //Now do the default transition
+                        var option = options.FirstOrDefault(f => !f.Condition.Any());
+                        if (option != null)
+                        {
+                            nextStep = option.ToGraphDataID.Value;
+                            isDefault = true;
+                            m.Status += " Transition Default.";
+                        }
+
                     }
                     if (nextStep != Guid.Empty || isCompleted)
                     {
