@@ -814,6 +814,8 @@ namespace EXPEDIT.Flow.Services {
                                         CommonName = pdtName,
                                         TemplateStructure = pdtStructure,
                                         TemplateStructureChecksum = pdtHash,
+                                        TableType = d.GetTableName(typeof(GraphData)),
+                                        ReferenceID = m.GraphDataID,
                                         VersionOwnerContactID = creatorContact,
                                         VersionOwnerCompanyID = creatorCompany,
                                         VersionUpdated = DateTime.UtcNow,
@@ -2923,6 +2925,42 @@ namespace EXPEDIT.Flow.Services {
             catch (Exception ex)
             {
                 return false;
+            }
+        }
+
+
+
+        public ContextVariableViewModel[] GetContextNames(Guid wfid)
+        {
+            if (wfid == Guid.Empty)
+                return new ContextVariableViewModel[] { };
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var table = d.GetTableName(typeof(GraphData));
+                    return (from o in d.GraphDataRelation.Where(f => f.GraphDataGroupID == wfid)
+                            join n in d.GraphData on o.FromGraphDataID equals n.GraphDataID
+                            join c in d.ProjectDataTemplates on n.GraphDataID equals c.ReferenceID
+                            where c.TableType == table
+                            select c
+                            ).Union(
+                            from o in d.GraphDataRelation.Where(f => f.GraphDataGroupID == wfid)
+                            join n in d.GraphData on o.ToGraphDataID equals n.GraphDataID
+                            join c in d.ProjectDataTemplates on n.GraphDataID equals c.ReferenceID
+                            where c.TableType == table
+                            select c
+                            ).Select(f =>
+                            new ContextVariableViewModel { id = f.ProjectDataTemplateID, CommonName = f.CommonName, FormID = f.FormID, GraphDataID = f.ReferenceID }
+                            ).ToArray();
+                    
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
             }
         }
 
