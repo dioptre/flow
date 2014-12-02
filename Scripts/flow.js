@@ -4706,9 +4706,9 @@ App.Task = DS.Model.extend({
 
 App.Trigger = DS.Model.extend({
     TriggerID: DS.attr('string'),
-    CommonName: DS.attr('string'),
+    CommonName: DS.attr('string'), 
     TriggerType: DS.attr('string'),
-    JsonMethod: DS.attr('string'),
+    JsonMethod: DS.attr('string'), //RESR
     JsonProxyApplicationID: DS.attr('string'),
     JsonProxyContactID: DS.attr('string'),
     JsonProxyCompanyID: DS.attr('string'),
@@ -4718,10 +4718,10 @@ App.Trigger = DS.Model.extend({
     JsonPasswordType: DS.attr('string'),
     SystemMethod: DS.attr('string'),
     ConditionID: DS.attr('string'),
-    ExternalUrl: DS.attr('string'),
-    ExternalRequestMethod: DS.attr('string'),
-    ExternalFormType: DS.attr('string'),
-    PassThroughProjectData: DS.attr('string')
+    ExternalUrl: DS.attr('string'), //Zap URL
+    ExternalRequestMethod: DS.attr('string'), //GET
+    ExternalFormType: DS.attr('string'), //JSON
+    PassThroughProjectData: DS.attr('string') //TRUE
 });
 
 
