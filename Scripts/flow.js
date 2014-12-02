@@ -4424,10 +4424,11 @@ App.Task = DS.Model.extend({
     EstimatedLabourCosts : DS.attr('string'), 
     EstimatedCapitalCosts : DS.attr('string'),
     EstimatedValue : DS.attr('string'), 
-    EstimatedIntagibleValue : DS.attr('string'), 
+    EstimatedIntagibleValue: DS.attr('string'),
+    EstimatedRevenue: DS.attr('string'),
     PerformanceMetricParameterID : DS.attr('string'),
     PerformanceMetricQuantity : DS.attr('string'),
-    Comment : DS.attr('string')
+    Comment: DS.attr('string')
 });
 
 App.Trigger = DS.Model.extend({
