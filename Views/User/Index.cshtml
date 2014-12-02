@@ -497,7 +497,7 @@
          You have no files.
       {{/if}}
       {{else}}
-           You are not logged in. Please {{link-to 'login' 'login'}} to see your workflows and steps.
+           You are not logged in. Please {{#link-to 'login' (query-params fromRoute='myworkflows')}}login{{/link-to}} to see your workflows and steps.
       {{/if}}
     {{/if}}
 </script>
@@ -570,7 +570,7 @@
             {{#if controllers.application.isLoggedIn}}
                 You have no files.
             {{else}}
-                You are not logged in. Please {{link-to 'login' 'login'}} to see your files.
+                You are not logged in. Please {{#link-to 'login' (query-params fromRoute='file')}}login{{/link-to}} to see your files.
             {{/if}}
 
       {{/if}}
@@ -1060,11 +1060,52 @@
 
   </script>
 
+<script type="text/x-handlebars" data-template-name="components/trigger-node">
+
+    {{#if loading}}
+        Loading node triggers...
+
+    {{else}}
+
+        {{eui-checkbox label='Enable Trigger Conditions' value=config.triggerConditions}}
+
+        <br>
+        <br>
+
+        {{#if config.triggerConditions}}
+            Match {{eui-select value=config.matchSelect required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
+            
+            <br>
+            <br>
+            <h3>IF</h3>
+            {{#each con in config.fields}}
+                {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium'}}
+                {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
+                {{eui-input  value=con.type.matchInput size="medium" placeholder=''}}
+                {{eui-button icon='icon icon-minus' action='deleteRow' itemToDelete=con}}
+                {{eui-button icon='icon icon-plus' action='addRow' itemInsertAfter=con}}
+                <br>
+                <br>
+            {{/each}}
+
+            <h3>THEN</h3>
+
+        {{else}}
+            No condition. Will change to next step either way.
+        {{/if}}
+
+
+        {{eui-button label='Save Conditions' action='saveConditions'}}
+
+    {{/if}}
+
+</script>
+
 
 <script type="text/x-handlebars" data-template-name="components/trigger-setup">
 
     {{#if loading}}
-        LOADING RIGHT NOW
+        Loading edge triggers...
 
     {{else}}
 
@@ -1216,17 +1257,17 @@
                <h1>
                     {{#if model.selected}}{{model.selected.localName}}{{/if}}
                     {{#if controllers.application.isLoggedIn}}
-                    {{#unless isPreview}}
-                        <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit Step">
-                            <i class="icon-pencil"></i>
-                        </span>&nbsp;
-                        <!--<span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;" title="Share or embed current step in your website">
-                           <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
-                        </span>&nbsp;-->
-                       <!--<span {{action 'togglePreview' }} class='btn-flat gray' title="Preview step for sharing">
-                           <i class="icon-fullscreen"></i>
-                       </span>-->
-                    {{/unless}}
+                        {{#unless isPreview}}
+                            <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit Step">
+                                <i class="icon-pencil"></i>
+                            </span>&nbsp;
+                            <!--<span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;" title="Share or embed current step in your website">
+                               <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
+                            </span>&nbsp;-->
+                           <!--<span {{action 'togglePreview' }} class='btn-flat gray' title="Preview step for sharing">
+                               <i class="icon-fullscreen"></i>
+                           </span>-->
+                        {{/unless}}
                     {{/if}}
                     {{#if isPreview}}
                         <small>{{workflowName}}</small>
@@ -1424,6 +1465,9 @@
                         <span {{action 'createWorkflowInstance' workflowID }} class='btn-flat gray' title="Create WF instance">
                             <i class="icon-play"></i> {{!--Edit Workflow name--}}
                         </span>
+                        <span {{action 'togglePreview' }} class='btn-flat gray' title="Preview step for sharing">
+                            <i class="icon-fullscreen"></i>
+                        </span>
                     {{/if}}
                 </h1>
                 <hr>
@@ -1432,14 +1476,11 @@
                 </div>
 
 
+                {{!-- Showing the edge triggers --}}
                 {{#if selectedDataisSingleEdge}}
-                    {{selectedData.edges.firstObject}}
-                    {{trigger-setup edgeID=selectedSingleEdgeID workflowID=workflowID}}
-                    
+                    {{trigger-setup edgeID=selectedSingleEdgeID workflowID=workflowID}} 
                 {{else}}
-
                     {{selectedDataisSingleEdgeError}}
-
                 {{/if}}
 
             </div>
@@ -1479,17 +1520,23 @@
                <h1>
                     {{#if model.selected}}{{model.selected.localName}}{{/if}}
                     {{#if controllers.application.isLoggedIn}}
-                    {{#unless isPreview}}
-                        <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit Step">
-                            <i class="icon-pencil"></i>
-                        </span>&nbsp;
-                        <span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;" title="Share or embed current step in your website">
-                           <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
-                        </span>&nbsp;
-                       <span {{action 'togglePreview' }} class='btn-flat gray' title="Preview step for sharing">
-                           <i class="icon-fullscreen"></i>
-                       </span>
-                    {{/unless}}
+
+                        {{!-- Add content here actually --}}
+                        {{#unless isPreview}}
+                            <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit Step Name & Content">
+                                <i class="icon-pencil"></i>
+                            </span>&nbsp;
+                            <span {{action 'toggleMoenyModal'}} class='btn-flat gray' title="Edit Step Money Estimation">
+                                <i class="icon-money"></i>
+                            </span>&nbsp;
+                            <span {{action 'toggleTriggersModal'}} class='btn-flat gray' title="Edit automated triggers">
+                                <i class="icon-cogs"></i>
+                            </span>&nbsp;
+                            <span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;" title="Share or embed current step in your website">
+                               <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
+                            </span>&nbsp;
+
+                        {{/unless}}
                     {{/if}}
                     {{#if isPreview}}
                         <small>{{workflowName}}</small>
@@ -1502,6 +1549,103 @@
                 {{#if isPreview}}
                     <div class="semi-transparent"><a href="http://flowpro.io" target="_blank" style="float:right;">Content provided by FlowPro.io</a></div>
                 {{/if}}
+
+
+                {{#eui-modal openBinding="triggerModal"}}
+                     <div style="padding: 50px; text-align: center;">
+                        <h4> Trigger Modal</h4>
+                        <br>
+                        <br>
+                        
+                        {{trigger-node graphID=graphID workflowID=workflowID}}
+                        
+                        <br>
+                        <br>
+
+                        {{eui-button label="Cancel" action="cancelWorkflowName" size='large'}}
+                        {{eui-button label="Submit" action="updateDirtyGraph" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                    </div>
+                {{/eui-modal}}
+
+                {{#eui-modal openBinding="moneyModal"}}
+                     <div style="padding: 50px; text-align: center;">
+
+                        {{#if loadingMoney}}
+                            Loading details...
+
+                        {{else}}
+                             <h4>Financial details</h4>
+                             <br />
+                             <br />
+                             <p>
+                                This step will only show up in the Todo list for people selected below. <br>
+                                To allow anyone do it, leave the fields empty.
+                             </p>
+                             <br />
+
+                            <b>Add user that complete the task</b><br>
+                            <input id="add-users-perm" style="width: 275px;" class='select2' type='hidden'/>
+
+                            <br>
+                            <br>
+
+                            <b>Add companies that can complete the task</b><br>
+                            <input id="add-comp-perm" style="width: 275px;" class='select2' type='hidden'/>
+
+                            <br>
+                            <br>
+                            <br>
+
+                            <p>
+                                These details are used in the report section to give insights in your business performance.
+                             </p>
+                            <div class='container-fluid'>
+                                <div class="row">
+                                    <div class="col-md-6">
+
+                                        <b>Priority level</b><br>
+                                        {{eui-input placeholder='Number from 0-100'}}
+
+                                        <br>
+                                        <br>
+                                        
+                                        <b>Estimated Duration</b><br>
+                                        {{eui-input placeholder='As measured in hours'}}
+
+                                        <br>
+                                        <br>
+                                        
+                                        <b>Estimated Labour Cost</b><br>
+                                        {{eui-input placeholder='In $$$'}}
+
+                                        <br>
+                                        <br>
+                                    </div>
+
+                                    <div class="col-md-6">
+                            
+                                        <b>Estimated Capital Cost</b><br>
+                                        {{eui-input placeholder='ie. cost for gloves in $$$'}}
+
+                                        <br>
+                                        <br>
+                                        
+                                        <b>Estimated Value</b><br>
+                                        {{eui-input placeholder='Value that is provided in $$$'}}
+
+                                        <br>
+                                        <br>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{eui-button label="Cancel" action="cancelMoneyModal" size='large'}}
+                            {{eui-button label="Submit" action="submitMoneyModal" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                        {{/if}}
+                    </div>
+                {{/eui-modal}}
+
+
                 {{#eui-modal openBinding="workflowEditNameModal"}}
                      <div style="padding: 50px; text-align: center;">
                          <h4> Update Workflow name</h4>
@@ -2093,6 +2237,8 @@
 <script type="text/x-handlebars" data-template-name="styleguide">
 
     <h1>Styleguide</h1>
+
+    Theme preview: <a href='http://detail.herokuapp.com/icons.html'>here</a>.
 
     <p><strong>Stay cool.</strong> Use this guide to make sure the styling is sexy & consistent.
 
