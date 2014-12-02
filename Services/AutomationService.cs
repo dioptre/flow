@@ -224,41 +224,39 @@ namespace EXPEDIT.Flow.Services {
             else return null;
         }
 
-        public async System.Threading.Tasks.Task<bool> EquateAsync(string js)
-        {
 
-            CancellationTokenSource cts = new CancellationTokenSource();
-            cts.CancelAfter(100);
-            try
-            {
-                System.Threading.Tasks.Task<bool> task = System.Threading.Tasks.Task.Run<bool>(() => Equate(js), cts.Token);
-                return await task;
-
-            }
-            // *** If cancellation is requested, an OperationCanceledException results. 
-            catch (OperationCanceledException)
-            {
-                return false;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        public bool EquatePseudoSync(string js)
-        {
-            var task = System.Threading.Tasks.Task.Factory.StartNew(() => EquateAsync(js));
-            task.Wait();
-            return task.Result.Result;
-        }
 
         public bool Equate(string js)
         {
-            return new Engine()
-                    .Execute(js)
-                    .GetCompletionValue() // get the latest statement completion value
-                    .AsBoolean();   
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(100);
+
+            System.Threading.Tasks.Task<bool> task = System.Threading.Tasks.Task.Run<bool>(() =>
+            {
+                try
+                {
+                    return new Engine()
+                        .Execute(js)
+                        .GetCompletionValue() // get the latest statement completion value
+                        .AsBoolean();
+                }
+                // *** If cancellation is requested, an OperationCanceledException results. 
+                catch (OperationCanceledException)
+                {
+                    return false;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }, cts.Token);
+            task.Wait(100);
+            if (!task.IsCompleted)
+                cts.Cancel();
+            return task.Result;
+
+
+
         }
 
 
@@ -273,13 +271,14 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);                
-                //if no stepid - lets make one
+
+                //We always require a stepID to start...otherwise...
                 if (!m.PreviousStepID.HasValue || m.PreviousStepID == Guid.Empty)
                 {
                     if (m.ReferenceID.HasValue)
-                        m.PreviousStep.ProjectPlanTaskResponseID = m.ReferenceID.Value;
+                        m.PreviousStep.ProjectPlanTaskResponseID = m.ReferenceID.Value; //Get stepid from the url
                     else
-                        m.PreviousStep.ProjectPlanTaskResponseID = Guid.NewGuid();
+                        return true; //The step is in the closed state
                 }
                     
                 
@@ -467,14 +466,14 @@ namespace EXPEDIT.Flow.Services {
                     var dict = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => f.Value);
                     foreach (var option in options)
                     {
-                        var correct = false;
-                        if (option.Condition == null)
+                        if (option.Condition == null || !option.Condition.Any())
                         {
                             nextStep = option.ToGraphDataID.Value;
                             isDefault = true;
                             m.Status += "Transition Default;";
                             break;
                         }
+                        var correct = false;
                         foreach (var condition in option.Condition)
                         {
                             var toCheck = condition.Condition.Condition;
@@ -487,11 +486,19 @@ namespace EXPEDIT.Flow.Services {
                                 m.Error = "Illegal string in your conditions.";
                                 return false;
                             }
-                            if (!EquatePseudoSync(toCheck))
+                            if (!Equate(toCheck))
                             {
                                 correct = false;
                                 m.Status += "Failed:" + toCheck;
-                                break;
+                                if (condition.JoinedBy == "&&")
+                                    break;
+                            }
+                            else
+                            {
+                                correct = true;
+                                m.Status += "Succeeded:" + toCheck;
+                                if (condition.JoinedBy == "||")
+                                    break;
                             }
                         }
                         if (correct)
@@ -502,6 +509,8 @@ namespace EXPEDIT.Flow.Services {
                     }
                     if (nextStep != Guid.Empty || isCompleted)
                     {
+                        m.PreviousStep.ActualGraphDataID = nextStep;
+                        d.SaveChanges();
                         return true;
                     }    
                 }
