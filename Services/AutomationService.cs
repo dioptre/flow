@@ -463,7 +463,7 @@ namespace EXPEDIT.Flow.Services {
                                 join t in d.ProjectDataTemplates on o.ProjectDataTemplateID equals t.ProjectDataTemplateID
                                 select new { t.CommonName, o.Value, t.SystemDataType }
                                     ).GroupBy(f => f.CommonName, f => f, (key, g) => g.FirstOrDefault());
-                    var dict = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => f.Value);
+                    var dict = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => (f.Value ?? "").Replace("\'","\\\'").Replace("\"", "\\\""));
                     foreach (var option in options)
                     {
                         if (option.Condition == null || !option.Condition.Any())
@@ -480,7 +480,7 @@ namespace EXPEDIT.Flow.Services {
                             if (string.IsNullOrWhiteSpace(toCheck))
                                 continue;
                             foreach (var lookup in dict)
-                                toCheck.Replace(lookup.Key, lookup.Value);
+                                toCheck.Replace(lookup.Key, "\"" + lookup.Value + "\"");
                             if (ConstantsHelper.REGEX_JS_CLEANER.IsMatch(toCheck))
                             {
                                 m.Error = "Illegal string in your conditions.";
