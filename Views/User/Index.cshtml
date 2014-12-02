@@ -286,6 +286,24 @@
     </div>
 </script>
 
+<script type="text/x-handlebars" data-template-name="components/lform-dropdown">
+    <div>
+        <label>{{s.d.label}}</label><br>
+        {{#if s.d.field_options.include_blank_option}}
+            {{eui-select value=s.value options=s.d.field_options.options required=true}}
+        {{else}}
+            {{eui-select value=s.value options=s.d.field_options.options labelPath='label' valuePath='label'}}
+        {{/if}}
+        {{s.value}}
+        @*{{view "select"
+       content=s.d.field_options.options
+       optionValuePath="content.id"
+       optionLabelPath="content.firstName"
+       value=currentProgrammer.id}}*@
+
+    </div>
+</script>
+
 <script type="text/x-handlebars" data-template-name="components/lform-wrapper">
     <div class="form" style="border: 1px solid red;">
         <h3>This is a form</h3>
