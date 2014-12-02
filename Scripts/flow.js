@@ -686,6 +686,8 @@ App.FileController = Ember.ObjectController.extend({
 App.LoginRoute = Ember.Route.extend(App.ResetScroll, {});
 
 App.LoginController = Ember.Controller.extend({
+    queryParams: ['fromRoute'],
+    fromRoute: '',
     needs: ['application'],
     email: "",
     rememberme: false,
@@ -721,7 +723,12 @@ App.LoginController = Ember.Controller.extend({
                         });
                         _this.set('controllers.application.userProfile', data);
                     })
-                    _this.transitionToRoute('search');
+                    if (_this.get('fromRoute') != '') {
+                         _this.transitionToRoute(_this.get('fromRoute'));
+                    } else {
+                        _this.transitionToRoute('search');
+                    }
+
                 } else {
                     Messenger().post({type:'error', message:'Incorrect username and/or password. Please try again.', id:'authenticate'});
                 }
@@ -2157,6 +2164,9 @@ App.GraphController = Ember.ObjectController.extend({
     workflowEditNameModal: false,
     workflowShareModal: false,
     workflowNewModal: false, // up to here is for new ones
+    moneyModal: false,
+    loadingMoney: true,
+    triggerModal: false,
     editing: true,
     updateGraph: '',
     workflowName: function () {
@@ -2181,6 +2191,7 @@ App.GraphController = Ember.ObjectController.extend({
             return 'process-header col-md-6';
     }.property('preview'),
     workflowID: null, // available ids will be in model
+    graphID: Ember.computed.alias('model.selectedID'),
     preview: null,
     localeSelected: null,
     currentURL: function () {
@@ -2360,6 +2371,74 @@ App.GraphController = Ember.ObjectController.extend({
         },
         toggleWorkflowEditModal: function (data, callback) {
             this.toggleProperty('workflowEditModal');
+        },
+        toggleMoenyModal: function (data, callback) {
+
+            this.set('loadingMoney', false)
+            Ember.run.scheduleOnce('afterRender', this, function(){
+                $('#add-comp-perm').select2({
+                    placeholder: "Enter Companies...",
+                    minimumInputLength: 2,
+                    tags: true,
+                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                        url: "/share/getcompanies",
+                        dataType: 'json',
+                        multiple: true,
+                        data: function (term, page) {
+                            return {id: term };
+                        },
+                        results: function (data, page) { // parse the results into the format expected by Select2.
+                            if (data.length === 0) {
+                                return { results: [] };
+                            }
+                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                            return { results: results, text: 'tag' };
+                        }
+                    },
+                    formatResult: function(state) {return state.tag; },
+                    formatSelection: function (state) {return state.tag; },
+                    escapeMarkup: function (m) { return m; }
+                });
+
+                $('#add-users-perm').select2({
+                    placeholder: "Enter Username...",
+                    minimumInputLength: 2,
+                    tags: true,
+                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                        url: "/share/getusernames",
+                        dataType: 'json',
+                        multiple: true,
+                        data: function (term, page) {
+                            return {id: term };
+                        },
+                        results: function (data, page) { // parse the results into the format expected by Select2.
+                            if (data.length === 0) {
+                                return { results: [] };
+                            }
+                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                            return { results: results, text: 'tag' };
+                        }
+                    },
+                    formatResult: function(state) {return state.tag; },
+                    formatSelection: function (state) {return state.tag; },
+                    escapeMarkup: function (m) { return m; }
+                })
+            });
+
+            this.toggleProperty('moneyModal');
+        },
+        submitMoneyModal: function (data, callback) {
+            // Save Money Variables 
+            this.toggleProperty('moneyModal');
+        },
+        cancelMoneyModal: function (data, callback) {
+            // Clear variable here
+            this.set('moneyModal', false);
+        },
+        toggleTriggersModal: function (data, callback) {
+            this.toggleProperty('triggerModal');
         },
         toggleShareModal: function (data, callback) {
             this.toggleProperty('workflowShareModal');
@@ -3828,6 +3907,200 @@ App.HandlebarsLiveComponent = Ember.Component.extend({
     });
 
   }.observes('templatestring').on('init')
+});
+
+
+App.TriggerNodeComponent = Ember.Component.extend({
+    defaultRow: {},
+    tSmatchesRules: [{value: 'All'}, {value: 'Any'}],
+    tSvariables: [{value: 'Test'}, {value:'Awesome'}], // - this should be loaded from the variables on the current page context
+    tSmatches: [{value: 'contains'}, {value:'does not contain'}, {value:'is'}, {value:'is not'}, {value:'begins with'}, {value:'ends with'}],
+    graphID: '', // this is the edge ID on the item we are editing
+    workflowID: '', // this is the workflow ID on the item we are editing
+    edge: '',
+    loading: true,
+    setup: function(){
+        var graphID = this.get('graphID');
+
+        debugger;
+        var workflowID = this.get('workflowID')
+        var store = this.get('targetObject.store');
+
+        var _this = this;
+
+        // Load available variables
+        var contextName = store.findQuery('contextName', {wfid: workflowID}).then(function(al){
+            var test = Enumerable.From(al.content).Select('i=>{value:i.get("CommonName"), label:i.get("CommonName")}').Distinct().ToArray();
+            _this.set('tSvariables', test);
+        })
+
+        // Setup the config - load values from the server
+
+        this.set('loading', true);
+        if (IsGUID(edgeID)){
+
+            var edge = store.getById('edge', edgeID);
+           
+            this.set('edge', edge); 
+            var conditions = edge.get('EdgeConditions').then(function(a){
+                // here you need to set the this.config :) - 
+                _this.set('loading', false);
+
+                if (a.get('length') == 1) {
+                //debugger;  
+
+                    _this.set('config', JSON.parse(a.get('firstObject.JSON')))
+                }
+                if (a.get('length') < 1) {
+                    _this.set('config', _this.get('defaultConfig'));
+                }
+
+                 if (a.get('length') > 1) {
+                    Messenger().post({ type: 'error', message: 'There should only be one edge condition. Please contact support!' });
+                    
+                }
+
+            })
+         
+                 
+        }
+
+
+
+
+    }.observes('edgeID').on('didInsertElement'),
+    config: {},
+    defaultConfig: {
+        matchSelect: 'All',
+        triggerConditions: false,
+        fields: [
+            {        
+                type: {
+                    varLabel: '',
+                    varSelect: '',
+                    matchSelect: '',
+                    matchInput: ''
+                }
+            }
+        ]
+    },
+    configEvaluation: function(config){
+        var c = config;
+
+        var s = ''; // this is the magic string later
+
+        if (!c.triggerConditions)
+          return s; // if the trigger condition is false just return nothing
+
+        // Loop through each line in the condition array
+        if (c.fields.length > 0) {
+          $.each(c.fields, function(i, a){
+    
+            if (a.type != null) {
+              b = a.type
+
+              // Create the comparions part 
+              var l = '';
+              if (b.matchSelect == 'contains') {
+                  l = '.match(/' + b.matchInput + '/ig) != null';
+              }
+              if (b.matchSelect == 'does not contain') {
+                  l = '.match(/' + b.matchInput + '/ig) == null';
+              }
+              if (b.matchSelect == 'is') {
+                  l = '.match(/^' + b.matchInput + '$/ig) != null';
+              }
+              if (b.matchSelect == 'is not') {
+                  l = '.match(/^' + b.matchInput + '$/ig) == null';
+              }
+              if (b.matchSelect == 'begins with') {
+                  l = '.match(/^' + b.matchInput + '/ig) != null';
+              }
+              if (b.matchSelect == 'ends with') {
+                l = '.match(/' + b.matchInput + '$/ig) != null'; // "abc".match(/cdf$/ig) != null
+              }
+
+
+              var comparison = ''; // this will be either AND, OR (or empty for the last line ;)
+              if (i != (c.fields.length - 1)) {
+                comparison = (c.matchSelect == 'All' ? ' && ' : ' || ');
+              }
+
+              // Put it all together
+              s += '( ' + '{{' + b.varSelect + '}}' + l  + ')' + comparison; 
+
+            }
+          });
+        }
+
+        return s
+        
+
+
+    },
+    defaultConfigItem: {        
+        type: {
+            varLabel: '',
+            varSelect: '',
+            matchSelect: '',
+            matchInput: ''
+        }
+    },
+    actions: {
+        'saveConditions': function(context){
+            var _this = this;
+            this.get('edge').get('EdgeConditions').then(function(a){
+                
+                 if (a.get('length') != 0) {
+                    // edit a
+                    z = a.get('firstObject');
+                    z.set('JSON', JSON.stringify(_this.get('config')));
+
+                    var conditionStr =  _this.get('configEvaluation')(_this.get('config'));
+                    z.set('Condition', conditionStr);
+
+                    z.save().then(function(){
+                         Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+
+                    }, function(){
+                         Messenger().post({ type: 'error', message: 'Error saving edge conditions' });
+
+                    });
+                 } else {
+                    // create a new one and save to it
+                    var store = _this.get('targetObject.store');
+                    var newCondition = store.createRecord('edgeCondition', {
+                        ConditionID: NewGUID(),
+                        GraphDataRelationID: _this.get('edgeID'),
+                        JSON: JSON.stringify(_this.get('config')),// paul super easy array
+                        Condition: _this.get('configEvaluation')(_this) // andy's js condition
+                    })
+
+                    _this.get('edge.EdgeConditions').addObject(newCondition);
+
+                    // newCondition.save().then(function(){
+                    //     return _this.get('edge').save()
+                    // }).then(function(){
+                    //      Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+                    //     alert('Successful save!!!')
+                    // })
+
+                     newCondition.save().then(function(){
+                         Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+                    })
+
+                 }
+            });
+        },
+        'addRow': function (context) {
+            var positionCurrent = this.get('config.fields').indexOf(context.itemInsertAfter) + 1;
+            this.get('config.fields').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
+
+        },
+        'deleteRow': function(context) {
+            this.get('config.fields').removeObject(context.itemToDelete);
+        }                                             
+    }
 });
 
 
