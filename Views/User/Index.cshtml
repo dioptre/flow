@@ -1062,7 +1062,7 @@
             <br>
 
             {{#each con in config.fields}}
-                {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium' labelPath='value'}}
+                {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium'}}
                 {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
                 {{eui-input  value=con.type.matchInput size="medium" placeholder=''}}
                 {{eui-button icon='icon icon-minus' action='deleteRow' itemToDelete=con}}

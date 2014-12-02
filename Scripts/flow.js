@@ -3841,15 +3841,19 @@ App.TriggerSetupComponent = Ember.Component.extend({
     loading: true,
     setup: function(){
         var edgeID = this.get('edgeID');
-        var workflowID = this.get('worfklowID')
+        var workflowID = this.get('workflowID')
         var store = this.get('targetObject.store');
 
+        var _this = this;
 
         // Load available variables
-        store.findQuery('contextName', {wfid: workflowID})
+        var contextName = store.findQuery('contextName', {wfid: workflowID}).then(function(al){
+            var test = Enumerable.From(al.content).Select('i=>{value:i.id, label:i.get("CommonName")}').ToArray();
+            _this.set('tSvariables', test);
+        })
 
         // Setup the config - load values from the server
-       var _this = this;
+
         this.set('loading', true);
         if (IsGUID(edgeID)){
 
