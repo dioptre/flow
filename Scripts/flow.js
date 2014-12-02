@@ -4325,7 +4325,8 @@ DS.Model.reopen({
         Ember.run.scheduleOnce('sync', this, this.get, '_locale');
         return this.get('_localContent');
     }.property('_localContent', 'humanContent', 'content'),
-
+    Error: DS.attr('string', { defaultValue: null }),
+    Status: DS.attr('string', { defaultValue: null })
 });
 
 

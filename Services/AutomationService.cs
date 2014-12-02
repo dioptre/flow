@@ -20,6 +20,7 @@ using EXPEDIT.Share.Helpers;
 using EXPEDIT.Share.Services;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace EXPEDIT.Flow.Services {
 
@@ -223,41 +224,39 @@ namespace EXPEDIT.Flow.Services {
             else return null;
         }
 
-        public async System.Threading.Tasks.Task<bool> EquateAsync(string js)
-        {
 
-            CancellationTokenSource cts = new CancellationTokenSource();
-            cts.CancelAfter(100);
-            try
-            {
-                System.Threading.Tasks.Task<bool> task = System.Threading.Tasks.Task.Run<bool>(() => Equate(js), cts.Token);
-                return await task;
-
-            }
-            // *** If cancellation is requested, an OperationCanceledException results. 
-            catch (OperationCanceledException)
-            {
-                return false;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        public bool EquatePseudoSync(string js)
-        {
-            var task = System.Threading.Tasks.Task.Factory.StartNew(() => EquateAsync(js));
-            task.Wait();
-            return task.Result.Result;
-        }
 
         public bool Equate(string js)
         {
-            return new Engine()
-                    .Execute(js)
-                    .GetCompletionValue() // get the latest statement completion value
-                    .AsBoolean();   
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(100);
+
+            System.Threading.Tasks.Task<bool> task = System.Threading.Tasks.Task.Run<bool>(() =>
+            {
+                try
+                {
+                    return new Engine()
+                        .Execute(js)
+                        .GetCompletionValue() // get the latest statement completion value
+                        .AsBoolean();
+                }
+                // *** If cancellation is requested, an OperationCanceledException results. 
+                catch (OperationCanceledException)
+                {
+                    return false;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }, cts.Token);
+            task.Wait(100);
+            if (!task.IsCompleted)
+                cts.Cancel();
+            return task.Result;
+
+
+
         }
 
 
@@ -268,16 +267,18 @@ namespace EXPEDIT.Flow.Services {
             var contact = ContactID;
             var company = CompanyID;
             var application = ApplicationID;
+            m.Status = "";
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);                
-                //if no stepid - lets make one
+
+                //We always require a stepID to start...otherwise...
                 if (!m.PreviousStepID.HasValue || m.PreviousStepID == Guid.Empty)
                 {
                     if (m.ReferenceID.HasValue)
-                        m.PreviousStep.ProjectPlanTaskResponseID = m.ReferenceID.Value;
+                        m.PreviousStep.ProjectPlanTaskResponseID = m.ReferenceID.Value; //Get stepid from the url
                     else
-                        m.PreviousStep.ProjectPlanTaskResponseID = Guid.NewGuid();
+                        return true; //The step is in the closed state
                 }
                     
                 
@@ -442,54 +443,78 @@ namespace EXPEDIT.Flow.Services {
                         }
                     }
 
-                    var isCompleted = false;
-                    var options = d.GraphDataRelation.Where(f=>f.FromGraphDataID == m.ActualGraphDataID && f.VersionDeletedBy == null && f.Version == 0)
+                    bool isCompleted = false, isDefault = false;
+                    var nextStep = Guid.Empty;
+                    var options = d.GraphDataRelation.Where(f=>
+                        f.FromGraphDataID == m.ActualGraphDataID 
+                        && f.VersionDeletedBy == null 
+                        && f.ToGraphDataID != m.ActualGraphDataID
+                        && f.ToGraphDataID != null 
+                        && f.Version == 0)
                         .OrderByDescending(f=>f.Weight)
                         .OrderByDescending(f=>f.VersionUpdated);
                     if (options.Count() == 0)
                     {
-                        m.Error = "Workflow Completed";
+                        m.Status += "Workflow Completed;";
                         isCompleted = true;
                     }
-
+                    //if step (response) & graphdataid go through graphdatarelationconditions for next transition   
                     var data = (from o in d.ProjectDatas.Where(f => f.ProjectID == m.ProjectID && f.VersionDeletedBy == null && f.Version == 0).OrderByDescending(f => f.VersionUpdated)
                                 join t in d.ProjectDataTemplates on o.ProjectDataTemplateID equals t.ProjectDataTemplateID
                                 select new { t.CommonName, o.Value, t.SystemDataType }
                                     ).GroupBy(f => f.CommonName, f => f, (key, g) => g.FirstOrDefault());
-                    var dict = data.ToDictionary(f => f.CommonName, f => f.Value);
+                    var dict = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => (f.Value ?? "").Replace("\'","\\\'").Replace("\"", "\\\""));
                     foreach (var option in options)
                     {
+                        if (option.Condition == null || !option.Condition.Any())
+                        {
+                            nextStep = option.ToGraphDataID.Value;
+                            isDefault = true;
+                            m.Status += "Transition Default;";
+                            break;
+                        }
                         var correct = false;
                         foreach (var condition in option.Condition)
                         {
-                            if (!EquatePseudoSync(condition.Condition.Condition))
+                            var toCheck = condition.Condition.Condition;
+                            if (string.IsNullOrWhiteSpace(toCheck))
+                                continue;
+                            foreach (var lookup in dict)
+                                toCheck.Replace(lookup.Key, "\"" + lookup.Value + "\"");
+                            if (ConstantsHelper.REGEX_JS_CLEANER.IsMatch(toCheck))
+                            {
+                                m.Error = "Illegal string in your conditions.";
+                                return false;
+                            }
+                            if (!Equate(toCheck))
                             {
                                 correct = false;
-                                break;
+                                m.Status += "Failed:" + toCheck;
+                                if (condition.JoinedBy == "&&")
+                                    break;
+                            }
+                            else
+                            {
+                                correct = true;
+                                m.Status += "Succeeded:" + toCheck;
+                                if (condition.JoinedBy == "||")
+                                    break;
                             }
                         }
+                        if (correct)
+                        {
+                            nextStep = option.ToGraphDataID.Value;
+                            break;
+                        }
                     }
-                   
-
-
-                    //if final transition send 000000-0000-00000000
-
-                    //if step (response) & graphdataid go through graphdatarelationconditions for next transition            
-
-                    //Transition & change owner to responsibleowner if task exists
-
-                    //run trigger on out
-
-                    //always create an event if successful or not
-
-                    //run trigger on in
-
-                    //always create an event if successful or not
-
-                    //update response
+                    if (nextStep != Guid.Empty || isCompleted)
+                    {
+                        m.PreviousStep.ActualGraphDataID = nextStep;
+                        d.SaveChanges();
+                        return true;
+                    }    
                 }
-
-
+                m.Error = "Could not find a valid transition.";
                 return false;
             }
         }

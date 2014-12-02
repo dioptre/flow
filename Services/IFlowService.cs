@@ -44,7 +44,8 @@ namespace EXPEDIT.Flow.Services
 
         [OperationContract]
         bool CreateEdge(FlowEdgeViewModel flow);
-
+        [OperationContract]
+        bool UpdateEdge(FlowEdgeViewModel m);
         [OperationContract]
         bool DeleteEdge(Guid eid);
 
