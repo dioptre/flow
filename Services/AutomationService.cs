@@ -316,8 +316,20 @@ namespace EXPEDIT.Flow.Services {
                                     join p in d.GraphData on o.FromGraphDataID equals p.GraphDataID
                                     select p
                                   ).FirstOrDefault();
-                            m.PreviousStep.ActualGraphDataID = gd.GraphDataID;
-                            m.content = gd.GraphContent;
+                            if (gd == null)
+                            {
+                                gd = (from o in d.GraphDataGroups.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
+                                      join r in d.GraphDataRelation on o.GraphDataGroupID equals r.GraphDataGroupID
+                                      join g in d.GraphData on r.FromGraphDataID equals g.GraphDataID
+                                      where o.StartGraphDataID == g.GraphDataID && r.FromGraphDataID != r.ToGraphDataID
+                                      select g
+                                          ).FirstOrDefault();
+                            }
+                            if (gd != null)
+                            {
+                                m.PreviousStep.ActualGraphDataID = gd.GraphDataID;
+                                m.content = gd.GraphContent;
+                            }
                         }
                         else
                         {
@@ -329,6 +341,15 @@ namespace EXPEDIT.Flow.Services {
                                                             where soq == null
                                                             select o.FromGraphDataID
                                                           ).FirstOrDefault();
+                            if (m.PreviousStep.ActualGraphDataID == null)
+                            {
+                                m.PreviousStep.ActualGraphDataID = (from o in d.GraphDataGroups.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
+                                      join r in d.GraphDataRelation on o.GraphDataGroupID equals r.GraphDataGroupID
+                                      join g in d.GraphData on r.FromGraphDataID equals g.GraphDataID
+                                      where o.StartGraphDataID == g.GraphDataID && r.FromGraphDataID != r.ToGraphDataID
+                                      select g.GraphDataID
+                                         ).FirstOrDefault();
+                            }
                         }
                         if (m.PreviousStep.ActualGraphDataID == null)
                         {
@@ -455,7 +476,7 @@ namespace EXPEDIT.Flow.Services {
                         .OrderByDescending(f=>f.VersionUpdated);
                     if (options.Count() == 0)
                     {
-                        m.Status += "Workflow Completed;";
+                        m.Status += " Workflow Completed.";
                         isCompleted = true;
                     }
                     //if step (response) & graphdataid go through graphdatarelationconditions for next transition   
@@ -470,7 +491,7 @@ namespace EXPEDIT.Flow.Services {
                         {
                             nextStep = option.ToGraphDataID.Value;
                             isDefault = true;
-                            m.Status += "Transition Default;";
+                            m.Status += " Transition Default.";
                             break;
                         }
                         var correct = false;
@@ -489,14 +510,14 @@ namespace EXPEDIT.Flow.Services {
                             if (!Equate(toCheck))
                             {
                                 correct = false;
-                                m.Status += "Failed:" + toCheck;
+                                m.Status += " Failed:" + toCheck;
                                 if (condition.JoinedBy == "&&")
                                     break;
                             }
                             else
                             {
                                 correct = true;
-                                m.Status += "Succeeded:" + toCheck;
+                                m.Status += " Succeeded:" + toCheck;
                                 if (condition.JoinedBy == "||")
                                     break;
                             }
@@ -509,7 +530,18 @@ namespace EXPEDIT.Flow.Services {
                     }
                     if (nextStep != Guid.Empty || isCompleted)
                     {
-                        m.PreviousStep.ActualGraphDataID = nextStep;
+                        if (nextStep == Guid.Empty)
+                        {
+                            m.PreviousStep.ActualGraphDataID = null;
+                            m.PreviousStep.Completed = now;
+                            m.PreviousWorkflowInstance.Completed = now;
+                        }
+                        else
+                        {
+                            m.PreviousStep.ActualGraphDataID = nextStep;
+                            m.PreviousWorkflowInstance.Idle = now.AddSeconds(m.PreviousWorkflowInstance.IdleTimeoutSeconds ?? ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS);
+                        }
+
                         d.SaveChanges();
                         return true;
                     }    

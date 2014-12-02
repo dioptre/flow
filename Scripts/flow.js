@@ -2024,7 +2024,7 @@ App.GraphRoute = Ember.Route.extend({
                     });
                 }
                 else if (typeof groupID === 'undefined' || !groupID)
-                    return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') })
+                    return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: _this.get('model.selectedID') })
             }),
             duplicateNode: $.get('/flow/NodeDuplicateID/' + id),
             selectedID: id,
@@ -2054,7 +2054,7 @@ App.GraphRoute = Ember.Route.extend({
                     // create the workflow here
                     m.workflow = App.Workflow.store.getById('workflow', m.workflowID);
                     if (!m.workflow)
-                        m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') });
+                        m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: m.selected });
                 }
             }
             else {
@@ -2107,7 +2107,8 @@ App.GraphRoute = Ember.Route.extend({
             if (!m.workflow) {
                 m.workflow = App.Workflow.store.createRecord('workflow', {
                     id: m.params.workflowID,
-                    name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss')
+                    name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'),
+                    StartGraphDataID: m.selected
                 });
             }
             m.workflows = Em.A([m.workflow]);
@@ -2387,7 +2388,7 @@ App.GraphController = Ember.ObjectController.extend({
 
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
             if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
-                newWorkflow = App.Node.store.createRecord('workflow', { id: this.get('workflowID'), name: this.get('model.workflow.name') });
+                newWorkflow = App.Node.store.createRecord('workflow', { id: this.get('workflowID'), name: this.get('model.workflow.name'), StartGraphDataID: _this.get('model.selectedID')  });
                 this.set('model.workflow', newWorkflow);
             }
             else
@@ -2723,7 +2724,7 @@ App.VizEditorComponent = Ember.Component.extend({
             //       deleteClusterError:"Clusters cannot be deleted."
             // },
             //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}},
-            smoothCurves: false,
+            smoothCurves: true,
             //hierarchicalLayout: {enabled:true},
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
             //physics: {barnesHut: {enabled: false}},
@@ -3237,7 +3238,7 @@ App.EditorRoute = Ember.Route.extend({
                     });
                 }
                 else if (typeof groupID === 'undefined' || !groupID)
-                    return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') })
+                    return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: id })
             }),
             duplicateNode: $.get('/flow/NodeDuplicateID/' + id),
             selectedID: id,
@@ -3267,7 +3268,7 @@ App.EditorRoute = Ember.Route.extend({
                     // create the workflow here
                     m.workflow = App.Workflow.store.getById('workflow', m.workflowID);
                     if (!m.workflow)
-                        m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss') });
+                        m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID : m.selectedID });
                 }
             }
             else {
@@ -3320,7 +3321,8 @@ App.EditorRoute = Ember.Route.extend({
             if (!m.workflow) {
                 m.workflow = App.Workflow.store.createRecord('workflow', {
                     id: m.params.workflowID,
-                    name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss')
+                    name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'),
+                    StartGraphDataID: m.selectedID
                 });
             }
             m.workflows = Em.A([m.workflow]);
@@ -3590,7 +3592,7 @@ App.EditorController = Ember.ObjectController.extend({
 
             newWorkflow = App.Node.store.getById('workflow', this.get('workflowID'));
             if (newWorkflow === null || typeof newWorkflow.get('name') === 'undefined') {
-                newWorkflow = App.Node.store.createRecord('workflow', { id: this.get('workflowID'), name: this.get('model.workflow.name') });
+                newWorkflow = App.Node.store.createRecord('workflow', { id: this.get('workflowID'), name: this.get('model.workflow.name'), StartGraphDataID: _this.get('model.selectedID') });
                 this.set('model.workflow', newWorkflow);
             }
             else
@@ -4539,6 +4541,7 @@ App.Workflow = DS.Model.extend({
     name: DS.attr('string'),
     comment: DS.attr('string'),
     firstNode: DS.attr('string'),
+    StartGraphDataID: DS.attr('string'),
     humanName: function () {
         var temp = this.get('name');
         if (temp)

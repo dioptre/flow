@@ -103,6 +103,7 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? id { get { return GraphDataGroupID; } set { GraphDataGroupID = value; } }
         public string name { get { return GraphDataGroupName; } set { GraphDataGroupName = value; } }
         public Guid? firstNode { get; set; }
+        public Guid? StartGraphDataID { get; set; }
         [JsonIgnore]
         public string GraphDataGroupName { get; set; }
         [JsonIgnore]

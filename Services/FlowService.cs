@@ -593,7 +593,7 @@ namespace EXPEDIT.Flow.Services {
                                         {
                                             GraphDataGroupID = o[0] as Guid?,
                                             GraphDataGroupName = o[1] as string,
-                                            Comment = o[2] as string
+                                            StartGraphDataID = o[2] as Guid?
                                         });
                     result.Files = (from o in dataset.Tables[files].AsEnumerable()
                                     select new FlowFileViewModel
@@ -1141,9 +1141,10 @@ namespace EXPEDIT.Flow.Services {
                 return (from o in d.GraphDataGroups
                         where o.GraphDataGroupID == id
                         select new FlowEdgeWorkflowViewModel
-                            {
+                            {                                
                                 GraphDataGroupID = o.GraphDataGroupID,
                                 GraphDataGroupName = o.GraphDataGroupName,
+                                StartGraphDataID = o.StartGraphDataID,
                                 firstNode = firstNode,
                                 Comment = o.Comment
                             }).FirstOrDefault();
@@ -1183,6 +1184,7 @@ namespace EXPEDIT.Flow.Services {
                 {
                     GraphDataGroupID = m.GraphDataGroupID.Value,
                     GraphDataGroupName = m.GraphDataGroupName,
+                    StartGraphDataID = m.StartGraphDataID,
                     Comment = m.Comment,
                     Created = now,
                     CreatedBy = contact,
@@ -1233,6 +1235,8 @@ namespace EXPEDIT.Flow.Services {
                     obj.GraphDataGroupName = m.GraphDataGroupName;
                 if (!string.IsNullOrWhiteSpace(m.Comment) && obj.Comment != m.Comment)
                     obj.Comment = m.Comment;
+                if (m.StartGraphDataID != null && obj.StartGraphDataID != m.StartGraphDataID)
+                    obj.StartGraphDataID = m.StartGraphDataID;
                 obj.VersionUpdated = now;
                 obj.VersionUpdatedBy = contact;
                 d.SaveChanges();
@@ -2503,7 +2507,7 @@ namespace EXPEDIT.Flow.Services {
                              GraphContent = o.GraphContent,
                              LastEditedBy = o.LastEditedBy
                          }
-                    ).ToArray();                        
+                    ).Where(f=>f.Completed == null).ToArray();                        
             }
 
         }
