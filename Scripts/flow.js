@@ -4394,6 +4394,59 @@ App.Node = DS.Model.extend({
     VersionUpdated: DS.attr('')
 });
 
+App.Task = DS.Model.extend({
+    TaskID : DS.attr('string'),
+    TaskName : DS.attr('string'),
+    WorkTypeID : DS.attr('string'), 
+    WorkCompanyID : DS.attr('string'),
+    WorkContactID : DS.attr('string'),
+    GraphDataGroupID : DS.attr('string'), 
+    GraphDataID : DS.attr('string'), 
+    DefaultPriority : DS.attr('string'), 
+    EstimatedDuration : DS.attr('string'), 
+    EstimatedLabourCosts : DS.attr('string'), 
+    EstimatedCapitalCosts : DS.attr('string'),
+    EstimatedValue : DS.attr('string'), 
+    EstimatedIntagibleValue : DS.attr('string'), 
+    PerformanceMetricParameterID : DS.attr('string'),
+    PerformanceMetricQuantity : DS.attr('string'),
+    Comment : DS.attr('string')
+});
+
+App.Trigger = DS.Model.extend({
+    TriggerID: DS.attr('string'),
+    CommonName: DS.attr('string'),
+    TriggerType: DS.attr('string'),
+    JsonMethod: DS.attr('string'),
+    JsonProxyApplicationID: DS.attr('string'),
+    JsonProxyContactID: DS.attr('string'),
+    JsonProxyCompanyID: DS.attr('string'),
+    JsonAuthorizedBy: DS.attr('string'),
+    JsonUsername: DS.attr('string'),
+    JsonPassword: DS.attr('string'),
+    JsonPasswordType: DS.attr('string'),
+    SystemMethod: DS.attr('string'),
+    ConditionID: DS.attr('string'),
+    ExternalUrl: DS.attr('string'),
+    ExternalRequestMethod: DS.attr('string'),
+    ExternalFormType: DS.attr('string'),
+    PassThroughProjectData: DS.attr('string')
+});
+
+
+
+App.GraphDataTrigger = App.Trigger.extend({
+    GraphDataTriggerID: DS.attr('string'),
+    GraphDataID: DS.attr('string'),
+    TriggerID: DS.attr('string'),
+    OnEnter: DS.attr('string'),
+    OnDataUpdate: DS.attr('string'),
+    OnExit: DS.attr('string'),
+    RunOnce: DS.attr('string')
+});
+
+
+
 
 App.Step = App.Node.extend({
     TaskName: DS.attr('string'),

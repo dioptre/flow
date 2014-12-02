@@ -255,10 +255,12 @@ namespace EXPEDIT.Flow.Services {
             }, cts.Token);
             task.Wait(100);
             if (!task.IsCompleted)
+            {
                 cts.Cancel();
+                return false;
+            }
             return task.Result;
-
-
+            
 
         }
 
@@ -492,10 +494,8 @@ namespace EXPEDIT.Flow.Services {
                     {
                         if (option.Condition == null || !option.Condition.Any())
                         {
-                            nextStep = option.ToGraphDataID.Value;
-                            isDefault = true;
-                            m.Status += " Transition Default.";
-                            break;
+                            //Dont take the deafult yet
+                            continue;
                         }
                         var correct = false;
                         foreach (var condition in option.Condition)
@@ -530,6 +530,18 @@ namespace EXPEDIT.Flow.Services {
                             nextStep = option.ToGraphDataID.Value;
                             break;
                         }
+                    }
+                    if (nextStep == Guid.Empty)
+                    {
+                        //Now do the default transition
+                        var option = options.FirstOrDefault(f => !f.Condition.Any());
+                        if (option != null)
+                        {
+                            nextStep = option.ToGraphDataID.Value;
+                            isDefault = true;
+                            m.Status += " Transition Default.";
+                        }
+
                     }
                     if (nextStep != Guid.Empty || isCompleted)
                     {
