@@ -3836,16 +3836,27 @@ App.TriggerSetupComponent = Ember.Component.extend({
     tSvariables: [{value: 'Test'}, {value:'Awesome'}], // - this should be loaded from the variables on the current page context
     tSmatches: [{value: 'contains'}, {value:'does not contain'}, {value:'is'}, {value:'is not'}, {value:'begins with'}, {value:'ends with'}],
     edgeID: '', // this is the edge ID on the item we are editing
+    workflowID: '', // this is the workflow ID on the item we are editing
     edge: '',
     loading: true,
     setup: function(){
         var edgeID = this.get('edgeID');
+        var workflowID = this.get('workflowID')
+        var store = this.get('targetObject.store');
 
-       var _this = this;
+        var _this = this;
+
+        // Load available variables
+        var contextName = store.findQuery('contextName', {wfid: workflowID}).then(function(al){
+            var test = Enumerable.From(al.content).Select('i=>{value:i.id, label:i.get("CommonName")}').ToArray();
+            _this.set('tSvariables', test);
+        })
+
+        // Setup the config - load values from the server
+
         this.set('loading', true);
         if (IsGUID(edgeID)){
 
-            var store = this.get('targetObject.store');
             var edge = store.getById('edge', edgeID);
            
             this.set('edge', edge); 
@@ -4601,6 +4612,12 @@ App.Myinfo = DS.Model.extend({
     UserID: DS.attr(''),
     UserName: DS.attr('')
 });
+
+App.ContextName = DS.Model.extend({
+    FormID: DS.attr(''),
+    GraphDataID: DS.attr(''),
+    CommonName: DS.attr('')
+})
 
 App.MyLicense = DS.Model.extend({
     LicenseID: DS.attr(''),

@@ -60,6 +60,9 @@
         <!--<script src="//use.typekit.net/osa0vpd.js"></script>
         <script>try{Typekit.load();}catch(e){}</script>-->
 
+        <!-- Webfonts - Avenir Lol -->
+        <script type="text/javascript" src="http://fast.fonts.net/jsapi/a4a24eee-1e8c-48da-a411-914841dc7d6a.js"></script>
+
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui-default-theme.css">
@@ -1059,7 +1062,7 @@
             <br>
 
             {{#each con in config.fields}}
-                {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium' labelPath='value'}}
+                {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium'}}
                 {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
                 {{eui-input  value=con.type.matchInput size="medium" placeholder=''}}
                 {{eui-button icon='icon icon-minus' action='deleteRow' itemToDelete=con}}
@@ -1416,7 +1419,7 @@
 
                 {{#if selectedDataisSingleEdge}}
                     {{selectedData.edges.firstObject}}
-                    {{trigger-setup edgeID=selectedSingleEdgeID}}
+                    {{trigger-setup edgeID=selectedSingleEdgeID workflowID=workflowID}}
                     
                 {{else}}
 
