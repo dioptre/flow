@@ -459,10 +459,10 @@ namespace EXPEDIT.Flow.Services {
                         isCompleted = true;
                     }
                     //if step (response) & graphdataid go through graphdatarelationconditions for next transition   
-                    var data = (from o in d.ProjectDatas.Where(f => f.ProjectID == m.ProjectID && f.VersionDeletedBy == null && f.Version == 0).OrderByDescending(f => f.VersionUpdated)
+                    var data = (from o in d.ProjectDatas.Where(f => f.ProjectID == m.ProjectID && f.VersionDeletedBy == null && f.Version == 0)
                                 join t in d.ProjectDataTemplates on o.ProjectDataTemplateID equals t.ProjectDataTemplateID
-                                select new { t.CommonName, o.Value, t.SystemDataType }
-                                    ).GroupBy(f => f.CommonName, f => f, (key, g) => g.FirstOrDefault());
+                                select new { t.CommonName, o.Value, t.SystemDataType, o.VersionUpdated }
+                                    ).GroupBy(f => f.CommonName, f => f, (key, g) => g.OrderByDescending(f=>f.VersionUpdated).FirstOrDefault());
                     var dict = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => (f.Value ?? "").Replace("\'","\\\'").Replace("\"", "\\\""));
                     foreach (var option in options)
                     {
@@ -514,7 +514,7 @@ namespace EXPEDIT.Flow.Services {
                         return true;
                     }    
                 }
-                m.Error = "Could not find a valid transition.";
+                m.Error = "Could not find a valid transition. ";
                 m.Error += m.Status;
                 return false;
             }

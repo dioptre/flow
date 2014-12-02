@@ -4175,7 +4175,10 @@ App.StepController = Ember.ObjectController.extend({
                     _this.store.findQuery('step', { id: _this.get('stepID') }).then(function (m) {
                         //_this.transitionToRoute('step', { id: _this.get('stepID') });
                         //Messenger().post({ type: 'success', message: 'Transitioned' });
+                        window.scrollTo(0, 0);
                     });
+                }, function (response) {
+                    Messenger().post({ type: 'error', message: 'Error:' + response.statusText });
                 });
 
 
