@@ -1092,25 +1092,22 @@
                 {{!--view 'awesome'--}}
                 {{handlebars-live templatestring=templatestring}}
             </div>
+            {{#unless model.steps.firstObject.Completed}}
             <hr>
             {{eui-button label="Next Step" action="nextStep" size="large" style='primary'}}
+            {{else}}
+                <h4>Workflow Completed</h4>
+            {{/unless}}
         </div>
 
         <div class="col-md-6">
             <div class="sidebar">
+                {{#unless model.steps.firstObject.Completed}}
                 <h2>Contextual Info</h2>
                 <p>
-                    Workflow Instance <a href="">#321543</a><br>
-                    // project // projectCode
-                    {{model.steps.projectCode}}
-
-                    <br>
-
-                    // project // projectData -- contextual variables will be here
-
-                    {{model.steps.projectData}}
-                    Last edited by {{#if model.steps.LastEditedBy}}{{model.steps.LastEditedBy}}{{else}}Nobody{{/if}}<br>
-                    <i>{{model.steps.VersionUpdated}} mins ago</i>
+                    Workflow Instance <a>#{{model.steps.firstObject.Project.ProjectCode}}</a><br>
+                    Last edited by {{model.steps.firstObject.LastEditedBy}}<br>
+                    <i>{{lastEdited}}</i>
 
 
 
@@ -1118,7 +1115,7 @@
                 </p>
                 <hr>
                 {{handlebars-live templatestring=formtemplatestring}}
-
+                {{/unless}}
             </div>
         </div>
     </div>
@@ -2188,7 +2185,7 @@
 
                         <div class="filter-block">
                             <div class="">
-                                {{eui-button label="Start a new case" action=""}}
+                                {{!--{{eui-button label="Start a new case" action=""}}--}}
                             </div>
                         </div>
                     </div>
@@ -2225,7 +2222,7 @@
                                     &nbsp;{{this.humanName}}
                                 </td>
                                 <td>
-                                    {{this.VersionUpdated}} {{this.LastUpdatedBy}}
+                                    {{VersionUpdated}} {{this.LastUpdatedBy}}
                                     <ul class="actions">
                                         <li>{{#link-to 'step' this.id}}Checkout{{/link-to}}</li>
                                         @*<li class="last"><a href="#">Delete</a></li>*@

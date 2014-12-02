@@ -2507,7 +2507,7 @@ namespace EXPEDIT.Flow.Services {
                              GraphContent = o.GraphContent,
                              LastEditedBy = o.LastEditedBy
                          }
-                    ).Where(f=>f.Completed == null).ToArray();                        
+                    ).Where(f=>f.Completed == null).OrderBy(f=>f.VersionUpdated).ToArray();                        
             }
 
         }

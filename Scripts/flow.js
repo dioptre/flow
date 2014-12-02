@@ -4141,6 +4141,9 @@ App.StepController = Ember.ObjectController.extend({
     }.property('model.steps.firstObject.id'),
     nodeID: null,
     taskID: null,
+    lastEdited: function() {
+        return moment(this.get('model.steps.firstObject.VersionUpdated')).fromNow();
+    }.property('model.steps.firstObject.VersionUpdated'),
     actions: {
         nextStep: function(){
 

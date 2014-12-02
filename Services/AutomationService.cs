@@ -197,6 +197,7 @@ namespace EXPEDIT.Flow.Services {
                     m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID).Single();
                 if (m.IncludeContent ?? false)
                     m.content = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID).Select(f => f.GraphContent).FirstOrDefault();
+                m.LastEditedBy = (from o in d.Contacts where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
                 return true;
             }
             else return false;
@@ -219,6 +220,8 @@ namespace EXPEDIT.Flow.Services {
                     m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID).Single();
                 if (includeContent)
                     m.content = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID).Select(f => f.GraphContent).FirstOrDefault();
+                m.LastEditedBy = (from o in d.Contacts where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
+
                 return m;
             }
             else return null;
