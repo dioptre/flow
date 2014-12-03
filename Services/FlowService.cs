@@ -3015,7 +3015,7 @@ namespace EXPEDIT.Flow.Services {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (!CheckPermission(m.id, ActionPermission.Update, typeof(Precondition)))
+                    if (!CheckPermission(null, ActionPermission.Create, typeof(Precondition)))
                         return false;
                     var c = new Precondition
                     {
@@ -3191,7 +3191,7 @@ namespace EXPEDIT.Flow.Services {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (!CheckPermission(m.id, ActionPermission.Update, typeof(Task)))
+                    if (!CheckPermission(null, ActionPermission.Create, typeof(Task)))
                         return false;
                     var c = new Task
                     {
@@ -3340,7 +3340,7 @@ namespace EXPEDIT.Flow.Services {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (!CheckPermission(m.id, ActionPermission.Update, typeof(Trigger)))
+                    if (!CheckPermission(null, ActionPermission.Create, typeof(Trigger)))
                         return false;
                     var c = new Trigger
                     {
