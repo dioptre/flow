@@ -2345,7 +2345,7 @@ App.GraphController = Ember.ObjectController.extend({
 
         return false;
     }.property('selectedData','selectedData.edges', 'selectedData.nodes'),
-    
+    moneyModalStoreObject: {}, // this is for the money modal - all input fileds bind to this...
     actions: {
         createWorkflowInstance: function() {
             this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
@@ -2372,65 +2372,67 @@ App.GraphController = Ember.ObjectController.extend({
             this.toggleProperty('workflowEditModal');
         },
         toggleMoenyModal: function (data, callback) {
+            // more like opening (not toggle) money modal
+            var _this = this;
 
-            this.set('loadingMoney', false)
-            Ember.run.scheduleOnce('afterRender', this, function(){
-                $('#add-comp-perm').select2({
-                    placeholder: "Enter Companies...",
-                    minimumInputLength: 2,
-                    tags: true,
-                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
-                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "/share/getcompanies",
-                        dataType: 'json',
-                        multiple: true,
-                        data: function (term, page) {
-                            return {id: term };
-                        },
-                        results: function (data, page) { // parse the results into the format expected by Select2.
-                            if (data.length === 0) {
-                                return { results: [] };
+            this.set('moneyModal', true); // show the modal
+
+            this.set('loadingMoney', true); // this will be used once data gets loaded in
+
+            this.store.findQuery('task', {GraphDataGroupID: this.get('workflowID'), GraphDataID: this.get('graphID')}).then(function(a) {
+                return a
+            }, function(){
+               // return new Promise(function(resolve, reject) {
+                            var aPromise = _this.store.createRecord('task',{
+                                id: NewGUID(), 
+                                GraphDataGroupID: _this.get('workflowID'), 
+                                GraphDataID: _this.get('graphID')
+                            }) //.save()
+
+                            // if save then not really a promise
+                            return aPromise
+                 //       });
+            }).then(function(a){
+                debugger;
+                _this.set('moneyModalStoreObject', a);
+                _this.set('loadingMoney', false); // this will be used once data gets loaded in
+                Ember.run.scheduleOnce('afterRender', this, function(){
+
+
+                    $('#add-users-perm').select2({
+                        placeholder: "Enter Username...",
+                        minimumInputLength: 2,
+                        tags: true,
+                        //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                        ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                            url: "/share/getusernames",
+                            dataType: 'json',
+                            multiple: true,
+                            data: function (term, page) {
+                                return {id: term };
+                            },
+                            results: function (data, page) { // parse the results into the format expected by Select2.
+                                if (data.length === 0) {
+                                    return { results: [] };
+                                }
+                                var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                                return { results: results, text: 'tag' };
                             }
-                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                            return { results: results, text: 'tag' };
-                        }
-                    },
-                    formatResult: function(state) {return state.tag; },
-                    formatSelection: function (state) {return state.tag; },
-                    escapeMarkup: function (m) { return m; }
+                        },
+                        formatResult: function(state) {return state.tag; },
+                        formatSelection: function (state) {return state.tag; },
+                        escapeMarkup: function (m) { return m; }
+                    })
                 });
-
-                $('#add-users-perm').select2({
-                    placeholder: "Enter Username...",
-                    minimumInputLength: 2,
-                    tags: true,
-                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
-                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "/share/getusernames",
-                        dataType: 'json',
-                        multiple: true,
-                        data: function (term, page) {
-                            return {id: term };
-                        },
-                        results: function (data, page) { // parse the results into the format expected by Select2.
-                            if (data.length === 0) {
-                                return { results: [] };
-                            }
-                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                            return { results: results, text: 'tag' };
-                        }
-                    },
-                    formatResult: function(state) {return state.tag; },
-                    formatSelection: function (state) {return state.tag; },
-                    escapeMarkup: function (m) { return m; }
-                })
             });
-
-            this.toggleProperty('moneyModal');
         },
         submitMoneyModal: function (data, callback) {
+            var a = this.get('moneyModalStoreObject', a);
+
+            debugger;
+
             // Save Money Variables 
-            this.toggleProperty('moneyModal');
+            this.set('moneyModal', false);
         },
         cancelMoneyModal: function (data, callback) {
             // Clear variable here
@@ -3909,6 +3911,43 @@ App.HandlebarsLiveComponent = Ember.Component.extend({
 });
 
 
+App.CompanySelectorComponent = Ember.Component.extend({
+    internalID: NewGUID(),
+    value: '',
+    setup: function(){
+        var _this = this;
+        Ember.run.scheduleOnce('afterRender', this, function(){
+            var id = '#' + this.get('internalID');
+            $(id).select2({
+                placeholder: "Enter Companies...",
+                minimumInputLength: 2,
+                tags: true,
+                //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                    url: "/share/getcompanies",
+                    dataType: 'json',
+                    multiple: true,
+                    data: function (term, page) {
+                        return {id: term };
+                    },
+                    results: function (data, page) { // parse the results into the format expected by Select2.
+                        if (data.length === 0) {
+                            return { results: [] };
+                        }
+                        var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                        return { results: results, text: 'tag' };
+                    }
+                },
+                formatResult: function(state) {return state.tag; },
+                formatSelection: function (state) {return state.tag; },
+                escapeMarkup: function (m) { return m; }
+            }).on("change", function(e) { 
+                _this.set('value', e.val); 
+            });
+        });
+    }.on('didInsertElement')
+})
+
 App.TriggerNodeComponent = Ember.Component.extend({
     defaultRow: {},
     tSmatchesRules: [{value: 'All'}, {value: 'Any'}],
@@ -3919,55 +3958,41 @@ App.TriggerNodeComponent = Ember.Component.extend({
     edge: '',
     loading: true,
     setup: function(){
+        
+        // Get graph & Workflow ID
         var graphID = this.get('graphID');
-
-        debugger;
-        var workflowID = this.get('workflowID')
-        var store = this.get('targetObject.store');
+        var workflowID = this.get('workflowID');
 
         var _this = this;
 
-        // Load available variables
-        var contextName = store.findQuery('contextName', {wfid: workflowID}).then(function(al){
-            var test = Enumerable.From(al.content).Select('i=>{value:i.get("CommonName"), label:i.get("CommonName")}').Distinct().ToArray();
-            _this.set('tSvariables', test);
-        })
-
-        // Setup the config - load values from the server
-
         this.set('loading', true);
-        if (IsGUID(edgeID)){
-
-            var edge = store.getById('edge', edgeID);
-           
-            this.set('edge', edge); 
-            var conditions = edge.get('EdgeConditions').then(function(a){
-                // here you need to set the this.config :) - 
-                _this.set('loading', false);
-
-                if (a.get('length') == 1) {
-                //debugger;  
-
-                    _this.set('config', JSON.parse(a.get('firstObject.JSON')))
-                }
-                if (a.get('length') < 1) {
-                    _this.set('config', _this.get('defaultConfig'));
-                }
-
-                 if (a.get('length') > 1) {
-                    Messenger().post({ type: 'error', message: 'There should only be one edge condition. Please contact support!' });
-                    
-                }
-
-            })
-         
-                 
-        }
+  
+        var store = this.get('targetObject.store');
 
 
+        // TODO - Does the trigger API work?
+        store.findQuery('trigger',{ GraphDataGroupID: workflowID, GraphDataID: graphID}).then(function(a) {
+            _this.set('loading', false);
+
+            debugger;  
 
 
-    }.observes('edgeID').on('didInsertElement'),
+            if (a.get('length') == 1) {
+
+                _this.set('config', JSON.parse(a.get('firstObject.JSON')))
+            }
+            if (a.get('length') < 1) {
+                _this.set('config', _this.get('defaultConfig'));
+            }
+
+             if (a.get('length') > 1) {
+                Messenger().post({ type: 'error', message: 'There should only be one edge condition. Please contact support!' });
+                
+            }
+        })    
+
+
+    }.observes('graphID', 'workflowID').on('didInsertElement'),
     config: {},
     defaultConfig: {
         matchSelect: 'All',

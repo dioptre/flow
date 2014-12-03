@@ -314,7 +314,14 @@
 
 
 <script type="text/x-handlebars" id="report">
-    <h1>Report</h1>
+    <h1>Reports</h1>
+    <h4>Estimated vs Actual</h4>
+    <h4>Forecast Revenue</h4>
+    <h4>Forecast Cost</h4>
+    <h4>Value Provided This Month</h4>
+    <h4>Top 3 Tasks</h4>
+    <h4>Low 3 Tasks</h4>
+
 </script>
 
 
@@ -1009,6 +1016,14 @@
 </script>
 
 
+
+<script type="text/x-handlebars" id="components/company-selector">
+     <input {{bind-attr id=internalID}} style="width: 275px;" class='select2' type='hidden'/>
+</script>
+
+
+
+
   <script type="text/x-handlebars" id="components/viz-editor">
                 {{#eui-modal openBinding="existingNodeModal"}}
                     <div style="padding: 50px; text-align: center;">
@@ -1601,7 +1616,7 @@
                             <br>
 
                             <b>Add companies that can complete the task</b><br>
-                            <input id="add-comp-perm" style="width: 275px;" class='select2' type='hidden'/>
+                            {{company-selector value=moneyModalStoreObject.WorkCompanyID}}
 
                             <br>
                             <br>
@@ -1615,19 +1630,19 @@
                                     <div class="col-md-6">
 
                                         <b>Priority level</b><br>
-                                        {{eui-input placeholder='Number from 0-100'}}
+                                        {{eui-input value=moneyModalStoreObject.DefaultPriority placeholder='Number from 0-100'}}
 
                                         <br>
                                         <br>
                                         
                                         <b>Estimated Duration</b><br>
-                                        {{eui-input placeholder='As measured in hours'}}
+                                        {{eui-input value=moneyModalStoreObject.EstimatedDuration placeholder='As measured in hours'}}
 
                                         <br>
                                         <br>
                                         
                                         <b>Estimated Labour Cost</b><br>
-                                        {{eui-input placeholder='In $$$'}}
+                                        {{eui-input value=moneyModalStoreObject.EstimatedLabourCosts placeholder='In $$$'}}
 
                                         <br>
                                         <br>
@@ -1636,13 +1651,18 @@
                                     <div class="col-md-6">
                             
                                         <b>Estimated Capital Cost</b><br>
-                                        {{eui-input placeholder='ie. cost for gloves in $$$'}}
+                                        {{eui-input value=moneyModalStoreObject.EstimatedCaptialCosts placeholder='ie. cost for gloves in $$$'}}
 
                                         <br>
                                         <br>
                                         
                                         <b>Estimated Value</b><br>
-                                        {{eui-input placeholder='Value that is provided in $$$'}}
+                                        {{eui-input value=moneyModalStoreObject.EstimatedValue placeholder='Value that is provided in $$$'}}
+
+                                        <br>
+                                        <br>
+                                        <b>Estimated Intangible Value</b><br>
+                                        {{eui-input value=moneyModalStoreObject.EstimatedIntangibleValue placeholder='In $$$'}}
 
                                         <br>
                                         <br>

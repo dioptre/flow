@@ -3247,12 +3247,12 @@ namespace EXPEDIT.Flow.Services {
                     if (m.WorkContactID != null && cc.WorkContactID != m.WorkContactID) cc.WorkContactID = m.WorkContactID;
                     if (m.GraphDataGroupID != null && cc.GraphDataGroupID != m.GraphDataGroupID) cc.GraphDataGroupID = m.GraphDataGroupID; 
                     if (m.GraphDataID != null && cc.GraphDataID != m.GraphDataID) cc.GraphDataID = m.GraphDataID; 
-                    if (m.DefaultPriority != null && cc.DefaultPriority != m.DefaultPriority) cc.DefaultPriority = m.DefaultPriority; 
+                    if (cc.DefaultPriority != m.DefaultPriority) cc.DefaultPriority = m.DefaultPriority; 
                     if (m.EstimatedDuration != null && cc.EstimatedDuration != m.EstimatedDuration) cc.EstimatedDuration = m.EstimatedDuration; 
                     if (m.EstimatedLabourCosts != null && cc.EstimatedLabourCosts != m.EstimatedLabourCosts) cc.EstimatedLabourCosts = m.EstimatedLabourCosts; 
                     if (m.EstimatedCapitalCosts != null && cc.EstimatedCapitalCosts != m.EstimatedCapitalCosts) cc.EstimatedCapitalCosts = m.EstimatedCapitalCosts;
                     if (m.EstimatedValue != null && cc.EstimatedValue != m.EstimatedValue) cc.EstimatedValue = m.EstimatedValue; 
-                    //ANDY FIX if (m.EstimatedIntangibleValue != null && cc.EstimatedIntagibleValue != m.EstimatedIntagibleValue) cc.EstimatedIntagibleValue = m.EstimatedIntagibleValue;
+                    if (m.EstimatedIntangibleValue != null && cc.EstimatedIntangibleValue != m.EstimatedIntangibleValue) cc.EstimatedIntangibleValue = m.EstimatedIntangibleValue;
                     if (m.EstimatedRevenue != null && cc.EstimatedRevenue != m.EstimatedRevenue) cc.EstimatedRevenue = m.EstimatedRevenue;
                     if (m.PerformanceMetricParameterID != null && cc.PerformanceMetricParameterID != m.PerformanceMetricParameterID) cc.PerformanceMetricParameterID = m.PerformanceMetricParameterID;
                     if (m.PerformanceMetricQuantity != null && cc.PerformanceMetricQuantity != m.PerformanceMetricQuantity) cc.PerformanceMetricQuantity = m.PerformanceMetricQuantity;
@@ -3414,7 +3414,33 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(Trigger)))
                         return false;
                     //Update
-                    return false;
+                    var cc = (from o in d.Triggers where o.TriggerID == m.id && o.VersionDeletedBy == null select o).Single();
+                    if (m.CommonName != null && cc.CommonName != m.CommonName) cc.CommonName = m.CommonName;
+                    if (m.TriggerTypeID != null && cc.TriggerTypeID != m.TriggerTypeID) cc.TriggerTypeID = m.TriggerTypeID;
+                    if (m.JsonMethod != null && cc.JsonMethod != m.JsonMethod) cc.JsonMethod = m.JsonMethod;
+                    if (m.JsonProxyApplicationID != null && cc.JsonProxyApplicationID != m.JsonProxyApplicationID) cc.JsonProxyApplicationID = m.JsonProxyApplicationID;
+                    if (m.JsonProxyContactID != null && cc.JsonProxyContactID != m.JsonProxyContactID) cc.JsonProxyContactID = m.JsonProxyContactID;
+                    if (m.JsonProxyCompanyID != null && cc.JsonProxyCompanyID != m.JsonProxyCompanyID) cc.JsonProxyCompanyID = m.JsonProxyCompanyID;
+                    if (m.JsonAuthorizedBy != null && cc.JsonAuthorizedBy != m.JsonAuthorizedBy) cc.JsonAuthorizedBy = m.JsonAuthorizedBy;
+                    if (m.JsonUsername != null && cc.JsonUsername != m.JsonUsername) cc.JsonUsername = m.JsonUsername;
+                    if (m.JsonPassword != null && cc.JsonPassword != m.JsonPassword) cc.JsonPassword = m.JsonPassword;
+                    if (m.JsonPasswordType != null && cc.JsonPasswordType != m.JsonPasswordType) cc.JsonPasswordType = m.JsonPasswordType;
+                    if (m.JSON != null && cc.JSON != m.JSON) cc.JSON = m.JSON;
+                    if (m.SystemMethod != null && cc.SystemMethod != m.SystemMethod) cc.SystemMethod = m.SystemMethod;
+                    if (m.ConditionID != null && cc.ConditionID != m.ConditionID) cc.ConditionID = m.ConditionID;
+                    if (m.ExternalURL != null && cc.ExternalURL != m.ExternalURL) cc.ExternalURL = m.ExternalURL;
+                    if (m.ExternalRequestMethod != null && cc.ExternalRequestMethod != m.ExternalRequestMethod) cc.ExternalRequestMethod = m.ExternalRequestMethod;
+                    if (m.ExternalFormType != null && cc.ExternalFormType != m.ExternalFormType) cc.ExternalFormType = m.ExternalFormType;
+                    if (m.PassThrough != null && cc.PassThrough != m.PassThrough) cc.PassThrough = m.PassThrough;
+                    //if (m.GraphDataTriggerID != null && cc.GraphDataTriggerID != m.GraphDataTriggerID) cc.GraphDataTriggerID = m.GraphDataTriggerID;
+                    //if (m.GraphDataID != null && cc.GraphDataID != m.GraphDataID) cc.GraphDataID = m.GraphDataID;
+                    //if (m.GraphDataGroupTriggerID != null && cc.GraphDataGroupTriggerID != m.GraphDataGroupTriggerID) cc.GraphDataGroupTriggerID = m.GraphDataGroupTriggerID;
+                    //if (m.GraphDataGroupID != null && cc.GraphDataGroupID != m.GraphDataGroupID) cc.GraphDataGroupID = m.GraphDataGroupID;
+                    //if (m.MergeProjectData != null && cc.MergeProjectData != m.MergeProjectData) cc.MergeProjectData = m.MergeProjectData;
+                    //if (m.OnEnter != null && cc.OnEnter != m.OnEnter) cc.OnEnter = m.OnEnter;
+                    //if (m.OnDataUpdate != null && cc.OnDataUpdate != m.OnDataUpdate) cc.OnDataUpdate = m.OnDataUpdate;
+                    //if (m.OnExit != null && cc.OnExit != m.OnExit) cc.OnExit = m.OnExit;
+                    //if (m.RunOnce != null && cc.RunOnce != m.RunOnce) cc.RunOnce = m.RunOnce;
                     //Not Implemented
                     d.SaveChanges();
                     return true;
