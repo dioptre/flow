@@ -169,5 +169,33 @@ namespace EXPEDIT.Flow.Services
         ContextVariableViewModel[] GetContextNames(Guid wfid);
 
 
+        [OperationContract]
+        ConditionViewModel GetCondition(Guid id);
+        [OperationContract]
+        bool CreateCondition(ConditionViewModel m);
+        [OperationContract]
+        bool UpdateCondition(ConditionViewModel m);
+        [OperationContract]
+        bool DeleteCondition(ConditionViewModel m);
+
+        [OperationContract]
+        TaskViewModel GetTask(Guid gid, Guid nid);
+        [OperationContract]
+        TaskViewModel GetTask(Guid id);
+        [OperationContract]
+        bool CreateTask(TaskViewModel m);
+        [OperationContract]
+        bool UpdateTask(TaskViewModel m);
+        [OperationContract]
+        bool DeleteTask(TaskViewModel m);
+
+        [OperationContract]
+        TriggerViewModel GetTrigger(Guid id);
+        [OperationContract]
+        bool CreateTrigger(TriggerViewModel m);
+        [OperationContract]
+        bool UpdateTrigger(TriggerViewModel m);
+        [OperationContract]
+        bool DeleteTrigger(TriggerViewModel m);
     }
 }

@@ -39,7 +39,7 @@ using NKD.ViewModels;
 
 using System.Net.Http;
 using System.Globalization;
-using System.Threading.Tasks;
+
 
 
 namespace EXPEDIT.Flow.Services {
@@ -2024,8 +2024,8 @@ namespace EXPEDIT.Flow.Services {
                                     default:
                                         return false;
                                 }
-                                Task<HttpResponseMessage> rName = null, rText = null;
-                                Func<Task<HttpResponseMessage>, Task<string>> responseContent = async delegate(Task<HttpResponseMessage> responseAsync)
+                                System.Threading.Tasks.Task<HttpResponseMessage> rName = null, rText = null;
+                                Func<System.Threading.Tasks.Task<HttpResponseMessage>, System.Threading.Tasks.Task<string>> responseContent = async delegate(System.Threading.Tasks.Task<HttpResponseMessage> responseAsync)
                                 {
                                     var response = responseAsync.Result;
                                     if (response.IsSuccessStatusCode)
@@ -2315,8 +2315,8 @@ namespace EXPEDIT.Flow.Services {
                             client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "GET");
                             foreach (var translation in translate)
                             {
-                                Task<HttpResponseMessage> rText = null;
-                                Func<Task<HttpResponseMessage>, Task<string>> responseContent = async delegate(Task<HttpResponseMessage> responseAsync)
+                                System.Threading.Tasks.Task<HttpResponseMessage> rText = null;
+                                Func<System.Threading.Tasks.Task<HttpResponseMessage>, System.Threading.Tasks.Task<string>> responseContent = async delegate(System.Threading.Tasks.Task<HttpResponseMessage> responseAsync)
                                 {
                                     var response = responseAsync.Result;
                                     if (response.IsSuccessStatusCode)
@@ -2977,6 +2977,462 @@ namespace EXPEDIT.Flow.Services {
         }
 
 
+
+
+        public ConditionViewModel GetCondition(Guid id)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (id == null || !CheckPermission(id, ActionPermission.Read, typeof(Precondition)))
+                        return null;
+                    var m = (from c in d.Precondition.Where(h => h.Version == 0 && h.VersionDeletedBy == null && h.ConditionID == id)
+                             select new ConditionViewModel
+                             {
+                                 id = c.ConditionID,
+                                 JSON = c.JSON,
+                                 OverrideProjectDataWithJsonCustomVars = c.OverrideProjectDataWithJsonCustomVars,
+                                 Condition = c.Condition
+                             }).SingleOrDefault();
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
+        public bool CreateCondition(ConditionViewModel m)
+        {
+            var contact = _users.ContactID;
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id, ActionPermission.Update, typeof(Precondition)))
+                        return false;
+                    var c = new Precondition
+                    {
+                        ConditionID = m.id.Value,
+                        Condition = m.Condition,
+                        JSON = m.JSON,
+                        OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionUpdatedBy = contact
+                    };
+                    d.Precondition.AddObject(c);                    
+                    d.SaveChanges();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool UpdateCondition(ConditionViewModel m)
+        {
+
+            try
+            {
+                var contact = _users.ContactID;
+                var now = DateTime.Now;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(Precondition)))
+                        return false;
+                    //Update
+                    var cc = (from o in d.Precondition where o.ConditionID == m.id && o.VersionDeletedBy == null select o).Single();
+                    if (m.JSON != null && cc.JSON != m.JSON)
+                        cc.JSON = m.JSON;
+                    if (m.Condition != null && cc.Condition != m.Condition)
+                        cc.Condition = m.Condition;
+                    if (m.OverrideProjectDataWithJsonCustomVars != null && cc.OverrideProjectDataWithJsonCustomVars != m.OverrideProjectDataWithJsonCustomVars)
+                        cc.OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars;                 
+                    if (cc.EntityState == EntityState.Modified)
+                    {
+                        cc.VersionUpdated = now;
+                        cc.VersionUpdatedBy = contact;
+                    }                 
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool DeleteCondition(ConditionViewModel m)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(Precondition)))
+                        return false;
+                    //Delete
+                    var pd = (from o in d.Precondition where o.ConditionID == m.id && o.VersionDeletedBy == null select o).Single();                    
+                    d.Precondition.DeleteObject(pd);
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public TaskViewModel GetTask(Guid gid, Guid nid)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(gid, ActionPermission.Read, typeof(GraphDataGroup)))
+                        return null;
+                    var m = (from o in d.Tasks.Where(h => h.Version == 0 && h.VersionDeletedBy == null && h.GraphDataID == nid && h.GraphDataGroupID == gid).OrderByDescending(f=>f.VersionUpdated)
+                             select new TaskViewModel
+                             {
+                                 id = o.TaskID,
+                                 TaskID = o.TaskID,
+                                 TaskName = o.TaskName,
+                                 WorkTypeID = o.WorkTypeID,
+                                 WorkCompanyID = o.WorkCompanyID,
+                                 WorkContactID = o.WorkContactID,
+                                 GraphDataGroupID = o.GraphDataGroupID,
+                                 GraphDataID = o.GraphDataID,
+                                 DefaultPriority = o.DefaultPriority,
+                                 EstimatedDuration = o.EstimatedDuration,
+                                 EstimatedDurationUnitID = o.EstimatedDurationUnitID,
+                                 EstimatedLabourCosts = o.EstimatedLabourCosts,
+                                 EstimatedCapitalCosts = o.EstimatedCapitalCosts,
+                                 EstimatedValue = o.EstimatedValue,
+                                 EstimatedIntangibleValue = o.EstimatedIntangibleValue,
+                                 EstimatedRevenue = o.EstimatedRevenue,
+                                 PerformanceMetricParameterID = o.PerformanceMetricParameterID,
+                                 PerformanceMetricQuantity = o.PerformanceMetricQuantity,
+                                 Comment = o.Comment
+                             }).FirstOrDefault();
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
+
+        public TaskViewModel GetTask(Guid id)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (id == null || !CheckPermission(id, ActionPermission.Read, typeof(Task)))
+                        return null;
+                    var m = (from o in d.Tasks.Where(h => h.Version == 0 && h.VersionDeletedBy == null && h.TaskID == id)
+                             select new TaskViewModel
+                             {
+                                 id = o.TaskID,
+                                 TaskID = o.TaskID,
+                                 TaskName = o.TaskName,
+                                 WorkTypeID = o.WorkTypeID,
+                                 WorkCompanyID = o.WorkCompanyID,
+                                 WorkContactID = o.WorkContactID,
+                                 GraphDataGroupID = o.GraphDataGroupID,
+                                 GraphDataID = o.GraphDataID,
+                                 DefaultPriority = o.DefaultPriority,
+                                 EstimatedDuration = o.EstimatedDuration,
+                                 EstimatedDurationUnitID = o.EstimatedDurationUnitID,
+                                 EstimatedLabourCosts = o.EstimatedLabourCosts,
+                                 EstimatedCapitalCosts = o.EstimatedCapitalCosts,
+                                 EstimatedValue = o.EstimatedValue,
+                                 EstimatedIntangibleValue = o.EstimatedIntangibleValue,
+                                 EstimatedRevenue = o.EstimatedRevenue,
+                                 PerformanceMetricParameterID = o.PerformanceMetricParameterID,
+                                 PerformanceMetricQuantity = o.PerformanceMetricQuantity,
+                                 Comment = o.Comment
+                             }).SingleOrDefault();
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
+        public bool CreateTask(TaskViewModel m)
+        {
+            var contact = _users.ContactID;
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id, ActionPermission.Update, typeof(Task)))
+                        return false;
+                    var c = new Task
+                    {
+                        TaskID = m.id.Value,
+                        TaskName = m.TaskName,
+                        WorkTypeID = m.WorkTypeID,
+                        WorkCompanyID = m.WorkCompanyID,
+                        WorkContactID = m.WorkContactID,
+                        GraphDataGroupID = m.GraphDataGroupID,
+                        GraphDataID = m.GraphDataID,
+                        DefaultPriority = m.DefaultPriority,
+                        EstimatedDuration = m.EstimatedDuration,
+                        EstimatedDurationUnitID = m.EstimatedDurationUnitID,
+                        EstimatedLabourCosts = m.EstimatedLabourCosts,
+                        EstimatedCapitalCosts = m.EstimatedCapitalCosts,
+                        EstimatedValue = m.EstimatedValue,
+                        EstimatedIntangibleValue = m.EstimatedIntangibleValue,
+                        EstimatedRevenue = m.EstimatedRevenue,
+                        PerformanceMetricParameterID = m.PerformanceMetricParameterID,
+                        PerformanceMetricQuantity = m.PerformanceMetricQuantity,
+                        Comment = m.Comment,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionUpdatedBy = contact
+                    };
+                    d.Tasks.AddObject(c);
+                    d.SaveChanges();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool UpdateTask(TaskViewModel m)
+        {
+
+            try
+            {
+                var contact = _users.ContactID;
+                var now = DateTime.Now;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(Task)))
+                        return false;
+                    //Update
+                    return false;
+                    //Not Implemented
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool DeleteTask(TaskViewModel m)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(Task)))
+                        return false;
+                    //Delete
+                    var pd = (from o in d.Tasks where o.TaskID == m.id && o.VersionDeletedBy == null select o).Single();
+                    d.Tasks.DeleteObject(pd);
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+
+
+
+
+        public TriggerViewModel GetTrigger(Guid id)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (id == null || !CheckPermission(id, ActionPermission.Read, typeof(Trigger)))
+                        return null;
+                    var m = (from o in d.Triggers.Where(h => h.Version == 0 && h.VersionDeletedBy == null && h.TriggerID == id)
+                             select new TriggerViewModel
+                             {
+                                id = o.TriggerID,
+                                TriggerID = o.TriggerID,
+                                CommonName = o.CommonName,
+                                TriggerTypeID = o.TriggerTypeID,
+                                JsonMethod = o.JsonMethod,
+                                JsonProxyApplicationID = o.JsonProxyApplicationID,
+                                JsonProxyContactID = o.JsonProxyContactID,
+                                JsonProxyCompanyID = o.JsonProxyCompanyID,
+                                JsonAuthorizedBy = o.JsonAuthorizedBy,
+                                JsonUsername = o.JsonUsername,
+                                JsonPassword = o.JsonPassword,
+                                JsonPasswordType = o.JsonPasswordType,
+                                JSON = o.JSON,
+                                SystemMethod = o.SystemMethod,
+                                ConditionID = o.ConditionID,
+                                ExternalURL = o.ExternalURL,
+                                ExternalRequestMethod = o.ExternalRequestMethod,
+                                ExternalFormType = o.ExternalFormType,
+                                PassThrough = o.PassThrough,
+                                //GraphDataTriggerID = o.GraphDataTriggerID,
+                                //GraphDataID = o.GraphDataID,
+                                //GraphDataGroupTriggerID = o.GraphDataGroupTriggerID,
+                                //GraphDataGroupID = o.GraphDataGroupID,
+                                //MergeProjectData = o.MergeProjectData,
+                                //OnEnter = o.OnEnter,
+                                //OnDataUpdate = o.OnDataUpdate,
+                                //OnExit = o.OnExit,
+                                //RunOnce = o.RunOnce
+                             }).SingleOrDefault();
+                    return m;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
+        public bool CreateTrigger(TriggerViewModel m)
+        {
+            var contact = _users.ContactID;
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id, ActionPermission.Update, typeof(Trigger)))
+                        return false;
+                    var c = new Trigger
+                    {
+                        TriggerID = m.id.Value,
+                        CommonName = m.CommonName,
+                        TriggerTypeID = m.TriggerTypeID,
+                        JsonMethod = m.JsonMethod,
+                        JsonProxyApplicationID = m.JsonProxyApplicationID,
+                        JsonProxyContactID = m.JsonProxyContactID,
+                        JsonProxyCompanyID = m.JsonProxyCompanyID,
+                        JsonAuthorizedBy = m.JsonAuthorizedBy,
+                        JsonUsername = m.JsonUsername,
+                        JsonPassword = m.JsonPassword,
+                        JsonPasswordType = m.JsonPasswordType,
+                        JSON = m.JSON,
+                        SystemMethod = m.SystemMethod,
+                        ConditionID = m.ConditionID,
+                        ExternalURL = m.ExternalURL,
+                        ExternalRequestMethod = m.ExternalRequestMethod,
+                        ExternalFormType = m.ExternalFormType,
+                        PassThrough = m.PassThrough,
+                        //GraphDataTriggerID = m.GraphDataTriggerID,
+                        //GraphDataID = m.GraphDataID,
+                        //GraphDataGroupTriggerID = m.GraphDataGroupTriggerID,
+                        //GraphDataGroupID = m.GraphDataGroupID,
+                        //MergeProjectData = m.MergeProjectData,
+                        //OnEnter = m.OnEnter,
+                        //OnDataUpdate = m.OnDataUpdate,
+                        //OnExit = m.OnExit,
+                        //RunOnce = m.RunOnce,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionUpdatedBy = contact
+                    };
+                    d.Triggers.AddObject(c);
+                    d.SaveChanges();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool UpdateTrigger(TriggerViewModel m)
+        {
+
+            try
+            {
+                var contact = _users.ContactID;
+                var now = DateTime.Now;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(Trigger)))
+                        return false;
+                    //Update
+                    return false;
+                    //Not Implemented
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool DeleteTrigger(TriggerViewModel m)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(Trigger)))
+                        return false;
+                    //Delete
+                    var pd = (from o in d.Triggers where o.TriggerID == m.id && o.VersionDeletedBy == null select o).Single();
+                    d.Triggers.DeleteObject(pd);
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
 
     }
 }

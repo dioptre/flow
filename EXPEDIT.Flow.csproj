@@ -1327,6 +1327,9 @@
     <Compile Include="Services\IFlowService.cs" />
     <Compile Include="Services\FlowService.cs" />
     <Compile Include="Services\XmlRpcHandler.cs" />
+    <Compile Include="ViewModels\TriggerViewModel.cs" />
+    <Compile Include="ViewModels\TaskViewModel.cs" />
+    <Compile Include="ViewModels\ConditionViewModel.cs" />
     <Compile Include="ViewModels\EdgeConditionViewModel.cs" />
     <Compile Include="ViewModels\ContextVariableViewModel.cs" />
     <Compile Include="ViewModels\ProjectDataViewModel.cs" />
