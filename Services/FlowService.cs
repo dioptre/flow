@@ -3240,7 +3240,23 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(Task)))
                         return false;
                     //Update
-                    return false;
+                    var cc = (from o in d.Tasks where o.TaskID == m.id && o.VersionDeletedBy == null select o).Single();
+                    if (m.TaskName != null && cc.TaskName != m.TaskName) cc.TaskName = m.TaskName;
+                    if (m.WorkTypeID != null && cc.WorkTypeID != m.WorkTypeID) cc.WorkTypeID = m.WorkTypeID; 
+                    if (m.WorkCompanyID != null && cc.WorkCompanyID != m.WorkCompanyID) cc.WorkCompanyID = m.WorkCompanyID;
+                    if (m.WorkContactID != null && cc.WorkContactID != m.WorkContactID) cc.WorkContactID = m.WorkContactID;
+                    if (m.GraphDataGroupID != null && cc.GraphDataGroupID != m.GraphDataGroupID) cc.GraphDataGroupID = m.GraphDataGroupID; 
+                    if (m.GraphDataID != null && cc.GraphDataID != m.GraphDataID) cc.GraphDataID = m.GraphDataID; 
+                    if (m.DefaultPriority != null && cc.DefaultPriority != m.DefaultPriority) cc.DefaultPriority = m.DefaultPriority; 
+                    if (m.EstimatedDuration != null && cc.EstimatedDuration != m.EstimatedDuration) cc.EstimatedDuration = m.EstimatedDuration; 
+                    if (m.EstimatedLabourCosts != null && cc.EstimatedLabourCosts != m.EstimatedLabourCosts) cc.EstimatedLabourCosts = m.EstimatedLabourCosts; 
+                    if (m.EstimatedCapitalCosts != null && cc.EstimatedCapitalCosts != m.EstimatedCapitalCosts) cc.EstimatedCapitalCosts = m.EstimatedCapitalCosts;
+                    if (m.EstimatedValue != null && cc.EstimatedValue != m.EstimatedValue) cc.EstimatedValue = m.EstimatedValue; 
+                    //ANDY FIX if (m.EstimatedIntangibleValue != null && cc.EstimatedIntagibleValue != m.EstimatedIntagibleValue) cc.EstimatedIntagibleValue = m.EstimatedIntagibleValue;
+                    if (m.EstimatedRevenue != null && cc.EstimatedRevenue != m.EstimatedRevenue) cc.EstimatedRevenue = m.EstimatedRevenue;
+                    if (m.PerformanceMetricParameterID != null && cc.PerformanceMetricParameterID != m.PerformanceMetricParameterID) cc.PerformanceMetricParameterID = m.PerformanceMetricParameterID;
+                    if (m.PerformanceMetricQuantity != null && cc.PerformanceMetricQuantity != m.PerformanceMetricQuantity) cc.PerformanceMetricQuantity = m.PerformanceMetricQuantity;
+                    if (m.Comment != null && cc.Comment != m.Comment) cc.Comment = m.Comment;
                     //Not Implemented
                     d.SaveChanges();
                     return true;
