@@ -41,6 +41,7 @@
         <!-- libraries -->
         <link href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/jquery-ui-1.10.2.custom.css")" rel="stylesheet" type="text/css" />
         <link href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/lib/font-awesome.css")" type="text/css" rel="stylesheet" />
+        <link href="@Url.Content("~/Modules/EXPEDIT.Share/Styles/line-icons-webfont/simple-line-icons.css")" type="text/css" rel="stylesheet" />
 
         <!-- global styles -->
         <link rel="stylesheet" type="text/css" href="@Url.Content("~/Modules/EXPEDIT.Flow/Static/AdminTheme/css/compiled/layout.css")" />
@@ -894,13 +895,13 @@
         <ul id="dashboard-menu">
             {{#view App.HomeNavView}}
                 {{#link-to 'search'}}
-                    <i class="icon-search"></i>
+                    <i class="icl-magnifier"></i>
                     <span>{{model.t.fp_menu_link_search}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 <a class="dropdown-toggle" href="#">
-                    <i class="icon-sitemap"></i>
+                    <i class="icl-directions"></i>
                     <span>{{model.t.fp_menu_link_workflow}}</span>
                     <i class="icon-chevron-down"></i>
                 </a>
@@ -911,13 +912,13 @@
             {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'todo'}}
-                    <i class="icon-check"></i>
+                    <i class="icl-check"></i>
                     <span>Todo</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'file'}}
-                    <i class="icon-file"></i>
+                    <i class="icl-doc"></i>
                     <span>{{model.t.fp_menu_link_myfiles}}</span>
                 {{/link-to}}
             {{/view}}
@@ -932,31 +933,31 @@
             --}}
             {{#view App.HomeNavView}}
                 {{#link-to 'report'}}
-                    <i class="icon-book"></i>
+                    <i class="icl-graph"></i>
                     <span>{{model.t.fp_menu_link_report}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'permission'}}
-                    <i class="icon-lock"></i>
+                    <i class="icl-lock"></i>
                     <span>{{model.t.fp_menu_link_permission}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'mylicenses'}}
-                    <i class="icon-tags"></i>
+                    <i class="icl-tag"></i>
                     <span>{{model.t.fp_menu_link_licenses}}</span>
                 {{/link-to}}
             {{/view}}
            {{#view App.HomeNavView}}
                 {{#link-to 'myprofiles'}}
-                    <i class="icon-user"></i>
+                    <i class="icl-user"></i>
                     <span>{{#if isLoggedIn}}{{userProfile.UserName}}{{else}}{{model.t.fp_menu_link_myprofile}}{{/if}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'help'}}
-                    <i class="icon-question"></i>
+                    <i class="icl-question"></i>
                     <span>{{model.t.fp_menu_link_help}}</span>
                 {{/link-to}}
             {{/view}}
@@ -2246,9 +2247,985 @@
 
 <script type="text/x-handlebars" data-template-name="styleguide">
 
-    <h1>Styleguide</h1>
+    <h1>Styleguide & Ember Help Snippets</h1>
 
-    Theme preview: <a href='http://detail.herokuapp.com/icons.html'>here</a>.
+    <p>Theme preview: <a href='http://detail.herokuapp.com/icons.html'>here</a>.</p>
+    <p>Translating the app can be done at {{#link-to 'translateme'}}/translateme{{/link-to}}</p>
+
+    <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-user"></span>
+                    &nbsp;icl-user
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-user-female"></span>
+                    &nbsp;icl-user-female
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-users"></span>
+                    &nbsp;icl-users
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-user-follow"></span>
+                    &nbsp;icl-user-follow
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-user-following"></span>
+                    &nbsp;icl-user-following
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-user-unfollow"></span>
+                    &nbsp;icl-user-unfollow
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-trophy"></span>
+                    &nbsp;icl-trophy
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-speedometer"></span>
+                    &nbsp;icl-speedometer
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-social-youtube"></span>
+                    &nbsp;icl-social-youtube
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-social-twitter"></span>
+                    &nbsp;icl-social-twitter
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-social-tumblr"></span>
+                    &nbsp;icl-social-tumblr
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-social-facebook"></span>
+                    &nbsp;icl-social-facebook
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-social-dropbox"></span>
+                    &nbsp;icl-social-dropbox
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-social-dribbble"></span>
+                    &nbsp;icl-social-dribbble
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-shield"></span>
+                    &nbsp;icl-shield
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-screen-tablet"></span>
+                    &nbsp;icl-screen-tablet
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-screen-smartphone"></span>
+                    &nbsp;icl-screen-smartphone
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-screen-desktop"></span>
+                    &nbsp;icl-screen-desktop
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-plane"></span>
+                    &nbsp;icl-plane
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-notebook"></span>
+                    &nbsp;icl-notebook
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-moustache"></span>
+                    &nbsp;icl-moustache
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-mouse"></span>
+                    &nbsp;icl-mouse
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-magnet"></span>
+                    &nbsp;icl-magnet
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-magic-wand"></span>
+                    &nbsp;icl-magic-wand
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-hourglass"></span>
+                    &nbsp;icl-hourglass
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-graduation"></span>
+                    &nbsp;icl-graduation
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-ghost"></span>
+                    &nbsp;icl-ghost
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-game-controller"></span>
+                    &nbsp;icl-game-controller
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-fire"></span>
+                    &nbsp;icl-fire
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-eyeglasses"></span>
+                    &nbsp;icl-eyeglasses
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-envelope-open"></span>
+                    &nbsp;icl-envelope-open
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-envelope-letter"></span>
+                    &nbsp;icl-envelope-letter
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-energy"></span>
+                    &nbsp;icl-energy
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-emoticl-smile"></span>
+                    &nbsp;icl-emoticl-smile
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-disc"></span>
+                    &nbsp;icl-disc
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-cursor-move"></span>
+                    &nbsp;icl-cursor-move
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-crop"></span>
+                    &nbsp;icl-crop
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-credit-card"></span>
+                    &nbsp;icl-credit-card
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-chemistry"></span>
+                    &nbsp;icl-chemistry
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-bell"></span>
+                    &nbsp;icl-bell
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-badge"></span>
+                    &nbsp;icl-badge
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-anchor"></span>
+                    &nbsp;icl-anchor
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-action-redo"></span>
+                    &nbsp;icl-action-redo
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-action-undo"></span>
+                    &nbsp;icl-action-undo
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-bag"></span>
+                    &nbsp;icl-bag
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-basket"></span>
+                    &nbsp;icl-basket
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-basket-loaded"></span>
+                    &nbsp;icl-basket-loaded
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-book-open"></span>
+                    &nbsp;icl-book-open
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-briefcase"></span>
+                    &nbsp;icl-briefcase
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-bubbles"></span>
+                    &nbsp;icl-bubbles
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-calculator"></span>
+                    &nbsp;icl-calculator
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-call-end"></span>
+                    &nbsp;icl-call-end
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-call-in"></span>
+                    &nbsp;icl-call-in
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-call-out"></span>
+                    &nbsp;icl-call-out
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-compass"></span>
+                    &nbsp;icl-compass
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-cup"></span>
+                    &nbsp;icl-cup
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-diamond"></span>
+                    &nbsp;icl-diamond
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-direction"></span>
+                    &nbsp;icl-direction
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-directions"></span>
+                    &nbsp;icl-directions
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-docs"></span>
+                    &nbsp;icl-docs
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-drawer"></span>
+                    &nbsp;icl-drawer
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-drop"></span>
+                    &nbsp;icl-drop
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-earphones"></span>
+                    &nbsp;icl-earphones
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-earphones-alt"></span>
+                    &nbsp;icl-earphones-alt
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-feed"></span>
+                    &nbsp;icl-feed
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-film"></span>
+                    &nbsp;icl-film
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-folder-alt"></span>
+                    &nbsp;icl-folder-alt
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-frame"></span>
+                    &nbsp;icl-frame
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-globe"></span>
+                    &nbsp;icl-globe
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-globe-alt"></span>
+                    &nbsp;icl-globe-alt
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-handbag"></span>
+                    &nbsp;icl-handbag
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-layers"></span>
+                    &nbsp;icl-layers
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-map"></span>
+                    &nbsp;icl-map
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-picture"></span>
+                    &nbsp;icl-picture
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-pin"></span>
+                    &nbsp;icl-pin
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-playlist"></span>
+                    &nbsp;icl-playlist
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-present"></span>
+                    &nbsp;icl-present
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-printer"></span>
+                    &nbsp;icl-printer
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-puzzle"></span>
+                    &nbsp;icl-puzzle
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-speech"></span>
+                    &nbsp;icl-speech
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-vector"></span>
+                    &nbsp;icl-vector
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-wallet"></span>
+                    &nbsp;icl-wallet
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-arrow-down"></span>
+                    &nbsp;icl-arrow-down
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-arrow-left"></span>
+                    &nbsp;icl-arrow-left
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-arrow-right"></span>
+                    &nbsp;icl-arrow-right
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-arrow-up"></span>
+                    &nbsp;icl-arrow-up
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-bar-chart"></span>
+                    &nbsp;icl-bar-chart
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-bulb"></span>
+                    &nbsp;icl-bulb
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-calendar"></span>
+                    &nbsp;icl-calendar
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-control-end"></span>
+                    &nbsp;icl-control-end
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-control-forward"></span>
+                    &nbsp;icl-control-forward
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-control-pause"></span>
+                    &nbsp;icl-control-pause
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-control-play"></span>
+                    &nbsp;icl-control-play
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-control-rewind"></span>
+                    &nbsp;icl-control-rewind
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-control-start"></span>
+                    &nbsp;icl-control-start
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-cursor"></span>
+                    &nbsp;icl-cursor
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-dislike"></span>
+                    &nbsp;icl-dislike
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-equalizer"></span>
+                    &nbsp;icl-equalizer
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-graph"></span>
+                    &nbsp;icl-graph
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-grid"></span>
+                    &nbsp;icl-grid
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-home"></span>
+                    &nbsp;icl-home
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-like"></span>
+                    &nbsp;icl-like
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-list"></span>
+                    &nbsp;icl-list
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-login"></span>
+                    &nbsp;icl-login
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-logout"></span>
+                    &nbsp;icl-logout
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-loop"></span>
+                    &nbsp;icl-loop
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-microphone"></span>
+                    &nbsp;icl-microphone
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-music-tone"></span>
+                    &nbsp;icl-music-tone
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-music-tone-alt"></span>
+                    &nbsp;icl-music-tone-alt
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-note"></span>
+                    &nbsp;icl-note
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-pencil"></span>
+                    &nbsp;icl-pencil
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-pie-chart"></span>
+                    &nbsp;icl-pie-chart
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-question"></span>
+                    &nbsp;icl-question
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-rocket"></span>
+                    &nbsp;icl-rocket
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-share"></span>
+                    &nbsp;icl-share
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-share-alt"></span>
+                    &nbsp;icl-share-alt
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-shuffle"></span>
+                    &nbsp;icl-shuffle
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-size-actual"></span>
+                    &nbsp;icl-size-actual
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-size-fullscreen"></span>
+                    &nbsp;icl-size-fullscreen
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-support"></span>
+                    &nbsp;icl-support
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-tag"></span>
+                    &nbsp;icl-tag
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-trash"></span>
+                    &nbsp;icl-trash
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-umbrella"></span>
+                    &nbsp;icl-umbrella
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-wrench"></span>
+                    &nbsp;icl-wrench
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-ban"></span>
+                    &nbsp;icl-ban
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-bubble"></span>
+                    &nbsp;icl-bubble
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-camcorder"></span>
+                    &nbsp;icl-camcorder
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-camera"></span>
+                    &nbsp;icl-camera
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-check"></span>
+                    &nbsp;icl-check
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-clock"></span>
+                    &nbsp;icl-clock
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-close"></span>
+                    &nbsp;icl-close
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-cloud-download"></span>
+                    &nbsp;icl-cloud-download
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-cloud-upload"></span>
+                    &nbsp;icl-cloud-upload
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-doc"></span>
+                    &nbsp;icl-doc
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-envelope"></span>
+                    &nbsp;icl-envelope
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-eye"></span>
+                    &nbsp;icl-eye
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-flag"></span>
+                    &nbsp;icl-flag
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-folder"></span>
+                    &nbsp;icl-folder
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-heart"></span>
+                    &nbsp;icl-heart
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-info"></span>
+                    &nbsp;icl-info
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-key"></span>
+                    &nbsp;icl-key
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-link"></span>
+                    &nbsp;icl-link
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-lock"></span>
+                    &nbsp;icl-lock
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-lock-open"></span>
+                    &nbsp;icl-lock-open
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-magnifier"></span>
+                    &nbsp;icl-magnifier
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-magnifier-add"></span>
+                    &nbsp;icl-magnifier-add
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-magnifier-remove"></span>
+                    &nbsp;icl-magnifier-remove
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-paper-clip"></span>
+                    &nbsp;icl-paper-clip
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-paper-plane"></span>
+                    &nbsp;icl-paper-plane
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-plus"></span>
+                    &nbsp;icl-plus
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-pointer"></span>
+                    &nbsp;icl-pointer
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-power"></span>
+                    &nbsp;icl-power
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-refresh"></span>
+                    &nbsp;icl-refresh
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-reload"></span>
+                    &nbsp;icl-reload
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-settings"></span>
+                    &nbsp;icl-settings
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-star"></span>
+                    &nbsp;icl-star
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-symbol-female"></span>
+                    &nbsp;icl-symbol-female
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-symbol-male"></span>
+                    &nbsp;icl-symbol-male
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-target"></span>
+                    &nbsp;icl-target
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-volume-1"></span>
+                    &nbsp;icl-volume-1
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-volume-2"></span>
+                    &nbsp;icl-volume-2
+                </span>
+            </span>
+            <span class="item-box">
+                <span class="item">
+                    <span aria-hidden="true" class="icl-volume-off"></span>
+                    &nbsp;icl-volume-off
+                </span>
+            </span>
+
+    Too add the icons use icl-whatever icon it is.
 
     <p><strong>Stay cool.</strong> Use this guide to make sure the styling is sexy & consistent.
 

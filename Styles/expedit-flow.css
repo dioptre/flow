@@ -711,8 +711,11 @@ box-shadow: 0px 0px 3px 3px rgba(21, 90, 207, 0.3);
 }
 
 
-
-
+/* Clean up line on sidebar menu */
+#dashboard-menu li:last-child>a {
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
 
 
 html, body.menu {
