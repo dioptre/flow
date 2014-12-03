@@ -458,7 +458,7 @@ div.row.processes {
 .main-searchbox span.tag, .main-searchbox input[type=text] {
   border: 1px solid #D0D0D0;
   border-radius: 4px;
-  margin-left: 0px;
+  margin-left: 1px;
   margin-bottom: 13px;
   margin-right: 6px;
   margin-right: 10px;
