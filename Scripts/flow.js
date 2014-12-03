@@ -2393,18 +2393,23 @@ App.GraphController = Ember.ObjectController.extend({
                             return aPromise
                  //       });
             }).then(function(a){
-                debugger;
                 _this.set('moneyModalStoreObject', a);
                 _this.set('loadingMoney', false); // this will be used once data gets loaded in
             });
         },
         submitMoneyModal: function (data, callback) {
             var a = this.get('moneyModalStoreObject', a);
-
-            debugger;
-
-            // Save Money Variables 
-            this.set('moneyModal', false);
+            
+            var _this = this;
+            // Save Money Variables
+            a.save(function(){
+                debugger;
+                Messenger().post({ type: 'success', message: 'Successfully updated details.' });
+                _this.set('moneyModal', false);
+            }, function(){
+                debugger;
+                Messenger().post({ type: 'error', message: 'Error updating details. Please try again.' });
+            })
         },
         cancelMoneyModal: function (data, callback) {
             // Clear variable here
