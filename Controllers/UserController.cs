@@ -1016,5 +1016,145 @@ namespace EXPEDIT.Flow.Controllers {
             return new JsonHelper.JsonNetResult(new { contextNames = result }, JsonRequestBehavior.AllowGet);
         }
 
+
+        [ActionName("Conditions")]
+        public ActionResult GetCondition(string id)
+        {
+            ConditionViewModel result = _Flow.GetCondition(Guid.Parse(id));
+            if (result == null)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+            return new JsonHelper.JsonNetResult(new { conditions = new ConditionViewModel[] {result} }, JsonRequestBehavior.AllowGet);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Conditions")]
+        public ActionResult CreateCondition(ConditionViewModel m)
+        {
+
+            if (m.condition != null)
+                m = m.condition;
+            if (_Flow.CreateCondition(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("Conditions")]
+        public ActionResult UpdateCondition(ConditionViewModel m)
+        {
+            if (m.condition != null && m.id != null)
+            {
+                m.condition.id = m.id;
+                m = m.condition;
+            }
+            if (_Flow.UpdateCondition(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("Conditions")]
+        public ActionResult DeleteCondition(ConditionViewModel m)
+        {
+            if (!m.id.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.DeleteCondition(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+
+        }
+
+        [Authorize]
+        [ActionName("Tasks")]
+        public ActionResult GetTask(string id)
+        {
+            TaskViewModel result = null;
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                string wf = Request.Params["GraphDataGroupID"];
+                Guid? gid = null;
+                Guid tgid;
+                if (Guid.TryParse(wf, out tgid))
+                    gid = tgid;
+
+                string node = Request.Params["GraphDataID"];
+                Guid? nid = null;
+                Guid tnid;
+                if (Guid.TryParse(node, out tnid))
+                    nid = tnid;
+
+                if (!nid.HasValue || !gid.HasValue)
+                    return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest); 
+
+                result = _Flow.GetTask(gid.Value, nid.Value);
+               
+            }
+            else
+            {
+                result = _Flow.GetTask(Guid.Parse(id));
+            }
+            if (result == null)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+            return new JsonHelper.JsonNetResult(new { tasks = new object[] {result} }, JsonRequestBehavior.AllowGet);            
+
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Tasks")]
+        public ActionResult CreateTask(TaskViewModel m)
+        {
+
+            if (m.task != null)
+                m = m.task;
+            if (_Flow.CreateTask(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("Tasks")]
+        public ActionResult UpdateTask(TaskViewModel m)
+        {
+            if (m.task != null && m.id != null)
+            {
+                m.task.id = m.id;
+                m = m.task;
+            }
+            if (_Flow.UpdateTask(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("Tasks")]
+        public ActionResult DeleteTask(TaskViewModel m)
+        {
+            if (!m.id.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.DeleteTask(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+
+        }
+
+
     }
 }
