@@ -1021,6 +1021,10 @@
      <input {{bind-attr id=internalID}} style="width: 275px;" class='select2' type='hidden'/>
 </script>
 
+<script type="text/x-handlebars" id="components/user-selector">
+     <input {{bind-attr id=internalID}} style="width: 275px;" class='select2' type='hidden'/>
+</script>
+
 
 
 
@@ -1610,7 +1614,7 @@
                              <br />
 
                             <b>Add user that complete the task</b><br>
-                            <input id="add-users-perm" style="width: 275px;" class='select2' type='hidden'/>
+                            {{user-selector value=moneyModalStoreObject.WorkContactID}}
 
                             <br>
                             <br>
