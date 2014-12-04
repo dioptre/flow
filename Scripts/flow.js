@@ -2924,7 +2924,7 @@ App.VizEditorComponent = Ember.Component.extend({
 
         var _this = this;
         var groups = {};
-        var centralGravity = 0.0155; //TODO HACK, AG, Less gravity for known graphs
+        var centralGravity = -0.1155; //TODO HACK, AG, Less gravity for known graphs
         if (!this.get('isWorkflow')) {
             centralGravity = 0.5;
         }
@@ -2932,8 +2932,8 @@ App.VizEditorComponent = Ember.Component.extend({
         var data = this.get('vizDataSet');
         var options = {
             navigation: true,
-            freezeForStabilization: true,
-            minVelocity: 5,
+            //freezeForStabilization: true,
+            //minVelocity: 5,
             //clustering: {
             //    enabled: true
             //},
@@ -2960,10 +2960,23 @@ App.VizEditorComponent = Ember.Component.extend({
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
             //physics: {barnesHut: {enabled: false}},
             //physics: { barnesHut: { gravitationalConstant: -8425, centralGravity: 0.1, springLength: 150, springConstant: 0.058, damping: 0.3 } },
-            physics: { barnesHut: { enabled: true, gravitationalConstant: -12000, centralGravity: centralGravity, springConstant: 0.01, damping: 0.1, springLength: 170 }, repulsion: { nodeDistance: 170} },
+            //physics: { barnesHut: { enabled: true, gravitationalConstant: -12000, centralGravity: centralGravity, springConstant: 0.01, damping: 0.1, springLength: 170 }, repulsion: { nodeDistance: 170} },
+            //physics: { barnesHut: { springLength: 200, centralGravity: -0.1, damping: 0.1 } },
+            //physics: { barnesHut: { enabled: true, gravitationalConstant: 2000, springLength: 200, centralGravity: 0.3, springCsontant: 0.04, damping: 0.09 } },
+            physics: {
+                barnesHut: {enabled: true, //},
+                //repulsion: {
+                    centralGravity: 0.3,
+                    springLength: 200,
+                    springConstant: 0.2,
+                    //nodeDistance: 200,
+                    damping: 0.096,
+                    gravitationalConstant: -8000
+                }
+            },
             stabilize: true,
             //clustering: true,
-            stabilizationIterations: 200,
+            stabilizationIterations: 10000,
             dataManipulation: {
                 enabled: this.get('editing'),
                 initiallyVisible: true
@@ -3105,7 +3118,7 @@ App.VizEditorComponent = Ember.Component.extend({
         var wfid = _this.get('workflowID');
 
         var updateGraph = function (nodes, edges) {
-            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('localName'), mass: 0.2, group: item.get('group') }; });
+            nodes = $.map(nodes, function (item) { return { id: item.get('id'), label: item.get('localName'), mass: 1, group: item.get('group') }; });
             edges = $.map(edges, function (item) { return { id: item.get('id'), from: item.get('from'), to: item.get('to'), style: item.get('style'), color: item.get('color') }; });
             Enumerable.From(nodes).ForEach(
                 function (value) {
@@ -4550,11 +4563,12 @@ App.StepRoute = Ember.Route.extend({
 App.StepController = Ember.ObjectController.extend({
     queryParams: ['projectID', 'workflowID', 'nodeID', 'taskID'],
     needs: ['application'],
+    context: Ember.Object.create({}),
     html: Ember.computed.alias('model.steps.firstObject.content'), // Just in case we later change where the value is pulled from
     contextData: {},
     formtemplatestring: '',
     templatestring: function(){
-
+        var _this = this;
         var template = this.get('html')
         // Create template from parsing content
         // #TODO
@@ -4584,18 +4598,22 @@ App.StepController = Ember.ObjectController.extend({
 
 
                 $.each(data.fields, function (i, d) {
-                     var uniqueID = id + '-' + i; // unique ID for each field
-
-
-
-                    text += "{{lform-" + d.field_type + " s=contextData." + uniqueID +" testvar=testVar}} <br>"
+                    text += "{{lform-" + d.field_type + " s=contextData." + d.uid +" testvar=testVar}} <br>"
                     var oldValue = projectData.Where("f=>f.get('CommonName') === '" + d.label + "'").FirstOrDefault();
                     if (oldValue)
-                        oldValue = oldValue.get('Value');
-                    else
-                        oldValue = "";
+                        oldValue = oldValue;
+                    else {
+                        var newRecord = _this.store.createRecord('projectDatum', {                            
+                            ProjectID: _this.get('model.steps.firstObject.Project.id'),
+                            ProjectDataTemplateID: d.uid,
+                            ProjectPlanTaskResponseID: _this.get('stepID'),
+                            Value: ''
+                        })
+                        oldValue = newRecord;
+                    }
+
                     // ember data here
-                    contextData[uniqueID] = { d: d, value: oldValue}
+                    contextData[d.uid] = { d: d, record: oldValue}
 
                 
                 })
@@ -4611,16 +4629,26 @@ App.StepController = Ember.ObjectController.extend({
             }
         });
         var currentNames = Enumerable.From(contextData).Select("{cn : $.Value.d.label}");
-        var pds = projectData.Select("{ cn: $.get('CommonName'), o: $}").Except(currentNames, "$.cn").Select("$.o").ForEach(
-            function (m) {
+        var pds = projectData.Select("{ cn: $.get('CommonName'), o: $}").Except(currentNames, "$.cn").Select("$.o").ForEach(function (m) {
                 var mid = m.get('id');
-                var ctx = { d: JSON.parse(m.get('TemplateStructure')), value: m.get('Value') };
+                var ctx = { d: JSON.parse(m.get('TemplateStructure')), record: m };
                 if (!ctx.d)
                     return;
                 ctx.d.readOnly = true;
                 contextData[mid] = ctx;
                 templateString += "{{lform-" + ctx.d.field_type + " s=contextData." + mid + " testvar=testVar}} <br>"
-            });
+        });
+
+        Enumerable.From(contextData).ForEach(function (m) {
+            var cn = m.Value.d.label;
+            if (!cn)
+                return;
+            cn = cn.replace(/[ \'\"]/ig, "_");
+            var co = _this.get('context.' + cn);
+            if (co || cn.length < 1)
+                return;
+            _this.set('context.' + cn, m.Value.record)
+        });
 
         // prepernd template string with other form on other pages
 
@@ -4650,7 +4678,9 @@ App.StepController = Ember.ObjectController.extend({
     }.property('html'),
     sampleVarControllerLevel: '123-sampleVarControllerLevel',
     workflowID: null,
-    projectID: null,
+    projectID: function () {
+        return this.get('model.steps.firstObject.Project.id');
+    }.property('model.steps.firstObject.id'),
     stepID: function(){
         return this.get('model.steps.firstObject.id');
     }.property('model.steps.firstObject.id'),
@@ -4672,15 +4702,9 @@ App.StepController = Ember.ObjectController.extend({
                 var formData = d.Value.d;
                 var formVal = d.Value.value;
 
+                
 
-                var newRecord = _this.store.createRecord('projectDatum', {
-                    ProjectID: _this.get('model.steps.firstObject.ProjectID'),
-                    ProjectDataTemplateID: formData.uid,
-                    ProjectPlanTaskResponseID: _this.get('stepID'),
-                    Value: formVal
-                })
-
-                promises.push(newRecord.save().then(function(){
+                promises.push(d.Value.record.save().then(function () {
                     Messenger().post({ type: 'success', message: 'Saved' });
                 }, function(){
                     Messenger().post({ type: 'error', message: 'Error' });
@@ -5014,7 +5038,14 @@ App.Step = App.Node.extend({
     LastEditedBy: DS.attr('string'),
     projectCode: function () {
         return this.get('ProjectCode');
-    }.property('ProjectCode')
+    }.property('ProjectCode'),
+    humanName: function () {
+    var temp = this.get('GraphName');
+    if (temp)
+        return ToTitleCase(temp.replace(/_/g, ' '));
+    else
+        return '';
+}.property('GraphName'),
 });
 
 App.Project = DS.Model.extend({

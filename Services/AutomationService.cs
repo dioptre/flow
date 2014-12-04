@@ -197,7 +197,12 @@ namespace EXPEDIT.Flow.Services {
                 if (m.PreviousStep.VersionWorkflowInstanceID.HasValue)
                     m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID).Single();
                 if (m.IncludeContent ?? false)
-                    m.content = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID).Select(f => f.GraphContent).FirstOrDefault();
+                {
+                    var g = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID).FirstOrDefault();
+                    m.content = g.GraphContent;
+                    m.GraphName = g.GraphName;
+                }
+                
                 m.LastEditedBy = (from o in d.Contacts where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
                 return true;
             }
@@ -220,7 +225,11 @@ namespace EXPEDIT.Flow.Services {
                 if (m.PreviousStep.VersionWorkflowInstanceID.HasValue)
                     m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID).Single();
                 if (includeContent)
-                    m.content = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID).Select(f => f.GraphContent).FirstOrDefault();
+                {
+                    var g = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID).FirstOrDefault();
+                    m.content = g.GraphContent;
+                    m.GraphName = g.GraphName;
+                }
                 m.LastEditedBy = (from o in d.Contacts where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
 
                 return m;
@@ -562,7 +571,8 @@ namespace EXPEDIT.Flow.Services {
                     }
                     if (nextStep != Guid.Empty || isCompleted)
                     {
-                        if (nextStep == Guid.Empty)
+                        bool checkAuthorization = false;
+                        if (isCompleted)
                         {
                             m.PreviousStep.ActualGraphDataID = null;
                             m.PreviousStep.Completed = now;
@@ -572,9 +582,34 @@ namespace EXPEDIT.Flow.Services {
                         {
                             m.PreviousStep.ActualGraphDataID = nextStep;
                             m.PreviousWorkflowInstance.Idle = now.AddSeconds(m.PreviousWorkflowInstance.IdleTimeoutSeconds ?? ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS);
+                            if (m.PreviousTask != null)
+                            {
+                                if (m.PreviousTask.WorkCompanyID.HasValue || m.PreviousTask.WorkContactID.HasValue)
+                                {
+                                    m.PreviousStep.VersionOwnerContactID = m.PreviousTask.WorkContactID;
+                                    m.PreviousStep.VersionOwnerCompanyID = m.PreviousTask.WorkCompanyID;
+                                    checkAuthorization = true;
+                                }
+
+                            }
                         }
+                        m.PreviousStep.VersionUpdatedBy = contact;
+                        m.PreviousStep.VersionUpdated = now;                       
 
                         d.SaveChanges();
+
+                        if (checkAuthorization)
+                        {
+                            if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
+                            {
+                                m.PreviousStep = null;
+                                m.PreviousTask = null;
+                                m.PreviousWorkflowInstance = null;
+                                m.Status = "Transitioned to a different department.";
+                                return true;
+                            }
+                        }
+
                         return true;
                     }    
                 }

@@ -280,7 +280,7 @@
 <script type="text/x-handlebars" data-template-name="components/lform-text">
     <div>
         <label>{{s.d.label}}</label><br>
-        {{eui-input value=s.value disabled=s.d.readOnly}}
+        {{eui-input value=s.record.Value disabled=s.d.readOnly}}
         @*{{s.value}}*@
 
     </div>
@@ -290,9 +290,9 @@
     <div>
         <label>{{s.d.label}}</label><br>
         {{#if s.d.field_options.include_blank_option}}
-            {{eui-select value=s.value options=s.d.field_options.options labelPath='label' valuePath='label' required=true disabled=s.d.readOnly}}
+            {{eui-select value=s.record.Value options=s.d.field_options.options labelPath='label' valuePath='label' required=true disabled=s.d.readOnly}}
         {{else}}
-            {{eui-select value=s.value options=s.d.field_options.options labelPath='label' valuePath='label' disabled=s.d.readOnly}}
+            {{eui-select value=s.record.Value options=s.d.field_options.options labelPath='label' valuePath='label' disabled=s.d.readOnly}}
         {{/if}}
         @*{{s.value}}*@
     </div>
@@ -1240,7 +1240,7 @@
 <!---- Step - Executing WF -->
 <!------------------------------>
 <script type="text/x-handlebars" id="step">
-    <h1>Step</h1>
+    <h1>{{model.steps.firstObject.humanName}} Step</h1>
     <hr>
     <div class="row">
         <div class="col-md-6">
@@ -4205,9 +4205,9 @@
         <!--
             <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
         -->
-          <link rel="stylesheet" href="http://rawgit.com/Addepar/ember-charts/v0.3.0/dist/ember-charts.css"> 
-        <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.10/d3.min.js"></script>
-        <script src="http://rawgit.com/Addepar/ember-charts/v0.3.0/dist/ember-charts.js"></script>
+        <link rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/ember-charts.css"> 
+        <script src="~/Modules/EXPEDIT.Share/Scripts/d3.min.js"></script>
+        <script src="~/Modules/EXPEDIT.Share/Scripts/ember-charts.js"></script>
 
 
 
