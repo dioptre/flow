@@ -1087,13 +1087,7 @@
 
 
 
-<script type="text/x-handlebars" id="components/company-selector">
-     <input {{bind-attr id=internalID}} style="width: 275px;" class='select2' type='hidden'/>
-</script>
 
-<script type="text/x-handlebars" id="components/user-selector">
-     <input {{bind-attr id=internalID}} style="width: 275px;" class='select2' type='hidden'/>
-</script>
 
 
 
@@ -1544,7 +1538,7 @@
                 <h1>
                     {{#if workflowName }}
                         {{#if workflowGte2}}
-                            {{eui-select optionsBinding='workflowsOptionsArray' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='medium' width='300px'}}
+                            {{eui-select optionsBinding='workflowsOptionsArray' valuePath="id" labelPath="name" valueBinding="workflowID" required=true size='medium' width='275px'}}
                         {{else}}
                             {{model.workflow.localName}}
                         {{/if}}
@@ -1625,16 +1619,16 @@
                         {{#unless isPreview}}
                             <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit Step Name & Content">
                                 <i class="icon-pencil"></i>
-                            </span>&nbsp;
+                            </span>
                             <span {{action 'toggleMoenyModal'}} class='btn-flat gray' title="Edit Step Money Estimation">
                                 <i class="icon-money"></i>
-                            </span>&nbsp;
+                            </span>
                             <span {{action 'toggleTriggersModal'}} class='btn-flat gray' title="Edit automated triggers">
                                 <i class="icon-cogs"></i>
-                            </span>&nbsp;
+                            </span>
                             <span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;" title="Share or embed current step in your website">
                                <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
-                            </span>&nbsp;
+                            </span>
 
                         {{/unless}}
                     {{/if}}
@@ -1684,13 +1678,14 @@
                              <br />
 
                             <b>Add user that complete the task</b><br>
-                            {{user-selector value=moneyModalStoreObject.WorkContactID}}
+                            {{user-selector value=moneyModalStoreObject.WorkContactID multiple=false}}
 
                             <br>
                             <br>
+
 
                             <b>Add companies that can complete the task</b><br>
-                            {{company-selector value=moneyModalStoreObject.WorkCompanyID}}
+                            {{company-selector value=moneyModalStoreObject.WorkCompanyID multiple=false}}
 
                             <br>
                             <br>
@@ -2343,9 +2338,21 @@
 
     <h1>Styleguide & Ember Help Snippets</h1>
 
+
+
     <p>Theme preview: <a href='http://detail.herokuapp.com/icons.html'>here</a>.</p>
     <p>Translating the app can be done at {{#link-to 'translateme'}}/translateme{{/link-to}}</p>
 
+    <h2> Components </h2>
+
+    User selector:
+    {user-selector value=moneyModalStoreObject.WorkContactID multiple=false}
+
+    Company Selector: 
+    {company-selector value=moneyModalStoreObject.WorkCompanyID multiple=false}
+
+
+    <h2> Icons </h2>
     <span class="item-box">
                 <span class="item">
                     <span aria-hidden="true" class="icl-user"></span>
