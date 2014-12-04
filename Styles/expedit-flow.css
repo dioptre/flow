@@ -1108,3 +1108,11 @@ color: red;
   -moz-transform: none !important;
   transform: none !important; 
 }
+
+.red {
+    color: red;
+}
+
+.green {
+    color: green;
+}
