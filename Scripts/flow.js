@@ -1,3 +1,8 @@
+if ((_ref = Ember.libraries) != null) {
+  _ref.register('FlowPro', '2.0 Alpha');
+}
+
+
 $(function () {
     FastClick.attach(document.body);
 });
@@ -167,6 +172,155 @@ App.StyleguideRoute = Ember.Route.extend({
           console.log('You pressed ESC to close the first modal');
         }
     }
+});
+
+App.ReportController = Ember.Controller.extend({ 
+    // Used for horizontal bar chart, vertical bar chart, and pie chart
+    content: [
+    {
+        "label": "Equity",
+        "value": 12935781.176999997
+    },
+    {
+        "label": "Real Assets",
+        "value": 10475849.276172025
+    },
+    {
+        "label": "Fixed Income",
+        "value": 8231078.16438347
+    },
+    {
+        "label": "Cash & Cash Equivalent",
+        "value": 5403418.115000006
+    },
+    {
+        "label": "Hedge Fund",
+        "value": 1621341.246006786
+    },
+    {
+        "label": "Private Equity",
+        "value": 1574677.59
+    }
+    ],
+
+    // Used only for scatter chart
+    scatterContent: [
+    {
+        "group": "Energy",
+        "xValue": 0.017440569068138557,
+        "yValue": 0.029481600786463634
+    },
+    {
+        "group": "Energy",
+        "xValue": -0.28908275497440244,
+        "yValue": -0.08083803288141521
+    },
+    {
+        "group": "Industrial Metals",
+        "xValue": 0.14072400896070691,
+        "yValue": 0.04008348814566197
+    },
+    {
+        "group": "Municipal Bonds",
+        "xValue": -0.2712097037294005,
+        "yValue": -0.11227088454416446
+    },
+    {
+        "group": "Precious Metals",
+        "xValue": -0.1728403500715051,
+        "yValue": -0.04917117591842082
+    },
+    {
+        "group": "Real Estate",
+        "xValue": -0.06466537726032852,
+        "yValue": -0.03309230484591455
+    }
+    ],
+
+    // Used only for time series chart
+    timeSeriesBarContent: [
+    {
+      time: d3.time.format('%Y-%m-%d').parse("2013-05-15"),
+      label: "Financial analytics software",
+      value: 49668,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-06-15"),
+      label: "Financial analytics software",
+      value: 68344,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-07-16"),
+      label: "Financial analytics software",
+      value: 60654,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-08-16"),
+      label: "Financial analytics software",
+      value: 48240,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-09-16"),
+      label: "Financial analytics software",
+      value: 62074,
+      type: "money"
+    }
+    ],
+
+    // Used only for time series chart
+    timeSeriesLineContent: [
+    {
+      time: d3.time.format('%Y-%m-%d').parse("2013-05-15"),
+      label: "Software & Programming",
+      value: 17326,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-05-15"),
+      label: "Telecommunication",
+      value: 4515,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-06-15"),
+      label: "Software & Programming",
+      value: 15326,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-06-15"),
+      label: "Telecommunication",
+      value: 1515,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-07-16"),
+      label: "Software & Programming",
+      value: 14326,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-07-16"),
+      label: "Telecommunication",
+      value: 8518,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-08-16"),
+      label: "Software & Programming",
+      value: 42301,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-08-16"),
+      label: "Telecommunication",
+      value: 90191,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-09-16"),
+      label: "Software & Programming",
+      value: 57326,
+      type: "money"
+    }, {
+      time: d3.time.format('%Y-%m-%d').parse("2013-09-16"),
+      label: "Telecommunication",
+      value: 39544,
+      type: "money"
+    }
+    ]
 });
 
 App.StyleguideController = Ember.Controller.extend({
@@ -2380,7 +2534,7 @@ App.GraphController = Ember.ObjectController.extend({
             this.set('loadingMoney', true); // this will be used once data gets loaded in
 
             this.store.findQuery('task', {GraphDataGroupID: this.get('workflowID'), GraphDataID: this.get('graphID')}).then(function(a) {
-                return a
+                return a.get('firstObject');
             }, function(){
                // return new Promise(function(resolve, reject) {
                             var aPromise = _this.store.createRecord('task',{
@@ -2398,16 +2552,15 @@ App.GraphController = Ember.ObjectController.extend({
             });
         },
         submitMoneyModal: function (data, callback) {
-            var a = this.get('moneyModalStoreObject', a);
+            var a = this.get('moneyModalStoreObject');
             
+
             var _this = this;
             // Save Money Variables
-            a.save(function(){
-                debugger;
+            a.save().then(function(){
                 Messenger().post({ type: 'success', message: 'Successfully updated details.' });
                 _this.set('moneyModal', false);
             }, function(){
-                debugger;
                 Messenger().post({ type: 'error', message: 'Error updating details. Please try again.' });
             })
         },
@@ -2415,8 +2568,29 @@ App.GraphController = Ember.ObjectController.extend({
             // Clear variable here
             this.set('moneyModal', false);
         },
+
         toggleTriggersModal: function (data, callback) {
             this.toggleProperty('triggerModal');
+        },
+        cancelTriggerModal: function (data, callback) {
+            this.set('triggerModal', false);
+        },
+        submitTriggerModal: function (data, callback) {
+            var a = this.get('moneyModalStoreObject');
+            
+            this.set('triggerModal', false);
+
+
+            var _this = this;
+            // Save Money Variables
+            // a.save(function(){
+            //     debugger;
+            //     Messenger().post({ type: 'success', message: 'Successfully updated details.' });
+            //     _this.set('moneyModal', false);
+            // }, function(){
+            //     debugger;
+            //     Messenger().post({ type: 'error', message: 'Error updating details. Please try again.' });
+            // })
         },
         toggleShareModal: function (data, callback) {
             this.toggleProperty('workflowShareModal');

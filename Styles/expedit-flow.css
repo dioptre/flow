@@ -449,6 +449,11 @@ div.row.processes {
   font-weight: bold;
 }
 
+.chart-container, .chart-container > div,  .chart-container svg {
+  height: 500px;
+  width: 500px;
+  display: block;
+}
 
 
 
