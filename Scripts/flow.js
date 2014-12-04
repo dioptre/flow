@@ -4441,6 +4441,8 @@ App.StepController = Ember.ObjectController.extend({
             function (m) {
                 var mid = m.get('id');
                 var ctx = { d: JSON.parse(m.get('TemplateStructure')), value: m.get('Value') };
+                if (!ctx.d)
+                    return;
                 ctx.d.readOnly = true;
                 contextData[mid] = ctx;
                 templateString += "{{lform-" + ctx.d.field_type + " s=contextData." + mid + " testvar=testVar}} <br>"

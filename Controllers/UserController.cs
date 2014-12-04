@@ -270,7 +270,7 @@ namespace EXPEDIT.Flow.Controllers {
             else
                 result = _Flow.GetNode(null, temp, gid, true, false);
             if (result == null)
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.NotFound); //Unauthorized redirects which is not so good fer ember
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
             return new JsonHelper.JsonNetResult(result, JsonRequestBehavior.AllowGet);
         }
 
