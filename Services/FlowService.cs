@@ -3188,7 +3188,6 @@ namespace EXPEDIT.Flow.Services {
             if (!CheckPermission(null, ActionPermission.Create, typeof(Task)))
                 return false;
             var contact = _users.ContactID;            
-            var worker = _users.GetContactID(m.WorkContactID);
             try
             {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
@@ -3200,7 +3199,7 @@ namespace EXPEDIT.Flow.Services {
                         TaskName = m.TaskName,
                         WorkTypeID = m.WorkTypeID,
                         WorkCompanyID = m.WorkCompanyID,
-                        WorkContactID = worker,
+                        WorkContactID = m.WorkContactID,
                         GraphDataGroupID = m.GraphDataGroupID,
                         GraphDataID = m.GraphDataID,
                         DefaultPriority = m.DefaultPriority,
