@@ -455,6 +455,20 @@ div.row.processes {
   display: block;
 }
 
+h1 > sub {
+  font-size: 0.5em;
+  font-style: italic;
+  display: block;
+  font-weight: 400;
+  margin-top: 5px;
+  margin-bottom: 14px;
+}
+
+span.item-box {
+display: inline-block;
+width: 143px;
+}
+
 
 
 .main-searchbox button.btn {

@@ -314,7 +314,10 @@
 
 
 <script type="text/x-handlebars" id="report">
-    <h1>Reports</h1>
+    <h1>
+        Reports
+        <sub>Create beautiful reports about your staffs performance</sub>
+    </h1>
 
     <br>    
     <br>    
@@ -401,7 +404,9 @@
         Loading...
      {{else}}
         {{#if controllers.application.isLoggedIn}}
-            <h3> My Permissions </h3>
+            <h1> My Permissions 
+                <sub>Manage access to content</sub>
+            </h1>
             <br />
             {{view Ember.Select content=types optionValuePath="content.id"  optionLabelPath="content.text"  value=type}}
             <br /><br />
@@ -583,7 +588,10 @@
 
 
 <script type="text/x-handlebars" id="file">
-    <h3> My Files </h3>
+    <h1> 
+        My Files 
+        <sub>Manage your media assets</sub>
+    </h1>
     <br><br>
     {{#if loading}}
       Loading...
@@ -1180,13 +1188,25 @@
             {{/each}}
 
             <h3>THEN</h3>
+            {{#each trig in config.trigger}}
+                {{eui-select value=trig.type options=tStTriggerTypes labelPath='value' placeholder="Choose trigger type"  size='medium'}}
+                <br>
+                <h5>Sender</h5>
+                {{eui-input value=trig.mail.sender placeholder='example@mail.com' size='medium' required='true'}}
+                <h5>Message</h5>
+                {{eui-textarea value=trig.mail.message size="medium" placeholder='Enter your message here'}}
+                {{eui-button icon='icon icon-minus' action='deleteTriggerRow' itemToDelete=trig}}
+                {{eui-button icon='icon icon-plus' action='addTriggerRow' itemInsertAfter=trig}}
+                <br>
+                <br>
+            {{/each}}
+
 
         {{else}}
             No condition. Will change to next step either way.
         {{/if}}
 
-
-        {{eui-button label='Save Conditions' action='saveConditions'}}
+        <br>
 
     {{/if}}
 
@@ -1961,6 +1981,12 @@
       <div class="row">
         <div class="col-md-12 main-searchbox">
 
+            <h1>
+                Search
+                <sub>Look for Workflows, Steps, Files & Location information</sub>
+            </h1>
+            <br>
+            <br>
 
 
             {{! show all the available tags}}
@@ -3975,7 +4001,9 @@
         <script type="text/x-handlebars" id="workflow">&nbsp;</script>
 
         <script type="text/x-handlebars" id="mylicenses">
-            <h3> My Licenses <small><a href="/store/">Buy License</a></small></h3>
+            <h1> My Licenses
+                <sub><a href="/store/">Buy License</a></sub>
+            </h1>
             <br><br>
             {{#if loading}}
               Loading...
