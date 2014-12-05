@@ -2555,7 +2555,7 @@ namespace EXPEDIT.Flow.Services {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (!CheckPermission(m.PreviousStepID.Value, ActionPermission.Create, typeof(ProjectPlanTaskResponse)))
+                    if (!CheckPermission(null, ActionPermission.Create, typeof(ProjectPlanTaskResponse)))
                         return false;
                     if (d.ProjectPlanTaskResponses.Any(f => f.ProjectPlanTaskResponseID == m.PreviousStepID))
                     {
@@ -3185,14 +3185,14 @@ namespace EXPEDIT.Flow.Services {
 
         public bool CreateTask(TaskViewModel m)
         {
-            var contact = _users.ContactID;
+            if (!CheckPermission(null, ActionPermission.Create, typeof(Task)))
+                return false;
+            var contact = _users.ContactID;            
             try
             {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (!CheckPermission(null, ActionPermission.Create, typeof(Task)))
-                        return false;
                     var c = new Task
                     {
                         TaskID = m.id.Value,

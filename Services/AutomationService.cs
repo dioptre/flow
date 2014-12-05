@@ -219,6 +219,8 @@ namespace EXPEDIT.Flow.Services {
                 //TODO: Refactor - all queries should be aggregated into one query
                 if (!Authorize(sid, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
                     return null;
+                if (!m.PreviousStep.ActualGraphDataID.HasValue)
+                    return m; 
                 var taskID = m.PreviousStep.ActualTaskID ?? (m.PreviousStep.ProjectPlanTaskID.HasValue ? m.PreviousStep.ProjectPlanTask.TaskID : null) ?? tid;
                 if (taskID.HasValue)
                     m.PreviousTask = d.Tasks.Where(f => f.TaskID == taskID && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
@@ -597,16 +599,18 @@ namespace EXPEDIT.Flow.Services {
                         m.PreviousStep.VersionUpdated = now;                       
 
                         d.SaveChanges();
-
-                        if (checkAuthorization)
+                        if (!isCompleted)
                         {
-                            if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
+                            if (checkAuthorization)
                             {
-                                m.PreviousStep = null;
-                                m.PreviousTask = null;
-                                m.PreviousWorkflowInstance = null;
-                                m.Status = "Transitioned to a different department.";
-                                return true;
+                                if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
+                                {
+                                    m.PreviousStep = null;
+                                    m.PreviousTask = null;
+                                    m.PreviousWorkflowInstance = null;
+                                    m.Error = "Transitioned to a different department.";
+                                    return false;
+                                }
                             }
                         }
 
