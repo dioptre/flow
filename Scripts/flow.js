@@ -4583,12 +4583,18 @@ App.StepRoute = Ember.Route.extend({
 App.StepController = Ember.ObjectController.extend({
     queryParams: ['projectID', 'workflowID', 'nodeID', 'taskID'],
     needs: ['application'],
-    context: Ember.Object.create({}),
+    context: {},
     html: Ember.computed.alias('model.steps.firstObject.content'), // Just in case we later change where the value is pulled from
     contextData: {},
     formtemplatestring: '',
     templatestring: function(){
         var _this = this;
+        var temp = {};
+        Enumerable.From(this.get('context')).ForEach(function (m) {
+            if (m.Value.get('ProjectID') == _this.get('model.project.id'))
+                temp[m.Key] = m.Value;
+        });
+        _this.set('context', temp);
         var template = this.get('html')
         // Create template from parsing content
         // #TODO
@@ -4603,7 +4609,8 @@ App.StepController = Ember.ObjectController.extend({
 
         var templateString = '';
         // 2. Go through content and extract data JSON
-        var projectData = Enumerable.From(this.store.all('projectDatum').content);
+        var projectData = Enumerable.From(this.store.all('projectDatum').content).Where("f=> f.get('ProjectID') === '" + _this.get('model.project.id') + "'");
+        console.log();
         $template = $(template);
         $template.find('*').andSelf().filter('.tiny').each(function () {
             var $this = $(this)
@@ -4618,22 +4625,23 @@ App.StepController = Ember.ObjectController.extend({
 
 
                 $.each(data.fields, function (i, d) {
-                    text += "{{lform-" + d.field_type + " s=contextData." + d.uid +" testvar=testVar}} <br>"
                     var oldValue = projectData.Where("f=>f.get('CommonName') === '" + d.label + "'").FirstOrDefault();
-                    if (oldValue)
-                        oldValue = oldValue;
-                    else {
-                        var newRecord = _this.store.createRecord('projectDatum', {                            
-                            ProjectID: _this.get('model.steps.firstObject.Project.id'),
+                    if (!oldValue)
+                    {
+                        var newRecord = _this.store.createRecord('projectDatum', {
+                            CommonName: d.label,
+                            ProjectID: _this.get('model.project.id'),
                             ProjectDataTemplateID: d.uid,
                             ProjectPlanTaskResponseID: _this.get('stepID'),
+                            TemplateStructure: JSON.stringify(d),
                             Value: ''
                         })
                         oldValue = newRecord;
                     }
+                    text += "{{lform-" + d.field_type + " s=contextData." + oldValue.id + " testvar=testVar}} <br>"
 
                     // ember data here
-                    contextData[d.uid] = { d: d, record: oldValue}
+                    contextData[oldValue.id] = { d: d, record: oldValue}
 
                 
                 })
@@ -4698,9 +4706,7 @@ App.StepController = Ember.ObjectController.extend({
     }.property('html'),
     sampleVarControllerLevel: '123-sampleVarControllerLevel',
     workflowID: null,
-    projectID: function () {
-        return this.get('model.steps.firstObject.Project.id');
-    }.property('model.steps.firstObject.id'),
+    projectID: null,
     stepID: function(){
         return this.get('model.steps.firstObject.id');
     }.property('model.steps.firstObject.id'),
