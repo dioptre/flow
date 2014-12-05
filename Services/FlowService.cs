@@ -2555,7 +2555,7 @@ namespace EXPEDIT.Flow.Services {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (!CheckPermission(m.PreviousStepID.Value, ActionPermission.Create, typeof(ProjectPlanTaskResponse)))
+                    if (!CheckPermission(null, ActionPermission.Create, typeof(ProjectPlanTaskResponse)))
                         return false;
                     if (d.ProjectPlanTaskResponses.Any(f => f.ProjectPlanTaskResponseID == m.PreviousStepID))
                     {

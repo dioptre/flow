@@ -4729,12 +4729,13 @@ App.StepController = Ember.ObjectController.extend({
                 var formVal = d.Value.value;
 
                 
-
-                promises.push(d.Value.record.save().then(function () {
-                    Messenger().post({ type: 'success', message: 'Saved' });
-                }, function(){
-                    Messenger().post({ type: 'error', message: 'Error' });
-                }));
+                if (d.Value.record.get('isDirty')) {
+                    promises.push(d.Value.record.save().then(function () {
+                        Messenger().post({ type: 'success', message: 'Saved' });
+                    }, function () {
+                        Messenger().post({ type: 'error', message: 'Error' });
+                    }));
+                }
             });
 
             Ember.RSVP.allSettled(promises).then(function (p) {
