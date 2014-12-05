@@ -3185,21 +3185,22 @@ namespace EXPEDIT.Flow.Services {
 
         public bool CreateTask(TaskViewModel m)
         {
-            var contact = _users.ContactID;
+            if (!CheckPermission(null, ActionPermission.Create, typeof(Task)))
+                return false;
+            var contact = _users.ContactID;            
+            var worker = _users.GetContactID(m.WorkContactID);
             try
             {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (!CheckPermission(null, ActionPermission.Create, typeof(Task)))
-                        return false;
                     var c = new Task
                     {
                         TaskID = m.id.Value,
                         TaskName = m.TaskName,
                         WorkTypeID = m.WorkTypeID,
                         WorkCompanyID = m.WorkCompanyID,
-                        WorkContactID = m.WorkContactID,
+                        WorkContactID = worker,
                         GraphDataGroupID = m.GraphDataGroupID,
                         GraphDataID = m.GraphDataID,
                         DefaultPriority = m.DefaultPriority,

@@ -4180,6 +4180,12 @@ App.CompanySelectorComponent = App.UserSelectorComponent.extend({
     url: "/share/getcompanies"
 });
 
+App.ContactSelectorComponent = App.UserSelectorComponent.extend({
+    internalID: NewGUID(),
+    placeholder: "Enter Companies...",
+    url: "/share/getcontacts"
+});
+
 App.TriggerNodeComponent = Ember.Component.extend({
     defaultRow: {},
     tSmatchesRules: [{value: 'All'}, {value: 'Any'}],
@@ -4610,7 +4616,6 @@ App.StepController = Ember.ObjectController.extend({
         var templateString = '';
         // 2. Go through content and extract data JSON
         var projectData = Enumerable.From(this.store.all('projectDatum').content).Where("f=> f.get('ProjectID') === '" + _this.get('model.project.id') + "'");
-        console.log();
         $template = $(template);
         $template.find('*').andSelf().filter('.tiny').each(function () {
             var $this = $(this)
@@ -5896,7 +5901,8 @@ App.TinymceEditorComponent = Ember.Component.extend({
         //    resize();
         //})
 
-
+        config.forced_root_block = false;
+        config.forced_root_block = false;
         //tinyMCE.init({
         //    theme: "advanced",
         //    schema: "html5",
