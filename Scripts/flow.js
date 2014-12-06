@@ -1,5 +1,5 @@
 if ((_ref = Ember.libraries) != null) {
-  _ref.register('FlowPro', '2.0 Alpha');
+  _ref.register('FlowPro', '2.0.0 Alpha');
 }
 
 
@@ -66,6 +66,11 @@ LiquidFire.map(function(){
         this.toRoute('graph'),
         this.use('toLeft'),
         this.reverse('toRight')
+    );
+
+    this.transition(
+      this.withinRoute('permission'),
+      this.use('toLeft')
     );
 })
 
@@ -1086,6 +1091,7 @@ App.ApplicationController = Ember.Controller.extend({
         window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
         var currentPath = this.get('currentPath');
         App.set('currentPath', currentPath);  // Set path to the top
+        $('body').trigger('pathChanged');
     }.observes('currentPath'), // This set the current path App.get('currentPath');
     isLoading: false, // this allows triggering the loading from anywhere in the code, just go: _this.set('controllers.application.isLoading', true)
     isLoadingObserver: function(){
@@ -4088,6 +4094,7 @@ App.CompanySelectorComponent = Ember.Component.extend({
 
             var orgVal = _this.get('value'); 
             // need to preload old value here...
+            $(id).val(orgVal)
 
             $(id).select2({
                 placeholder: "Enter Companies...",
@@ -4109,6 +4116,17 @@ App.CompanySelectorComponent = Ember.Component.extend({
                         return { results: results, text: 'tag' };
                     }
                 },
+                // initSelection: function(element, callback) {
+                //        // the input tag has a value attribute preloaded that points to a preselected repository's id
+                //        // this function resolves that id attribute to an object that select2 can render
+                //        // using its formatResult renderer - that way the repository name is shown preselected
+                //        var id = $(element).val();
+                //        if (id !== "") {
+                //            $.ajax("https://api.github.com/repositories/" + id, {
+                //                dataType: "json"
+                //            }).done(function(data) { callback(data); });
+                //        }
+                // },
                 formatResult: function(state) {return state.tag; },
                 formatSelection: function (state) {return state.tag; },
                 escapeMarkup: function (m) { return m; }
@@ -4189,6 +4207,7 @@ App.ContactSelectorComponent = App.UserSelectorComponent.extend({
 App.TriggerNodeComponent = Ember.Component.extend({
     defaultRow: {},
     tSmatchesRules: [{value: 'All'}, {value: 'Any'}],
+    tStTriggerTypes: [{value: 'Email'}, {value: 'Zapier'}],
     tSvariables: [{value: 'Test'}, {value:'Awesome'}], // - this should be loaded from the variables on the current page context
     tSmatches: [{value: 'contains'}, {value:'does not contain'}, {value:'is'}, {value:'is not'}, {value:'begins with'}, {value:'ends with'}],
     graphID: '', // this is the edge ID on the item we are editing
@@ -4210,22 +4229,23 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
         // TODO - Does the trigger API work?
         store.findQuery('trigger',{ GraphDataGroupID: workflowID, GraphDataID: graphID}).then(function(a) {
+            return a
+        }, function(){
+            return [];
+        }).then(function(a){
             _this.set('loading', false);
-
-            debugger;  
 
 
             if (a.get('length') == 1) {
-
                 _this.set('config', JSON.parse(a.get('firstObject.JSON')))
             }
+            
             if (a.get('length') < 1) {
                 _this.set('config', _this.get('defaultConfig'));
             }
 
-             if (a.get('length') > 1) {
+            if (a.get('length') > 1) {
                 Messenger().post({ type: 'error', message: 'There should only be one edge condition. Please contact support!' });
-                
             }
         })    
 
@@ -4242,6 +4262,15 @@ App.TriggerNodeComponent = Ember.Component.extend({
                     varSelect: '',
                     matchSelect: '',
                     matchInput: ''
+                }
+            }
+        ],
+        trigger: [
+            {
+                type: 'Email',
+                email: {
+                    sender: 'paul@flowpro.io',
+                    messsage: 'Test message'
                 }
             }
         ]
@@ -4361,7 +4390,15 @@ App.TriggerNodeComponent = Ember.Component.extend({
         },
         'deleteRow': function(context) {
             this.get('config.fields').removeObject(context.itemToDelete);
-        }                                             
+        },
+        'addTriggerRow': function (context) {
+            var positionCurrent = this.get('config.fields').indexOf(context.itemInsertAfter) + 1;
+            this.get('config.fields').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
+
+        },
+        'deleteTriggerRow': function(context) {
+            this.get('config.fields').removeObject(context.itemToDelete);
+        }                                                
     }
 });
 
@@ -5842,19 +5879,30 @@ App.HomeNavView = Ember.View.extend({
     activeTagzz: null,
     tagThisMate: function () {
         var _this = this;
-        $(window).on('hashchange', function () {
-            if (_this.get('activeTagzz')) {
-                _this.set('activeTagzz', false);
-                var a = _this.$('a');
-                if (typeof a !== 'undefined') {
-                    a.each(function (i, j, y) {
-                        if (j.getAttribute('href').replace(/^#\//, '') === window.location.hash.substring(2)) {
-                            _this.set('activeTagzz', true);
-                        }
-                    });
-                }
-            }
-        }).trigger('hashchange')
+        $('body').on('pathChanged', function () {
+          Ember.run.scheduleOnce('afterRender', this, function(){
+                
+                // Get the targeted element
+                var isActive  = false;
+                var a = _this.$('a');   
+                       
+                a.each(function (i, j, y) {
+                    j = $(j);
+
+                    // This is to highlight the workflow button when looking at a step ;)
+                    var specialRule = (j.attr('href').replace(/^#\//, '') == 'workflow/undefined') && (window.location.hash.substring(2).indexOf('process') == 0)
+                    
+                    // Either matches active in the elements below
+                    // OR url href matches window.location
+                    // OR any special rules
+                    if (specialRule || j.attr('class').indexOf('active') != -1 || j.attr('href').replace(/^#\//, '') === window.location.hash.substring(2))       
+                        isActive = true;   
+                }); 
+                
+                _this.set('activeTagzz', isActive);
+
+            })
+        }).trigger('pathChanged')
     }.on('didInsertElement')
 });
 
