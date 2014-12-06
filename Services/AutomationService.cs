@@ -614,6 +614,7 @@ namespace EXPEDIT.Flow.Services {
                         {
                             m.PreviousStep.ActualGraphDataID = nextStep;
                             m.PreviousWorkflowInstance.Idle = now.AddSeconds(m.PreviousWorkflowInstance.IdleTimeoutSeconds ?? ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS);
+                            m.PreviousTask = d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == m.GraphDataGroupID && f.GraphDataID == nextStep).FirstOrDefault();
                             if (m.PreviousTask != null)
                             {
                                 if (m.PreviousTask.WorkCompanyID.HasValue || m.PreviousTask.WorkContactID.HasValue)
@@ -624,10 +625,7 @@ namespace EXPEDIT.Flow.Services {
                                 }
 
                             }
-                            else
-                            {
-                                m.PreviousStep.ActualTaskID = null;
-                            }
+                            m.PreviousStep.ActualTaskID = m.TaskID;
                         }
 
                         m.PreviousStep.VersionUpdatedBy = contact;

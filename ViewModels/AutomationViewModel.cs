@@ -19,7 +19,7 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? WorkTypeID { get { return PreviousTask.WorkTypeID; } }
         public Guid? WorkCompanyID { get { return PreviousTask.WorkCompanyID; } }
         public Guid? WorkContactID { get { return PreviousTask.WorkContactID; } }
-        public Guid? GraphDataGroupID { get { return TaskID ?? PreviousStep.ActualGraphDataGroupID; } }
+        public Guid? GraphDataGroupID { get { return PreviousTask.GraphDataGroupID ?? PreviousStep.ActualGraphDataGroupID; } }
         public new Guid? GraphDataID { get { return PreviousTask.GraphDataID ?? PreviousStep.ActualGraphDataID; } }
         public Guid? ProjectID { get { return PreviousStep.ProjectID; } }
         public Guid? ProjectPlanTaskID { get { return PreviousStep.ProjectPlanTaskID; } }

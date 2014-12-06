@@ -584,6 +584,12 @@ App.MyworkflowsRoute = Ember.Route.extend({
             workflows: this.store.find('myWorkflow'),
             processes: this.store.find('myNode')
         });
+    },
+    afterModel: function (m) {
+        if (m.workflows)
+            m.workflows = m.workflows.sortBy('humanName');
+        if (m.processes)
+            m.processes = m.processes.sortBy('humanName');
     }
 })
 
@@ -4082,67 +4088,10 @@ App.HandlebarsLiveComponent = Ember.Component.extend({
 
 
 // doesn't load pulled data yet
-App.CompanySelectorComponent = Ember.Component.extend({
-    template: "<div {{bind-attr id=internalID}} style='width: 275px;' class='select2' type='hidden'></div>",
-    internalID: NewGUID(),
-    multiple: true,
-    value: '',
-    setup: function(){
-        var _this = this;
-        Ember.run.scheduleOnce('afterRender', this, function(){
-            var id = '#' + _this.get('internalID');
-
-            var orgVal = _this.get('value'); 
-            // need to preload old value here...
-            $(id).val(orgVal)
-
-            $(id).select2({
-                placeholder: "Enter Companies...",
-                minimumInputLength: 2,
-                tags: _this.get('multiple'),
-                //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
-                ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                    url: "/share/getcompanies",
-                    dataType: 'json',
-                    multiple: true,
-                    data: function (term, page) {
-                        return {id: term };
-                    },
-                    results: function (data, page) { // parse the results into the format expected by Select2.
-                        if (data.length === 0) {
-                            return { results: [] };
-                        }
-                        var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                        return { results: results, text: 'tag' };
-                    }
-                },
-                // initSelection: function(element, callback) {
-                //        // the input tag has a value attribute preloaded that points to a preselected repository's id
-                //        // this function resolves that id attribute to an object that select2 can render
-                //        // using its formatResult renderer - that way the repository name is shown preselected
-                //        var id = $(element).val();
-                //        if (id !== "") {
-                //            $.ajax("https://api.github.com/repositories/" + id, {
-                //                dataType: "json"
-                //            }).done(function(data) { callback(data); });
-                //        }
-                // },
-                formatResult: function(state) {return state.tag; },
-                formatSelection: function (state) {return state.tag; },
-                escapeMarkup: function (m) { return m; }
-            }).on("change", function(e) { 
-                _this.set('value', e.val); 
-            });
-        });
-    }.on('didInsertElement')
-})
-
-
-// doesn't load pulled data yet
 // Note: App.CompanySelectorComponent inherits from this :)
 App.UserSelectorComponent = Ember.Component.extend({
     layout: Ember.Handlebars.compile("<div {{bind-attr id=internalID}} style='width: 275px;' class='select2' type='hidden'></div>"),
-    url: "/share/getusernames",
+    url: "//share/getusernames",
     placeholder: "Enter Usernames...",
     internalID: NewGUID(),
     value: '',
@@ -4170,7 +4119,7 @@ App.UserSelectorComponent = Ember.Component.extend({
                         var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray(); // Use linq ;)
                         return { results: results, text: 'tag' };
                     }
-                },
+                },           
                 formatResult: function(state) {return state.tag; },
                 formatSelection: function (state) {return state.tag; },
                 escapeMarkup: function (m) { return m; }
@@ -4183,11 +4132,26 @@ App.UserSelectorComponent = Ember.Component.extend({
 
             var orgVal = _this.get('value'); 
             // need to preload old value here...
-
+            //$(id).val(orgVal);
             // Setup Select2
             $(id).select2(settings).on("change", function(e) { 
                 _this.set('value', e.val); 
             });
+
+            $.ajax(_this.get('url') + "/" + orgVal, {
+                dataType: "json"
+            }).done(function (data) {
+                if (!data || data.length == 0)
+                    return;
+                var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                if (_this.get('multiple'))
+                    $(id).select2('data', results);
+                else
+                    $(id).select2('data', results[0]);
+                
+            });
+
+            
         });
     }.on('didInsertElement')
 })
@@ -4200,7 +4164,7 @@ App.CompanySelectorComponent = App.UserSelectorComponent.extend({
 
 App.ContactSelectorComponent = App.UserSelectorComponent.extend({
     internalID: NewGUID(),
-    placeholder: "Enter Companies...",
+    placeholder: "Enter Contacts...",
     url: "/share/getcontacts"
 });
 
