@@ -1043,7 +1043,11 @@ namespace EXPEDIT.Flow.Services {
                     VersionOwnerContactID = creatorContact
                 };
                 d.GraphDataRelation.AddObject(g);
+                var wf = d.GraphDataGroups.FirstOrDefault(f=>f.GraphDataGroupID == m.GroupID && f.StartGraphDataID == null);
+                if (wf != null)
+                    wf.StartGraphDataID = m.FromID;
                 d.SaveChanges();
+
                 return true;
             }
         }

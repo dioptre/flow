@@ -2214,7 +2214,7 @@ App.GraphRoute = Ember.Route.extend({
                     // create the workflow here
                     m.workflow = App.Workflow.store.getById('workflow', m.workflowID);
                     if (!m.workflow)
-                        m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: m.selected });
+                        m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: m.selectedID });
                 }
             }
             else {
@@ -2268,7 +2268,7 @@ App.GraphRoute = Ember.Route.extend({
                 m.workflow = App.Workflow.store.createRecord('workflow', {
                     id: m.params.workflowID,
                     name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'),
-                    StartGraphDataID: m.selected
+                    StartGraphDataID: m.params.id
                 });
             }
             m.workflows = Em.A([m.workflow]);
