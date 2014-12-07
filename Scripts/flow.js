@@ -4741,11 +4741,7 @@ App.StepController = Ember.ObjectController.extend({
 
                 
                 if (d.Value.record.get('isDirty')) {
-                    promises.push(d.Value.record.save().then(function () {
-                        Messenger().post({ type: 'success', message: 'Saved' });
-                    }, function () {
-                        
-                    }));
+                    promises.push(d.Value.record.save());
                 }
             });
 
@@ -4757,6 +4753,7 @@ App.StepController = Ember.ObjectController.extend({
                     return;
                 }
                 else {
+                    //Messenger().post({ type: 'success', message: 'Saved Data' });
                     $.ajax({
                         url: "/flow/WebMethod/DoNext/" + _this.get('stepID'),
                         type: "GET"
