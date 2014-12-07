@@ -4566,6 +4566,11 @@ App.StepRoute = Ember.Route.extend({
     },
     steps: '',
     project: '',
+    beforeModel: function (params) {
+        if (params.params.step.id === 'undefined') {
+            this.replaceWith('step', NewGUID(), { queryParams: { workflowID: params.queryParams.workflowID } });
+        }
+    },
     model: function (params, data) {
         var _this = this;
         return this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true }).then(function(a){

@@ -3480,5 +3480,21 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
+
+
+        public void Cleanup()
+        {
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var cleanBefore = DateTime.UtcNow.AddDays(-1);
+                var oldWorkflows = (from o in d.GraphDataGroups
+                                    where !(from r in d.GraphDataRelation select r.GraphDataGroupID).Contains(o.GraphDataGroupID)
+                                    && o.VersionUpdated < cleanBefore
+                                    select o).Delete();               
+            }
+
+        }
+
     }
 }
