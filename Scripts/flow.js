@@ -4418,7 +4418,13 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
         },
         'deleteRow': function(context) {
-            this.get('config.fields').removeObject(context.itemToDelete);
+            // don't delete if the last one :)
+            if (this.get('config.fields.length') == 1) {
+                Messenger().post({ type: 'info', message: 'You need at least on row. Turn off Trigger alternatively.' });
+            } else {
+                this.get('config.fields').removeObject(context.itemToDelete);
+            }
+            
         },
         'addTriggerRow': function (context) {
             var positionCurrent = this.get('config.trigger').indexOf(context.itemInsertAfter) + 1;
@@ -4426,7 +4432,11 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
         },
         'deleteTriggerRow': function(context) {
-            this.get('config.trigger').removeObject(context.itemToDelete);
+            if (this.get('config.trigger.length') == 1) {
+                Messenger().post({ type: 'info', message: 'You need at least on row. Turn off Trigger alternatively.' });
+            } else {
+                this.get('config.trigger').removeObject(context.itemToDelete);
+            }
         }                                                
     }
 });
