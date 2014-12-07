@@ -2956,6 +2956,16 @@ App.VizEditorComponent = Ember.Component.extend({
             });
         }
     }.observes('editing'),
+    preview: null,
+    previewChange: function () {
+        var g = this.get('graph');
+
+        var redraw = function () {
+            this.zoomExtent(); //Not working?!
+            this.redraw(); // This makes the graph responsive!!!
+        };       
+        Ember.run.debounce(g, redraw, 150, false);
+    }.observes('preview'),
     data: null,
     updateGraph: '',
     vizDataSet: { nodes: new vis.DataSet(), edges: new vis.DataSet() },

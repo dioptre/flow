@@ -1465,7 +1465,7 @@
                 </h1>
                 <hr>
                 <div class="networkColumn">
-                    {{viz-editor t=controllers.application.model.t workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=controllers.application.isLoggedIn toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems' selectedData=selectedData}}
+                    {{viz-editor t=controllers.application.model.t workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=controllers.application.isLoggedIn toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems' selectedData=selectedData preview=preview}}
                 </div>
 
                 <br>
@@ -1515,7 +1515,7 @@
                     {{#if isPreview}}
                        <small>{{workflowName}}</small>
                        <span {{action 'hidePreview' }} class='btn-flat gray' title="Edit Content @@ FlowPro.io">
-                           <i class="icon-pencil"></i>
+                           <i class="icon-fullscreen"></i>
                        </span>
                     {{/if}}
                 </h1>
