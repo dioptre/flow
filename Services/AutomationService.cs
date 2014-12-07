@@ -436,9 +436,13 @@ namespace EXPEDIT.Flow.Services {
                             VersionOwnerCompanyID =  company,
                             VersionUpdated =  now
                         };
-                        d.WorkflowInstances.AddObject(wf);
-                        
+                        d.WorkflowInstances.AddObject(wf);                        
                         m.PreviousStep.VersionWorkflowInstanceID = wfid;
+
+                        bool checkAuthorization = false;
+                        if (!m.TaskID.HasValue)
+                            m.PreviousTask = d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == m.GraphDataGroupID && f.GraphDataID == m.GraphDataID).FirstOrDefault();
+
                         m.PreviousStep.ResponsibleCompanyID = m.PreviousTask.WorkCompanyID ?? company;
                         m.PreviousStep.ResponsibleContactID = m.PreviousTask.WorkContactID ?? contact;
                         m.PreviousStep.VersionUpdatedBy = contact;
@@ -448,14 +452,36 @@ namespace EXPEDIT.Flow.Services {
                         m.PreviousStep.VersionAntecedentID = m.PreviousStepID;
 
                         m.LastEditedBy = d.Contacts.Where(f => f.ContactID == contact).Select(f => f.Username).FirstOrDefault();
-
-                        if (m.TaskID.HasValue)
+                                  
+                            
+                        if (m.PreviousTask != null)
+                        {
                             m.PreviousStep.ActualTaskID = m.TaskID;
+                            if (m.PreviousTask.WorkCompanyID.HasValue || m.PreviousTask.WorkContactID.HasValue)
+                            {
+                                m.PreviousStep.VersionOwnerContactID = m.PreviousTask.WorkContactID;
+                                m.PreviousStep.VersionOwnerCompanyID = m.PreviousTask.WorkCompanyID;
+                                checkAuthorization = true;
+                            }
+                        }
+                        
                         m.PreviousStep.Began = now;
                         d.ProjectPlanTaskResponses.AddObject(m.PreviousStep);
 
                         d.SaveChanges();
-                        //TODO: Should checkout
+
+                        if (checkAuthorization)
+                        {
+                            if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
+                            {
+                                m.PreviousStep = null;
+                                m.PreviousTask = null;
+                                m.PreviousWorkflowInstance = null;
+                                m.Error = "Transitioned to a different department.";
+                                return false;
+                            }
+                        }
+                        
                         return true;
                     }
                     else
@@ -571,6 +597,10 @@ namespace EXPEDIT.Flow.Services {
                         }
 
                     }
+
+                    if (m.PreviousWorkflowInstance != null && m.PreviousWorkflowInstance.Idle.HasValue)
+                        m.PreviousStep.Hours = ((decimal)((now - m.PreviousWorkflowInstance.Idle.Value.AddSeconds(-ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS)).TotalHours));
+
                     if (nextStep != Guid.Empty || isCompleted)
                     {
                         bool checkAuthorization = false;
@@ -584,6 +614,7 @@ namespace EXPEDIT.Flow.Services {
                         {
                             m.PreviousStep.ActualGraphDataID = nextStep;
                             m.PreviousWorkflowInstance.Idle = now.AddSeconds(m.PreviousWorkflowInstance.IdleTimeoutSeconds ?? ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS);
+                            m.PreviousTask = d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == m.GraphDataGroupID && f.GraphDataID == nextStep).FirstOrDefault();
                             if (m.PreviousTask != null)
                             {
                                 if (m.PreviousTask.WorkCompanyID.HasValue || m.PreviousTask.WorkContactID.HasValue)
@@ -594,9 +625,11 @@ namespace EXPEDIT.Flow.Services {
                                 }
 
                             }
+                            m.PreviousStep.ActualTaskID = m.TaskID;
                         }
+
                         m.PreviousStep.VersionUpdatedBy = contact;
-                        m.PreviousStep.VersionUpdated = now;                       
+                        m.PreviousStep.VersionUpdated = now;      
 
                         d.SaveChanges();
                         if (!isCompleted)

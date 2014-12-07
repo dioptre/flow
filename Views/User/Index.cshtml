@@ -513,7 +513,8 @@
                                   {{!--<th>Preview</th>--}}
                                   <th>Name</th>
                                   <th>Updated</th>
-                                  <th>Link</th>
+                                  <th>Run</th>
+                                  <th>Edit</th>
                                   {{#if controllers.application.isLoggedIn}}
                                     <th>Permissions</th>
                                   {{/if}}
@@ -525,9 +526,10 @@
                                     {{!--<td><img {{bind-attr src=result.ResourcePreviewPath}} height="15"></td>--}}
                                     <td>{{workf.humanName}}</td>
                                     <td>{{workf.updatedNiceMinutes}}</td>
-                                    <td>{{link-to 'View' 'workflow' workf.id}}</td>
+                                    <td>{{link-to 'Run' 'step' 'undefined'  (query-params workflowID=workf.id) }}</td>
+                                    <td>{{link-to 'Edit' 'workflow' workf.id}}</td>
                                     {{#if controllers.application.isLoggedIn}}
-                                        <td><a {{action 'editPermission' workf}} class="hlink">Edit</a></td>
+                                        <td><a {{action 'editPermission' workf}} class="hlink">Assign</a></td>
                                     {{/if}}
                                   </tr>
                                 {{/each}}
@@ -550,7 +552,7 @@
                                   {{!--<th>Preview</th>--}}
                                   <th>Name</th>
                                   <th>Updated</th>
-                                  <th>Link</th>
+                                  <th>Edit</th>
                                   {{#if controllers.application.isLoggedIn}}
                                     <th>Permissions</th>
                                   {{/if}}
@@ -562,9 +564,9 @@
                                     {{!--<td><img {{bind-attr src=proc.ResourcePreviewPath}} height="15"></td>--}}
                                     <td>{{proc.humanName}}</td>
                                     <td>{{proc.updatedNiceMinutes}}</td>
-                                    <td>{{link-to 'View' 'graph' proc.id (query-params workflowID="undefined")}}</td>
+                                    <td>{{link-to 'Edit' 'graph' proc.id (query-params workflowID="undefined")}}</td>
                                     {{#if controllers.application.isLoggedIn}}
-                                        <td><a {{action 'editPermission' proc}} class="hlink">Edit</a></td>
+                                        <td><a {{action 'editPermission' proc}} class="hlink">Assign</a></td>
                                     {{/if}}
                                   </tr>
                                 {{/each}}
@@ -1281,6 +1283,8 @@
             {{eui-button label="Next Step" action="nextStep" size="large" style='primary'}}
             {{else}}
                 <h4>Workflow Completed</h4>
+                <br /><br />
+                <h4 style="margin-left:20px;">{{#link-to 'todo'}}... continue with my Todos{{/link-to}}</h4>
             {{/unless}}
         </div>
 
@@ -1336,7 +1340,7 @@
                         <span {{action 'translateWorkflow' workflowID selectedID}} class='btn-flat gray' title="Translate Workflow">
                             <i class="icon-globe"></i> {{!--Edit Workflow name--}}
                         </span>
-                        <span {{action 'createWFinstance' workflowID }} class='btn-flat gray' title="Create WF instance">
+                        <span {{action 'createWFinstance' workflowID }} class='btn-flat gray' title="Run workflow">
                             <i class="icon-play"></i> {{!--Edit Workflow name--}}
                         </span>
                     {{/if}}
@@ -1712,7 +1716,7 @@
                              <br />
 
                             <b>Add user that complete the task</b><br>
-                            {{user-selector value=moneyModalStoreObject.WorkContactID multiple=false}}
+                            {{contact-selector value=moneyModalStoreObject.WorkContactID multiple=false}}
 
                             <br>
                             <br>
@@ -1736,16 +1740,22 @@
                                         {{eui-input value=moneyModalStoreObject.DefaultPriority placeholder='Number from 0-100'}}
 
                                         <br>
-                                        <br>
+                                        <br>                                    
                                         
-                                        <b>Estimated Duration</b><br>
-                                        {{eui-input value=moneyModalStoreObject.EstimatedDuration placeholder='As measured in hours'}}
+                                        <b>Estimated Labour Cost</b><br>
+                                        {{eui-input value=moneyModalStoreObject.EstimatedLabourCosts placeholder='In $$$'}}
 
                                         <br>
                                         <br>
-                                        
-                                        <b>Estimated Labour Cost</b><br>
-                                        {{eui-input value=moneyModalStoreObject.EstimatedLabourCost placeholder='In $$$'}}
+
+                                        <b>Estimated Intangible Value</b><br>
+                                        {{eui-input value=moneyModalStoreObject.EstimatedIntangibleValue placeholder='In $$$'}}
+
+                                        <br>
+                                        <br>
+
+                                        <b>Estimated Revenue</b><br>
+                                        {{eui-input value=moneyModalStoreObject.EstimatedRevenue placeholder='In $$$'}}
 
                                         <br>
                                         <br>
@@ -1753,8 +1763,14 @@
 
                                     <div class="col-md-6">
                             
+                                        <b>Estimated Duration</b><br>
+                                        {{eui-input value=moneyModalStoreObject.EstimatedDuration placeholder='As measured in hours'}}
+
+                                        <br>
+                                        <br>
+
                                         <b>Estimated Capital Cost</b><br>
-                                        {{eui-input value=moneyModalStoreObject.EstimatedCaptialCost placeholder='ie. cost for gloves in $$$'}}
+                                        {{eui-input value=moneyModalStoreObject.EstimatedCapitalCosts placeholder='ie. cost for gloves in $$$'}}
 
                                         <br>
                                         <br>
@@ -1764,11 +1780,7 @@
 
                                         <br>
                                         <br>
-                                        <b>Estimated Intangible Value</b><br>
-                                        {{eui-input value=moneyModalStoreObject.EstimatedIntangibleValue placeholder='In $$$'}}
-
-                                        <br>
-                                        <br>
+                                      
                                     </div>
                                 </div>
                             </div>
@@ -2386,7 +2398,7 @@
     <h2> Components </h2>
 
     User selector:
-    {user-selector value=moneyModalStoreObject.WorkContactID multiple=false}
+    {contact-selector value=moneyModalStoreObject.WorkContactID multiple=false}
 
     Company Selector: 
     {company-selector value=moneyModalStoreObject.WorkCompanyID multiple=false}

@@ -602,6 +602,12 @@ App.MyworkflowsRoute = Ember.Route.extend({
             workflows: this.store.find('myWorkflow'),
             processes: this.store.find('myNode')
         });
+    },
+    afterModel: function (m) {
+        if (m.workflows)
+            m.workflows = m.workflows.sortBy('humanName');
+        if (m.processes)
+            m.processes = m.processes.sortBy('humanName');
     }
 })
 
@@ -2238,7 +2244,7 @@ App.GraphRoute = Ember.Route.extend({
                     // create the workflow here
                     m.workflow = App.Workflow.store.getById('workflow', m.workflowID);
                     if (!m.workflow)
-                        m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: m.selected });
+                        m.workflow = App.Workflow.store.createRecord('workflow', { id: m.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: m.selectedID });
                 }
             }
             else {
@@ -2292,7 +2298,7 @@ App.GraphRoute = Ember.Route.extend({
                 m.workflow = App.Workflow.store.createRecord('workflow', {
                     id: m.params.workflowID,
                     name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'),
-                    StartGraphDataID: m.selected
+                    StartGraphDataID: m.params.id
                 });
             }
             m.workflows = Em.A([m.workflow]);
@@ -4100,67 +4106,10 @@ App.HandlebarsLiveComponent = Ember.Component.extend({
 
 
 // doesn't load pulled data yet
-App.CompanySelectorComponent = Ember.Component.extend({
-    template: "<div {{bind-attr id=internalID}} style='width: 275px;' class='select2' type='hidden'></div>",
-    internalID: NewGUID(),
-    multiple: true,
-    value: '',
-    setup: function(){
-        var _this = this;
-        Ember.run.scheduleOnce('afterRender', this, function(){
-            var id = '#' + _this.get('internalID');
-
-            var orgVal = _this.get('value'); 
-            // need to preload old value here...
-            $(id).val(orgVal)
-
-            $(id).select2({
-                placeholder: "Enter Companies...",
-                minimumInputLength: 2,
-                tags: _this.get('multiple'),
-                //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
-                ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                    url: "/share/getcompanies",
-                    dataType: 'json',
-                    multiple: true,
-                    data: function (term, page) {
-                        return {id: term };
-                    },
-                    results: function (data, page) { // parse the results into the format expected by Select2.
-                        if (data.length === 0) {
-                            return { results: [] };
-                        }
-                        var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                        return { results: results, text: 'tag' };
-                    }
-                },
-                // initSelection: function(element, callback) {
-                //        // the input tag has a value attribute preloaded that points to a preselected repository's id
-                //        // this function resolves that id attribute to an object that select2 can render
-                //        // using its formatResult renderer - that way the repository name is shown preselected
-                //        var id = $(element).val();
-                //        if (id !== "") {
-                //            $.ajax("https://api.github.com/repositories/" + id, {
-                //                dataType: "json"
-                //            }).done(function(data) { callback(data); });
-                //        }
-                // },
-                formatResult: function(state) {return state.tag; },
-                formatSelection: function (state) {return state.tag; },
-                escapeMarkup: function (m) { return m; }
-            }).on("change", function(e) { 
-                _this.set('value', e.val); 
-            });
-        });
-    }.on('didInsertElement')
-})
-
-
-// doesn't load pulled data yet
 // Note: App.CompanySelectorComponent inherits from this :)
 App.UserSelectorComponent = Ember.Component.extend({
     layout: Ember.Handlebars.compile("<div {{bind-attr id=internalID}} style='width: 275px;' class='select2' type='hidden'></div>"),
-    url: "/share/getusernames",
+    url: "//share/getusernames",
     placeholder: "Enter Usernames...",
     internalID: NewGUID(),
     value: '',
@@ -4188,7 +4137,7 @@ App.UserSelectorComponent = Ember.Component.extend({
                         var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray(); // Use linq ;)
                         return { results: results, text: 'tag' };
                     }
-                },
+                },           
                 formatResult: function(state) {return state.tag; },
                 formatSelection: function (state) {return state.tag; },
                 escapeMarkup: function (m) { return m; }
@@ -4201,11 +4150,26 @@ App.UserSelectorComponent = Ember.Component.extend({
 
             var orgVal = _this.get('value'); 
             // need to preload old value here...
-
+            //$(id).val(orgVal);
             // Setup Select2
             $(id).select2(settings).on("change", function(e) { 
                 _this.set('value', e.val); 
             });
+
+            $.ajax(_this.get('url') + "/" + orgVal, {
+                dataType: "json"
+            }).done(function (data) {
+                if (!data || data.length == 0)
+                    return;
+                var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                if (_this.get('multiple'))
+                    $(id).select2('data', results);
+                else
+                    $(id).select2('data', results[0]);
+                
+            });
+
+            
         });
     }.on('didInsertElement')
 })
@@ -4218,7 +4182,7 @@ App.CompanySelectorComponent = App.UserSelectorComponent.extend({
 
 App.ContactSelectorComponent = App.UserSelectorComponent.extend({
     internalID: NewGUID(),
-    placeholder: "Enter Companies...",
+    placeholder: "Enter Contacts...",
     url: "/share/getcontacts"
 });
 
@@ -4667,6 +4631,11 @@ App.StepRoute = Ember.Route.extend({
     },
     steps: '',
     project: '',
+    beforeModel: function (params) {
+        if (params.params.step.id === 'undefined') {
+            this.replaceWith('step', NewGUID(), { queryParams: { workflowID: params.queryParams.workflowID } });
+        }
+    },
     model: function (params, data) {
         var _this = this;
         return this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true }).then(function(a){
@@ -4823,8 +4792,8 @@ App.StepController = Ember.ObjectController.extend({
         return moment(this.get('model.steps.firstObject.VersionUpdated')).fromNow();
     }.property('model.steps.firstObject.VersionUpdated'),
     actions: {
-        nextStep: function(){
-
+        nextStep: function(btn){
+            btn.set('loading', true);
             var _this = this;
 
             var context = this.get('contextData');
@@ -4840,24 +4809,37 @@ App.StepController = Ember.ObjectController.extend({
                     promises.push(d.Value.record.save().then(function () {
                         Messenger().post({ type: 'success', message: 'Saved' });
                     }, function () {
-                        Messenger().post({ type: 'error', message: 'Error' });
+                        
                     }));
                 }
             });
 
             Ember.RSVP.allSettled(promises).then(function (p) {
-                $.ajax({
-                    url: "/flow/WebMethod/DoNext/" + _this.get('stepID'),
-                    type: "GET"
-                }).then(function (response) {
-                    _this.store.findQuery('step', { id: _this.get('stepID') }).then(function (m) {
-                        //_this.transitionToRoute('step', { id: _this.get('stepID') });
-                        //Messenger().post({ type: 'success', message: 'Transitioned' });
-                        window.scrollTo(0, 0);
+                if (Enumerable.From(p).Any("f=>f.reason"))
+                {
+                    btn.set('loading', false);
+                    Messenger().post({ type: 'error', message: 'Error Saving Data' });
+                    return;
+                }
+                else {
+                    $.ajax({
+                        url: "/flow/WebMethod/DoNext/" + _this.get('stepID'),
+                        type: "GET"
+                    }).then(function (response) {
+                        _this.store.findQuery('step', { id: _this.get('stepID') }).then(function (m) {
+                            //_this.transitionToRoute('step', { id: _this.get('stepID') });
+                            //Messenger().post({ type: 'success', message: 'Transitioned' });
+                            window.scrollTo(0, 0);
+                            btn.set('loading', false);
+                        });
+                    }, function (response) {
+                        btn.set('loading', false);
+                        btn.set('isDisabled', true);
+                        Messenger().post({ type: 'error', message: 'Error:' + response.statusText });
+
                     });
-                }, function (response) {
-                    Messenger().post({ type: 'error', message: 'Error:' + response.statusText });
-                });
+                }
+               
 
 
             });
@@ -5080,7 +5062,7 @@ App.Task = DS.Model.extend({
     EstimatedLabourCosts : DS.attr('string'), 
     EstimatedCapitalCosts : DS.attr('string'),
     EstimatedValue : DS.attr('string'), 
-    EstimatedIntagibleValue: DS.attr('string'),
+    EstimatedIntangibleValue: DS.attr('string'),
     EstimatedRevenue: DS.attr('string'),
     PerformanceMetricParameterID : DS.attr('string'),
     PerformanceMetricQuantity : DS.attr('string'),

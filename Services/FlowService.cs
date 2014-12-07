@@ -1043,7 +1043,11 @@ namespace EXPEDIT.Flow.Services {
                     VersionOwnerContactID = creatorContact
                 };
                 d.GraphDataRelation.AddObject(g);
+                var wf = d.GraphDataGroups.FirstOrDefault(f=>f.GraphDataGroupID == m.GroupID && f.StartGraphDataID == null);
+                if (wf != null)
+                    wf.StartGraphDataID = m.FromID;
                 d.SaveChanges();
+
                 return true;
             }
         }
@@ -3474,6 +3478,22 @@ namespace EXPEDIT.Flow.Services {
             {
                 return false;
             }
+        }
+
+
+
+        public void Cleanup()
+        {
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var cleanBefore = DateTime.UtcNow.AddDays(-1);
+                var oldWorkflows = (from o in d.GraphDataGroups
+                                    where !(from r in d.GraphDataRelation select r.GraphDataGroupID).Contains(o.GraphDataGroupID)
+                                    && o.VersionUpdated < cleanBefore
+                                    select o).Delete();               
+            }
+
         }
 
     }
