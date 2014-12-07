@@ -54,6 +54,24 @@ LiquidFire.defineTransition('rotateBelow', function (oldView, insertNewView, opt
 });
 
 LiquidFire.map(function(){
+
+    // For the trigger modal
+    this.transition(
+      // hasClass('vehicles') is true even during the first render, so
+      // we also require fromNonEmptyModel to prevent an animation when
+      // the page first loads.
+      this.fromNonEmptyModel(),
+
+      // this makes our rule apply when the liquid-if transitions to the
+      // true state.
+      this.toModel(true),
+      this.use('crossFade', {duration: 100}),
+
+      // which means we can also apply a reverse rule for transitions to
+      // the false state.
+      this.reverse('crossFade', {duration: 100})
+    );
+
     this.transition(
         this.fromRoute('todo'),
         this.toRoute('step'),
@@ -4204,11 +4222,39 @@ App.ContactSelectorComponent = App.UserSelectorComponent.extend({
     url: "/share/getcontacts"
 });
 
+
+App.ThenTrigger = Ember.Object.extend({
+        type: 'email',
+        email: null,
+        zapier: null,
+        options: ['zapier', 'email'],
+        emailTemplate: {
+            sender: 'paul@flowpro.io',
+            messsage: 'Test message'
+        },
+        zapierTemplate: {
+            url: 'paul@flowpro.io'
+        },
+        cleaner: function(){
+            var _this = this;
+            var type = this.get('type')
+
+            // Clean up
+            this.get('options').forEach(function(a, i){
+                _this.set(a, null)
+            })
+
+            // Setup new template
+            var template = this.get(type + 'Template');
+            this.set(type, template)
+        }.observes('type').on('init')
+    })
+
 App.TriggerNodeComponent = Ember.Component.extend({
     defaultRow: {},
     tSmatchesRules: [{value: 'All'}, {value: 'Any'}],
-    tStTriggerTypes: [{value: 'Email'}, {value: 'Zapier'}],
-    tSvariables: [{value: 'Test'}, {value:'Awesome'}], // - this should be loaded from the variables on the current page context
+    tStTriggerTypes: [{value: 'email', text: "Email"}, {value: 'zapier', text: "Zapier"}],
+    tSvariables: [], // {value: 'Test'}, {value:'Awesome'}], // - this should be loaded from the variables on the current page context
     tSmatches: [{value: 'contains'}, {value:'does not contain'}, {value:'is'}, {value:'is not'}, {value:'begins with'}, {value:'ends with'}],
     graphID: '', // this is the edge ID on the item we are editing
     workflowID: '', // this is the workflow ID on the item we are editing
@@ -4252,6 +4298,19 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
     }.observes('graphID', 'workflowID').on('didInsertElement'),
     config: {},
+    // configCleaner: function() {
+        
+    //     var trig = this.get('config.trigger')
+
+    //     if (trig) {
+    //         trig.forEach(function(i, a){
+    //             debugger;
+    //             delete a[a.type]
+    //         })
+    //     }
+    //     debugger;
+    // }.observes('config.trigger.@each.type'),
+    // triggerField: , 
     defaultConfig: {
         matchSelect: 'All',
         triggerConditions: false,
@@ -4266,13 +4325,19 @@ App.TriggerNodeComponent = Ember.Component.extend({
             }
         ],
         trigger: [
-            {
-                type: 'Email',
-                email: {
-                    sender: 'paul@flowpro.io',
-                    messsage: 'Test message'
+            
+            App.ThenTrigger.create({
+                type: 'email'
+            })
+            ,
+            App.ThenTrigger.create({
+            
+                type: 'zapier',
+                zapier: {
+                    url: "",
                 }
-            }
+            })
+            
         ]
     },
     configEvaluation: function(config){

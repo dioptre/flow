@@ -1115,7 +1115,7 @@ color: red;
 }
 
 /*Liquid Fire Fixes*/
-.liquid-container {
+#pad-wrapper > .liquid-container {
   position: inherit !important; 
   overflow: hidden !important;
   -webkit-transform: none !important; 
