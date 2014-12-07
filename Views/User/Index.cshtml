@@ -1264,12 +1264,14 @@
         <br>
         <br>
 
-        {{#if config.triggerConditions}}
+        {{#liquid-if config.triggerConditions}}
+   
+            <h3>IF</h3>
             Match {{eui-select value=config.matchSelect required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
             
             <br>
             <br>
-            <h3>IF</h3>
+
             {{#each con in config.fields}}
                 {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium'}}
                 {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
@@ -1282,14 +1284,26 @@
 
             <h3>THEN</h3>
             {{#each trig in config.trigger}}
-                {{eui-select value=trig.type options=tStTriggerTypes labelPath='value' placeholder="Choose trigger type"  size='medium'}}
-                <br>
-                <h5>Sender</h5>
-                {{eui-input value=trig.mail.sender placeholder='example@mail.com' size='medium' required='true'}}
-                <h5>Message</h5>
-                {{eui-textarea value=trig.mail.message size="medium" placeholder='Enter your message here'}}
+                {{eui-select value=trig.type options=tStTriggerTypes labelPath='text' placeholder="Choose trigger type"  size='medium'}}
+                {{#if trig.email}}
+                    <span>
+                    <b>Send to</b>
+                    {{eui-input value=trig.mail.sender placeholder='example@mail.com' size='medium' required='true'}}
+                    <br>
+                    <b>Subject</b>
+                    {{eui-input value=trig.mail.subject placeholder='Subject' size='medium' required='true'}}                    
+                    </span>
+                    <b>Message</b>
+                    {{eui-textarea value=trig.mail.message size="medium" placeholder='Enter your message here...'}}
+                {{/if}}
+                {{#if trig.zapier}}
+                    <b>Webhook URL</b>
+                    {{eui-input value=trig.zapier.url size="medium" placeholder="https://zapier.com/hooks/catch/oiqrdy/"}}
+                {{/if}}
+
                 {{eui-button icon='icon icon-minus' action='deleteTriggerRow' itemToDelete=trig}}
                 {{eui-button icon='icon icon-plus' action='addTriggerRow' itemInsertAfter=trig}}
+                
                 <br>
                 <br>
             {{/each}}
@@ -1297,7 +1311,7 @@
 
         {{else}}
             No condition. Will change to next step either way.
-        {{/if}}
+        {{/liquid-if}}
 
         <br>
 
