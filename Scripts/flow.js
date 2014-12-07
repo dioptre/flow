@@ -464,15 +464,24 @@ App.TranslateRoute = Ember.Route.extend({
             //m.selectedTranslation = Enumerable.From(translation).Where("f=>f.get('DocID')==='" + m.select + "' && f.get('TranslationCulture')==='" + localeSelected + "'").FirstOrDefault();
         }
     },
-    willTransition: function(transition) {
-      if (this.controller.get('model.selectedTranslation.isDirty') &&
-          !confirm("Are you sure you want to abandon progress?")) {
-        transition.abort();
-      } else {
-        // Bubble the `willTransition` action so that
-        // parent routes can decide whether or not to abort.
-        return true;
-      }
+    actions: {
+        willTransition: function (transition) {
+            //if (this.controller.get('model.selectedTranslation.isDirty') &&
+            //    !confirm("Are you sure you want to abandon progress?")) {
+            //    transition.abort();
+            //} else {
+            //    // Bubble the `willTransition` action so that
+            //    // parent routes can decide whether or not to abort.
+            //    var translationID = this.get('model.selectedOriginal.t.id');
+            //    debugger;
+            //    return true;
+            //}
+            //this.store.all('translation').toArray().forEach(function (item) {
+            //    item.unloadRecord();
+            //})
+            //debugger;
+
+        }
     }
 });
 
@@ -513,6 +522,11 @@ App.TranslateController = Ember.ObjectController.extend({
                 Messenger().post({ type: 'error', message: 'Unknown transition error.' });
 
             });
+        },
+        previewTranslation: function () {
+            //debugger;
+            window.location.hash = "/process/" + this.get('model.select') + "?localeSelected=" + this.get('controllers.application.localeSelected') + "&workflowID=" + this.get('model.workflowID');
+            window.location.reload(true);
         }
     }
 })
@@ -1047,6 +1061,8 @@ var updateLocale = function (context, locale) {
         });
         App.set('locale.t', Ember.Object.create(m));
         c.set('model', App.get('locale'));
+    }, function (e) {
+        console.log(e);
     });
 }
 App.ApplicationRoute = Ember.Route.extend({
@@ -1059,8 +1075,7 @@ App.ApplicationRoute = Ember.Route.extend({
             params.localeSelected = App.get('locale.l');
 
         // Get the language from the browser settings;
-        var userLang = params.localeSelected || navigator.language || navigator.userLanguage;
-
+        var userLang = params.localeSelected || navigator.language || navigator.userLanguage || defaultLocale;
         var isNew = false;
         if (!App.get('locale')) {
             isNew = true;
@@ -1161,9 +1176,10 @@ App.ApplicationController = Ember.Controller.extend({
     }.property('localeSelected'),
     localeSelectedOberver: function () {
         var selectedLocal = this.get('localeSelected');
-        if (typeof selectedLocal !== 'undefined' && selectedLocal !== null && selectedLocal !== 'null' && -1 === $.inArray(selectedLocal, this.get('localeActivated'))) {
+        if (typeof selectedLocal === 'undefined' || selectedLocal === null || selectedLocal === 'null' || -1 === $.inArray(selectedLocal, this.get('localeActivated'))) {
+            debugger;
             this.set('localeSelected', defaultLocale);
-            this.transitionTo({ queryParams: {localeSelected: defaultLocale}})
+            this.replaceRoute({ queryParams: {localeSelected: defaultLocale}})
         }
         App.set('localeSelected', selectedLocal); // this way you can pull the what the language is at any point (like in the model of routes)
     }.observes('localeSelected'),
@@ -4799,7 +4815,7 @@ App.StepController = Ember.ObjectController.extend({
     nodeID: null,
     taskID: null,
     lastEdited: function() {
-        return moment(this.get('model.steps.firstObject.VersionUpdated')).fromNow();
+        return moment.utc(this.get('model.steps.firstObject.VersionUpdated')).fromNow();
     }.property('model.steps.firstObject.VersionUpdated'),
     actions: {
         nextStep: function(btn){
@@ -6047,7 +6063,8 @@ App.TinymceEditorComponent = Ember.Component.extend({
             editor.settings.object_resizing = false;
             editor.on('change', function (e) {
                 var newData = e.level.content;
-
+                if (!newData.match(/^\s*\</ig))
+                    newData = "<div>" + newData + "</div>";
                 // clean new data
                 var cleanData = '';
                 window.cleanFunctions($(newData));

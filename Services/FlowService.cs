@@ -39,6 +39,7 @@ using NKD.ViewModels;
 
 using System.Net.Http;
 using System.Globalization;
+using Newtonsoft.Json.Linq;
 
 
 
@@ -2034,7 +2035,7 @@ namespace EXPEDIT.Flow.Services {
                                     var response = responseAsync.Result;
                                     if (response.IsSuccessStatusCode)
                                     {
-                                        dynamic json = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
+                                        dynamic json = JObject.Parse(await response.Content.ReadAsStringAsync());
                                         return json.data.translations[0].translatedText ?? string.Empty;
                                     }
                                     else

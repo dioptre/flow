@@ -1384,9 +1384,9 @@
                 {{#unless model.steps.firstObject.Completed}}
                 <h2>Contextual Info</h2>
                 <p>
-                    Workflow Instance <a>#{{model.steps.firstObject.Project.ProjectCode}}</a><br>
-                    Last edited by {{model.steps.firstObject.LastEditedBy}}<br>
-                    <i>{{lastEdited}}</i>
+                    Workflow Instance <a>#{{model.steps.firstObject.Project.ProjectCode}}</a>{{link-to '.' 'graph' model.steps.firstObject.GraphDataID (query-params workflowID=model.steps.firstObject.GraphDataGroupID localeSelected=localeSelected) }}<br>
+                    Last edited by {{model.steps.firstObject.LastEditedBy}}&nbsp;<i>{{lastEdited}}</i><br>
+                    
 
 
 
@@ -1679,17 +1679,11 @@
                         <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray' title="Edit Workflow">
                             <i class="icon-pencil"></i> {{!--Edit Workflow name--}}
                         </span>
-                        <span {{action 'translateWorkflow' workflowID selectedID}} class='btn-flat gray' title="Translate Workflow">
-                            <i class="icon-globe"></i> {{!--Edit Workflow name--}}
-                        </span>
-                        <span {{action 'createWorkflowInstance' workflowID }} class='btn-flat gray' title="Create WF instance">
+                        <span {{action 'createWorkflowInstance' workflowID }} class='btn-flat gray' title="Run a new workflow instance">
                             <i class="icon-play"></i> {{!--Edit Workflow name--}}
                         </span>
-                        <span {{action 'togglePreview' }} class='btn-flat gray' title="Preview step for sharing">
+                        <span {{action 'toggleGraphView' }} class='btn-flat gray' title="Preview workflow fullscreen">
                             <i class="icon-fullscreen"></i>
-                        </span>
-                        <span {{action 'toggleGraphview' }} class='btn-flat gray' title="Preview workflow fullscreen">
-                            <i class="icon-zoom-out"></i>
                         </span>
                     {{/if}}
                 </h1>
@@ -1761,7 +1755,12 @@
                             <span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;" title="Share or embed current step in your website">
                                <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
                             </span>
-
+                               <span {{action 'translateWorkflow' workflowID selectedID}} class='btn-flat gray' title="Translate Workflow">
+                                   <i class="icon-globe"></i> {{!--Edit Workflow name--}}
+                               </span>
+                           <span {{action 'togglePreview' }} class='btn-flat gray' title="Preview step for sharing">
+                               <i class="icon-fullscreen"></i>
+                           </span>
                         {{/unless}}
                     {{/if}}
                     {{#if isPreview}}
@@ -2357,9 +2356,7 @@
                                     {{eui-button label="Save Translation" action="saveTranslation" size='small' disabled=newContent style='primary'}}
                                     {{eui-button label="Reset to original Translation" action="resetTranslation" disabled=newContent size='small'}}
                                     {{eui-button label="Redo Autotranslate" action="redoTranslate" size='small'}}
-                                    {{#link-to 'graph' model.select (query-params workflowID=model.workflowID)}}
-                                        get workflow preview
-                                    {{/link-to}}
+                                    {{eui-button label="Preview" action="previewTranslation" size='small'}}
                                     </div>
                                     <br>
                                     <br>
