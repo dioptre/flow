@@ -4732,8 +4732,9 @@ App.StepController = Ember.ObjectController.extend({
             var _this = this;
 
             var context = this.get('contextData');
-            console.log(context);
+            //console.log(context);
             var promises = [];
+            var saved = false;
             Enumerable.From(context).ForEach(function(d){
                 
                 var formData = d.Value.d;
@@ -4742,6 +4743,7 @@ App.StepController = Ember.ObjectController.extend({
                 
                 if (d.Value.record.get('isDirty')) {
                     promises.push(d.Value.record.save());
+                    saved = true;
                 }
             });
 
@@ -4753,7 +4755,8 @@ App.StepController = Ember.ObjectController.extend({
                     return;
                 }
                 else {
-                    //Messenger().post({ type: 'success', message: 'Saved Data' });
+                    if (saved)
+                        Messenger().post({ type: 'success', message: 'Saved Data' });
                     $.ajax({
                         url: "/flow/WebMethod/DoNext/" + _this.get('stepID'),
                         type: "GET"
@@ -4761,6 +4764,7 @@ App.StepController = Ember.ObjectController.extend({
                         _this.store.findQuery('step', { id: _this.get('stepID') }).then(function (m) {
                             //_this.transitionToRoute('step', { id: _this.get('stepID') });
                             //Messenger().post({ type: 'success', message: 'Transitioned' });
+                            Messenger().post({ type: 'success', message: 'Transitioning...' });
                             window.scrollTo(0, 0);
                             btn.set('loading', false);
                         });

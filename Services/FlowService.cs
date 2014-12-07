@@ -2743,7 +2743,7 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     //Update
                     var pd = (from o in d.ProjectDatas where o.ProjectDataID == m.id && o.VersionDeletedBy == null select o).Single();
-                    if (pd.Value != null && pd.Value != m.Value)
+                    if (pd.Value != m.Value)
                     {
                         pd.Value = m.Value;
                         pd.VersionUpdated = DateTime.UtcNow;
