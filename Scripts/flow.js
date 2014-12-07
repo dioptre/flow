@@ -4421,12 +4421,12 @@ App.TriggerNodeComponent = Ember.Component.extend({
             this.get('config.fields').removeObject(context.itemToDelete);
         },
         'addTriggerRow': function (context) {
-            var positionCurrent = this.get('config.fields').indexOf(context.itemInsertAfter) + 1;
-            this.get('config.fields').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
+            var positionCurrent = this.get('config.trigger').indexOf(context.itemInsertAfter) + 1;
+            this.get('config.trigger').insertAt(positionCurrent, App.ThenTrigger.create({}));
 
         },
         'deleteTriggerRow': function(context) {
-            this.get('config.fields').removeObject(context.itemToDelete);
+            this.get('config.trigger').removeObject(context.itemToDelete);
         }                                                
     }
 });
