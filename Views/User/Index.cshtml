@@ -1405,11 +1405,40 @@
   <script type="text/x-handlebars" id="graph">
     <div class="container-fluid">
         <div class="row processes">
+            {{#if isPreview}}
+            <style>
+                .navbar {
+                    display: none;
+                }
 
+                #sidebar-nav {
+                    display: none;
+                }
+
+                .content {
+                    margin-left: 0px;
+                }
+            </style>
+            {{else}}
+            <style>
+                .navbar {
+                    display: inherit;
+                }
+
+                #sidebar-nav {
+                    display: inherit;
+                }
+
+                .content {
+                    /* margin-left: 177px;*/
+                }
+            </style>
+
+            {{/if}}
             <!-- WORKFLOW STARTS HERE -->
-            {{#unless isPreview}}
+            {{#unless isProcessPreview}}
 
-            <div class="col-md-6 process-header">
+            <div {{bind-attr class='columnLayout'}}>
                 <h4><small>{{controllers.application.model.t.fp_menu_link_workflow}}</small></h4>
                 <h1>
                     {{#if workflowName }}
@@ -1453,37 +1482,10 @@
             </div>
             {{/unless}}
 
-
-            <!-- PROCESS VIEW STARTS HERE -->
+            {{#unless isWorkflowPreview}}
+            <!-- PREVIEW STARTS HERE -->
             <div {{bind-attr class='columnLayout'}}>
-            {{#if isPreview}}
-                <style>
-                    .navbar {
-                        display:none;
-                    }
-                    #sidebar-nav {
-                        display:none;
-                    }
-                    .content {
-                        margin-left:0px;
-                    }
-                </style>
-            {{else}}
-                    <style>
-                        .navbar {
-                            display: inherit;
-                        }
-
-                        #sidebar-nav {
-                            display: inherit;
-                        }
-
-                        .content {
-                           /* margin-left: 177px;*/
-                        }
-                    </style>
-                    <h4><small>{{controllers.application.model.t.fp_general_step}}</small></h4>
-            {{/if}}
+                {{#unless isPreview}}<h4><small>{{controllers.application.model.t.fp_general_step}}</small></h4>{{/unless}}
                <h1>
                     {{#if model.selected}}{{model.selected.localName}}{{/if}}
                     {{#if controllers.application.isLoggedIn}}
@@ -1511,7 +1513,7 @@
                         {{/unless}}
                     {{/if}}
                     {{#if isPreview}}
-                        <small>{{workflowName}}</small>
+                       <small>{{workflowName}}</small>
                        <span {{action 'hidePreview' }} class='btn-flat gray' title="Edit Content @@ FlowPro.io">
                            <i class="icon-pencil"></i>
                        </span>
@@ -1522,178 +1524,6 @@
                     <div class="semi-transparent"><a href="http://flowpro.io" target="_blank" style="float:right;">Content provided by FlowPro.io</a></div>
                 {{/if}}
 
-
-                {{#eui-modal openBinding="triggerModal"}}
-                     <div style="padding: 50px; text-align: center;">
-                        <h4> Trigger Modal</h4>
-                        <br>
-                        <br>
-                        
-                        {{trigger-node graphID=graphID workflowID=workflowID}}
-                        
-                        <br>
-                        <br>
-
-                        {{eui-button label="Cancel" action="cancelTriggerModal" size='large'}}
-                        {{eui-button label="Submit" action="submitTriggerModal" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
-                    </div>
-                {{/eui-modal}}
-
-                {{#eui-modal openBinding="moneyModal"}}
-                     <div style="padding: 50px; text-align: center;">
-
-                        {{#if loadingMoney}}
-                            Loading details...
-
-                        {{else}}
-                             <h4>Financial details</h4>
-                             <br />
-                             <br />
-                             <p>
-                                This step will only show up in the Todo list for people selected below. <br>
-                                To allow anyone do it, leave the fields empty.
-                             </p>
-                             <br />
-
-                            <b>Add user that complete the task</b><br>
-                            {{contact-selector value=moneyModalStoreObject.WorkContactID multiple=false}}
-
-                            <br>
-                            <br>
-
-
-                            <b>Add companies that can complete the task</b><br>
-                            {{company-selector value=moneyModalStoreObject.WorkCompanyID multiple=false}}
-
-                            <br>
-                            <br>
-                            <br>
-
-                            <p>
-                                These details are used in the report section to give insights in your business performance.
-                             </p>
-                            <div class='container-fluid'>
-                                <div class="row">
-                                    <div class="col-md-6">
-
-                                        <b>Priority level</b><br>
-                                        {{eui-input value=moneyModalStoreObject.DefaultPriority placeholder='Number from 0-100'}}
-
-                                        <br>
-                                        <br>                                    
-                                        
-                                        <b>Estimated Labour Cost</b><br>
-                                        {{eui-input value=moneyModalStoreObject.EstimatedLabourCosts placeholder='In $$$'}}
-
-                                        <br>
-                                        <br>
-
-                                        <b>Estimated Intangible Value</b><br>
-                                        {{eui-input value=moneyModalStoreObject.EstimatedIntangibleValue placeholder='In $$$'}}
-
-                                        <br>
-                                        <br>
-
-                                        <b>Estimated Revenue</b><br>
-                                        {{eui-input value=moneyModalStoreObject.EstimatedRevenue placeholder='In $$$'}}
-
-                                        <br>
-                                        <br>
-                                    </div>
-
-                                    <div class="col-md-6">
-                            
-                                        <b>Estimated Duration</b><br>
-                                        {{eui-input value=moneyModalStoreObject.EstimatedDuration placeholder='As measured in hours'}}
-
-                                        <br>
-                                        <br>
-
-                                        <b>Estimated Capital Cost</b><br>
-                                        {{eui-input value=moneyModalStoreObject.EstimatedCapitalCosts placeholder='ie. cost for gloves in $$$'}}
-
-                                        <br>
-                                        <br>
-                                        
-                                        <b>Estimated Value</b><br>
-                                        {{eui-input value=moneyModalStoreObject.EstimatedValue placeholder='Value that is provided in $$$'}}
-
-                                        <br>
-                                        <br>
-                                      
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{eui-button label="Cancel" action="cancelMoneyModal" size='large'}}
-                            {{eui-button label="Submit" action="submitMoneyModal" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
-                        {{/if}}
-                    </div>
-                {{/eui-modal}}
-
-
-                {{#eui-modal openBinding="workflowEditNameModal"}}
-                     <div style="padding: 50px; text-align: center;">
-                         <h4> Update Workflow name</h4>
-                         <br />
-                         <br />
-                        Choose a new name below:<br />
-                        {{eui-input valueBinding="model.workflow.name" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
-
-                        {{eui-button label="Cancel" action="cancelWorkflowName" size='large'}}
-                        {{eui-button label="Submit" action="updateDirtyGraph" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
-                    </div>
-                {{/eui-modal}}
-
-
-                {{#eui-modal openBinding="workflowShareModal"}}
-                     <div style="padding: 50px; text-align: center; max-width:530px;">
-                         <h4>Share Workflow Steps</h4>
-                         <br />
-                         <br />
-                         {{#unless generatePreviewLink}}
-                         Link:<br />
-                         <a {{bind-attr href="currentURL"}}>{{currentURL}}</a>
-                         <br/><br/>
-                         {{else}}
-                         Embed:<br/>
-                         <textarea rows="8" cols="50">
-                         &lt;iframe id="flowpro_io" marginheight="0" frameborder="0" src="{{{unbound previewURL}}}" width="100%" height="2048" onLoad="document.getElementById('flowpro_io').height=document.getElementById('flowpro_io').contentWindow.document.body.scrollHeight + 'px'; document.getElementById('flowpro_io').width=document.getElementById('flowpro_io').contentWindow.document.body.scrollWidth + 'px';"&gt;&lt;/iframe&gt;</textarea>
-                         <br /><br />
-                         {{/unless}}
-                         {{input type="checkbox" checked=generatePreviewLink}} Show Content Only
-                         <br /><br />
-                         {{eui-button label="OK" action="cancelWorkflowShare" size='large'}}
-                    </div>
-                {{/eui-modal}}
-
-                 {{#eui-modal openBinding="workflowEditModal" style="full"}}
-                    <div style="padding: 50px; text-align: center;">
-                        <p> The step name: </p>
-
-                        {{eui-input valueBinding="model.selected.label" placeholder='Enter a step name' error=validateNewName forceErrorCheck=true}}
-
-                        <br /> <br /> <br /> <br /> <!-- fixes spacing issue with error modal on eui-input -->
-
-                        {{tinymce-editor data=model.selected.content}}
-
-                        {{eui-button label="Cancel" action="cancelProcess" size='large'}}
-                        {{eui-button label="Submit" action="updateDirtyGraph" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
-                    </div>
-                {{/eui-modal}}
-
-                {{#eui-modal openBinding="workflowNewModal" style="full"}}
-                    <div style="padding: 50px; text-align: center;">
-                        <p> The new step name: </p>
-                        {{eui-input valueBinding="newName" placeholder='Enter a new step name' error=validateNewNewName forceErrorCheck=true}}
-
-                        <br /> <br /> <br /> <br /> <!-- fixes spacing issue with error modal on eui-input -->
-
-                        {{tinymce-editor data=newContent}}
-                        {{eui-button label="Cancel" action="toggleWorkflowNewModal" size='large'}}
-                        {{eui-button label="Submit" action="addNewNode" style='primary' size='large' disabled=validateNewNewName loading=loadingNewNewName}}
-                    </div>
-                {{/eui-modal}}
 
                 <div class='pretty-content'>
                     {{safehtml model.selected.localContent}}
@@ -1774,8 +1604,178 @@
                 </div>
             </div>
 
+            {{/unless}}
+
+            {{#eui-modal openBinding="triggerModal"}}
+            <div style="padding: 50px; text-align: center;">
+                <h4> Trigger Modal</h4>
+                <br>
+                <br>
+
+                {{trigger-node graphID=graphID workflowID=workflowID}}
+
+                <br>
+                <br>
+
+                {{eui-button label="Cancel" action="cancelTriggerModal" size='large'}}
+                {{eui-button label="Submit" action="submitTriggerModal" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+            </div>
+            {{/eui-modal}}
+
+            {{#eui-modal openBinding="moneyModal"}}
+            <div style="padding: 50px; text-align: center;">
+
+                {{#if loadingMoney}}
+                Loading details...
+
+                {{else}}
+                <h4>Financial details</h4>
+                <br />
+                <br />
+                <p>
+                    This step will only show up in the Todo list for people selected below. <br>
+                    To allow anyone do it, leave the fields empty.
+                </p>
+                <br />
+
+                <b>Add user that complete the task</b><br>
+                {{contact-selector value=moneyModalStoreObject.WorkContactID multiple=false}}
+
+                <br>
+                <br>
 
 
+                <b>Add companies that can complete the task</b><br>
+                {{company-selector value=moneyModalStoreObject.WorkCompanyID multiple=false}}
+
+                <br>
+                <br>
+                <br>
+
+                <p>
+                    These details are used in the report section to give insights in your business performance.
+                </p>
+                <div class='container-fluid'>
+                    <div class="row">
+                        <div class="col-md-6">
+
+                            <b>Priority level</b><br>
+                            {{eui-input value=moneyModalStoreObject.DefaultPriority placeholder='Number from 0-100'}}
+
+                            <br>
+                            <br>
+
+                            <b>Estimated Labour Cost</b><br>
+                            {{eui-input value=moneyModalStoreObject.EstimatedLabourCosts placeholder='In $$$'}}
+
+                            <br>
+                            <br>
+
+                            <b>Estimated Intangible Value</b><br>
+                            {{eui-input value=moneyModalStoreObject.EstimatedIntangibleValue placeholder='In $$$'}}
+
+                            <br>
+                            <br>
+
+                            <b>Estimated Revenue</b><br>
+                            {{eui-input value=moneyModalStoreObject.EstimatedRevenue placeholder='In $$$'}}
+
+                            <br>
+                            <br>
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <b>Estimated Duration</b><br>
+                            {{eui-input value=moneyModalStoreObject.EstimatedDuration placeholder='As measured in hours'}}
+
+                            <br>
+                            <br>
+
+                            <b>Estimated Capital Cost</b><br>
+                            {{eui-input value=moneyModalStoreObject.EstimatedCapitalCosts placeholder='ie. cost for gloves in $$$'}}
+
+                            <br>
+                            <br>
+
+                            <b>Estimated Value</b><br>
+                            {{eui-input value=moneyModalStoreObject.EstimatedValue placeholder='Value that is provided in $$$'}}
+
+                            <br>
+                            <br>
+
+                        </div>
+                    </div>
+                </div>
+
+                {{eui-button label="Cancel" action="cancelMoneyModal" size='large'}}
+                {{eui-button label="Submit" action="submitMoneyModal" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                {{/if}}
+            </div>
+            {{/eui-modal}}
+
+
+            {{#eui-modal openBinding="workflowEditNameModal"}}
+            <div style="padding: 50px; text-align: center;">
+                <h4> Update Workflow name</h4>
+                <br />
+                <br />
+                Choose a new name below:<br />
+                {{eui-input valueBinding="model.workflow.name" placeholder='Enter a workflow name' error=validateWorkflowName forceErrorCheck=true}} <br /><br />
+
+                {{eui-button label="Cancel" action="cancelWorkflowName" size='large'}}
+                {{eui-button label="Submit" action="updateDirtyGraph" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+            </div>
+            {{/eui-modal}}
+
+
+            {{#eui-modal openBinding="workflowShareModal"}}
+            <div style="padding: 50px; text-align: center; max-width:530px;">
+                <h4>Share Workflow Steps</h4>
+                <br />
+                <br />
+                {{#unless generatePreviewLink}}
+                Link:<br />
+                <a {{bind-attr href="currentURL"}}>{{currentURL}}</a>
+                <br /><br />
+                {{else}}
+                Embed:<br />
+                <textarea rows="8" cols="50">
+                    &lt;iframe id="flowpro_io" marginheight="0" frameborder="0" src="{{{unbound previewURL}}}" width="100%" height="2048" onLoad="document.getElementById('flowpro_io').height=document.getElementById('flowpro_io').contentWindow.document.body.scrollHeight + 'px'; document.getElementById('flowpro_io').width=document.getElementById('flowpro_io').contentWindow.document.body.scrollWidth + 'px';"&gt;&lt;/iframe&gt;
+                </textarea>
+                <br /><br />
+                {{/unless}}
+                {{input type="checkbox" checked=generatePreviewLink}} Show Content Only
+                <br /><br />
+                {{eui-button label="OK" action="cancelWorkflowShare" size='large'}}
+            </div>
+            {{/eui-modal}}
+
+            {{#eui-modal openBinding="workflowEditModal" style="full"}}
+            <div style="padding: 50px; text-align: center;">
+                <p> The step name: </p>
+
+                {{eui-input valueBinding="model.selected.label" placeholder='Enter a step name' error=validateNewName forceErrorCheck=true}}
+
+                <br /> <br /> <br /> <br /> <!-- fixes spacing issue with error modal on eui-input -->
+                {{tinymce-editor data=model.selected.content}}
+
+                {{eui-button label="Cancel" action="cancelProcess" size='large'}}
+                {{eui-button label="Submit" action="updateDirtyGraph" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+            </div>
+            {{/eui-modal}}
+
+            {{#eui-modal openBinding="workflowNewModal" style="full"}}
+            <div style="padding: 50px; text-align: center;">
+                <p> The new step name: </p>
+                {{eui-input valueBinding="newName" placeholder='Enter a new step name' error=validateNewNewName forceErrorCheck=true}}
+
+                <br /> <br /> <br /> <br /> <!-- fixes spacing issue with error modal on eui-input -->
+                {{tinymce-editor data=newContent}}
+                {{eui-button label="Cancel" action="toggleWorkflowNewModal" size='large'}}
+                {{eui-button label="Submit" action="addNewNode" style='primary' size='large' disabled=validateNewNewName loading=loadingNewNewName}}
+            </div>
+            {{/eui-modal}}
 
              <hr>
             {{#if isPreview}}
