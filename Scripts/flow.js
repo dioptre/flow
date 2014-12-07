@@ -4727,8 +4727,8 @@ App.StepController = Ember.ObjectController.extend({
         return moment(this.get('model.steps.firstObject.VersionUpdated')).fromNow();
     }.property('model.steps.firstObject.VersionUpdated'),
     actions: {
-        nextStep: function(){
-
+        nextStep: function(btn){
+            btn.set('loading', true);
             var _this = this;
 
             var context = this.get('contextData');
@@ -4744,24 +4744,37 @@ App.StepController = Ember.ObjectController.extend({
                     promises.push(d.Value.record.save().then(function () {
                         Messenger().post({ type: 'success', message: 'Saved' });
                     }, function () {
-                        Messenger().post({ type: 'error', message: 'Error' });
+                        
                     }));
                 }
             });
 
             Ember.RSVP.allSettled(promises).then(function (p) {
-                $.ajax({
-                    url: "/flow/WebMethod/DoNext/" + _this.get('stepID'),
-                    type: "GET"
-                }).then(function (response) {
-                    _this.store.findQuery('step', { id: _this.get('stepID') }).then(function (m) {
-                        //_this.transitionToRoute('step', { id: _this.get('stepID') });
-                        //Messenger().post({ type: 'success', message: 'Transitioned' });
-                        window.scrollTo(0, 0);
+                if (Enumerable.From(p).Any("f=>f.reason"))
+                {
+                    btn.set('loading', false);
+                    Messenger().post({ type: 'error', message: 'Error Saving Data' });
+                    return;
+                }
+                else {
+                    $.ajax({
+                        url: "/flow/WebMethod/DoNext/" + _this.get('stepID'),
+                        type: "GET"
+                    }).then(function (response) {
+                        _this.store.findQuery('step', { id: _this.get('stepID') }).then(function (m) {
+                            //_this.transitionToRoute('step', { id: _this.get('stepID') });
+                            //Messenger().post({ type: 'success', message: 'Transitioned' });
+                            window.scrollTo(0, 0);
+                            btn.set('loading', false);
+                        });
+                    }, function (response) {
+                        btn.set('loading', false);
+                        btn.set('isDisabled', true);
+                        Messenger().post({ type: 'error', message: 'Error:' + response.statusText });
+
                     });
-                }, function (response) {
-                    Messenger().post({ type: 'error', message: 'Error:' + response.statusText });
-                });
+                }
+               
 
 
             });
