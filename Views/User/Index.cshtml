@@ -1688,6 +1688,9 @@
                         <span {{action 'togglePreview' }} class='btn-flat gray' title="Preview step for sharing">
                             <i class="icon-fullscreen"></i>
                         </span>
+                        <span {{action 'toggleGraphview' }} class='btn-flat gray' title="Preview workflow fullscreen">
+                            <i class="icon-zoom-out"></i>
+                        </span>
                     {{/if}}
                 </h1>
                 <hr>
@@ -1746,14 +1749,14 @@
 
                         {{!-- Add content here actually --}}
                         {{#unless isPreview}}
-                            <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit Step Name & Content">
+                            <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit step name & content">
                                 <i class="icon-pencil"></i>
                             </span>
-                            <span {{action 'toggleMoenyModal'}} class='btn-flat gray' title="Edit Step Money Estimation">
-                                <i class="icon-money"></i>
-                            </span>
-                            <span {{action 'toggleTriggersModal'}} class='btn-flat gray' title="Edit automated triggers">
+                            <span {{action 'toggleMoenyModal'}} class='btn-flat gray' title="Edit business properties">
                                 <i class="icon-cogs"></i>
+                            </span>
+                            <span {{action 'toggleTriggersModal'}} class='btn-flat gray' title="Edit triggers">
+                                <i class="icon-bolt"></i>
                             </span>
                             <span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;" title="Share or embed current step in your website">
                                <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
