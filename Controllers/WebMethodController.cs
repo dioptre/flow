@@ -67,20 +67,27 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
         [Themed(false)]
-        [HttpGet]
+        [AcceptVerbs(HttpVerbs.Get | HttpVerbs.Post)]
         [ActionName("ExecuteMethod")]
         //[ValidateAntiForgeryToken]
-        public ActionResult ExecuteMethod(string id, string reference = null)
+        public ActionResult ExecuteMethod(string id, string reference)
         {
+            //, string reference = null, string username = null, string password = null, string workflow = null,  string application = null
+            if (string.IsNullOrWhiteSpace(reference))
+                reference = Request.Params["reference"];
+            string username = Request.Params["username"];
+            string password = Request.Params["password"];
+            string workflow = Request.Params["workflow"];
+            string application = Request.Params["application"];
+
+
             var result = false;
             if (string.IsNullOrWhiteSpace(id))
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.MethodNotAllowed);
             var json = new StreamReader(Request.InputStream).ReadToEnd();
             if (string.IsNullOrWhiteSpace(json))
             {
-                if (string.IsNullOrWhiteSpace(reference))
-                    return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest); 
-                json = string.Format("{{ ReferenceID: '{0}'}}", reference);
+                json = string.Format("{{ ReferenceID: '{0}', username: '{1}', password: '{2}', application: '{3}', GraphDataGroupID: '{4}' }}", reference, username, password, application, workflow);
             }
             var m = new AutomationViewModel
             {
@@ -92,7 +99,7 @@ namespace EXPEDIT.Flow.Controllers {
             var method = id.ToUpperInvariant();
             if (!User.Identity.IsAuthenticated)
             {
-                if (string.IsNullOrWhiteSpace(m.Username) || string.IsNullOrWhiteSpace(m.Password) || string.IsNullOrWhiteSpace(m.Application))
+                if (string.IsNullOrWhiteSpace(m.Username) || string.IsNullOrWhiteSpace(m.Password))
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
                 if (!_Auto.Authenticate(m, method))
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);

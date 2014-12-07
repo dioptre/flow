@@ -176,16 +176,23 @@ namespace EXPEDIT.Flow.ViewModels
         }
 
 
+        private string application = null;
         [JsonIgnore]
         public string Application
         {
             get
             {
-                string temp;
-                if (lookup.TryGetValue("application", out temp))
-                    return temp;
-                return null;
-
+                if (application == null)
+                {
+                    string temp;
+                    if (lookup.TryGetValue("application", out temp))
+                        application = temp;
+                }
+                return application;
+            }
+            set
+            {
+                application = value;
             }
         }
 

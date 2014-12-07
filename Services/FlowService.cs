@@ -965,7 +965,7 @@ namespace EXPEDIT.Flow.Services {
                 var g = (from o in d.GraphData where o.GraphDataID == mid select o).Single();
                 d.GraphDataHistories.Where(f => f.GraphDataID == mid).Delete();
                 d.GraphDataRelation.Where(f => f.FromGraphDataID == mid || f.ToGraphDataID == mid).Delete();
-                d.GraphDataTriggers.Where(f => f.GraphDataID == mid).Delete();
+                d.TriggerGraphs.Where(f => f.GraphDataID == mid).Delete();
                 d.ProjectPlanTaskResponses.Where(f => f.ActualGraphDataID == mid).Delete();
                 d.Tasks.Where(f => f.GraphDataID == mid).Delete();
                 d.GraphDataFileDatas.Where(f => f.GraphDataID == mid).Delete();

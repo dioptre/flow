@@ -458,7 +458,8 @@ namespace EXPEDIT.Flow
                         new RouteValueDictionary {
                             {"area", "EXPEDIT.Flow"},
                             {"controller", "WebMethod"},
-                            {"action", "ExecuteMethod"}
+                            {"action", "ExecuteMethod"},
+                            {"reference", UrlParameter.Optional}
                         },
                         new RouteValueDictionary {
                             {"area", "EXPEDIT.Flow"},
