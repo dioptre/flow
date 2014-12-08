@@ -1296,9 +1296,9 @@
                     <b>Message</b>
                     {{eui-textarea value=trig.mail.message size="medium" placeholder='Enter your message here...'}}
                 {{/if}}
-                {{#if trig.zapier}}
+                {{#if trig.webhook}}
                     <b>Webhook URL</b>
-                    {{eui-input value=trig.zapier.url size="medium" placeholder="https://zapier.com/hooks/catch/oiqrdy/"}}
+                    {{eui-input value=trig.webhook.url size="medium" placeholder="https://zapier.com/hooks/catch/oiqrdy/"}}
                 {{/if}}
 
                 {{eui-button icon='icon icon-minus' action='deleteTriggerRow' itemToDelete=trig}}

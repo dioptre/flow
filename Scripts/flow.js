@@ -3630,14 +3630,14 @@ App.ContactSelectorComponent = App.UserSelectorComponent.extend({
 App.ThenTrigger = Ember.Object.extend({
         type: 'email',
         email: null,
-        zapier: null,
-        options: ['zapier', 'email'],
+        webhook: null,
+        options: ['webhook', 'email'],
         emailTemplate: {
             sender: 'paul@flowpro.io',
             messsage: 'Test message'
         },
-        zapierTemplate: {
-            url: 'paul@flowpro.io'
+        webhookTemplate: {
+            url: 'http://x.com/xxx'
         },
         cleaner: function(){
             var _this = this;
@@ -3657,7 +3657,7 @@ App.ThenTrigger = Ember.Object.extend({
 App.TriggerNodeComponent = Ember.Component.extend({
     defaultRow: {},
     tSmatchesRules: [{value: 'All'}, {value: 'Any'}],
-    tStTriggerTypes: [{value: 'email', text: "Email"}, {value: 'zapier', text: "Zapier"}],
+    tStTriggerTypes: [{value: 'email', text: "Email"}, {value: 'webhook', text: "Webhook"}],
     tSvariables: [], // {value: 'Test'}, {value:'Awesome'}], // - this should be loaded from the variables on the current page context
     tSmatches: [{value: 'contains'}, {value:'does not contain'}, {value:'is'}, {value:'is not'}, {value:'begins with'}, {value:'ends with'}],
     graphID: '', // this is the edge ID on the item we are editing
@@ -3736,8 +3736,8 @@ App.TriggerNodeComponent = Ember.Component.extend({
             ,
             App.ThenTrigger.create({
             
-                type: 'zapier',
-                zapier: {
+                type: 'webhook',
+                webhook: {
                     url: "",
                 }
             })
