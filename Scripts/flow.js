@@ -2398,6 +2398,9 @@ App.GraphController = Ember.ObjectController.extend({
     graphID: Ember.computed.alias('model.selectedID'),
     preview: null,
     localeSelected: null,
+    triggerWFURL: function() {
+        return window.location.protocol + '//' + window.location.host + '/flow/WebMethod/DoNext?workflow=' + this.get('workflowID') + '&username=bob&password=bob';
+    }.property('workflowID'),
     currentURL: function () {
         return window.document.URL;
     }.property('workflowID', 'model.selected', 'preview', 'generatePreviewLink'),
@@ -2619,7 +2622,9 @@ App.GraphController = Ember.ObjectController.extend({
             // Clear variable here
             this.set('moneyModal', false);
         },
-
+        toggleWorkflowTriggersModal: function (data, callback) {
+            this.toggleProperty('triggerWorkflowModal');
+        },
         toggleTriggersModal: function (data, callback) {
             this.toggleProperty('triggerModal');
         },

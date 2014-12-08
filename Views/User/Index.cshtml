@@ -1307,6 +1307,8 @@
                 <br>
                 <br>
             {{/each}}
+            <h3>WHEN</h3>
+            To configure....
 
 
         {{else}}
@@ -1458,6 +1460,9 @@
                         <span {{action 'createWorkflowInstance' workflowID }} class='btn-flat gray' title="Run a new workflow instance">
                             <i class="icon-play"></i> {{!--Edit Workflow name--}}
                         </span>
+                        <span {{action 'toggleWorkflowTriggersModal'}} class='btn-flat gray' title="Show triggers">
+                            <i class="icon-bolt"></i>
+                        </span>
                         <span {{action 'toggleWorkflowView' }} class='btn-flat gray' title="Preview workflow fullscreen">
                             <i class="icon-fullscreen"></i>
                         </span>
@@ -1606,6 +1611,23 @@
 
             {{/unless}}
 
+            {{#eui-modal openBinding="triggerWorkflowModal"}}
+            <div style="padding: 50px; text-align: center; max-width:530px;">
+                <h4>Available Triggers</h4>
+                <br>
+                <br>
+                <h6>Start a new workflow instance</h6>
+                <br />
+                <p>REST (GET or POST)</p>
+                <br/>
+                <a {{bind-attr href="triggerWFURL"}}>{{triggerWFURL}}</a>
+                <br>
+                <br>
+                <br />
+                {{eui-button label="OK" action="toggleWorkflowTriggersModal" style='primary' size='large'}}
+            </div>
+            {{/eui-modal}}
+
             {{#eui-modal openBinding="triggerModal"}}
             <div style="padding: 50px; text-align: center;">
                 <h4> Trigger Modal</h4>
@@ -1618,7 +1640,7 @@
                 <br>
 
                 {{eui-button label="Cancel" action="cancelTriggerModal" size='large'}}
-                {{eui-button label="Submit" action="submitTriggerModal" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                {{eui-button label="Submit" action="submitTriggerModal" style='primary' size='large' @*disabled=validateNewName loading=loadingEditName*@}}
             </div>
             {{/eui-modal}}
 
