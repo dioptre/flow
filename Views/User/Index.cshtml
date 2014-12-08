@@ -1285,20 +1285,20 @@
 
     {{else}}
 
-        {{eui-checkbox label='Enable Trigger Conditions' value=config.triggerConditions}}
+        {{eui-checkbox label='Enable Trigger Conditions' value=config.JSON.triggerConditions}}
 
         <br>
         <br>
 
-        {{#liquid-if config.triggerConditions}}
+        {{#liquid-if config.JSON.triggerConditions}}
    
             <h3>IF</h3>
-            Match {{eui-select value=config.matchSelect required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
+            Match {{eui-select value=cnfig.JSON.matchSelect required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
             
             <br>
             <br>
 
-            {{#each con in config.fields}}
+            {{#each con in config.JSON.fields}}
                 {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium'}}
                 {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
                 {{eui-input  value=con.type.matchInput size="medium" placeholder=''}}
@@ -1309,7 +1309,7 @@
             {{/each}}
 
             <h3>THEN</h3>
-            {{#each trig in config.trigger}}
+            {{#each trig in config.JSON.trigger}}
                 {{eui-select value=trig.type options=tStTriggerTypes labelPath='text' placeholder="Choose trigger type"  size='medium'}}
                 {{#if trig.email}}
                     <span>
@@ -1333,8 +1333,9 @@
                 <br>
                 <br>
             {{/each}}
+
             <h3>WHEN</h3>
-            {{#each when in config.when}}
+            {{#each when in config.JSON.when}}
                 {{eui-select value=when.type options=when.select size='medium' labelPath='text'}}
                 {{#if when.delay}}
                     <b>Seconds</b>
@@ -1343,6 +1344,10 @@
                     {{eui-input value=when.delay.hours placeholder='Enter for time delay in hours'}}
                 {{/if}}
             {{/each}}
+
+            <br>
+
+            {{eui-button label='Save' action='saveTriggerConditions'}}
 
 
         {{else}}
