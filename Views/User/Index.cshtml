@@ -421,8 +421,10 @@
 
                 <h4>Top 6 Tasks</h4>
                 <div class="chart-container">
-                  {{horizontal-bar-chart
-                    data=content
+                  {{scatter-chart
+                    data=scatterContent
+                    xValueDisplayName="Risk"
+                    yValueDisplayName="Return"
                   }}
                 </div>
                 
@@ -432,7 +434,7 @@
                 <br>
                 <br>
 
-                <h4>Value Provided This Month</h4>
+                @*<h4>Value Provided This Month</h4>
                 <div class="chart-container">
                   {{vertical-bar-chart
                     data=content
@@ -450,18 +452,16 @@
                   {{pie-chart
                     data=content
                   }}
-                </div>
+                </div>*@
 
             </div>
             <div class="col-md-6">
 
-                <h4>Forecast Revenue & Cost by Industry</h4>
+                @*<h4>Forecast Revenue & Cost by Industry</h4>
                 <div class="chart-container">
-                  {{scatter-chart
-                    data=scatterContent
-                    xValueDisplayName="Risk"
-                    yValueDisplayName="Return"
-                  }}
+                {{horizontal-bar-chart
+                   data=content
+                }}
                 </div>
 
                 <br>
@@ -477,7 +477,7 @@
                     barData=timeSeriesBarContent
                     lineData=timeSeriesLineContent
                   }}
-                </div>
+                </div>*@
 
             </div>
         </div>
