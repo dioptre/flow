@@ -117,6 +117,7 @@ App.Router.map(function () {
     this.route('styleguide', {path:"styleguide"}); // Internal only
     this.route('step', { path: 'step/:id' }); // - executing
     this.route('report')
+    this.route('organization')
 
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });
@@ -2723,6 +2724,7 @@ App.GraphController = Ember.ObjectController.extend({
                         updateDirtyProcesses();
                         //var a = { id: f.get('id'), label: f.get('label'), shape: f.get('shape'), group: f.get('group') }
                         _this.set('workflowEditModal', false);
+                        //TODO AG refresh dropdown in conditions after form is saved
                     }, function () {
                         if (_this.get('model'))
                             Messenger().post({ type: 'error', message: 'Error Updating Step' });
@@ -5622,6 +5624,7 @@ App.MylicensesController = Ember.ObjectController.extend({
     }
 });
 
+
 App.MyprofilesRoute = Ember.Route.extend({
     model: function () {
         var _this = this;
@@ -5726,6 +5729,38 @@ App.MyprofilesController = Ember.ObjectController.extend({
         }
     }
 });
+
+
+
+App.OrganizationRoute = Ember.Route.extend({
+    model: function () {
+        var _this = this;
+        return Ember.RSVP.hash({
+     
+        });
+    },
+    afterModel: function (m) {
+        //if (m.profiles.content && m.profiles.content.length > 0)
+        //    m.profile = m.profiles.get('firstObject');
+    }
+});
+
+App.OrganizationController = Ember.ObjectController.extend({
+    needs: ['application'],
+    organization: null,
+    title: function () {
+        return 'My Organization'
+    }.property('organization'),
+    
+    actions: {
+        
+    }
+});
+
+
+
+
+
 
 
 App.WorkflowController = Ember.ArrayController.extend({

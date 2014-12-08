@@ -407,7 +407,7 @@
 <script type="text/x-handlebars" id="report">
     <h1>
         Reports
-        <sub>Create beautiful reports about your staffs performance</sub>
+        <sub>Measure your success</sub>
     </h1>
 
     <br>    
@@ -488,7 +488,23 @@
 
 </script>
 
-
+        <script type="text/x-handlebars" id="organization">
+            {{#if loading}}
+            Loading...
+            {{else}}
+            {{#if controllers.application.isLoggedIn}}
+            <h1>My Organization
+            <br /><br />
+                <sub>For security purposes, all organizations and divisions are managed by the FlowPro team.</sub>
+                <sub style="padding-top:6px;">Please contact <a href="mailto:support@flowpro.io">support@flowpro.io</a> to have your company or division added.</sub>
+            {{else}}
+            <h1>
+                My Organization
+                <br /><br /><sub>You are not logged in. Please {{link-to 'login' 'login'}} to see your organization.</sub>
+            </h1>
+            {{/if}}
+            {{/if}}
+        </script>
 
 <script type="text/x-handlebars" id="permission">
      {{#if loading}}
@@ -1091,7 +1107,7 @@
             {{#view App.HomeNavView}}
                 {{#link-to 'todo'}}
                     <i class="icl-check"></i>
-                    <span>Todo</span>
+                    <span>{{model.t.fp_menu_link_todos}}</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
@@ -1125,6 +1141,12 @@
                 {{#link-to 'mylicenses'}}
                     <i class="icl-tag"></i>
                     <span>{{model.t.fp_menu_link_licenses}}</span>
+                {{/link-to}}
+            {{/view}}
+            {{#view App.HomeNavView}}
+                {{#link-to 'organization'}}
+                    <i class="icl-users"></i>
+                    <span>{{model.t.fp_menu_link_organization}}</span>
                 {{/link-to}}
             {{/view}}
            {{#view App.HomeNavView}}
