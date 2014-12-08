@@ -190,6 +190,8 @@ namespace EXPEDIT.Flow.Services
         bool DeleteTask(TaskViewModel m);
 
         [OperationContract]
+        TriggerViewModel GetTrigger(string commonName);
+        [OperationContract]
         TriggerViewModel GetTrigger(Guid id);
         [OperationContract]
         bool CreateTrigger(TriggerViewModel m);

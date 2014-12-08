@@ -218,6 +218,27 @@ namespace EXPEDIT.Flow.ViewModels
 
         public Dictionary<string, object> QueryParams { get; set; }
 
+        public Dictionary<string, string> QueryParamsVariables
+        {
+            get
+            {
+                if (QueryParams == null)
+                    QueryParams = new Dictionary<string, object>();
+                var q = (from o in QueryParams
+                         select new Tuple<string, string>(
+                             o.Key,
+                             JsonConvert.SerializeObject(o.Value, Formatting.Indented, new JsonSerializerSettings
+                             {
+                                 TypeNameHandling = TypeNameHandling.All,
+                                 TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple
+                             })
+                         ));
+                return q
+                    .Where(f => f.Item1.ToLowerInvariant() != "password")
+                    .ToDictionary(f => f.Item1, f => f.Item2);
+            }
+        }
+
         public Dictionary<string, string> Variables
         {
             get

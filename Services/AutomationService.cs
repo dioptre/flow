@@ -482,35 +482,39 @@ namespace EXPEDIT.Flow.Services {
                         m.PreviousStep.Began = now;
                         d.ProjectPlanTaskResponses.AddObject(m.PreviousStep);
 
+                        Dictionary<string, string> pdd = new Dictionary<string, string>();
                         if (ProxyAuthenticated)
+                            pdd = m.Variables;
+                        else 
+                            pdd = m.QueryParamsVariables;
+
+                        //OK now save context variables passed in
+                        foreach (var v in m.Variables)
                         {
-                            //OK now save context variables passed in
-                            foreach (var v in m.Variables)
+                            var pdtid = Guid.NewGuid();
+                            var lbl = string.Format("{0}",v.Key).Replace("\"", "\\\"");
+                            var pdt = new ProjectDataTemplate
                             {
-                                var pdtid = Guid.NewGuid();
-                                var lbl = string.Format("{0}",v.Key).Replace("\"", "\\\"");
-                                var pdt = new ProjectDataTemplate
-                                {
-                                    ProjectDataTemplateID = pdtid,
-                                    TemplateStructure = string.Format("{{\"label\":\"{0}\",\"field_type\":\"text\",\"required\":false,\"field_options\":{{\"size\":\"small\"}},\"cid\":\"{1}\",\"uid\":\"{2}\"}}", lbl , pdtid, pdtid),
-                                    CommonName = v.Key,
-                                    VersionUpdated = now,
-                                    VersionUpdatedBy = contact
-                                };
-                                d.ProjectDataTemplates.AddObject(pdt);
-                                var pd = new ProjectData
-                                {
-                                    ProjectDataID = Guid.NewGuid(),
-                                    ProjectID = m.ProjectID,
-                                    ProjectDataTemplateID = pdtid,
-                                    ProjectPlanTaskResponseID = m.PreviousStepID,
-                                    Value = v.Value,
-                                    VersionUpdated = now,
-                                    VersionUpdatedBy = contact
-                                };
-                                d.ProjectDatas.AddObject(pd);
-                            }
+                                ProjectDataTemplateID = pdtid,
+                                TemplateStructure = string.Format("{{\"label\":\"{0}\",\"field_type\":\"text\",\"required\":false,\"field_options\":{{\"size\":\"small\"}},\"cid\":\"{1}\",\"uid\":\"{2}\"}}", lbl , pdtid, pdtid),
+                                CommonName = v.Key,
+                                VersionUpdated = now,
+                                VersionUpdatedBy = contact
+                            };
+                            d.ProjectDataTemplates.AddObject(pdt);
+                            var pd = new ProjectData
+                            {
+                                ProjectDataID = Guid.NewGuid(),
+                                ProjectID = m.ProjectID,
+                                ProjectDataTemplateID = pdtid,
+                                ProjectPlanTaskResponseID = m.PreviousStepID,
+                                Value = v.Value,
+                                VersionUpdated = now,
+                                VersionUpdatedBy = contact
+                            };
+                            d.ProjectDatas.AddObject(pd);
                         }
+                        
 
                         d.SaveChanges();
 

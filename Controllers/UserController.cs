@@ -1157,5 +1157,77 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
 
+        [Authorize]
+        [ActionName("Triggers")]
+        public ActionResult GetTrigger(string id)
+        {
+            TriggerViewModel result = null;
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                string cn = Request.Params["CommonName"];
+                if (string.IsNullOrWhiteSpace(cn))
+                    return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+                result = _Flow.GetTrigger(cn);
+                if (result == null)
+                    return null;
+
+            }
+            else
+            {
+                result = _Flow.GetTrigger(Guid.Parse(id));
+            }
+            if (result == null)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+            return new JsonHelper.JsonNetResult(new { triggers = new object[] { result } }, JsonRequestBehavior.AllowGet);
+
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("Triggers")]
+        public ActionResult CreateTrigger(TriggerViewModel m)
+        {
+
+            if (m.trigger != null)
+                m = m.trigger;
+            if (_Flow.CreateTrigger(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("Triggers")]
+        public ActionResult UpdateTrigger(TriggerViewModel m)
+        {
+            if (m.trigger != null && m.id != null)
+            {
+                m.trigger.id = m.id;
+                m = m.trigger;
+            }
+            if (_Flow.UpdateTrigger(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("Triggers")]
+        public ActionResult DeleteTrigger(TriggerViewModel m)
+        {
+            if (!m.id.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.DeleteTrigger(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+
+        }
+
     }
 }

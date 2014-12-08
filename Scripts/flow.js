@@ -2219,6 +2219,8 @@ App.GraphRoute = Ember.Route.extend({
         //        resolve();
         //    })
         //});
+        var apiCache = Enumerable.From(this.store.all('trigger').content).Where("f=>f.get('CommonName') === 'DONEXT'").FirstOrDefault();
+
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
             workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
@@ -2231,6 +2233,9 @@ App.GraphRoute = Ember.Route.extend({
                 else if (typeof groupID === 'undefined' || !groupID)
                     return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: _this.get('model.selectedID') })
             }),
+            api: (apiCache) ? apiCache : this.store.findQuery('trigger', { CommonName: "DONEXT" }).then(function (m) {
+                return m.get('firstObject');
+            }, function () { return null; }), //TODO put this in an sync component - shouldnt be blocking
             duplicateNode: $.get('/flow/NodeDuplicateID/' + id),
             selectedID: id,
             workflowID: params.workflowID,
@@ -2399,7 +2404,7 @@ App.GraphController = Ember.ObjectController.extend({
     preview: null,
     localeSelected: null,
     triggerWFURL: function() {
-        return window.location.protocol + '//' + window.location.host + '/flow/WebMethod/DoNext?workflow=' + this.get('workflowID') + '&username=bob&password=bob';
+        return window.location.protocol + '//' + window.location.host + '/flow/WebMethod/DoNext?workflow=' + this.get('workflowID') + '&username=' + this.get('api.JsonUsername') + '&password=' + this.get('api.JsonPassword') + '&yourvariable=yourdata';
     }.property('workflowID'),
     currentURL: function () {
         return window.document.URL;
@@ -2621,6 +2626,10 @@ App.GraphController = Ember.ObjectController.extend({
         cancelMoneyModal: function (data, callback) {
             // Clear variable here
             this.set('moneyModal', false);
+        },
+        redirectFromTriggersModal: function (data, callback) {
+            this.toggleProperty('triggerWorkflowModal');
+            this.transitionToRoute('myprofiles');
         },
         toggleWorkflowTriggersModal: function (data, callback) {
             this.toggleProperty('triggerWorkflowModal');
@@ -4529,7 +4538,7 @@ App.Trigger = DS.Model.extend({
     ExternalUrl: DS.attr('string'), //http://dothis/rest/url
     ExternalRequestMethod: DS.attr('string', { defaultValue: 'GET' }),
     ExternalFormType: DS.attr('string', { defaultValue: 'JSON' }), 
-    PassThrough: DS.attr('string', { defaultValue: false }), 
+    PassThrough: DS.attr('string', { defaultValue: true }), 
     condition: DS.belongsTo('condition', { async: true }),
 });
 
@@ -5617,12 +5626,15 @@ App.MyprofilesRoute = Ember.Route.extend({
     model: function () {
         var _this = this;
         return Ember.RSVP.hash({
-            profiles: this.store.find('myProfile')
+            profiles: this.store.find('myProfile'),
+            api: this.store.findQuery('trigger', { CommonName: "DONEXT" }).catch(function () { return null; })
         });
     },
     afterModel: function (m) {
         if (m.profiles.content && m.profiles.content.length > 0)
             m.profile = m.profiles.get('firstObject');
+        if (m.api && m.api.content && m.api.content.length > 0)
+            m.trigger = m.api.get('firstObject');
     }
 });
 
@@ -5631,6 +5643,44 @@ App.MyprofilesController = Ember.ObjectController.extend({
     title: function() {
         return 'My Profile'
     }.property('profile'),
+    trigger: null,
+    hasAPI: function (key, value, previousValue) {
+        var t = this.get('model.trigger');
+        var hasValue = (typeof t !== 'undefined' && t !== null);
+        if (arguments.length > 1) {
+            if (hasValue) {
+                if (t.get('isNew'))
+                    t.unloadRecord();
+                else
+                    t.destroyRecord();
+                hasValue = false;
+                this.set('model.trigger', null);
+            }
+            else {
+                t = this.store.createRecord('trigger', { CommonName: 'DONEXT' });
+                hasValue = true;
+                this.set('model.trigger', t);
+            }
+        }
+        return hasValue;
+
+    }.property('model.trigger'),
+    usernameValid: function () {
+        var temp = this.get('model.trigger.JsonUsername');
+        if (!temp || !temp.length || temp.length < 4) {
+            return 'Please use a larger username.';
+        } else {
+            return false;
+        }
+    }.property('model.trigger.JsonUsername'),
+    passwordValid: function () {
+        var temp = this.get('model.trigger.JsonPassword');
+        if (!temp || !temp.length || temp.length < 4) {
+            return 'Please use a larger password.'; 
+        } else {
+            return false;
+        }
+    }.property('model.trigger.JsonPassword'),
     emailValid: function() {
         var emailpat = /^[^@]+@[^@]+\.[^@\.]{2,}$/;
         var email = this.get('profile.DefaultEmail');
@@ -5663,6 +5713,16 @@ App.MyprofilesController = Ember.ObjectController.extend({
                 Messenger().post({ type: 'error', message: "Could not update profile.", id: 'user-security' })
             });
 
+        },
+        updateAPI: function (t) {
+            if (this.get('usernameValid') || this.get('passwordValid') || !t)
+                return;
+            t.save().then(function (response) {
+                Messenger().post({ type: 'success', message: "Successfully updated api key.", id: 'user-security' })
+            }, function () {
+                Messenger().post({ type: 'error', message: "Could not update api key.", id: 'user-security' })
+            });
+            
         }
     }
 });
