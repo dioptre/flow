@@ -91,6 +91,7 @@ namespace EXPEDIT.Flow.Controllers {
             }
 
             var result = false;
+            object toReturn = null;
             if (string.IsNullOrWhiteSpace(id))
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.MethodNotAllowed);
             var json = new StreamReader(Request.InputStream).ReadToEnd();
@@ -117,13 +118,14 @@ namespace EXPEDIT.Flow.Controllers {
             switch (method) {
                 case "DONEXT":
                     result = _Auto.DoNext(m);
+                    toReturn = m.PreviousStepID;
                     break;
                 default:
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.NotFound);
             }
                  
             if (result)
-                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+                return new JsonHelper.JsonNetResult(toReturn, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error); 
                
