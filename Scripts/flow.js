@@ -3645,32 +3645,44 @@ App.ContactSelectorComponent = App.UserSelectorComponent.extend({
 });
 
 
-App.ThenTrigger = Ember.Object.extend({
-        type: 'email',
-        email: null,
-        webhook: null,
-        options: ['webhook', 'email'],
-        emailTemplate: {
-            sender: 'paul@flowpro.io',
-            messsage: 'Test message'
-        },
-        webhookTemplate: {
-            url: 'http://x.com/xxx'
-        },
-        cleaner: function(){
-            var _this = this;
-            var type = this.get('type')
+App.XxxTrigger = Ember.Object.extend({
+    cleaner: function(){
+        var _this = this;
+        var type = this.get('type')
 
-            // Clean up
-            this.get('options').forEach(function(a, i){
-                _this.set(a, null)
-            })
+        // Clean up
+        this.get('options').forEach(function(a, i){
+            _this.set(a, null)
+        })
 
-            // Setup new template
-            var template = this.get(type + 'Template');
-            this.set(type, template)
-        }.observes('type').on('init')
-    })
+        // Setup new template
+        var template = this.get(type + 'Template');
+        this.set(type, template)
+    }.observes('type').on('init')
+})
+
+App.ThenTrigger = App.XxxTrigger.extend({
+    type: 'email',
+    options: ['webhook', 'email'],
+    emailTemplate: {
+        sender: 'paul@flowpro.io',
+        messsage: 'Test message'
+    },
+    webhookTemplate: {
+        url: 'http://x.com/xxx'
+    }
+});
+
+App.WhenTrigger = App.XxxTrigger.extend({
+    type: 'now',
+    options: ['now', 'delay'],
+    select: [{value: 'now', text: "Immediately"}, {value: 'delay', text: "Time Delay"}],
+    delayTemplate: {
+        hours: '0',
+        seconds: '0'
+    },
+    nowTemplate: {}
+});
 
 App.TriggerNodeComponent = Ember.Component.extend({
     defaultRow: {},
@@ -3694,31 +3706,33 @@ App.TriggerNodeComponent = Ember.Component.extend({
   
         var store = this.get('targetObject.store');
 
+        var config = { GraphDataID: graphID };
 
-        // TODO - Does the trigger API work?
-        store.findQuery('trigger',{ GraphDataGroupID: workflowID, GraphDataID: graphID}).then(function(a) {
-            return a
+
+        store.findQuery('GraphDataTrigger', config).then(function(a) {
+            // if problem do something else - needs error handeling
+
+            return a.get('firstObject')
         }, function(){
-            return [];
+
+            // Load the default config first
+            config.JSON = _this.get('defaultConfig');
+            return store.createRecord('GraphDataTrigger', config);
         }).then(function(a){
             _this.set('loading', false);
 
+            debugger;
 
-            if (a.get('length') == 1) {
-                _this.set('config', JSON.parse(a.get('firstObject.JSON')))
-            }
-            
-            if (a.get('length') < 1) {
-                _this.set('config', _this.get('defaultConfig'));
-            }
 
-            if (a.get('length') > 1) {
-                Messenger().post({ type: 'error', message: 'There should only be one edge condition. Please contact support!' });
-            }
+            if (a.get('JSON')) {
+                _this.set('config', a)
+            } else {
+                Messenger().post({ type: 'error', message: 'Weird error.' });                
+            }            
         })    
 
 
-    }.observes('graphID', 'workflowID').on('didInsertElement'),
+    }.observes('graphID').on('didInsertElement'),
     config: {},
     // configCleaner: function() {
         
@@ -3760,6 +3774,9 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 }
             })
             
+        ],
+        when: [
+            App.WhenTrigger.create({})
         ]
     },
     configEvaluation: function(config){
@@ -3825,75 +3842,87 @@ App.TriggerNodeComponent = Ember.Component.extend({
         }
     },
     actions: {
-        'saveConditions': function(context){
+        'saveTriggerConditions': function(context){
             var _this = this;
-            this.get('edge').get('EdgeConditions').then(function(a){
-                
-                 if (a.get('length') != 0) {
-                    // edit a
-                    z = a.get('firstObject');
-                    z.set('JSON', JSON.stringify(_this.get('config')));
+            var store = _this.get('targetObject.store');
 
-                    var conditionStr =  _this.get('configEvaluation')(_this.get('config'));
-                    z.set('Condition', conditionStr);
 
-                    z.save().then(function(){
-                         Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+            var trigger = this.get('config')
 
-                    }, function(){
-                         Messenger().post({ type: 'error', message: 'Error saving edge conditions' });
+    
 
-                    });
-                 } else {
-                    // create a new one and save to it
-                    var store = _this.get('targetObject.store');
-                    var newCondition = store.createRecord('edgeCondition', {
-                        ConditionID: NewGUID(),
-                        GraphDataRelationID: _this.get('edgeID'),
-                        JSON: JSON.stringify(_this.get('config')),// paul super easy array
-                        Condition: _this.get('configEvaluation')(_this) // andy's js condition
-                    })
+            trigger.save().then(function(){
+                 Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
 
-                    _this.get('edge.EdgeConditions').addObject(newCondition);
+            }, function(){
+                 Messenger().post({ type: 'error', message: 'Error saving edge conditions' });
 
-                    // newCondition.save().then(function(){
-                    //     return _this.get('edge').save()
-                    // }).then(function(){
-                    //      Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
-                    //     alert('Successful save!!!')
-                    // })
-
-                     newCondition.save().then(function(){
-                         Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
-                    })
-
-                 }
             });
+
+            // this.get('edge').get('EdgeConditions').then(function(a){
+                
+            //      if (a.get('length') != 0) {
+            //         // edit a
+            //         z = a.get('firstObject');
+            //         z.set('JSON', JSON.stringify(_this.get('config')));
+
+            //         var conditionStr =  _this.get('configEvaluation')(_this.get('config'));
+            //         z.set('Condition', conditionStr);
+
+            //         z.save().then(function(){
+            //              Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+
+            //         }, function(){
+            //              Messenger().post({ type: 'error', message: 'Error saving edge conditions' });
+
+            //         });
+            //      } else {
+            //         // create a new one and save to it
+            //         var store = _this.get('targetObject.store');
+            //         var newCondition = store.createRecord('edgeCondition', {
+            //             ConditionID: NewGUID(),
+            //             GraphDataRelationID: _this.get('edgeID'),
+            //             JSON: JSON.stringify(_this.get('config')),// paul super easy array
+            //             Condition: _this.get('configEvaluation')(_this) // andy's js condition
+            //         })
+
+            //         _this.get('edge.EdgeConditions').addObject(newCondition);
+
+            //         // newCondition.save().then(function(){
+
+            //         // })
+
+            //          newCondition.save().then(function(){
+            //              Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+            //         })
+
+            //      }
+            // });
         },
         'addRow': function (context) {
-            var positionCurrent = this.get('config.fields').indexOf(context.itemInsertAfter) + 1;
-            this.get('config.fields').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
+            var positionCurrent = this.get('config.JSON.fields').indexOf(context.itemInsertAfter) + 1;
+            this.get('config.JSON.fields').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
 
         },
         'deleteRow': function(context) {
             // don't delete if the last one :)
-            if (this.get('config.fields.length') == 1) {
+            if (this.get('config.JSON.fields.length') == 1) {
                 Messenger().post({ type: 'info', message: 'You need at least on row. Turn off Trigger alternatively.' });
             } else {
-                this.get('config.fields').removeObject(context.itemToDelete);
+                this.get('config.JSON.fields').removeObject(context.itemToDelete);
             }
             
         },
         'addTriggerRow': function (context) {
-            var positionCurrent = this.get('config.trigger').indexOf(context.itemInsertAfter) + 1;
-            this.get('config.trigger').insertAt(positionCurrent, App.ThenTrigger.create({}));
+            var positionCurrent = this.get('config.JSON.trigger').indexOf(context.itemInsertAfter) + 1;
+            this.get('config.JSON.trigger').insertAt(positionCurrent, App.ThenTrigger.create({}));
 
         },
         'deleteTriggerRow': function(context) {
-            if (this.get('config.trigger.length') == 1) {
+            if (this.get('config.JSON.trigger.length') == 1) {
                 Messenger().post({ type: 'info', message: 'You need at least on row. Turn off Trigger alternatively.' });
             } else {
-                this.get('config.trigger').removeObject(context.itemToDelete);
+                this.get('config.JSON.trigger').removeObject(context.itemToDelete);
             }
         }                                                
     }
@@ -4539,22 +4568,22 @@ App.Task = DS.Model.extend({
 });
 
 App.Trigger = DS.Model.extend({
-    TriggerID: DS.attr('string'),
-    CommonName: DS.attr('string'),
+    TriggerID: DS.attr('string'), //same guid = id
+    CommonName: DS.attr('string'), //guid = id
     TriggerType: DS.attr('string'),
-    JsonMethod: DS.attr('string'), //
+    JsonMethod: DS.attr('string'), //Webhook,email
     JsonProxyApplicationID: DS.attr('string'),
     JsonProxyContactID: DS.attr('string'),
     JsonProxyCompanyID: DS.attr('string'),
-    JsonAuthorizedBy: DS.attr('string'),
+    JsonAuthorizedBy: DS.attr('string'), // JsonXXX - this is just for recieving trigger 
     JsonUsername: DS.attr('string'),
     JsonPassword: DS.attr('string'),
     JsonPasswordType: DS.attr('string'),
-    JSON: DS.attr('string'), //
+    JSON: DS.attr('string'), //PK, just for ui extra shit inside trigger not condition
     SystemMethod: DS.attr('string'),
-    ConditionID: DS.attr('string'), //
+    ConditionID: DS.attr('string'), //json for condition partidentical to last time
     ExternalUrl: DS.attr('string'), //http://dothis/rest/url
-    ExternalRequestMethod: DS.attr('string', { defaultValue: 'GET' }),
+    ExternalRequestMethod: DS.attr('string', { defaultValue: 'POST' }),
     ExternalFormType: DS.attr('string', { defaultValue: 'JSON' }), 
     PassThrough: DS.attr('string', { defaultValue: true }),
     RunOnce: DS.attr('string',  { defaultValue: true }),
@@ -4569,7 +4598,7 @@ App.Trigger = DS.Model.extend({
 });
 
 
-
+// This is the conditions on a graph
 App.GraphDataTrigger = App.Trigger.extend({
     GraphDataTriggerID: DS.attr('string'),
     GraphDataID: DS.attr('string'),
