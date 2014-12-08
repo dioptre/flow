@@ -1334,7 +1334,15 @@
                 <br>
             {{/each}}
             <h3>WHEN</h3>
-            To configure....
+            {{#each when in config.when}}
+                {{eui-select value=when.type options=when.select size='medium' labelPath='text'}}
+                {{#if when.delay}}
+                    <b>Seconds</b>
+                    {{eui-input value=when.delay.seconds placeholder='Enter for time delay in seconds'}}
+                    <b>Hours</b>
+                    {{eui-input value=when.delay.hours placeholder='Enter for time delay in hours'}}
+                {{/if}}
+            {{/each}}
 
 
         {{else}}

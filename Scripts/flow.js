@@ -3630,31 +3630,59 @@ App.ContactSelectorComponent = App.UserSelectorComponent.extend({
 
 
 App.ThenTrigger = Ember.Object.extend({
-        type: 'email',
-        email: null,
-        webhook: null,
-        options: ['webhook', 'email'],
-        emailTemplate: {
-            sender: 'paul@flowpro.io',
-            messsage: 'Test message'
-        },
-        webhookTemplate: {
-            url: 'http://x.com/xxx'
-        },
-        cleaner: function(){
-            var _this = this;
-            var type = this.get('type')
+    type: 'email',
+    email: null,
+    webhook: null,
+    options: ['webhook', 'email'],
+    emailTemplate: {
+        sender: 'paul@flowpro.io',
+        messsage: 'Test message'
+    },
+    webhookTemplate: {
+        url: 'http://x.com/xxx'
+    },
+    cleaner: function(){
+        var _this = this;
+        var type = this.get('type')
 
-            // Clean up
-            this.get('options').forEach(function(a, i){
-                _this.set(a, null)
-            })
+        // Clean up
+        this.get('options').forEach(function(a, i){
+            _this.set(a, null)
+        })
 
-            // Setup new template
-            var template = this.get(type + 'Template');
-            this.set(type, template)
-        }.observes('type').on('init')
-    })
+        // Setup new template
+        var template = this.get(type + 'Template');
+        this.set(type, template)
+    }.observes('type').on('init')
+});
+
+App.WhenTrigger = Ember.Object.extend({
+    type: 'now',
+    // now: null,
+    // delay: null,
+    options: ['now', 'delay'],
+    select: [{value: 'now', text: "Immediately"}, {value: 'delay', text: "Time Delay"}],
+    delayTemplate: {
+        hours: '0',
+        seconds: '0'
+    },
+    nowTemplate: {},
+    cleaner: function(){
+        var _this = this;
+        var type = this.get('type')
+
+        debugger;
+
+        // Clean up
+        this.get('options').forEach(function(a, i){
+            _this.set(a, null)
+        })
+
+        // Setup new template
+        var template = this.get(type + 'Template');
+        this.set(type, template)
+    }.observes('type').on('init')
+});
 
 App.TriggerNodeComponent = Ember.Component.extend({
     defaultRow: {},
@@ -3744,6 +3772,9 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 }
             })
             
+        ],
+        when: [
+            App.WhenTrigger.create({})
         ]
     },
     configEvaluation: function(config){
