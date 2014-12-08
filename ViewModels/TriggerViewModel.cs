@@ -42,15 +42,16 @@ namespace EXPEDIT.Flow.ViewModels
         public bool? OnDataUpdate { get; set;}
         public bool? OnExit { get; set;}
         public bool? RunOnce { get; set;}
-        public Guid?[] condition
+        //public Guid? VersionOwnerContactID { get; set; }
+        public Guid? condition
         {
-            get { return new Guid?[] { ConditionID }; }
+            get { return ConditionID; }
         }
 
         public string Error { get; set; }
 
 
-        public TaskViewModel task { get; set; }
+        public TriggerViewModel trigger { get; set; }
 
     }
 

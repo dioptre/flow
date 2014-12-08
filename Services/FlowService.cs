@@ -39,6 +39,8 @@ using NKD.ViewModels;
 
 using System.Net.Http;
 using System.Globalization;
+using Newtonsoft.Json.Linq;
+using Orchard.Environment.Configuration;
 
 
 
@@ -55,14 +57,17 @@ namespace EXPEDIT.Flow.Services {
         private readonly IAutomationService _automation;
         private readonly IUsersService _users;
         private readonly IOrchardServices _services;
+        private readonly ShellSettings _shellSettings;
         public ILogger Logger { get; set; }
 
         public FlowService(
             IOrchardServices orchardServices,
             IUsersService users,
-            IAutomationService automation
+            IAutomationService automation,
+            ShellSettings shellSettings
             )
         {
+            _shellSettings = shellSettings;
             _users = users;
             _services = orchardServices;
             _automation = automation;
@@ -964,7 +969,7 @@ namespace EXPEDIT.Flow.Services {
                 var g = (from o in d.GraphData where o.GraphDataID == mid select o).Single();
                 d.GraphDataHistories.Where(f => f.GraphDataID == mid).Delete();
                 d.GraphDataRelation.Where(f => f.FromGraphDataID == mid || f.ToGraphDataID == mid).Delete();
-                d.GraphDataTriggers.Where(f => f.GraphDataID == mid).Delete();
+                d.TriggerGraphs.Where(f => f.GraphDataID == mid).Delete();
                 d.ProjectPlanTaskResponses.Where(f => f.ActualGraphDataID == mid).Delete();
                 d.Tasks.Where(f => f.GraphDataID == mid).Delete();
                 d.GraphDataFileDatas.Where(f => f.GraphDataID == mid).Delete();
@@ -2034,7 +2039,7 @@ namespace EXPEDIT.Flow.Services {
                                     var response = responseAsync.Result;
                                     if (response.IsSuccessStatusCode)
                                     {
-                                        dynamic json = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
+                                        dynamic json = JObject.Parse(await response.Content.ReadAsStringAsync());
                                         return json.data.translations[0].translatedText ?? string.Empty;
                                     }
                                     else
@@ -2743,7 +2748,7 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     //Update
                     var pd = (from o in d.ProjectDatas where o.ProjectDataID == m.id && o.VersionDeletedBy == null select o).Single();
-                    if (pd.Value != null && pd.Value != m.Value)
+                    if (pd.Value != m.Value)
                     {
                         pd.Value = m.Value;
                         pd.VersionUpdated = DateTime.UtcNow;
@@ -3297,8 +3302,59 @@ namespace EXPEDIT.Flow.Services {
         }
 
 
+        public TriggerViewModel GetTrigger(string commonName)
+        {
+            try
+            {
+                var contact = _users.ContactID;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    //We are only checking the owner contacts...so dont need perms here
+                    //if (!CheckPermission(id, ActionPermission.Read, typeof(Trigger)))
+                    //    return null;
+                    var m = (from o in d.Triggers.Where(h => h.Version == 0 && h.VersionDeletedBy == null && h.CommonName == commonName && h.VersionOwnerContactID == contact)
+                             select new TriggerViewModel
+                             {
+                                 id = o.TriggerID,
+                                 TriggerID = o.TriggerID,
+                                 CommonName = o.CommonName,
+                                 TriggerTypeID = o.TriggerTypeID,
+                                 JsonMethod = o.JsonMethod,
+                                 JsonProxyApplicationID = o.JsonProxyApplicationID,
+                                 JsonProxyContactID = o.JsonProxyContactID,
+                                 JsonProxyCompanyID = o.JsonProxyCompanyID,
+                                 JsonAuthorizedBy = o.JsonAuthorizedBy,
+                                 JsonUsername = o.JsonUsername,
+                                 JsonPassword = o.JsonPassword,
+                                 JsonPasswordType = o.JsonPasswordType,
+                                 JSON = o.JSON,
+                                 SystemMethod = o.SystemMethod,
+                                 ConditionID = o.ConditionID,
+                                 ExternalURL = o.ExternalURL,
+                                 ExternalRequestMethod = o.ExternalRequestMethod,
+                                 ExternalFormType = o.ExternalFormType,
+                                 PassThrough = o.PassThrough,
+                                 //VersionOwnerContactID = o.VersionOwnerContactID
+                                 //GraphDataTriggerID = o.GraphDataTriggerID,
+                                 //GraphDataID = o.GraphDataID,
+                                 //GraphDataGroupTriggerID = o.GraphDataGroupTriggerID,
+                                 //GraphDataGroupID = o.GraphDataGroupID,
+                                 //MergeProjectData = o.MergeProjectData,
+                                 //OnEnter = o.OnEnter,
+                                 //OnDataUpdate = o.OnDataUpdate,
+                                 //OnExit = o.OnExit,
+                                 //RunOnce = o.RunOnce
+                             }).SingleOrDefault();
+                    return m;
+                }
 
-
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
 
         public TriggerViewModel GetTrigger(Guid id)
         {
@@ -3317,13 +3373,13 @@ namespace EXPEDIT.Flow.Services {
                                 CommonName = o.CommonName,
                                 TriggerTypeID = o.TriggerTypeID,
                                 JsonMethod = o.JsonMethod,
-                                JsonProxyApplicationID = o.JsonProxyApplicationID,
-                                JsonProxyContactID = o.JsonProxyContactID,
-                                JsonProxyCompanyID = o.JsonProxyCompanyID,
-                                JsonAuthorizedBy = o.JsonAuthorizedBy,
-                                JsonUsername = o.JsonUsername,
-                                JsonPassword = o.JsonPassword,
-                                JsonPasswordType = o.JsonPasswordType,
+                                //JsonProxyApplicationID = o.JsonProxyApplicationID,
+                                //JsonProxyContactID = o.JsonProxyContactID,
+                                //JsonProxyCompanyID = o.JsonProxyCompanyID,
+                                //JsonAuthorizedBy = o.JsonAuthorizedBy,
+                                //JsonUsername = o.JsonUsername,
+                                //JsonPassword = o.JsonPassword,
+                                //JsonPasswordType = o.JsonPasswordType,
                                 JSON = o.JSON,
                                 SystemMethod = o.SystemMethod,
                                 ConditionID = o.ConditionID,
@@ -3355,6 +3411,7 @@ namespace EXPEDIT.Flow.Services {
         public bool CreateTrigger(TriggerViewModel m)
         {
             var contact = _users.ContactID;
+            var company = _users.DefaultContactCompanyID;
             try
             {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
@@ -3362,21 +3419,24 @@ namespace EXPEDIT.Flow.Services {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
                     if (!CheckPermission(null, ActionPermission.Create, typeof(Trigger)))
                         return false;
+                    var runningApplicationID = (from o in d.Applications where o.ApplicationName == _shellSettings.Name select o.ApplicationId).FirstOrDefault();
+                    if (runningApplicationID == Guid.Empty || runningApplicationID == null)
+                        return false;
                     var c = new Trigger
                     {
                         TriggerID = m.id.Value,
                         CommonName = m.CommonName,
                         TriggerTypeID = m.TriggerTypeID,
-                        JsonMethod = m.JsonMethod,
-                        JsonProxyApplicationID = m.JsonProxyApplicationID,
-                        JsonProxyContactID = m.JsonProxyContactID,
-                        JsonProxyCompanyID = m.JsonProxyCompanyID,
+                        JsonMethod = m.JsonMethod ?? m.CommonName,
+                        JsonProxyApplicationID = runningApplicationID,
+                        JsonProxyContactID = contact,
+                        JsonProxyCompanyID = company,
                         JsonAuthorizedBy = m.JsonAuthorizedBy,
                         JsonUsername = m.JsonUsername,
                         JsonPassword = m.JsonPassword,
-                        JsonPasswordType = m.JsonPasswordType,
+                        JsonPasswordType = m.JsonPasswordType ?? "TEXT",
                         JSON = m.JSON,
-                        SystemMethod = m.SystemMethod,
+                        SystemMethod = m.SystemMethod ?? m.CommonName,
                         ConditionID = m.ConditionID,
                         ExternalURL = m.ExternalURL,
                         ExternalRequestMethod = m.ExternalRequestMethod,
@@ -3392,7 +3452,8 @@ namespace EXPEDIT.Flow.Services {
                         //OnExit = m.OnExit,
                         //RunOnce = m.RunOnce,
                         VersionUpdated = DateTime.UtcNow,
-                        VersionUpdatedBy = contact
+                        VersionUpdatedBy = contact,
+                        VersionOwnerContactID = contact
                     };
                     d.Triggers.AddObject(c);
                     d.SaveChanges();
@@ -3419,18 +3480,21 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     //Update
                     var cc = (from o in d.Triggers where o.TriggerID == m.id && o.VersionDeletedBy == null select o).Single();
-                    if (m.CommonName != null && cc.CommonName != m.CommonName) cc.CommonName = m.CommonName;
-                    if (m.TriggerTypeID != null && cc.TriggerTypeID != m.TriggerTypeID) cc.TriggerTypeID = m.TriggerTypeID;
-                    if (m.JsonMethod != null && cc.JsonMethod != m.JsonMethod) cc.JsonMethod = m.JsonMethod;
-                    if (m.JsonProxyApplicationID != null && cc.JsonProxyApplicationID != m.JsonProxyApplicationID) cc.JsonProxyApplicationID = m.JsonProxyApplicationID;
-                    if (m.JsonProxyContactID != null && cc.JsonProxyContactID != m.JsonProxyContactID) cc.JsonProxyContactID = m.JsonProxyContactID;
-                    if (m.JsonProxyCompanyID != null && cc.JsonProxyCompanyID != m.JsonProxyCompanyID) cc.JsonProxyCompanyID = m.JsonProxyCompanyID;
+                    if (string.Format("{0}", m.CommonName).Trim().ToUpperInvariant() == "DONEXT" && cc.VersionOwnerContactID != contact)
+                        return false;
+                    //Commented unsafe updates AG
+                    //if (m.CommonName != null && cc.CommonName != m.CommonName) cc.CommonName = m.CommonName;
+                    //if (m.TriggerTypeID != null && cc.TriggerTypeID != m.TriggerTypeID) cc.TriggerTypeID = m.TriggerTypeID;
+                    //if (m.JsonMethod != null && cc.JsonMethod != m.JsonMethod) cc.JsonMethod = m.JsonMethod;
+                    //if (m.JsonProxyApplicationID != null && cc.JsonProxyApplicationID != m.JsonProxyApplicationID) cc.JsonProxyApplicationID = m.JsonProxyApplicationID;
+                    //if (m.JsonProxyContactID != null && cc.JsonProxyContactID != m.JsonProxyContactID) cc.JsonProxyContactID = m.JsonProxyContactID;
+                    //if (m.JsonProxyCompanyID != null && cc.JsonProxyCompanyID != m.JsonProxyCompanyID) cc.JsonProxyCompanyID = m.JsonProxyCompanyID;
                     if (m.JsonAuthorizedBy != null && cc.JsonAuthorizedBy != m.JsonAuthorizedBy) cc.JsonAuthorizedBy = m.JsonAuthorizedBy;
                     if (m.JsonUsername != null && cc.JsonUsername != m.JsonUsername) cc.JsonUsername = m.JsonUsername;
                     if (m.JsonPassword != null && cc.JsonPassword != m.JsonPassword) cc.JsonPassword = m.JsonPassword;
                     if (m.JsonPasswordType != null && cc.JsonPasswordType != m.JsonPasswordType) cc.JsonPasswordType = m.JsonPasswordType;
                     if (m.JSON != null && cc.JSON != m.JSON) cc.JSON = m.JSON;
-                    if (m.SystemMethod != null && cc.SystemMethod != m.SystemMethod) cc.SystemMethod = m.SystemMethod;
+                    //if (m.SystemMethod != null && cc.SystemMethod != m.SystemMethod) cc.SystemMethod = m.SystemMethod;
                     if (m.ConditionID != null && cc.ConditionID != m.ConditionID) cc.ConditionID = m.ConditionID;
                     if (m.ExternalURL != null && cc.ExternalURL != m.ExternalURL) cc.ExternalURL = m.ExternalURL;
                     if (m.ExternalRequestMethod != null && cc.ExternalRequestMethod != m.ExternalRequestMethod) cc.ExternalRequestMethod = m.ExternalRequestMethod;

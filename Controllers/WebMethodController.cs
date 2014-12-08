@@ -67,24 +67,42 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
         [Themed(false)]
-        [HttpGet]
+        [AcceptVerbs(HttpVerbs.Get | HttpVerbs.Post)]
         [ActionName("ExecuteMethod")]
         //[ValidateAntiForgeryToken]
-        public ActionResult ExecuteMethod(string id, string reference = null)
+        public ActionResult ExecuteMethod(string id, string reference)
         {
+            var dict = Request.QueryString.ToDictionary();
+            if (dict.ContainsKey("reference"))
+            {
+                var temp = dict["reference"];
+                dict.Remove("reference");
+                dict.Add("ReferenceID", temp);
+            }
+            else if (!string.IsNullOrWhiteSpace(reference))
+            {
+                dict.Add("ReferenceID", reference);
+            }
+            if (dict.ContainsKey("workflow"))
+            {
+                var temp = dict["workflow"];
+                dict.Remove("workflow");
+                dict.Add("GraphDataGroupID", temp);
+            }
+
             var result = false;
+            object toReturn = null;
             if (string.IsNullOrWhiteSpace(id))
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.MethodNotAllowed);
             var json = new StreamReader(Request.InputStream).ReadToEnd();
             if (string.IsNullOrWhiteSpace(json))
             {
-                if (string.IsNullOrWhiteSpace(reference))
-                    return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest); 
-                json = string.Format("{{ ReferenceID: '{0}'}}", reference);
+                json = dict.ToJsonObject();
             }
             var m = new AutomationViewModel
             {
-                JSON = json
+                JSON = json,
+                QueryParams = dict
             };
             Guid trid;
             if (Guid.TryParse(reference, out trid))
@@ -92,7 +110,7 @@ namespace EXPEDIT.Flow.Controllers {
             var method = id.ToUpperInvariant();
             if (!User.Identity.IsAuthenticated)
             {
-                if (string.IsNullOrWhiteSpace(m.Username) || string.IsNullOrWhiteSpace(m.Password) || string.IsNullOrWhiteSpace(m.Application))
+                if (string.IsNullOrWhiteSpace(m.Username) || string.IsNullOrWhiteSpace(m.Password))
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
                 if (!_Auto.Authenticate(m, method))
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
@@ -100,13 +118,14 @@ namespace EXPEDIT.Flow.Controllers {
             switch (method) {
                 case "DONEXT":
                     result = _Auto.DoNext(m);
+                    toReturn = m.PreviousStepID;
                     break;
                 default:
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.NotFound);
             }
                  
             if (result)
-                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+                return new JsonHelper.JsonNetResult(toReturn, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error); 
                

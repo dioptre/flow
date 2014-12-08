@@ -21,6 +21,7 @@ using EXPEDIT.Share.Services;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using Orchard.Environment.Configuration;
 
 namespace EXPEDIT.Flow.Services {
 
@@ -33,7 +34,8 @@ namespace EXPEDIT.Flow.Services {
         private Guid? contactID = null;
         private Guid? companyID = null;
         private Guid? applicationID = null;
-
+        private readonly ShellSettings _shellSettings;
+        private bool ProxyAuthenticated { get; set; }
 
 
         private Guid? ApplicationID
@@ -91,12 +93,14 @@ namespace EXPEDIT.Flow.Services {
         public AutomationService(
             IOrchardServices orchardServices,
             IUsersService users,
-            IWorkflowService wf
+            IWorkflowService wf,
+             ShellSettings shellSettings
             )
         {
             _users = users;
             _services = orchardServices;
             _wf = wf;
+            _shellSettings = shellSettings;
         }
 
 
@@ -118,27 +122,37 @@ namespace EXPEDIT.Flow.Services {
 
         public bool Authenticate(AutomationViewModel m, string method)
         {
-            Guid applicationID;
-            if (!Guid.TryParse(m.Application, out applicationID))
-                return false;
-            byte[] bytes = Encoding.UTF8.GetBytes(m.Password);
-            SHA256Managed hashstring = new SHA256Managed();
-            byte[] hash = hashstring.ComputeHash(bytes);
-            string hashString = string.Empty;
-            foreach (byte x in hash)
-            {
-                hashString += String.Format("{0:x2}", x);
-            }
+
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                var trigger = d.Triggers.FirstOrDefault(f => f.JsonProxyApplicationID == applicationID && f.JsonUsername == m.Username && f.JsonPassword == hashString && f.JsonMethod == method
+                
+                var runningApplicationID = (from o in d.Applications where o.ApplicationName == _shellSettings.Name select o.ApplicationId).FirstOrDefault();
+                Guid applicationID;
+                if (!Guid.TryParse(m.Application, out applicationID))
+                    applicationID = runningApplicationID;
+                else if (applicationID != runningApplicationID)
+                    return false;
+
+                byte[] bytes = Encoding.UTF8.GetBytes(m.Password);
+                SHA256Managed hashstring = new SHA256Managed();
+                byte[] hash = hashstring.ComputeHash(bytes);
+                string hashString = string.Empty;
+                foreach (byte x in hash)
+                {
+                    hashString += String.Format("{0:x2}", x);
+                }
+
+                var trigger = d.Triggers.FirstOrDefault(f => f.JsonProxyApplicationID == applicationID && f.JsonUsername == m.Username 
+                    && ((f.JsonPassword == hashString && f.JsonPasswordType=="SHA256") || (f.JsonPassword == m.Password && f.JsonPasswordType == "TEXT"))
+                    && f.JsonMethod == method
                     && f.VersionDeletedBy == null && f.Version == 0);
                 if (trigger == null)
                     return false;
                 ApplicationID = applicationID;
                 ContactID = trigger.JsonProxyContactID;
                 CompanyID = trigger.JsonProxyCompanyID;
+                ProxyAuthenticated = true;
                 return true;
 
             }
@@ -311,7 +325,7 @@ namespace EXPEDIT.Flow.Services {
                     if (m.ReferenceID.HasValue)
                         m.PreviousStep.ProjectPlanTaskResponseID = m.ReferenceID.Value; //Get stepid from the url
                     else
-                        return true; //The step is in the closed state
+                        m.PreviousStep.ProjectPlanTaskResponseID = Guid.NewGuid(); //Lets create one
                 }
                     
                 
@@ -384,7 +398,7 @@ namespace EXPEDIT.Flow.Services {
                                          ).FirstOrDefault();
                             }
                         }
-                        if (m.PreviousStep.ActualGraphDataID == null)
+                        if (m.PreviousStep.ActualGraphDataID == null || m.PreviousStep.ActualGraphDataID == Guid.Empty)
                         {
                             m.Error = "Couldn't identify distinct start in workflow.";
                             return false;
@@ -467,6 +481,40 @@ namespace EXPEDIT.Flow.Services {
                         
                         m.PreviousStep.Began = now;
                         d.ProjectPlanTaskResponses.AddObject(m.PreviousStep);
+
+                        Dictionary<string, string> pdd = new Dictionary<string, string>();
+                        if (ProxyAuthenticated)
+                            pdd = m.Variables;
+                        else 
+                            pdd = m.QueryParamsVariables;
+
+                        //OK now save context variables passed in
+                        foreach (var v in m.Variables)
+                        {
+                            var pdtid = Guid.NewGuid();
+                            var lbl = string.Format("{0}",v.Key).Replace("\"", "\\\"");
+                            var pdt = new ProjectDataTemplate
+                            {
+                                ProjectDataTemplateID = pdtid,
+                                TemplateStructure = string.Format("{{\"label\":\"{0}\",\"field_type\":\"text\",\"required\":false,\"field_options\":{{\"size\":\"small\"}},\"cid\":\"{1}\",\"uid\":\"{2}\"}}", lbl , pdtid, pdtid),
+                                CommonName = v.Key,
+                                VersionUpdated = now,
+                                VersionUpdatedBy = contact
+                            };
+                            d.ProjectDataTemplates.AddObject(pdt);
+                            var pd = new ProjectData
+                            {
+                                ProjectDataID = Guid.NewGuid(),
+                                ProjectID = m.ProjectID,
+                                ProjectDataTemplateID = pdtid,
+                                ProjectPlanTaskResponseID = m.PreviousStepID,
+                                Value = v.Value,
+                                VersionUpdated = now,
+                                VersionUpdatedBy = contact
+                            };
+                            d.ProjectDatas.AddObject(pd);
+                        }
+                        
 
                         d.SaveChanges();
 
@@ -599,7 +647,7 @@ namespace EXPEDIT.Flow.Services {
                     }
 
                     if (m.PreviousWorkflowInstance != null && m.PreviousWorkflowInstance.Idle.HasValue)
-                        m.PreviousStep.Hours = ((decimal)((now - m.PreviousWorkflowInstance.Idle.Value.AddSeconds(-ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS)).TotalHours));
+                        m.PreviousStep.Hours = (m.PreviousStep.Hours ?? 0) + ((decimal)((now - m.PreviousWorkflowInstance.Idle.Value.AddSeconds(-ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS)).TotalHours));
 
                     if (nextStep != Guid.Empty || isCompleted)
                     {
