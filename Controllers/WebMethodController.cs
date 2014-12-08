@@ -72,14 +72,23 @@ namespace EXPEDIT.Flow.Controllers {
         //[ValidateAntiForgeryToken]
         public ActionResult ExecuteMethod(string id, string reference)
         {
-            //, string reference = null, string username = null, string password = null, string workflow = null,  string application = null
-            if (string.IsNullOrWhiteSpace(reference))
-                reference = Request.Params["reference"];
-            string username = Request.Params["username"];
-            string password = Request.Params["password"];
-            string workflow = Request.Params["workflow"];
-            string application = Request.Params["application"];
-
+            var dict = Request.QueryString.ToDictionary();
+            if (dict.ContainsKey("reference"))
+            {
+                var temp = dict["reference"];
+                dict.Remove("reference");
+                dict.Add("ReferenceID", temp);
+            }
+            else if (!string.IsNullOrWhiteSpace(reference))
+            {
+                dict.Add("ReferenceID", reference);
+            }
+            if (dict.ContainsKey("workflow"))
+            {
+                var temp = dict["workflow"];
+                dict.Remove("workflow");
+                dict.Add("GraphDataGroupID", temp);
+            }
 
             var result = false;
             if (string.IsNullOrWhiteSpace(id))
@@ -87,11 +96,12 @@ namespace EXPEDIT.Flow.Controllers {
             var json = new StreamReader(Request.InputStream).ReadToEnd();
             if (string.IsNullOrWhiteSpace(json))
             {
-                json = string.Format("{{ ReferenceID: '{0}', username: '{1}', password: '{2}', application: '{3}', GraphDataGroupID: '{4}' }}", reference, username, password, application, workflow);
+                json = dict.ToJsonObject();
             }
             var m = new AutomationViewModel
             {
-                JSON = json
+                JSON = json,
+                QueryParams = dict
             };
             Guid trid;
             if (Guid.TryParse(reference, out trid))

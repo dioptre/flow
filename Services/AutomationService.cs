@@ -35,6 +35,7 @@ namespace EXPEDIT.Flow.Services {
         private Guid? companyID = null;
         private Guid? applicationID = null;
         private readonly ShellSettings _shellSettings;
+        private bool ProxyAuthenticated { get; set; }
 
 
         private Guid? ApplicationID
@@ -142,13 +143,16 @@ namespace EXPEDIT.Flow.Services {
                     hashString += String.Format("{0:x2}", x);
                 }
 
-                var trigger = d.Triggers.FirstOrDefault(f => f.JsonProxyApplicationID == applicationID && f.JsonUsername == m.Username && f.JsonPassword == hashString && f.JsonMethod == method
+                var trigger = d.Triggers.FirstOrDefault(f => f.JsonProxyApplicationID == applicationID && f.JsonUsername == m.Username 
+                    && ((f.JsonPassword == hashString && f.JsonPasswordType=="SHA256") || (f.JsonPassword == m.Password && f.JsonPasswordType == "TEXT"))
+                    && f.JsonMethod == method
                     && f.VersionDeletedBy == null && f.Version == 0);
                 if (trigger == null)
                     return false;
                 ApplicationID = applicationID;
                 ContactID = trigger.JsonProxyContactID;
                 CompanyID = trigger.JsonProxyCompanyID;
+                ProxyAuthenticated = true;
                 return true;
 
             }
@@ -394,7 +398,7 @@ namespace EXPEDIT.Flow.Services {
                                          ).FirstOrDefault();
                             }
                         }
-                        if (m.PreviousStep.ActualGraphDataID == null)
+                        if (m.PreviousStep.ActualGraphDataID == null || m.PreviousStep.ActualGraphDataID == Guid.Empty)
                         {
                             m.Error = "Couldn't identify distinct start in workflow.";
                             return false;
@@ -477,6 +481,36 @@ namespace EXPEDIT.Flow.Services {
                         
                         m.PreviousStep.Began = now;
                         d.ProjectPlanTaskResponses.AddObject(m.PreviousStep);
+
+                        if (ProxyAuthenticated)
+                        {
+                            //OK now save context variables passed in
+                            foreach (var v in m.Variables)
+                            {
+                                var pdtid = Guid.NewGuid();
+                                var lbl = string.Format("{0}",v.Key).Replace("\"", "\\\"");
+                                var pdt = new ProjectDataTemplate
+                                {
+                                    ProjectDataTemplateID = pdtid,
+                                    TemplateStructure = string.Format("{{\"label\":\"{0}\",\"field_type\":\"text\",\"required\":false,\"field_options\":{{\"size\":\"small\"}},\"cid\":\"{1}\",\"uid\":\"{2}\"}}", lbl , pdtid, pdtid),
+                                    CommonName = v.Key,
+                                    VersionUpdated = now,
+                                    VersionUpdatedBy = contact
+                                };
+                                d.ProjectDataTemplates.AddObject(pdt);
+                                var pd = new ProjectData
+                                {
+                                    ProjectDataID = Guid.NewGuid(),
+                                    ProjectID = m.ProjectID,
+                                    ProjectDataTemplateID = pdtid,
+                                    ProjectPlanTaskResponseID = m.PreviousStepID,
+                                    Value = v.Value,
+                                    VersionUpdated = now,
+                                    VersionUpdatedBy = contact
+                                };
+                                d.ProjectDatas.AddObject(pd);
+                            }
+                        }
 
                         d.SaveChanges();
 
