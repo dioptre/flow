@@ -217,6 +217,53 @@ namespace EXPEDIT.Flow.Services {
 
         }
 
+
+
+        public object[] Report()
+        {
+            var contact = _users.ContactID;
+
+            var report1 = new List<Tuple<string, decimal?, decimal?>>();
+            var report2 = new List<Tuple<string, int?>>();
+            using (var con = new SqlConnection(_users.ApplicationConnectionString))
+            using (var cmd = new SqlCommand("E_SP_GetWorkflowData", con))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                //query, contact, application, s, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, start, pageSize, verified, found
+                var qP = cmd.CreateParameter();
+                qP.ParameterName = "@contactid";
+                qP.DbType = DbType.Guid;
+                qP.Value = contact;
+                cmd.Parameters.Add(qP);
+
+                con.Open();
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            report1.Add(new Tuple<string, decimal?, decimal?>(reader[0] as string, reader[1] as decimal?, reader[2] as decimal?));
+                        }
+
+                        if (reader.NextResult())
+                        {
+                            while (reader.Read())
+                                report2.Add(new Tuple<string, int?>(reader[0] as string, reader[1] as int?));
+                        }
+                    }
+                }
+                con.Close();
+
+            }
+            
+            return new object[] { report1.ToArray(), report2.ToArray() };
+
+        }
+
+
+
         public WikiViewModel GetWiki(string wikiName, Guid? nid)
         {
             wikiName = wikiName.ToSlug();

@@ -1229,5 +1229,16 @@ namespace EXPEDIT.Flow.Controllers {
 
         }
 
+        [Authorize]
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("Reports")]
+        public ActionResult GetReports()
+        {
+                return new JsonHelper.JsonNetResult(_Flow.Report(), JsonRequestBehavior.AllowGet);
+
+        }
+
+
     }
 }

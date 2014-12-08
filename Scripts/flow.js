@@ -197,6 +197,22 @@ App.StyleguideRoute = Ember.Route.extend({
     }
 });
 
+App.ReportRoute = Ember.Route.extend({
+    model: function () {
+        return Ember.RSVP.hash({
+            data : new Ember.RSVP.Promise(function(resolve) {
+                $.ajax('/flow/reports').then(function (m) {
+                    resolve(m);
+                });
+            })
+        });           
+    },
+    afterModel: function (m) {
+        m.impact = Enumerable.From(m.data[0]).Select("{group:ToTitleCase($.Item1.replace(/_/g, ' ')), xValue: $.Item2, yValue: $.Item3*100.0 }").ToArray();
+        m.overdue = Enumerable.From(m.data[1]).Select("{label:ToTitleCase($.Item1.replace(/_/g, ' ')), value: $.Item2 }").ToArray();
+    }
+});
+
 App.ReportController = Ember.Controller.extend({ 
     // Used for horizontal bar chart, vertical bar chart, and pie chart
     content: [
@@ -4540,7 +4556,15 @@ App.Trigger = DS.Model.extend({
     ExternalUrl: DS.attr('string'), //http://dothis/rest/url
     ExternalRequestMethod: DS.attr('string', { defaultValue: 'GET' }),
     ExternalFormType: DS.attr('string', { defaultValue: 'JSON' }), 
-    PassThrough: DS.attr('string', { defaultValue: true }), 
+    PassThrough: DS.attr('string', { defaultValue: true }),
+    RunOnce: DS.attr('string',  { defaultValue: true }),
+    DelaySeconds: DS.attr('string',  { defaultValue: 0 }),
+    DelayDays: DS.attr('string',  { defaultValue: 0 }),
+    DelayWeeks: DS.attr('string',  { defaultValue: 0 }),
+    DelayMonths: DS.attr('string',  { defaultValue: 0 }),
+    DelayYears: DS.attr('string',  { defaultValue: 0 }),
+    RepeatDelay: DS.attr('string',  { defaultValue: 0 }),
+    DelayUntil: DS.attr('string'), //Do this later? Repeat until later?
     condition: DS.belongsTo('condition', { async: true }),
 });
 
@@ -4552,8 +4576,7 @@ App.GraphDataTrigger = App.Trigger.extend({
     TriggerID: DS.attr('string'),
     OnEnter: DS.attr('string'),
     OnDataUpdate: DS.attr('string'),
-    OnExit: DS.attr('string'),
-    RunOnce: DS.attr('string')
+    OnExit: DS.attr('string')
 });
 
 

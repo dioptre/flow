@@ -419,12 +419,12 @@
         <div class="row">
             <div class="col-md-6">
 
-                <h4>Top 6 Tasks</h4>
+                <h4>Business Impact</h4>
                 <div class="chart-container">
                   {{scatter-chart
-                    data=scatterContent
-                    xValueDisplayName="Risk"
-                    yValueDisplayName="Return"
+                    data=model.impact
+                    xValueDisplayName="Completed Tasks - Total Duration (hours)"
+                    yValueDisplayName="Relative Expectation (percent)"
                   }}
                 </div>
                 
@@ -457,10 +457,10 @@
             </div>
             <div class="col-md-6">
 
-                @*<h4>Forecast Revenue & Cost by Industry</h4>
+                <h4>Outstanding Tasks</h4>
                 <div class="chart-container">
                 {{horizontal-bar-chart
-                   data=content
+                   data=model.overdue
                 }}
                 </div>
 
@@ -471,7 +471,7 @@
                 <br>
                 
 
-                <h4>Estimated vs Actual</h4>
+                @*<h4>Estimated vs Actual</h4>
                 <div class="chart-container">
                   {{time-series-chart
                     barData=timeSeriesBarContent
