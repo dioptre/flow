@@ -224,7 +224,7 @@ namespace EXPEDIT.Flow.Services {
             var contact = _users.ContactID;
 
             var report1 = new List<Tuple<string, decimal?, decimal?>>();
-            var report2 = new List<Tuple<string, int?>>();
+            var report2 = new List<Tuple<string, int?, decimal?>>();
             using (var con = new SqlConnection(_users.ApplicationConnectionString))
             using (var cmd = new SqlCommand("E_SP_GetWorkflowData", con))
             {
@@ -250,7 +250,7 @@ namespace EXPEDIT.Flow.Services {
                         if (reader.NextResult())
                         {
                             while (reader.Read())
-                                report2.Add(new Tuple<string, int?>(reader[0] as string, reader[1] as int?));
+                                report2.Add(new Tuple<string, int?, decimal?>(reader[0] as string, reader[1] as int?, reader[2] as decimal?));
                         }
                     }
                 }
@@ -771,7 +771,7 @@ namespace EXPEDIT.Flow.Services {
                     (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
                     (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
                     //(from o in d.GraphDataHistories where o.GraphDataID == m.GraphDataID select o).Delete();
-                    //(from o in d.GraphDataTriggers where o.GraphDataID == m.GraphDataID select o).Delete();
+                    //(from o in d.TriggerGraphs where o.GraphDataID == m.GraphDataID select o).Delete();
                     //(from o in d.ProjectPlanTaskResponses where o.ActualGraphDataID == m.GraphDataID select o).Delete();
                     //(from o in d.Tasks where o.GraphDataID == m.GraphDataID select o).Delete();
                 }
@@ -898,7 +898,7 @@ namespace EXPEDIT.Flow.Services {
                 (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
                 (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
                 //(from o in d.GraphDataHistories where o.GraphDataID == m.GraphDataID select o).Delete();
-                //(from o in d.GraphDataTriggers where o.GraphDataID == m.GraphDataID select o).Delete();
+                //(from o in d.TriggerGraphs where o.GraphDataID == m.GraphDataID select o).Delete();
                 //(from o in d.ProjectPlanTaskResponses where o.ActualGraphDataID == m.GraphDataID select o).Delete();
                 //(from o in d.Tasks where o.GraphDataID == m.GraphDataID select o).Delete();
             }
@@ -3313,6 +3313,11 @@ namespace EXPEDIT.Flow.Services {
                     if (m.PerformanceMetricParameterID != null && cc.PerformanceMetricParameterID != m.PerformanceMetricParameterID) cc.PerformanceMetricParameterID = m.PerformanceMetricParameterID;
                     if (m.PerformanceMetricQuantity != null && cc.PerformanceMetricQuantity != m.PerformanceMetricQuantity) cc.PerformanceMetricQuantity = m.PerformanceMetricQuantity;
                     if (m.Comment != null && cc.Comment != m.Comment) cc.Comment = m.Comment;
+                    if (cc.EntityState == EntityState.Modified)
+                    {
+                        cc.VersionUpdated = DateTime.UtcNow;
+                        cc.VersionUpdatedBy = contact;
+                    }
                     //Not Implemented
                     d.SaveChanges();
                     return true;
@@ -3382,15 +3387,6 @@ namespace EXPEDIT.Flow.Services {
                                  ExternalRequestMethod = o.ExternalRequestMethod,
                                  ExternalFormType = o.ExternalFormType,
                                  PassThrough = o.PassThrough,
-                                 //VersionOwnerContactID = o.VersionOwnerContactID
-                                 //GraphDataTriggerID = o.GraphDataTriggerID,
-                                 //GraphDataID = o.GraphDataID,
-                                 //GraphDataGroupTriggerID = o.GraphDataGroupTriggerID,
-                                 //GraphDataGroupID = o.GraphDataGroupID,
-                                 //MergeProjectData = o.MergeProjectData,
-                                 //OnEnter = o.OnEnter,
-                                 //OnDataUpdate = o.OnDataUpdate,
-                                 //OnExit = o.OnExit,
                                  //RunOnce = o.RunOnce
                              }).SingleOrDefault();
                     return m;
@@ -3420,6 +3416,7 @@ namespace EXPEDIT.Flow.Services {
                                 CommonName = o.CommonName,
                                 TriggerTypeID = o.TriggerTypeID,
                                 JsonMethod = o.JsonMethod,
+                                //Commented unsafe data
                                 //JsonProxyApplicationID = o.JsonProxyApplicationID,
                                 //JsonProxyContactID = o.JsonProxyContactID,
                                 //JsonProxyCompanyID = o.JsonProxyCompanyID,
@@ -3434,7 +3431,7 @@ namespace EXPEDIT.Flow.Services {
                                 ExternalRequestMethod = o.ExternalRequestMethod,
                                 ExternalFormType = o.ExternalFormType,
                                 PassThrough = o.PassThrough,
-                                //GraphDataTriggerID = o.GraphDataTriggerID,
+                                //TriggerGraphID = o.TriggerGraphID,
                                 //GraphDataID = o.GraphDataID,
                                 //GraphDataGroupTriggerID = o.GraphDataGroupTriggerID,
                                 //GraphDataGroupID = o.GraphDataGroupID,
@@ -3489,14 +3486,6 @@ namespace EXPEDIT.Flow.Services {
                         ExternalRequestMethod = m.ExternalRequestMethod,
                         ExternalFormType = m.ExternalFormType,
                         PassThrough = m.PassThrough,
-                        //GraphDataTriggerID = m.GraphDataTriggerID,
-                        //GraphDataID = m.GraphDataID,
-                        //GraphDataGroupTriggerID = m.GraphDataGroupTriggerID,
-                        //GraphDataGroupID = m.GraphDataGroupID,
-                        //MergeProjectData = m.MergeProjectData,
-                        //OnEnter = m.OnEnter,
-                        //OnDataUpdate = m.OnDataUpdate,
-                        //OnExit = m.OnExit,
                         //RunOnce = m.RunOnce,
                         VersionUpdated = DateTime.UtcNow,
                         VersionUpdatedBy = contact,
@@ -3547,16 +3536,12 @@ namespace EXPEDIT.Flow.Services {
                     if (m.ExternalRequestMethod != null && cc.ExternalRequestMethod != m.ExternalRequestMethod) cc.ExternalRequestMethod = m.ExternalRequestMethod;
                     if (m.ExternalFormType != null && cc.ExternalFormType != m.ExternalFormType) cc.ExternalFormType = m.ExternalFormType;
                     if (m.PassThrough != null && cc.PassThrough != m.PassThrough) cc.PassThrough = m.PassThrough;
-                    //if (m.GraphDataTriggerID != null && cc.GraphDataTriggerID != m.GraphDataTriggerID) cc.GraphDataTriggerID = m.GraphDataTriggerID;
-                    //if (m.GraphDataID != null && cc.GraphDataID != m.GraphDataID) cc.GraphDataID = m.GraphDataID;
-                    //if (m.GraphDataGroupTriggerID != null && cc.GraphDataGroupTriggerID != m.GraphDataGroupTriggerID) cc.GraphDataGroupTriggerID = m.GraphDataGroupTriggerID;
-                    //if (m.GraphDataGroupID != null && cc.GraphDataGroupID != m.GraphDataGroupID) cc.GraphDataGroupID = m.GraphDataGroupID;
-                    //if (m.MergeProjectData != null && cc.MergeProjectData != m.MergeProjectData) cc.MergeProjectData = m.MergeProjectData;
-                    //if (m.OnEnter != null && cc.OnEnter != m.OnEnter) cc.OnEnter = m.OnEnter;
-                    //if (m.OnDataUpdate != null && cc.OnDataUpdate != m.OnDataUpdate) cc.OnDataUpdate = m.OnDataUpdate;
-                    //if (m.OnExit != null && cc.OnExit != m.OnExit) cc.OnExit = m.OnExit;
                     //if (m.RunOnce != null && cc.RunOnce != m.RunOnce) cc.RunOnce = m.RunOnce;
-                    //Not Implemented
+                    if (cc.EntityState == EntityState.Modified)
+                    {
+                        cc.VersionUpdated = DateTime.UtcNow;
+                        cc.VersionUpdatedBy = contact;
+                    }
                     d.SaveChanges();
                     return true;
                 }
@@ -3606,6 +3591,288 @@ namespace EXPEDIT.Flow.Services {
             }
 
         }
+
+
+
+
+        public bool GetTriggerGraph(TriggerGraphViewModel m)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    if (m.GraphDataID == null)
+                        return false;
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.GraphDataID, ActionPermission.Read, typeof(GraphData)))
+                        return false;
+                     m.triggerGraphs = (from o in d.Triggers.Where(h => h.Version == 0 && h.VersionDeletedBy == null)
+                                            join gt in d.TriggerGraphs.Where(f=>f.Version == 0 && f.VersionDeletedBy == null)
+                                            on o.TriggerID equals gt.TriggerID
+                                            join c in d.Precondition.Where(f=>f.Version == 0 && f.VersionDeletedBy == null)
+                                            on o.ConditionID equals c.ConditionID
+                                            where gt.GraphDataID == m.GraphDataID && gt.GraphDataGroupID == m.GraphDataGroupID
+                                           
+                             select new TriggerGraphViewModel
+                             {
+                                 id = o.TriggerID,                                 
+                                 TriggerID = o.TriggerID,
+                                 CommonName = o.CommonName,
+                                 TriggerTypeID = o.TriggerTypeID,
+                                 JsonMethod = o.JsonMethod,
+                                 JSON = o.JSON,
+                                 SystemMethod = o.SystemMethod,
+                                 ExternalURL = o.ExternalURL,
+                                 ExternalRequestMethod = o.ExternalRequestMethod,
+                                 ExternalFormType = o.ExternalFormType,
+                                 TriggerGraphID = gt.TriggerGraphID,
+                                 GraphDataID = gt.GraphDataID,
+                                 GraphDataGroupID = gt.GraphDataGroupID,
+                                 MergeProjectData = gt.MergeProjectData,
+                                 OnEnter = gt.OnEnter,
+                                 OnDataUpdate = gt.OnDataUpdate,
+                                 OnExit = gt.OnExit,
+                                 RunOnce = o.RunOnce,
+                                 PassThrough = o.PassThrough,
+                                 DelaySeconds = o.DelaySeconds,
+                                 DelayDays = o.DelayDays,
+                                 DelayWeeks = o.DelayWeeks,
+                                 DelayMonths = o.DelayMonths,
+                                 DelayYears = o.DelayYears,
+                                 RepeatDelay = o.RepeatDelay,
+                                 DelayUntil = o.DelayUntil,
+                                 ConditionID = o.ConditionID,
+                                 Condition = c.Condition,
+                                 ConditionJSON = c.JSON,
+                                 OverrideProjectDataWithJsonCustomVars = c.OverrideProjectDataWithJsonCustomVars
+                             }).ToArray();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+
+        public bool CreateTriggerGraph(TriggerGraphViewModel m)
+        {
+            var contact = _users.ContactID;
+            var company = _users.DefaultContactCompanyID;
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(null, ActionPermission.Create, typeof(Trigger)))
+                        return false;
+                    var runningApplicationID = (from o in d.Applications where o.ApplicationName == _shellSettings.Name select o.ApplicationId).FirstOrDefault();
+                    if (runningApplicationID == Guid.Empty || runningApplicationID == null)
+                        return false;
+
+                    Precondition c  = null;
+
+                    if (!string.IsNullOrWhiteSpace(m.Condition))
+                    {
+                        c = new Precondition
+                        {
+                            ConditionID = m.ConditionID ?? Guid.NewGuid(),
+                            Condition = m.Condition,
+                            JSON = m.ConditionJSON,
+                            OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
+                            VersionUpdated = DateTime.UtcNow,
+                            VersionUpdatedBy = contact
+                        };
+                        d.Precondition.AddObject(c);
+                    }
+
+                    var t = new Trigger
+                    {
+                        TriggerID = m.TriggerID ?? Guid.NewGuid(),
+                        CommonName = m.TriggerGraphID.Value.ToString(),
+                        TriggerTypeID = m.TriggerTypeID,
+                        JsonMethod = m.JsonMethod ?? m.CommonName,
+                        //Removed for security
+                        //JsonProxyApplicationID = runningApplicationID,
+                        //JsonProxyContactID = contact,
+                        //JsonProxyCompanyID = company,
+                        //JsonAuthorizedBy = m.JsonAuthorizedBy,
+                        //JsonUsername = m.JsonUsername,
+                        //JsonPassword = m.JsonPassword,
+                        //JsonPasswordType = m.JsonPasswordType ?? "TEXT",
+                        JSON = m.JSON,
+                        SystemMethod = "USER", // m.SystemMethod ?? m.CommonName,
+                        ConditionID = m.ConditionID ?? ((c != null) ? c.ConditionID : default(Guid?)),
+                        ExternalURL = m.ExternalURL,
+                        ExternalRequestMethod = m.ExternalRequestMethod,
+                        ExternalFormType = m.ExternalFormType,
+                        PassThrough = m.PassThrough,    
+                        RunOnce = m.RunOnce,
+                        DelaySeconds = m.DelaySeconds,
+                        DelayDays = m.DelayDays,
+                        DelayWeeks = m.DelayWeeks,
+                        DelayMonths = m.DelayMonths,
+                        DelayYears = m.DelayYears,
+                        DelayUntil = m.DelayUntil,
+                        RepeatDelay = m.RepeatDelay,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionUpdatedBy = contact
+                    };
+                    d.Triggers.AddObject(t);
+                    var g = new TriggerGraph
+                    {
+                        TriggerGraphID = m.TriggerGraphID.Value,
+                        TriggerID = t.TriggerID,
+                        GraphDataID = m.GraphDataID,
+                        GraphDataGroupID = m.GraphDataGroupID,
+                        MergeProjectData = m.MergeProjectData,
+                        OnDataUpdate = m.OnDataUpdate,
+                        OnEnter = m.OnEnter,
+                        OnExit = m.OnExit,
+                        VersionUpdated = DateTime.UtcNow,
+                        VersionUpdatedBy = contact
+                    };
+                    d.TriggerGraphs.AddObject(g);
+                    d.SaveChanges();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool UpdateTriggerGraph(TriggerGraphViewModel m)
+        {
+
+            try
+            {
+                var contact = _users.ContactID;
+                var now = DateTime.Now;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var gt = (from o in d.TriggerGraphs.Where(f=>f.TriggerGraphID == m.TriggerGraphID.Value && f.Version==0 && f.VersionDeletedBy == null)
+                                   select o).Single();
+                    if (gt == null || gt.GraphDataID == null)
+                        return false;
+                    if (!CheckPermission(gt.GraphDataID, ActionPermission.Update, typeof(GraphData)))
+                        return false;
+                    //Update
+                    var cc = (from o in d.Triggers where o.TriggerID == m.id && o.VersionDeletedBy == null select o).Single();
+                    //Commented unsafe updates AG
+                    //if (m.CommonName != null && cc.CommonName != m.CommonName) cc.CommonName = m.CommonName;
+                    if (m.TriggerTypeID != null && cc.TriggerTypeID != m.TriggerTypeID) cc.TriggerTypeID = m.TriggerTypeID;
+                    if (m.JsonMethod != null && cc.JsonMethod != m.JsonMethod) cc.JsonMethod = m.JsonMethod;
+                    //if (m.JsonProxyApplicationID != null && cc.JsonProxyApplicationID != m.JsonProxyApplicationID) cc.JsonProxyApplicationID = m.JsonProxyApplicationID;
+                    //if (m.JsonProxyContactID != null && cc.JsonProxyContactID != m.JsonProxyContactID) cc.JsonProxyContactID = m.JsonProxyContactID;
+                    //if (m.JsonProxyCompanyID != null && cc.JsonProxyCompanyID != m.JsonProxyCompanyID) cc.JsonProxyCompanyID = m.JsonProxyCompanyID;
+                    //if (m.JsonAuthorizedBy != null && cc.JsonAuthorizedBy != m.JsonAuthorizedBy) cc.JsonAuthorizedBy = m.JsonAuthorizedBy;
+                    //if (m.JsonUsername != null && cc.JsonUsername != m.JsonUsername) cc.JsonUsername = m.JsonUsername;
+                    //if (m.JsonPassword != null && cc.JsonPassword != m.JsonPassword) cc.JsonPassword = m.JsonPassword;
+                    //if (m.JsonPasswordType != null && cc.JsonPasswordType != m.JsonPasswordType) cc.JsonPasswordType = m.JsonPasswordType;
+                    if (m.JSON != null && cc.JSON != m.JSON) cc.JSON = m.JSON;
+                    //if (m.SystemMethod != null && cc.SystemMethod != m.SystemMethod) cc.SystemMethod = m.SystemMethod;                    
+                    if (m.ExternalURL != null && cc.ExternalURL != m.ExternalURL) cc.ExternalURL = m.ExternalURL;
+                    if (m.ExternalRequestMethod != null && cc.ExternalRequestMethod != m.ExternalRequestMethod) cc.ExternalRequestMethod = m.ExternalRequestMethod;
+                    if (m.ExternalFormType != null && cc.ExternalFormType != m.ExternalFormType) cc.ExternalFormType = m.ExternalFormType;
+                    if (m.PassThrough != null && cc.PassThrough != m.PassThrough) cc.PassThrough = m.PassThrough;
+                    //if (m.GraphDataID != null && gt.GraphDataID != m.GraphDataID) gt.GraphDataID = m.GraphDataID;
+                    //if (m.GraphDataGroupID != null && gt.GraphDataGroupID != m.GraphDataGroupID) gt.GraphDataGroupID = m.GraphDataGroupID;
+                    if (m.MergeProjectData != null && gt.MergeProjectData != m.MergeProjectData) gt.MergeProjectData = m.MergeProjectData;
+                    if (m.OnEnter != null && gt.OnEnter != m.OnEnter) gt.OnEnter = m.OnEnter;
+                    if (m.OnDataUpdate != null && gt.OnDataUpdate != m.OnDataUpdate) gt.OnDataUpdate = m.OnDataUpdate;
+                    if (m.OnExit != null && gt.OnExit != m.OnExit) gt.OnExit = m.OnExit;
+                    if (m.RunOnce != null && cc.RunOnce != m.RunOnce) cc.RunOnce = m.RunOnce;                    
+                    if (m.DelaySeconds != null && cc.DelaySeconds != m.DelaySeconds) cc.DelaySeconds = m.DelaySeconds;
+                    if (m.DelayDays != null && cc.DelayDays != m.DelayDays) cc.DelayDays = m.DelayDays;
+                    if (m.DelayWeeks != null && cc.DelayWeeks != m.DelayWeeks) cc.DelayWeeks = m.DelayWeeks;
+                    if (m.DelayMonths != null && cc.DelayMonths != m.DelayMonths) cc.DelayMonths = m.DelayMonths;
+                    if (m.DelayYears != null && cc.DelayYears != m.DelayYears) cc.DelayYears = m.DelayYears;
+                    if (m.RepeatDelay != null && cc.RepeatDelay != m.RepeatDelay) cc.RepeatDelay = m.RepeatDelay;
+                    if (m.DelayUntil != null && cc.DelayUntil != m.DelayUntil) cc.DelayUntil = m.DelayUntil;
+
+                    if (m.Condition != null)
+                    {
+                        if (cc.ConditionID == null)
+                        {
+                            var pc = new Precondition
+                            {
+                                ConditionID = m.ConditionID ?? Guid.NewGuid(),
+                                Condition = m.Condition,
+                                JSON = m.ConditionJSON,
+                                OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
+                                VersionUpdated = DateTime.UtcNow,
+                                VersionUpdatedBy = contact
+                            };
+                            d.Precondition.AddObject(pc);
+                        }
+                        else
+                        {
+                            if (cc.Condition.Condition != null && cc.Condition.Condition != m.Condition) cc.Condition.Condition = m.Condition;
+                            if (cc.Condition.JSON != null && cc.Condition.JSON != m.ConditionJSON) cc.Condition.JSON = m.ConditionJSON;
+                            if (cc.Condition.OverrideProjectDataWithJsonCustomVars != null && cc.Condition.OverrideProjectDataWithJsonCustomVars != m.OverrideProjectDataWithJsonCustomVars) cc.Condition.OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars;
+                        }
+                    }
+
+                    if (cc.EntityState == EntityState.Modified)
+                    {
+                        cc.VersionUpdated = DateTime.UtcNow;
+                        cc.VersionUpdatedBy = contact;
+                    }
+                    if (cc.Condition != null && cc.Condition.EntityState == EntityState.Modified)
+                    {
+                        cc.Condition.VersionUpdated = DateTime.UtcNow;
+                        cc.Condition.VersionUpdatedBy = contact;
+                    }
+                    if (gt.EntityState == EntityState.Modified)
+                    {
+                        gt.VersionUpdated = DateTime.UtcNow;
+                        gt.VersionUpdatedBy = contact;
+                    }
+                    //Not Implemented
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool DeleteTriggerGraph(TriggerGraphViewModel m)
+        {
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (m.GraphDataID == null)
+                        return false;
+                    if (!CheckPermission(m.GraphDataID, ActionPermission.Delete, typeof(GraphData)))
+                        return false;
+                    //Delete
+                    var pd = (from o in d.TriggerGraphs where o.TriggerGraphID == m.id && o.VersionDeletedBy == null select o).Single();
+                    if (pd.Trigger.Condition != null)
+                        d.Precondition.DeleteObject(pd.Trigger.Condition);
+                    d.Triggers.DeleteObject(pd.Trigger);
+                    d.TriggerGraphs.DeleteObject(pd);
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
 
     }
 }

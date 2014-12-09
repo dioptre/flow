@@ -1130,3 +1130,8 @@ color: red;
 .green {
     color: green;
 }
+
+#lateTasksReport .x.axis > .tick {
+    display: none;
+}
+

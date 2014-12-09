@@ -145,7 +145,7 @@ namespace EXPEDIT.Flow.Services {
 
                 var trigger = d.Triggers.FirstOrDefault(f => f.JsonProxyApplicationID == applicationID && f.JsonUsername == m.Username 
                     && ((f.JsonPassword == hashString && f.JsonPasswordType=="SHA256") || (f.JsonPassword == m.Password && f.JsonPasswordType == "TEXT"))
-                    && f.JsonMethod == method
+                    && f.CommonName == method
                     && f.VersionDeletedBy == null && f.Version == 0);
                 if (trigger == null)
                     return false;
