@@ -3765,7 +3765,13 @@ App.TriggerNodeComponent = Ember.Component.extend({
         store.findQuery('triggerGraph', config).then(function(a) {
             // if problem do something else - needs error handeling
 
-            return a.get('firstObject')
+            var result = a.get('firstObject');
+            if (result)
+                return result;
+            else {
+                config.JSON = _this.get('defaultConfig');
+                return store.createRecord('triggerGraph', config);
+            }
         }, function(){
 
             // Load the default config first
@@ -3773,8 +3779,6 @@ App.TriggerNodeComponent = Ember.Component.extend({
             return store.createRecord('triggerGraph', config);
         }).then(function(a){
             _this.set('loading', false);
-
-            debugger;
 
 
             if (a.get('JSON')) {
@@ -3818,14 +3822,14 @@ App.TriggerNodeComponent = Ember.Component.extend({
             App.ThenTrigger.create({
                 type: 'email'
             })
-            ,
-            App.ThenTrigger.create({
+            //,
+            //App.ThenTrigger.create({
             
-                type: 'webhook',
-                webhook: {
-                    url: "",
-                }
-            })
+            //    type: 'webhook',
+            //    webhook: {
+            //        url: "",
+            //    }
+            //})
             
         ],
         when: [

@@ -286,7 +286,7 @@ namespace EXPEDIT.Flow.Services {
                     m = new WikiViewModel { GraphDataID = id.Value, IsNew = true, GraphName = wikiName };
                 else
                 {
-                    m = (from o in d.GraphData
+                    m = (from o in d.GraphData.Where(f=>f.Version == 0 && f.VersionDeletedBy == null)
                          where o.GraphDataID == id
                          select
                              new WikiViewModel
@@ -368,9 +368,9 @@ namespace EXPEDIT.Flow.Services {
                 if (id.HasValue && d.GraphData.Where(f => f.GraphDataID == id.Value && f.GraphName == wikiName).Any())
                     return false;
                 if (!creatorCompany.HasValue)
-                    return d.GraphData.Any(f => (f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null)));
+                    return d.GraphData.Any(f => f.Version == 0 && f.VersionDeletedBy == null && (f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null)));
                 else
-                    return d.GraphData.Any(f => (f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany)));
+                    return d.GraphData.Any(f => f.Version == 0 && f.VersionDeletedBy == null && (f.GraphName == wikiName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany)));
 
             }
         }
@@ -385,12 +385,12 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                if (id.HasValue && d.GraphDataGroups.Where(f => f.GraphDataGroupID == id.Value && f.GraphDataGroupName == workflowName).Any())
+                if (id.HasValue && d.GraphDataGroups.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == id.Value && f.GraphDataGroupName == workflowName).Any())
                     return false;
                 if (!creatorCompany.HasValue)
-                    return d.GraphDataGroups.Any(f => (f.GraphDataGroupName == workflowName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null)));
+                    return d.GraphDataGroups.Any(f => f.Version == 0 && f.VersionDeletedBy == null && (f.GraphDataGroupName == workflowName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == null)));
                 else
-                    return d.GraphDataGroups.Any(f => (f.GraphDataGroupName == workflowName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany)));
+                    return d.GraphDataGroups.Any(f => f.Version == 0 && f.VersionDeletedBy == null && (f.GraphDataGroupName == workflowName && (f.VersionOwnerCompanyID == company || f.VersionOwnerCompanyID == creatorCompany)));
             }
         }
 
@@ -709,10 +709,10 @@ namespace EXPEDIT.Flow.Services {
                             files.Add(Guid.Parse(match.Groups[1].Value));
                     }
                     if (files.Count > 0)
-                        (from o in d.GraphDataFileDatas where !files.Contains(o.FileDataID.Value) && o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
+                        (from o in d.GraphDataFileDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where !files.Contains(o.FileDataID.Value) && o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
                     else
-                        (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
-                    var fd = (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).AsEnumerable();
+                        (from o in d.GraphDataFileDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
+                    var fd = (from o in d.GraphDataFileDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataID == m.GraphDataID select o).AsEnumerable();
                     foreach (var file in files)
                     {
                         if (!fd.Any(f => f.FileDataID == file))
@@ -741,7 +741,7 @@ namespace EXPEDIT.Flow.Services {
                         if (match.Success)
                             locations.Add(Guid.Parse(match.Groups[1].Value));
                     }
-                    (from o in d.GraphDataLocations where !locations.Contains(o.LocationID.Value) && o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
+                    (from o in d.GraphDataLocations.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where !locations.Contains(o.LocationID.Value) && o.GraphDataID == m.GraphDataID.Value select o).Delete(); //Delete redundant links
                     var ld = (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).AsEnumerable();
                     foreach (var location in locations)
                     {
@@ -768,8 +768,8 @@ namespace EXPEDIT.Flow.Services {
                 else
                 {
                     //(from o in d.GraphDataRelation where o.FromGraphDataID == m.GraphDataID || o.ToGraphDataID == m.GraphDataID select o).Delete();
-                    (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
-                    (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
+                    (from o in d.GraphDataLocations.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataID == m.GraphDataID select o).Delete();
+                    (from o in d.GraphDataFileDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataID == m.GraphDataID select o).Delete();
                     //(from o in d.GraphDataHistories where o.GraphDataID == m.GraphDataID select o).Delete();
                     //(from o in d.TriggerGraphs where o.GraphDataID == m.GraphDataID select o).Delete();
                     //(from o in d.ProjectPlanTaskResponses where o.ActualGraphDataID == m.GraphDataID select o).Delete();
@@ -895,8 +895,8 @@ namespace EXPEDIT.Flow.Services {
             else
             {
                 //(from o in d.GraphDataRelation where o.FromGraphDataID == m.GraphDataID || o.ToGraphDataID == m.GraphDataID select o).Delete();
-                (from o in d.GraphDataLocations where o.GraphDataID == m.GraphDataID select o).Delete();
-                (from o in d.GraphDataFileDatas where o.GraphDataID == m.GraphDataID select o).Delete();
+                (from o in d.GraphDataLocations.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataID == m.GraphDataID select o).Delete();
+                (from o in d.GraphDataFileDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataID == m.GraphDataID select o).Delete();
                 //(from o in d.GraphDataHistories where o.GraphDataID == m.GraphDataID select o).Delete();
                 //(from o in d.TriggerGraphs where o.GraphDataID == m.GraphDataID select o).Delete();
                 //(from o in d.ProjectPlanTaskResponses where o.ActualGraphDataID == m.GraphDataID select o).Delete();
@@ -910,7 +910,7 @@ namespace EXPEDIT.Flow.Services {
                 {
                     if (gid.HasValue)
                     {
-                        var firstProcess = !(from o in d.GraphDataRelation where o.GraphDataGroupID==gid.Value select o).Any();
+                        var firstProcess = !(from o in d.GraphDataRelation.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataGroupID == gid.Value select o).Any();
                         if (firstProcess)
                         {
                             var fp = new GraphDataRelation
@@ -985,7 +985,7 @@ namespace EXPEDIT.Flow.Services {
                 var id = CheckNodePrivileges(d, m.GraphName, m.GraphDataID, companies, company, ActionPermission.Update, out isNew);
                 if (!id.HasValue || isNew || id != m.GraphDataID)
                     return false;
-                var g = (from o in d.GraphData where o.GraphDataID == m.GraphDataID select o).Single();
+                var g = (from o in d.GraphData.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataID == m.GraphDataID select o).Single();
                 if (!string.IsNullOrWhiteSpace(m.GraphName) && m.GraphName != g.GraphName)
                 {
                     g.GraphName = m.GraphName;
@@ -1013,14 +1013,14 @@ namespace EXPEDIT.Flow.Services {
                 var id = CheckNodePrivileges(d, null, mid, companies, company, ActionPermission.Delete, out isNew);
                 if (!id.HasValue || isNew || id != mid)
                     return false;
-                var g = (from o in d.GraphData where o.GraphDataID == mid select o).Single();
-                d.GraphDataHistories.Where(f => f.GraphDataID == mid).Delete();
-                d.GraphDataRelation.Where(f => f.FromGraphDataID == mid || f.ToGraphDataID == mid).Delete();
-                d.TriggerGraphs.Where(f => f.GraphDataID == mid).Delete();
-                d.ProjectPlanTaskResponses.Where(f => f.ActualGraphDataID == mid).Delete();
-                d.Tasks.Where(f => f.GraphDataID == mid).Delete();
-                d.GraphDataFileDatas.Where(f => f.GraphDataID == mid).Delete();
-                d.GraphDataLocations.Where(f => f.GraphDataID == mid).Delete();                            
+                var g = (from o in d.GraphData.Where(f => f.Version==0 && f.VersionDeletedBy==null) where o.GraphDataID == mid select o).Single();
+                d.GraphDataHistories.Where(f => f.Version==0 && f.VersionDeletedBy==null && f.GraphDataID == mid).Delete();
+                d.GraphDataRelation.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.FromGraphDataID == mid || f.ToGraphDataID == mid).Delete();
+                d.TriggerGraphs.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();
+                d.ProjectPlanTaskResponses.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ActualGraphDataID == mid).Delete();
+                d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();
+                d.GraphDataFileDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();
+                d.GraphDataLocations.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();                            
                 d.GraphData.DeleteObject(g);
                 d.SaveChanges();
                 return true;
@@ -1038,11 +1038,11 @@ namespace EXPEDIT.Flow.Services {
                 var id = CheckNodePrivileges(d, null, mid, companies, company, ActionPermission.Delete, out isNew);
                 if (!id.HasValue || isNew || id != mid)
                     return false;
-                var g = (from o in d.GraphData where o.GraphDataID == mid select o).Single();
+                var g = (from o in d.GraphData.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataID == mid select o).Single();
                 if (gid.HasValue)
-                    d.GraphDataRelation.Where(f => (f.FromGraphDataID == mid || f.ToGraphDataID == mid) && (f.GraphDataRelationID == gid.Value)).Delete();
+                    d.GraphDataRelation.Where(f => f.Version==0 && f.VersionDeletedBy==null && (f.FromGraphDataID == mid || f.ToGraphDataID == mid) && (f.GraphDataRelationID == gid.Value)).Delete();
                 else
-                    d.GraphDataRelation.Where(f => (f.FromGraphDataID == mid || f.ToGraphDataID == mid)).Delete();
+                    d.GraphDataRelation.Where(f => f.Version==0 && f.VersionDeletedBy==null && (f.FromGraphDataID == mid || f.ToGraphDataID == mid)).Delete();
                 d.SaveChanges();
                 return true;
             }
@@ -1116,7 +1116,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(GraphDataRelation)))
                         return false;
                     //Update
-                    var gdrc = (from o in d.GraphDataRelation where o.GraphDataRelationID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var gdrc = (from o in d.GraphDataRelation.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataRelationID == m.id && o.VersionDeletedBy == null select o).Single();
                     if (m.Weight != null && gdrc.Weight != m.Weight)
                         gdrc.Weight = m.Weight;
                     if (m.Sequence != null && gdrc.Sequence != m.Sequence)
@@ -1150,7 +1150,7 @@ namespace EXPEDIT.Flow.Services {
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 bool isNew;
-                var edge = (from o in d.GraphDataRelation where o.GraphDataRelationID == mid select o).SingleOrDefault();
+                var edge = (from o in d.GraphDataRelation.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.GraphDataRelationID == mid select o).SingleOrDefault();
                 if (edge == null)
                     return true;
                 var id = CheckNodePrivileges(d, null, edge.FromGraphDataID, companies, company, ActionPermission.Delete, out isNew);
@@ -1194,7 +1194,7 @@ namespace EXPEDIT.Flow.Services {
                     else
                         firstNode = firstNodes.FromGraphDataID;
                 }
-                return (from o in d.GraphDataGroups
+                return (from o in d.GraphDataGroups.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
                         where o.GraphDataGroupID == id
                         select new FlowEdgeWorkflowViewModel
                             {                                
@@ -1268,7 +1268,7 @@ namespace EXPEDIT.Flow.Services {
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                var obj = (from o in d.GraphDataGroups where o.GraphDataGroupID == m.GraphDataGroupID select o).SingleOrDefault();
+                var obj = (from o in d.GraphDataGroups.Where(f => f.Version==0 && f.VersionDeletedBy==null) where o.GraphDataGroupID == m.GraphDataGroupID select o).SingleOrDefault();
                 if (obj == null)
                     return false;
                 var table = d.GetTableName(typeof(GraphDataGroup));
@@ -1466,7 +1466,7 @@ namespace EXPEDIT.Flow.Services {
 
                 if (m.SecurityTypeID.HasValue && m.SecurityTypeID == (uint)SecurityType.WhiteList)
                 {
-                    var delete = (from o in d.SecurityWhitelists
+                    var delete = (from o in d.SecurityWhitelists.Where(f => f.Version==0 && f.VersionDeletedBy==null)
                                   where
                                       o.OwnerApplicationID == application &&
                                       o.OwnerContactID == contact &&
@@ -1567,7 +1567,7 @@ namespace EXPEDIT.Flow.Services {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
                 if (!securityTypeID.HasValue || securityTypeID == (int)SecurityType.WhiteList)
                 {
-                    var delete = (from o in d.SecurityWhitelists
+                    var delete = (from o in d.SecurityWhitelists.Where(f => f.Version==0 && f.VersionDeletedBy==null)
                                   where
                                       o.SecurityWhitelistID == sid &&
                                       o.OwnerApplicationID == application &&
@@ -1580,7 +1580,7 @@ namespace EXPEDIT.Flow.Services {
                 }
                 if (!securityTypeID.HasValue || securityTypeID == (int)SecurityType.BlackList)
                 {
-                    var delete = (from o in d.SecurityBlacklists
+                    var delete = (from o in d.SecurityBlacklists.Where(f => f.Version==0 && f.VersionDeletedBy==null)
                                   where
                                       o.SecurityBlacklistID == sid &&
                                       o.OwnerApplicationID == application &&
@@ -1957,10 +1957,10 @@ namespace EXPEDIT.Flow.Services {
                             if (!CheckPermission(m.DocID.Value, ActionPermission.Read, typeof(GraphDataGroup)))
                                 return false;
                             m.TableType = d.GetTableName(typeof(GraphData));
-                            m.TranslationQueue = (from g in (from g in d.GraphData
+                            m.TranslationQueue = (from g in (from g in d.GraphData.Where(f => f.Version==0 && f.VersionDeletedBy==null)
                                                   join gg in d.GraphDataRelation.Where(f=>f.GraphDataGroupID == m.DocID && f.Version == 0 && f.VersionDeletedBy == null)
                                                     on g.GraphDataID equals gg.FromGraphDataID select g).Union(
-                                                     (from g in d.GraphData
+                                                     (from g in d.GraphData.Where(f => f.Version==0 && f.VersionDeletedBy==null)
                                                       join gg in d.GraphDataRelation.Where(f => f.GraphDataGroupID == m.DocID && f.Version == 0 && f.VersionDeletedBy == null)
                                                     on g.GraphDataID equals gg.ToGraphDataID select g))
                                                   join t in d.TranslationData.Where(f => f.TableType == m.TableType && f.TranslationCulture == m.TranslationCulture && f.Version == 0 && f.VersionDeletedBy == null)
@@ -2160,7 +2160,7 @@ namespace EXPEDIT.Flow.Services {
                                     {
                                         //Update
                                         if (!failedCreate)
-                                            tx = (from o in d.TranslationData where o.TranslationDataID == translation.Value.TranslationDataID && o.VersionDeletedBy == null select o).Single();
+                                            tx = (from o in d.TranslationData where o.TranslationDataID == translation.Value.TranslationDataID && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                                         else
                                             tx = (from o in d.TranslationData where 
                                                       o.TableType == m.TableType && o.ReferenceID == translation.Key && o.ReferenceName == translation.Value.OriginalName 
@@ -2235,7 +2235,7 @@ namespace EXPEDIT.Flow.Services {
                             return false;
                     }
                     //Update
-                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                     tx.OriginCulture = m.OriginCulture ?? "en-US";
                     if (m.TranslationName != null)
                         tx.TranslationName = m.TranslationName;
@@ -2278,7 +2278,7 @@ namespace EXPEDIT.Flow.Services {
                             return false;
                     }
                     //Delete
-                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                     d.TranslationData.DeleteObject(tx);                    
                     d.SaveChanges();
                     return true;
@@ -2423,7 +2423,7 @@ namespace EXPEDIT.Flow.Services {
                                     else
                                     {
                                         //Update
-                                        var tx = (from o in d.TranslationData where o.TranslationDataID == translation.TranslationDataID && o.VersionDeletedBy == null select o).Single();
+                                        var tx = (from o in d.TranslationData where o.TranslationDataID == translation.TranslationDataID && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                                         tx.ReferenceName = translation.Label;
                                         //tx.ReferenceUpdated = translation.Value.OriginalUpdated;
                                         tx.OriginCulture = m.OriginalCulture ?? "en-US";
@@ -2464,7 +2464,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(TranslationData)))
                         return false;                   
                     //Update
-                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.VersionDeletedBy == null && o.TableType == LocaleViewModel.DocType select o).Single();
+                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.Version == 0 && o.VersionDeletedBy == null && o.TableType == LocaleViewModel.DocType select o).Single();
                     tx.OriginCulture = m.OriginalCulture ?? "en-US";
                     if (m.TranslationName != null)
                         tx.TranslationName = m.TranslationName;
@@ -2493,7 +2493,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(TranslationData)))
                         return false;                  
                     //Delete
-                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.VersionDeletedBy == null && o.TableType == LocaleViewModel.DocType select o).Single();
+                    var tx = (from o in d.TranslationData where o.TranslationDataID == m.id && o.Version == 0 && o.VersionDeletedBy == null && o.TableType == LocaleViewModel.DocType select o).Single();
                     d.TranslationData.DeleteObject(tx);
                     d.SaveChanges();
                     return true;
@@ -2735,7 +2735,7 @@ namespace EXPEDIT.Flow.Services {
 
                     ProjectDataTemplate pdt = null;
                     if (m.ProjectDataTemplateID.HasValue)
-                        pdt = (from o in d.ProjectDataTemplates where o.ProjectDataTemplateID == m.ProjectDataTemplateID.Value select o).FirstOrDefault();
+                        pdt = (from o in d.ProjectDataTemplates.Where(f => f.Version==0 && f.VersionDeletedBy==null) where o.ProjectDataTemplateID == m.ProjectDataTemplateID.Value select o).FirstOrDefault();
                     if (pdt == null)
                     {
                         pdt = new ProjectDataTemplate
@@ -2794,7 +2794,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(ProjectData)))
                         return false;
                     //Update
-                    var pd = (from o in d.ProjectDatas where o.ProjectDataID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var pd = (from o in d.ProjectDatas where o.ProjectDataID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                     if (pd.Value != m.Value)
                     {
                         pd.Value = m.Value;
@@ -2822,7 +2822,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(ProjectData)))
                         return false;
                     //Delete
-                    var pd = (from o in d.ProjectDatas where o.ProjectDataID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var pd = (from o in d.ProjectDatas where o.ProjectDataID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                     d.ProjectDatas.DeleteObject(pd);
                     d.SaveChanges();
                     return true;
@@ -2931,7 +2931,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(GraphDataRelationCondition)))
                         return false;
                     //Update
-                    var gdrc = (from o in d.GraphDataRelationConditions where o.GraphDataRelationConditionID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var gdrc = (from o in d.GraphDataRelationConditions where o.GraphDataRelationConditionID == m.id &&o.Version ==0 && o.VersionDeletedBy == null select o).Single();
                     if (m.JSON != null && gdrc.Condition.JSON != m.JSON)
                         gdrc.Condition.JSON = m.JSON;
                     if (m.Condition != null && gdrc.Condition.Condition != m.Condition)
@@ -2975,7 +2975,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(GraphDataRelationCondition)))
                         return false;
                     //Delete
-                    var pd = (from o in d.GraphDataRelationConditions where o.GraphDataRelationConditionID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var pd = (from o in d.GraphDataRelationConditions where o.GraphDataRelationConditionID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                     if (pd != null && pd.ConditionID != null)
                     {
                         try
@@ -3008,15 +3008,15 @@ namespace EXPEDIT.Flow.Services {
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
                     var table = d.GetTableName(typeof(GraphData));
-                    return (from o in d.GraphDataRelation.Where(f => f.GraphDataGroupID == wfid)
-                            join n in d.GraphData on o.FromGraphDataID equals n.GraphDataID
-                            join c in d.ProjectDataTemplates on n.GraphDataID equals c.ReferenceID
+                    return (from o in d.GraphDataRelation.Where(f => f.Version==0 && f.VersionDeletedBy==null && f.GraphDataGroupID == wfid)
+                            join n in d.GraphData.Where(f => f.Version==0 && f.VersionDeletedBy==null) on o.FromGraphDataID equals n.GraphDataID
+                            join c in d.ProjectDataTemplates.Where(f => f.Version==0 && f.VersionDeletedBy==null) on n.GraphDataID equals c.ReferenceID
                             where c.TableType == table
                             select c
                             ).Union(
-                            from o in d.GraphDataRelation.Where(f => f.GraphDataGroupID == wfid)
-                            join n in d.GraphData on o.ToGraphDataID equals n.GraphDataID
-                            join c in d.ProjectDataTemplates on n.GraphDataID equals c.ReferenceID
+                            from o in d.GraphDataRelation.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == wfid)
+                            join n in d.GraphData.Where(f => f.Version==0 && f.VersionDeletedBy==null) on o.ToGraphDataID equals n.GraphDataID
+                            join c in d.ProjectDataTemplates.Where(f => f.Version==0 && f.VersionDeletedBy==null) on n.GraphDataID equals c.ReferenceID
                             where c.TableType == table
                             select c
                             ).Select(f =>
@@ -3106,7 +3106,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(Precondition)))
                         return false;
                     //Update
-                    var cc = (from o in d.Precondition where o.ConditionID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var cc = (from o in d.Precondition where o.ConditionID == m.id && o.Version==0 && o.VersionDeletedBy == null select o).Single();
                     if (m.JSON != null && cc.JSON != m.JSON)
                         cc.JSON = m.JSON;
                     if (m.Condition != null && cc.Condition != m.Condition)
@@ -3139,7 +3139,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(Precondition)))
                         return false;
                     //Delete
-                    var pd = (from o in d.Precondition where o.ConditionID == m.id && o.VersionDeletedBy == null select o).Single();                    
+                    var pd = (from o in d.Precondition where o.ConditionID == m.id && o.Version==0 && o.VersionDeletedBy == null select o).Single();                    
                     d.Precondition.DeleteObject(pd);
                     d.SaveChanges();
                     return true;
@@ -3296,7 +3296,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(Task)))
                         return false;
                     //Update
-                    var cc = (from o in d.Tasks where o.TaskID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var cc = (from o in d.Tasks where o.TaskID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                     if (m.TaskName != null && cc.TaskName != m.TaskName) cc.TaskName = m.TaskName;
                     if (m.WorkTypeID != null && cc.WorkTypeID != m.WorkTypeID) cc.WorkTypeID = m.WorkTypeID; 
                     if (m.WorkCompanyID != null && cc.WorkCompanyID != m.WorkCompanyID) cc.WorkCompanyID = m.WorkCompanyID;
@@ -3340,7 +3340,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(Task)))
                         return false;
                     //Delete
-                    var pd = (from o in d.Tasks where o.TaskID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var pd = (from o in d.Tasks where o.TaskID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                     d.Tasks.DeleteObject(pd);
                     d.SaveChanges();
                     return true;
@@ -3515,7 +3515,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Update, typeof(Trigger)))
                         return false;
                     //Update
-                    var cc = (from o in d.Triggers where o.TriggerID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var cc = (from o in d.Triggers where o.TriggerID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                     if (string.Format("{0}", m.CommonName).Trim().ToUpperInvariant() == "DONEXT" && cc.VersionOwnerContactID != contact)
                         return false;
                     //Commented unsafe updates AG
@@ -3563,7 +3563,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.id.Value, ActionPermission.Delete, typeof(Trigger)))
                         return false;
                     //Delete
-                    var pd = (from o in d.Triggers where o.TriggerID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var pd = (from o in d.Triggers where o.TriggerID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
                     d.Triggers.DeleteObject(pd);
                     d.SaveChanges();
                     return true;
@@ -3676,22 +3676,39 @@ namespace EXPEDIT.Flow.Services {
 
                     if (!string.IsNullOrWhiteSpace(m.Condition))
                     {
-                        c = new Precondition
+                        if (m.ConditionID.HasValue && d.Precondition.Any(f =>f.Version == 0 && f.VersionDeletedBy == null && f.ConditionID == m.ConditionID))
                         {
-                            ConditionID = m.ConditionID ?? Guid.NewGuid(),
-                            Condition = m.Condition,
-                            JSON = m.ConditionJSON,
-                            OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
-                            VersionUpdated = DateTime.UtcNow,
-                            VersionUpdatedBy = contact
-                        };
-                        d.Precondition.AddObject(c);
+                            //Update
+                            c = d.Precondition.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ConditionID == m.ConditionID).Single();
+                            if (m.Condition != c.Condition || m.JSON != c.JSON || m.OverrideProjectDataWithJsonCustomVars != c.OverrideProjectDataWithJsonCustomVars)
+                            {
+                                c.Condition = m.Condition;
+                                c.JSON = m.ConditionJSON;
+                                c.OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars;
+                                c.VersionUpdated = DateTime.UtcNow;
+                                c.VersionUpdatedBy = contact;
+                            }
+                        }
+                        else
+                        {
+                            //Insert
+                            c = new Precondition
+                            {
+                                ConditionID = Guid.NewGuid(),
+                                Condition = m.Condition,
+                                JSON = m.ConditionJSON,
+                                OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
+                                VersionUpdated = DateTime.UtcNow,
+                                VersionUpdatedBy = contact
+                            };
+                            d.Precondition.AddObject(c);
+                        }
                     }
 
                     var t = new Trigger
                     {
                         TriggerID = m.TriggerID ?? Guid.NewGuid(),
-                        CommonName = m.TriggerGraphID.Value.ToString(),
+                        CommonName = m.id.Value.ToString(),
                         TriggerTypeID = m.TriggerTypeID,
                         JsonMethod = m.JsonMethod ?? m.CommonName,
                         //Removed for security
@@ -3704,7 +3721,7 @@ namespace EXPEDIT.Flow.Services {
                         //JsonPasswordType = m.JsonPasswordType ?? "TEXT",
                         JSON = m.JSON,
                         SystemMethod = "USER", // m.SystemMethod ?? m.CommonName,
-                        ConditionID = m.ConditionID ?? ((c != null) ? c.ConditionID : default(Guid?)),
+                        ConditionID = ((c != null) ? c.ConditionID : default(Guid?)),
                         ExternalURL = m.ExternalURL,
                         ExternalRequestMethod = m.ExternalRequestMethod,
                         ExternalFormType = m.ExternalFormType,
@@ -3723,7 +3740,7 @@ namespace EXPEDIT.Flow.Services {
                     d.Triggers.AddObject(t);
                     var g = new TriggerGraph
                     {
-                        TriggerGraphID = m.TriggerGraphID.Value,
+                        TriggerGraphID = m.id.Value,
                         TriggerID = t.TriggerID,
                         GraphDataID = m.GraphDataID,
                         GraphDataGroupID = m.GraphDataGroupID,
@@ -3755,7 +3772,7 @@ namespace EXPEDIT.Flow.Services {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    var gt = (from o in d.TriggerGraphs.Where(f=>f.TriggerGraphID == m.TriggerGraphID.Value && f.Version==0 && f.VersionDeletedBy == null)
+                    var gt = (from o in d.TriggerGraphs.Where(f=>f.TriggerGraphID == m.id.Value && f.Version==0 && f.VersionDeletedBy == null)
                                    select o).Single();
                     if (gt == null || gt.GraphDataID == null)
                         return false;
@@ -3857,8 +3874,9 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(m.GraphDataID, ActionPermission.Delete, typeof(GraphData)))
                         return false;
                     //Delete
-                    var pd = (from o in d.TriggerGraphs where o.TriggerGraphID == m.id && o.VersionDeletedBy == null select o).Single();
-                    if (pd.Trigger.Condition != null)
+                    var pd = (from o in d.TriggerGraphs where o.TriggerGraphID == m.id && o.Version==0 && o.VersionDeletedBy == null select o).Single();
+
+                    if (pd.Trigger.Condition != null && d.Triggers.Where(f=>f.Version ==0 && f.VersionDeletedBy == null && f.ConditionID==pd.Trigger.ConditionID).Count() == 1)
                         d.Precondition.DeleteObject(pd.Trigger.Condition);
                     d.Triggers.DeleteObject(pd.Trigger);
                     d.TriggerGraphs.DeleteObject(pd);
