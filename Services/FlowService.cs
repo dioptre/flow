@@ -3694,7 +3694,7 @@ namespace EXPEDIT.Flow.Services {
                             //Insert
                             c = new Precondition
                             {
-                                ConditionID = Guid.NewGuid(),
+                                ConditionID = m.ConditionID ?? Guid.NewGuid(),
                                 Condition = m.Condition,
                                 JSON = m.ConditionJSON,
                                 OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
@@ -3721,7 +3721,7 @@ namespace EXPEDIT.Flow.Services {
                         //JsonPasswordType = m.JsonPasswordType ?? "TEXT",
                         JSON = m.JSON,
                         SystemMethod = "USER", // m.SystemMethod ?? m.CommonName,
-                        ConditionID = ((c != null) ? c.ConditionID : default(Guid?)),
+                        ConditionID = m.ConditionID ?? ((c != null) ? c.ConditionID : default(Guid?)),
                         ExternalURL = m.ExternalURL,
                         ExternalRequestMethod = m.ExternalRequestMethod,
                         ExternalFormType = m.ExternalFormType,
