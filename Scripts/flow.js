@@ -3768,27 +3768,34 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
         store.findQuery('triggerGraph', config).then(function (a) {
             // if problem do something else - needs error handeling
-            var construct = _this.get('defaultConfig');
+            var construct;
+            construct = _this.get('triggersJSON');
+            if (!construct.matchSelect)
+                construct = _this.get('defaultConfig');
             Enumerable.From(a.content).ForEach(function (value, index) {
                 triggerValue = JSON.parse(value.get('JSON'));
                 if (index == 0) {
-                    construct.trigger = [];
-                    triggerValue = JSON.parse(value.get('JSON'));
+                    construct.trigger.clear();
                     construct.matchSelect = triggerValue.matchSelect;
                     construct.triggerConditions = triggerValue.triggerConditions;
-                    construct.fields = JSON.parse(value.get('ConditionJSON'));
+                    construct.fields.clear();
+                    $.each(JSON.parse(value.get('ConditionJSON')), function (i, v) {
+                        construct.fields.pushObject(v);
+                    });
                     if (triggerValue.delay) {
-                        construct.when = [{ type: 'delay', delay: triggerValue.delay}];
+                        construct.when[0].type = 'delay';
+                        construct.when[0].delay = triggerValue.delay;
                     }
                     else if (triggerValue.now) {
-                        construct.when = [{ type: 'now', now: triggerValue.now }];
+                        construct.when[0].type = 'now';
+                        construct.when[0].now = triggerValue.now;
                     }
                 }
                 if (triggerValue.webhook) {
-                    construct.trigger.push({ id: value.id, type: 'webhook', webhook: triggerValue.webhook });
+                    construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'webhook', webhook: triggerValue.webhook }));
                 }
                 else if (triggerValue.email) {
-                    construct.trigger.push({ id: value.id, type: 'email', email: triggerValue.email });
+                    construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'email', email: triggerValue.email }));
                 }
             
                 _this.get('triggers').addObject(value);
