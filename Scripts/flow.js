@@ -4003,7 +4003,9 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 }
                 value.set('OverrideProjectDataWithJsonCustomVars', true);
                 value.set('PassThrough', true);
-                value.set('RunOnce', true);
+                value.set('RepeatAfterDays', 0);
+                value.set('Repeats', 0);
+
                 if (triggersJSON.when && triggersJSON.when.length > 0) {
                     if (triggersJSON.when[0].delay) {
                         if (triggersJSON.when[0].delay.hours && triggersJSON.when[0].delay.hours.match(/^[0-9]+$/ig) !== null)
@@ -4016,7 +4018,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
                             value.set('DelayMonths', triggersJSON.when[0].delay.months);
                         if (triggersJSON.when[0].delay.years && triggersJSON.when[0].delay.years.match(/^[0-9]+$/ig) !== null)
                             value.set('DelayYears', triggersJSON.when[0].delay.years);
-                        //,[RepeatDelay]
+                        //,[RepeatAfterDays, Repeats]
                         //,[DelayUntil]
                     } else {
                         value.set('DelaySeconds', 0);
@@ -4889,14 +4891,14 @@ App.Trigger = App.Condition.extend({
     ExternalRequestMethod: DS.attr('string', { defaultValue: 'POST' }),
     ExternalFormType: DS.attr('string', { defaultValue: 'JSON' }),
     PassThrough: DS.attr('string', { defaultValue: true }),
-    RunOnce: DS.attr('string', { defaultValue: true }),
     DelaySeconds: DS.attr('string', { defaultValue: 0 }),
     DelayDays: DS.attr('string', { defaultValue: 0 }),
     DelayWeeks: DS.attr('string', { defaultValue: 0 }),
     DelayMonths: DS.attr('string', { defaultValue: 0 }),
     DelayYears: DS.attr('string', { defaultValue: 0 }),
-    RepeatDelay: DS.attr('string', { defaultValue: 0 }),
     DelayUntil: DS.attr('string'), //Do this later? Repeat until later?
+    RepeatAfterDays: DS.attr('string', { defaultValue: 0 }),
+    Repeats: DS.attr('string', { defaultValue: 0 }),
 
     ConditionID: DS.attr('string'), //json for condition partidentical to last time
     ConditionJSON: DS.attr('string'), //PK, just for ui extra shit inside trigger not condition

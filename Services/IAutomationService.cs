@@ -16,8 +16,7 @@ namespace EXPEDIT.Flow.Services
     [ServiceContract]
     public interface IAutomationService : IDependency
     {
-        [OperationContract]
-        bool EvaluateCondition();
+       
 
         [OperationContract]
         bool ExecuteMethod(AutomationViewModel m,string method);

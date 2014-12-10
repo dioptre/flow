@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Orchard.Environment.Configuration;
+using System.Net;
 
 namespace EXPEDIT.Flow.Services {
 
@@ -103,22 +104,25 @@ namespace EXPEDIT.Flow.Services {
             _shellSettings = shellSettings;
         }
 
+        private void Tick(int add = 1)
+        {
+            var key = string.Format("API-USER-TICKER-{0}", ContactID);
+            var count = CacheHelper.AddToCache<int>(() =>
+            {
+                object val = CacheHelper.Cache[key];
+                if (val != null)
+                    return ((int)val) + add;
+                else
+                    return 1;
+            }, key, new TimeSpan(3, 0, 0));
+            if (count > 100)
+            {
+                //Disable it
+                _users.DisableContact(ContactID.Value);
 
-        public bool EvaluateCondition() {
-            dynamic p = new  { Name = "Mickey Mouse"};
-
-            var result = new Engine()
-                    .SetValue("p", p)
-                    .Execute("p.Name === 'Mickey Mouse'")
-                    .GetCompletionValue() // get the latest statement completion value
-                    .ToObject()
-                    ;
-            return false; 
+            }
         }
 
-        public bool ExecuteMethod(AutomationViewModel m, string method) {
-            return false;
-        }
 
         public bool Authenticate(AutomationViewModel m, string method)
         {
@@ -153,9 +157,12 @@ namespace EXPEDIT.Flow.Services {
                 ContactID = trigger.JsonProxyContactID;
                 CompanyID = trigger.JsonProxyCompanyID;
                 ProxyAuthenticated = true;
-                return true;
-
             }
+            if (!ContactID.HasValue)
+                return false;
+            if (_users.IsContactDisabled(ContactID.Value))
+                return false;
+            return true;
         }
 
 
@@ -256,6 +263,8 @@ namespace EXPEDIT.Flow.Services {
 
         public bool Equate(string js)
         {
+            if (string.IsNullOrWhiteSpace(js))
+                return true;
             return new Engine()
                 .Execute(js)
                 .GetCompletionValue() // get the latest statement completion value
@@ -263,6 +272,8 @@ namespace EXPEDIT.Flow.Services {
         }
         public bool EquateAsync(string js)
         {
+            if (string.IsNullOrWhiteSpace(js))
+                return true; 
             int cancelms = 1000;
             CancellationTokenSource cts = new CancellationTokenSource();
             cts.CancelAfter(cancelms);
@@ -314,7 +325,14 @@ namespace EXPEDIT.Flow.Services {
             var contact = ContactID;
             var company = CompanyID;
             var application = ApplicationID;
+            Tick();
             m.Status = "";
+            bool isNew = false;
+            bool isTransitioned = false;
+            bool isCompleted = false;
+            bool checkAuthorization = false;
+            Guid nextGid = default(Guid);
+            Guid? oldGid = default(Guid?);
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);                
@@ -403,6 +421,7 @@ namespace EXPEDIT.Flow.Services {
                             m.Error = "Couldn't identify distinct start in workflow.";
                             return false;
                         }
+                        nextGid = m.PreviousStep.ActualGraphDataID.Value;
                     }
 
                     if (Authorize(m, m.GraphDataGroupID, ActionPermission.Read, typeof(GraphDataGroup))
@@ -453,7 +472,6 @@ namespace EXPEDIT.Flow.Services {
                         d.WorkflowInstances.AddObject(wf);                        
                         m.PreviousStep.VersionWorkflowInstanceID = wfid;
 
-                        bool checkAuthorization = false;
                         if (!m.TaskID.HasValue)
                             m.PreviousTask = d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == m.GraphDataGroupID && f.GraphDataID == m.GraphDataID).FirstOrDefault();
 
@@ -518,19 +536,7 @@ namespace EXPEDIT.Flow.Services {
 
                         d.SaveChanges();
 
-                        if (checkAuthorization)
-                        {
-                            if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
-                            {
-                                m.PreviousStep = null;
-                                m.PreviousTask = null;
-                                m.PreviousWorkflowInstance = null;
-                                m.Error = "Transitioned to a different department.";
-                                return false;
-                            }
-                        }
-                        
-                        return true;
+                        isNew = true;
                     }
                     else
                     {
@@ -571,8 +577,8 @@ namespace EXPEDIT.Flow.Services {
                         }
                     }
 
-                    bool isCompleted = false, isDefault = false;
-                    var nextStep = Guid.Empty;
+                    bool isDefault = false;
+                    oldGid = m.ActualGraphDataID;
                     var options = d.GraphDataRelation.Where(f=>
                         f.FromGraphDataID == m.ActualGraphDataID 
                         && f.VersionDeletedBy == null 
@@ -629,17 +635,17 @@ namespace EXPEDIT.Flow.Services {
                         }
                         if (correct)
                         {
-                            nextStep = option.ToGraphDataID.Value;
+                            nextGid = option.ToGraphDataID.Value;
                             break;
                         }
                     }
-                    if (nextStep == Guid.Empty)
+                    if (nextGid == Guid.Empty)
                     {
                         //Now do the default transition
                         var option = options.FirstOrDefault(f => !f.Condition.Any());
                         if (option != null)
                         {
-                            nextStep = option.ToGraphDataID.Value;
+                            nextGid = option.ToGraphDataID.Value;
                             isDefault = true;
                             m.Status += " Transition Default.";
                         }
@@ -649,9 +655,8 @@ namespace EXPEDIT.Flow.Services {
                     if (m.PreviousWorkflowInstance != null && m.PreviousWorkflowInstance.Idle.HasValue)
                         m.PreviousStep.Hours = (m.PreviousStep.Hours ?? 0) + ((decimal)((now - m.PreviousWorkflowInstance.Idle.Value.AddSeconds(-ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS)).TotalHours));
 
-                    if (nextStep != Guid.Empty || isCompleted)
-                    {
-                        bool checkAuthorization = false;
+                    if (nextGid != Guid.Empty || isCompleted)
+                    {                       
                         if (isCompleted)
                         {
                             m.PreviousStep.ActualGraphDataID = null;
@@ -660,9 +665,9 @@ namespace EXPEDIT.Flow.Services {
                         }
                         else
                         {
-                            m.PreviousStep.ActualGraphDataID = nextStep;
+                            m.PreviousStep.ActualGraphDataID = nextGid;
                             m.PreviousWorkflowInstance.Idle = now.AddSeconds(m.PreviousWorkflowInstance.IdleTimeoutSeconds ?? ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS);
-                            m.PreviousTask = d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == m.GraphDataGroupID && f.GraphDataID == nextStep).FirstOrDefault();
+                            m.PreviousTask = d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == m.GraphDataGroupID && f.GraphDataID == nextGid).FirstOrDefault();
                             if (m.PreviousTask != null)
                             {
                                 if (m.PreviousTask.WorkCompanyID.HasValue || m.PreviousTask.WorkContactID.HasValue)
@@ -680,60 +685,130 @@ namespace EXPEDIT.Flow.Services {
                         m.PreviousStep.VersionUpdated = now;      
 
                         d.SaveChanges();
-                        if (!isCompleted)
-                        {
-                            if (checkAuthorization)
-                            {
-                                if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
-                                {
-                                    m.PreviousStep = null;
-                                    m.PreviousTask = null;
-                                    m.PreviousWorkflowInstance = null;
-                                    m.Error = "Transitioned to a different department.";
-                                    return false;
-                                }
-                            }
-                        }
 
-                        return true;
+
+                        isTransitioned = true;
                     }    
                 }
+                
+                if (isTransitioned || isNew)
+                {
+                    EnqueueEvents(d, m, oldGid, isCompleted ? default(Guid?) : nextGid);
+                }
+
+                if (!isCompleted)
+                {
+                    if (checkAuthorization)
+                    {
+                        if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
+                        {
+                            m.PreviousStep = null;
+                            m.PreviousTask = null;
+                            m.PreviousWorkflowInstance = null;
+                            m.Error = "Transitioned to a different department.";
+                            return true;
+                        }
+                    }
+                }
+                
                 m.Error = "Could not find a valid transition. ";
                 m.Error += m.Status;
                 return false;
             }
         }
 
-        public bool SendEmail()
+
+        public bool ExecuteMethod(AutomationViewModel m, string method)
         {
             return false;
+
         }
 
-        public bool SendSMS()
+        private void EnqueueEvents(NKDC d, AutomationViewModel m, Guid? oldgid, Guid? newgid)
         {
-            return false;
-        }
+            var isExit = false;
+            var isEntry = false;
+            var isUpdate = false;
+            if (oldgid.HasValue && newgid == Guid.Empty)
+                isUpdate = true;
+            if (oldgid.HasValue && newgid == null)
+                isExit = true;
+            if (newgid.HasValue && newgid != Guid.Empty)
+                isEntry = true;
+            if (oldgid.HasValue && oldgid != Guid.Empty)
+                isExit = true;
 
-        public bool InstantiateWorkflow()
-        {
-            return false;
-        }
 
-        public bool TransitionWorkflow()
-        {
-            return false;
         }
-
-        public bool CancelWorkflow()
-        {
-            return false;
-        }
-
 
         public bool ProcessEvents()
         {
+            //Disable account if theyve done too many requests
+            var ticks = new Dictionary<Guid, int>();
+            var now = DateTime.UtcNow;
+            var contact = ContactID;
+            var company = CompanyID;
+            var application = ApplicationID;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var ableContacts = d.Contacts.Where(f => f.VersionCertainty >= 0 && f.Version == 0 && f.VersionDeletedBy == null);
+
+
+            }
+            foreach(var tick in ticks.Keys)
+                Tick(ticks[tick]);
             return false;
         }
+
+
+        private bool SendWebRequest()
+        {
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create("http://url");
+            httpWebRequest.ContentType = "text/json";
+            httpWebRequest.Method = "POST";
+            //httpWebRequest.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => { return true; };
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = "{\"user\":\"test\"," +
+                              "\"password\":\"bla\"}";
+
+                streamWriter.Write(json);
+                streamWriter.Flush();
+                streamWriter.Close();
+
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                }
+            }
+            return false;
+        }
+
+        private bool SendEmail()
+        {
+            return false;
+        }
+
+        private bool SendSMS()
+        {
+            return false;
+        }
+
+
+        private bool CancelWorkflow()
+        {
+            return false;
+        }
+
+        private bool PauseWorkflow()
+        {
+            return false;
+
+        }
+
 
     }
 }
