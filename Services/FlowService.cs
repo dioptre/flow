@@ -3615,7 +3615,7 @@ namespace EXPEDIT.Flow.Services {
                                            
                              select new TriggerGraphViewModel
                              {
-                                 id = o.TriggerID,                                 
+                                 id = gt.TriggerGraphID,                                 
                                  TriggerID = o.TriggerID,
                                  CommonName = o.CommonName,
                                  TriggerTypeID = o.TriggerTypeID,
@@ -3779,7 +3779,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(gt.GraphDataID, ActionPermission.Update, typeof(GraphData)))
                         return false;
                     //Update
-                    var cc = (from o in d.Triggers where o.TriggerID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var cc = (from o in d.Triggers where o.TriggerID == gt.TriggerID && o.VersionDeletedBy == null select o).Single();
                     //Commented unsafe updates AG
                     //if (m.CommonName != null && cc.CommonName != m.CommonName) cc.CommonName = m.CommonName;
                     if (m.TriggerTypeID != null && cc.TriggerTypeID != m.TriggerTypeID) cc.TriggerTypeID = m.TriggerTypeID;
@@ -3869,13 +3869,12 @@ namespace EXPEDIT.Flow.Services {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (m.GraphDataID == null)
-                        return false;
-                    if (!CheckPermission(m.GraphDataID, ActionPermission.Delete, typeof(GraphData)))
+                    if (m.id == null)
                         return false;
                     //Delete
                     var pd = (from o in d.TriggerGraphs where o.TriggerGraphID == m.id && o.Version==0 && o.VersionDeletedBy == null select o).Single();
-
+                    if (!CheckPermission(pd.GraphDataID, ActionPermission.Delete, typeof(GraphData)))
+                        return false;
                     if (pd.Trigger.Condition != null && d.Triggers.Where(f=>f.Version ==0 && f.VersionDeletedBy == null && f.ConditionID==pd.Trigger.ConditionID).Count() == 1)
                         d.Precondition.DeleteObject(pd.Trigger.Condition);
                     d.Triggers.DeleteObject(pd.Trigger);

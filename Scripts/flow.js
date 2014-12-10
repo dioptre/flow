@@ -3709,7 +3709,7 @@ App.TriggerOption = Ember.Object.extend({
         })
 
         // Setup new template
-        var template = this.get(type + 'Template');
+        var template = JSON.parse(JSON.stringify(this.get(type + 'Template')));
         this.set(type, template)
     }.observes('type').on('init')
 })
@@ -3765,6 +3765,11 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
         var config = { GraphDataID: graphID, GraphDataGroupID: workflowID };
 
+        // Load available variables
+        var contextName = store.findQuery('contextName', { wfid: workflowID }).then(function (al) {
+            var test = Enumerable.From(al.content).Select('i=>{value:i.get("CommonName"), label:i.get("CommonName")}').Distinct().ToArray();
+            _this.set('tSvariables', test);
+        })
 
         store.findQuery('triggerGraph', config).then(function (a) {
             // if problem do something else - needs error handeling
@@ -3792,10 +3797,14 @@ App.TriggerNodeComponent = Ember.Component.extend({
                     }
                 }
                 if (triggerValue.webhook) {
-                    construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'webhook', webhook: triggerValue.webhook }));
+                    var p = construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'webhook' }));
+                    p.webhook.url = triggerValue.webhook.url;
                 }
                 else if (triggerValue.email) {
-                    construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'email', email: triggerValue.email }));
+                    var p = construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'email' }));
+                    p.email.recipient = triggerValue.email.recipient;
+                    p.email.subject = triggerValue.email.subject;
+                    p.email.message = triggerValue.email.message;
                 }
             
                 _this.get('triggers').addObject(value);
@@ -3940,7 +3949,9 @@ App.TriggerNodeComponent = Ember.Component.extend({
             var promises = [];
             //Now do all updates
             Enumerable.From(this.get('triggers')).ForEach(function(value) {
-                var temp = Enumerable.From(triggers).Where("$.id =='" + value.id + "'").Single();
+                var temp = Enumerable.From(triggers).Where("$.id =='" + value.id + "'").FirstOrDefault();
+                if (!temp)
+                    return;
                 value.set('MergeProjectData', true);
                 value.set('OnEnter', true);
                 value.set('OnDataUpdate', false);
@@ -4005,29 +4016,32 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
         },
         'addRow': function (context) {
-            var positionCurrent = this.get('config.JSON.fields').indexOf(context.itemInsertAfter) + 1;
-            this.get('config.JSON.fields').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
+            var positionCurrent = this.get('triggersJSON.fields').indexOf(context.itemInsertAfter) + 1;
+            this.get('triggersJSON.fields').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
 
         },
         'deleteRow': function(context) {
             // don't delete if the last one :)
-            if (this.get('config.JSON.fields.length') == 1) {
+            if (this.get('triggersJSON.fields.length') == 1) {
                 Messenger().post({ type: 'info', message: 'You need at least on row. Turn off Trigger alternatively.' });
             } else {
-                this.get('config.JSON.fields').removeObject(context.itemToDelete);
+                this.get('triggersJSON.fields').removeObject(context.itemToDelete);
             }
             
         },
         'addTriggerRow': function (context) {
-            var positionCurrent = this.get('config.JSON.trigger').indexOf(context.itemInsertAfter) + 1;
-            this.get('config.JSON.trigger').insertAt(positionCurrent, App.ThenTrigger.create({}));
+            var positionCurrent = this.get('triggersJSON.trigger').indexOf(context.itemInsertAfter) + 1;
+            this.get('triggersJSON.trigger').insertAt(positionCurrent, App.ThenTrigger.create({
+                id: NewGUID(),
+                type: 'email'
+            }));
 
         },
         'deleteTriggerRow': function(context) {
-            if (this.get('config.JSON.trigger.length') == 1) {
+            if (this.get('triggersJSON.trigger.length') == 1) {
                 Messenger().post({ type: 'info', message: 'You need at least on row. Turn off Trigger alternatively.' });
             } else {
-                this.get('config.JSON.trigger').removeObject(context.itemToDelete);
+                this.get('triggersJSON.trigger').removeObject(context.itemToDelete);
             }
         }                                                
     }
