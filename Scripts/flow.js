@@ -3750,7 +3750,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
     edge: '',
     loading: true,
     triggers: [],
-    triggersJSON: {},
+    triggersJSON: Em.Object.create({ t : null}),
     setup: function(){
         
         // Get graph & Workflow ID
@@ -3773,10 +3773,10 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 _this.get('triggers').addObject(value);
             });
             if (_this.get('triggers').length < 1) {
-                _this.set('triggersJSON', _this.get('defaultConfig'))
+                _this.set('triggersJSON.t', _this.get('defaultConfig'))
             }
             else {
-                _this.set('triggersJSON', JSON.parse(a.get('firstObject.JSON')));
+                _this.set('triggersJSON.t', JSON.parse(a.get('firstObject.JSON')));
             }
             _this.set('loading', false);
         });
@@ -3812,7 +3812,9 @@ App.TriggerNodeComponent = Ember.Component.extend({
             
         ],
         when: [
-            App.WhenTrigger.create({})
+            App.WhenTrigger.create({
+                type: 'now'
+            })
         ]
     },
     configEvaluation: function(config){
@@ -3883,7 +3885,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
             var store = _this.get('targetObject.store');
             var graphID = _this.get('graphID');
             var workflowID = _this.get('workflowID');
-            var triggersJSON = _this.get('triggersJSON');
+            var triggersJSON = _this.get('triggersJSON.t');
             var conditionID = triggersJSON.ConditionID;
             if (!conditionID) {
                 conditionID = NewGUID();
@@ -3938,18 +3940,18 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 value.set('OverrideProjectDataWithJsonCustomVars', true);
                 value.set('PassThrough', true);
                 value.set('RunOnce', true);
-                if (triggersJSON.when && triggersJSON.length > 0) {
-                    if (triggersJSON[0].delay) {
-                        if (triggersJSON[0].delay.hours && triggersJSON[0].delay.hours.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelaySeconds', triggersJSON[0].delay.hours * 60);
-                        if (triggersJSON[0].delay.days && triggersJSON[0].delay.days.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelayDays', triggersJSON[0].delay.days);
-                        if (triggersJSON[0].delay.weeks && triggersJSON[0].delay.weeks.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelayWeeks', triggersJSON[0].delay.weeks);
-                        if (triggersJSON[0].delay.months && triggersJSON[0].delay.months.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelayMonths', triggersJSON[0].delay.months);
-                        if (triggersJSON[0].delay.years && triggersJSON[0].delay.years.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelayYears', triggersJSON[0].delay.years);
+                if (triggersJSON.when && triggersJSON.when.length > 0) {
+                    if (triggersJSON.when[0].delay) {
+                        if (triggersJSON.when[0].delay.hours && triggersJSON.when[0].delay.hours.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelaySeconds', triggersJSON.when[0].delay.hours * 60);
+                        if (triggersJSON.when[0].delay.days && triggersJSON.when[0].delay.days.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayDays', triggersJSON.when[0].delay.days);
+                        if (triggersJSON.when[0].delay.weeks && triggersJSON.when[0].delay.weeks.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayWeeks', triggersJSON.when[0].delay.weeks);
+                        if (triggersJSON.when[0].delay.months && triggersJSON.when[0].delay.months.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayMonths', triggersJSON.when[0].delay.months);
+                        if (triggersJSON.when[0].delay.years && triggersJSON.when[0].delay.years.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayYears', triggersJSON.when[0].delay.years);
                         //,[RepeatDelay]
                         //,[DelayUntil]
                     } else {

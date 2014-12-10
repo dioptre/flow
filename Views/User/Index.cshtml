@@ -1295,20 +1295,20 @@
 
     {{else}}
 
-        {{eui-checkbox label='Enable Trigger Conditions' value=triggersJSON.triggerConditions}}
+        {{eui-checkbox label='Enable Trigger Conditions' value=triggersJSON.t.triggerConditions}}
 
         <br>
         <br>
 
-        {{#liquid-if triggersJSON.triggerConditions}}
+        {{#liquid-if triggersJSON.t.triggerConditions}}
    
             <h3>IF</h3>
-            Match {{eui-select value=triggersJSON.matchSelect required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
+            Match {{eui-select value=triggersJSON.t.matchSelect required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
             
             <br>
             <br>
 
-            {{#each con in triggersJSON.fields}}
+            {{#each con in triggersJSON.t.fields}}
                 {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium'}}
                 {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
                 {{eui-input  value=con.type.matchInput size="medium" placeholder=''}}
@@ -1319,7 +1319,7 @@
             {{/each}}
 
             <h3>THEN</h3>
-            {{#each trig in triggersJSON.trigger}}
+            {{#each trig in triggersJSON.t.trigger}}
                 {{eui-select value=trig.type options=tStTriggerTypes labelPath='text' placeholder="Choose trigger type"  size='medium'}}
                 {{#if trig.email}}
                     <span>
@@ -1345,7 +1345,7 @@
             {{/each}}
 
             <h3>WHEN</h3>
-            {{#each when in triggersJSON.when}}{{when.type}}
+            {{#each when in triggersJSON.t.when}}{{when.type}}
                 {{eui-select value=when.type options=when.select size='medium' labelPath='text'}}
                 {{#if when.delay}}
                     <b>Seconds</b>
