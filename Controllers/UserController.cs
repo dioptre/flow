@@ -1182,6 +1182,8 @@ namespace EXPEDIT.Flow.Controllers {
 
         }
 
+
+
         [Authorize]
         [Themed(false)]
         [HttpPost]
@@ -1236,6 +1238,64 @@ namespace EXPEDIT.Flow.Controllers {
         public ActionResult GetReports()
         {
                 return new JsonHelper.JsonNetResult(_Flow.Report(), JsonRequestBehavior.AllowGet);
+
+        }
+
+        [Authorize]
+        [ActionName("TriggerGraphs")]
+        public ActionResult GetTriggerGraph(TriggerGraphViewModel m)
+        {
+            if (_Flow.GetTriggerGraph(m))
+                return new JsonHelper.JsonNetResult(new { triggerGraphs = m.triggerGraphs }, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+
+        }
+
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("TriggerGraphs")]
+        public ActionResult CreateTriggerGraph(TriggerGraphViewModel m)
+        {
+            if (m.triggerGraph != null)
+                m = m.triggerGraph;
+            if (_Flow.CreateTriggerGraph(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("TriggerGraphs")]
+        public ActionResult UpdateTriggerGraph(TriggerGraphViewModel m)
+        {
+            if (m.triggerGraph != null && m.id != null)
+            {
+                m.triggerGraph.id = m.id;
+                m = m.triggerGraph;
+            }
+            if (_Flow.UpdateTriggerGraph(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("TriggerGraphs")]
+        public ActionResult DeleteTriggerGraph(TriggerGraphViewModel m)
+        {
+            if (!m.id.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.DeleteTriggerGraph(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
 
         }
 

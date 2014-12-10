@@ -145,7 +145,7 @@ namespace EXPEDIT.Flow.Services {
 
                 var trigger = d.Triggers.FirstOrDefault(f => f.JsonProxyApplicationID == applicationID && f.JsonUsername == m.Username 
                     && ((f.JsonPassword == hashString && f.JsonPasswordType=="SHA256") || (f.JsonPassword == m.Password && f.JsonPasswordType == "TEXT"))
-                    && f.JsonMethod == method
+                    && f.CommonName == method
                     && f.VersionDeletedBy == null && f.Version == 0);
                 if (trigger == null)
                     return false;
@@ -209,15 +209,15 @@ namespace EXPEDIT.Flow.Services {
                 if (taskID.HasValue)
                     m.PreviousTask = d.Tasks.Where(f => f.TaskID == taskID && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
                 if (m.PreviousStep.VersionWorkflowInstanceID.HasValue)
-                    m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID).Single();
+                    m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID && f.Version == 0 && f.VersionDeletedBy == null).Single();
                 if (m.IncludeContent ?? false)
                 {
-                    var g = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID).FirstOrDefault();
+                    var g = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID && f.Version == 0 && f.VersionDeletedBy == null).FirstOrDefault();
                     m.content = g.GraphContent;
                     m.GraphName = g.GraphName;
                 }
                 
-                m.LastEditedBy = (from o in d.Contacts where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
+                m.LastEditedBy = (from o in d.Contacts.Where(f=> f.Version == 0 && f.VersionDeletedBy == null) where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
                 return true;
             }
             else return false;
@@ -242,11 +242,11 @@ namespace EXPEDIT.Flow.Services {
                     m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID).Single();
                 if (includeContent)
                 {
-                    var g = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID).FirstOrDefault();
+                    var g = d.GraphData.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == m.PreviousStep.ActualGraphDataID).FirstOrDefault();
                     m.content = g.GraphContent;
                     m.GraphName = g.GraphName;
                 }
-                m.LastEditedBy = (from o in d.Contacts where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
+                m.LastEditedBy = (from o in d.Contacts.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
 
                 return m;
             }
@@ -366,8 +366,8 @@ namespace EXPEDIT.Flow.Services {
                             if (gd == null)
                             {
                                 gd = (from o in d.GraphDataGroups.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
-                                      join r in d.GraphDataRelation on o.GraphDataGroupID equals r.GraphDataGroupID
-                                      join g in d.GraphData on r.FromGraphDataID equals g.GraphDataID
+                                      join r in d.GraphDataRelation.Where(f => f.Version == 0 && f.VersionDeletedBy == null) on o.GraphDataGroupID equals r.GraphDataGroupID
+                                      join g in d.GraphData.Where(f => f.Version == 0 && f.VersionDeletedBy == null) on r.FromGraphDataID equals g.GraphDataID
                                       where o.StartGraphDataID == g.GraphDataID && r.FromGraphDataID != r.ToGraphDataID
                                       select g
                                           ).FirstOrDefault();
@@ -391,8 +391,8 @@ namespace EXPEDIT.Flow.Services {
                             if (m.PreviousStep.ActualGraphDataID == null)
                             {
                                 m.PreviousStep.ActualGraphDataID = (from o in d.GraphDataGroups.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
-                                      join r in d.GraphDataRelation on o.GraphDataGroupID equals r.GraphDataGroupID
-                                      join g in d.GraphData on r.FromGraphDataID equals g.GraphDataID
+                                      join r in d.GraphDataRelation.Where(f=> f.Version == 0 && f.VersionDeletedBy == null) on o.GraphDataGroupID equals r.GraphDataGroupID
+                                      join g in d.GraphData.Where(f=> f.Version == 0 && f.VersionDeletedBy == null) on r.FromGraphDataID equals g.GraphDataID
                                       where o.StartGraphDataID == g.GraphDataID && r.FromGraphDataID != r.ToGraphDataID
                                       select g.GraphDataID
                                          ).FirstOrDefault();
@@ -588,7 +588,7 @@ namespace EXPEDIT.Flow.Services {
                     }
                     //if step (response) & graphdataid go through graphdatarelationconditions for next transition   
                     var data = (from o in d.ProjectDatas.Where(f => f.ProjectID == m.ProjectID && f.VersionDeletedBy == null && f.Version == 0)
-                                join t in d.ProjectDataTemplates on o.ProjectDataTemplateID equals t.ProjectDataTemplateID
+                                join t in d.ProjectDataTemplates.Where(f => f.Version == 0 && f.VersionDeletedBy == null) on o.ProjectDataTemplateID equals t.ProjectDataTemplateID
                                 select new { t.CommonName, o.Value, t.SystemDataType, o.VersionUpdated }
                                     ).GroupBy(f => f.CommonName, f => f, (key, g) => g.OrderByDescending(f=>f.VersionUpdated).FirstOrDefault());
                     var dict = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => (f.Value ?? "").Replace("\'","\\\'").Replace("\"", "\\\""));

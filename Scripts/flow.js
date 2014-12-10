@@ -2,6 +2,37 @@ if ((_ref = Ember.libraries) != null) {
   _ref.register('FlowPro', '2.0.0 Alpha');
 }
 
+//Leave this!
+//<meta name="__RequestVerificationToken" content="@Html.AntiForgeryTokenValueOrchard()">
+//$.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+//    if ((originalOptions.type && originalOptions.type.match(/get/ig) !== null) || (options.type && options.type.match(/get/ig) !== null)) {
+//        return;
+//    }
+//    var verificationToken = $("meta[name='__RequestVerificationToken']").attr('content');
+//    if (verificationToken) {
+//        jqXHR.setRequestHeader("X-Request-Verification-Token", verificationToken);
+//        var data = originalOptions.data;
+//        if (originalOptions.dataType && originalOptions.dataType.match(/json/ig) !== null) {
+//            if (data && Object.prototype.toString.call(originalOptions.data) === '[object String]') {
+//                var temp = JSON.parse(originalOptions.data);                
+//            } else
+//            {
+//                data = {};
+//            }
+//            options.data = JSON.stringify($.extend(temp, { __RequestVerificationToken: verificationToken }));
+//        }
+//        else {            
+//            if (data !== undefined) {
+//                if (Object.prototype.toString.call(originalOptions.data) === '[object String]') {
+//                    data = $.deparam(originalOptions.data); // see http://benalman.com/code/projects/jquery-bbq/examples/deparam/
+//                }
+//            } else {
+//                data = {};
+//            }
+//            options.data = $.param($.extend(data, { __RequestVerificationToken: verificationToken }));
+//        }
+//    }
+//});
 
 $(function () {
     FastClick.attach(document.body);
@@ -209,7 +240,29 @@ App.ReportRoute = Ember.Route.extend({
     },
     afterModel: function (m) {
         m.impact = Enumerable.From(m.data[0]).Select("{group:ToTitleCase($.Item1.replace(/_/g, ' ')), xValue: $.Item2, yValue: $.Item3*100.0 }").ToArray();
-        m.overdue = Enumerable.From(m.data[1]).Select("{label:ToTitleCase($.Item1.replace(/_/g, ' ')), value: $.Item2 }").ToArray();
+        var overdueMax = 1;
+        
+        m.overdue = Enumerable.From(m.data[1]).Select(function (value, index) {
+            if (value.Item2 > overdueMax)
+                overdueMax = value.Item2;
+            var hackDate = new Date(1970, 01, 01); 
+            hackDate.setMonth(1 + index);
+            var lbl = ToTitleCase(value.Item1.replace(/_/g, ' '));
+            return { label: 'Outstanding Instances', group: lbl, time: hackDate, value: value.Item2 }
+        }).ToArray();
+
+        var overdueFactorMax = 1;
+        m.overdueFactor = Enumerable.From(m.data[1]).Select(function (value, index) {
+            if (value.Item3 > overdueFactorMax)
+                overdueFactorMax = value.Item3;
+            return {label: ToTitleCase(value.Item1.replace(/_/g, ' ')), value: value.Item3};
+        });
+        m.overdueFactor = m.overdueFactor.Select(function (value, index) {
+            var hackDate = new Date(1970, 01, 01); //hack but hey... AG
+            hackDate.setMonth(1 + index);
+            return {label: 'Relative Lateness' , group: value.label, time: hackDate, value: overdueMax * (value.value / overdueFactorMax) };
+        }).ToArray();
+        m.od = m.overdue.concat(m.overdueFactor);
     }
 });
 
@@ -3645,7 +3698,7 @@ App.ContactSelectorComponent = App.UserSelectorComponent.extend({
 });
 
 
-App.XxxTrigger = Ember.Object.extend({
+App.TriggerOption = Ember.Object.extend({
     cleaner: function(){
         var _this = this;
         var type = this.get('type')
@@ -3661,7 +3714,7 @@ App.XxxTrigger = Ember.Object.extend({
     }.observes('type').on('init')
 })
 
-App.ThenTrigger = App.XxxTrigger.extend({
+App.ThenTrigger = App.TriggerOption.extend({
     type: 'email',
     options: ['webhook', 'email'],
     emailTemplate: {
@@ -3673,7 +3726,7 @@ App.ThenTrigger = App.XxxTrigger.extend({
     }
 });
 
-App.WhenTrigger = App.XxxTrigger.extend({
+App.WhenTrigger = App.TriggerOption.extend({
     type: 'now',
     options: ['now', 'delay'],
     select: [{value: 'now', text: "Immediately"}, {value: 'delay', text: "Time Delay"}],
@@ -3694,6 +3747,10 @@ App.TriggerNodeComponent = Ember.Component.extend({
     workflowID: '', // this is the workflow ID on the item we are editing
     edge: '',
     loading: true,
+    triggers: [],
+    triggersFirst: function () {
+        return this.get('triggers.firstObject');
+    }.property('triggers'),
     setup: function(){
         
         // Get graph & Workflow ID
@@ -3706,47 +3763,29 @@ App.TriggerNodeComponent = Ember.Component.extend({
   
         var store = this.get('targetObject.store');
 
-        var config = { GraphDataID: graphID };
+        var config = { GraphDataID: graphID, GraphDataGroupID: workflowID };
 
 
-        store.findQuery('GraphDataTrigger', config).then(function(a) {
+        store.findQuery('triggerGraph', config).then(function (a) {
             // if problem do something else - needs error handeling
 
-            return a.get('firstObject')
-        }, function(){
-
-            // Load the default config first
-            config.JSON = _this.get('defaultConfig');
-            return store.createRecord('GraphDataTrigger', config);
-        }).then(function(a){
+            Enumerable.From(a.content).ForEach(function (value, index) {
+                _this.get('triggers').addObject(value);
+                console.log(index);
+                //Construct JSON for 1st object                
+            });
+            if (_this.get('triggers').length < 1) {
+                _this.get('triggers').addObject(store.createRecord('triggerGraph',
+                    $.extend(config, { 
+                        JSON: _this.get('defaultConfig'), 
+                        ConditionID: NewGUID(),
+                        TriggerID: NewGUID()
+                    })));
+            }
             _this.set('loading', false);
-
-            debugger;
-
-
-            if (a.get('JSON')) {
-                _this.set('config', a)
-            } else {
-                Messenger().post({ type: 'error', message: 'Weird error.' });                
-            }            
-        })    
-
+        });
 
     }.observes('graphID').on('didInsertElement'),
-    config: {},
-    // configCleaner: function() {
-        
-    //     var trig = this.get('config.trigger')
-
-    //     if (trig) {
-    //         trig.forEach(function(i, a){
-    //             debugger;
-    //             delete a[a.type]
-    //         })
-    //     }
-    //     debugger;
-    // }.observes('config.trigger.@each.type'),
-    // triggerField: , 
     defaultConfig: {
         matchSelect: 'All',
         triggerConditions: false,
@@ -3765,14 +3804,14 @@ App.TriggerNodeComponent = Ember.Component.extend({
             App.ThenTrigger.create({
                 type: 'email'
             })
-            ,
-            App.ThenTrigger.create({
+            //,
+            //App.ThenTrigger.create({
             
-                type: 'webhook',
-                webhook: {
-                    url: "",
-                }
-            })
+            //    type: 'webhook',
+            //    webhook: {
+            //        url: "",
+            //    }
+            //})
             
         ],
         when: [
@@ -3845,59 +3884,56 @@ App.TriggerNodeComponent = Ember.Component.extend({
         'saveTriggerConditions': function(context){
             var _this = this;
             var store = _this.get('targetObject.store');
+            var firstTrigger = _this.get('triggersFirst');
+            var condition = firstTrigger.get('JSON').fields;
+            var triggers = firstTrigger.get('JSON').trigger;
 
-
-            var trigger = this.get('config')
-
+     //       [TriggerGraphID]
+     //, [TriggerID]
     
+     //     , [MergeProjectData]
+     // , [OnEnter]
+     // , [OnDataUpdate]
+     // , [OnExit]
+     //, [OnEnter]
+   
+     // , [CommonName]
+     
+     // , [JsonMethod]
 
-            trigger.save().then(function(){
-                 Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+     // , [JSON]
+     //       [OverrideProjectDataWithJsonCustomVars]
+     // , [JSON]
+     // , [Condition]
 
-            }, function(){
-                 Messenger().post({ type: 'error', message: 'Error saving edge conditions' });
+     //        , [ExternalURL]
+     // , [ExternalRequestMethod]
+     // , [ExternalFormType]
+     // , [PassThrough]
+     // , [RunOnce]
+     // , [DelaySeconds]
+     // , [DelayDays]
+     // , [DelayWeeks]
+     // , [DelayMonths]
+     // , [DelayYears]
+     // , [RepeatDelay]
+     // , [DelayUntil]
+
+            //Destruct JSON objects
+            //Merge with trigger array
+            Enumerable.From(this.get('triggers')).ForEach(function (value, index) {
 
             });
+    
 
-            // this.get('edge').get('EdgeConditions').then(function(a){
-                
-            //      if (a.get('length') != 0) {
-            //         // edit a
-            //         z = a.get('firstObject');
-            //         z.set('JSON', JSON.stringify(_this.get('config')));
+            //trigger.save().then(function(){
+            //     Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
 
-            //         var conditionStr =  _this.get('configEvaluation')(_this.get('config'));
-            //         z.set('Condition', conditionStr);
+            //}, function(){
+            //     Messenger().post({ type: 'error', message: 'Error saving edge conditions' });
 
-            //         z.save().then(function(){
-            //              Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+            //});
 
-            //         }, function(){
-            //              Messenger().post({ type: 'error', message: 'Error saving edge conditions' });
-
-            //         });
-            //      } else {
-            //         // create a new one and save to it
-            //         var store = _this.get('targetObject.store');
-            //         var newCondition = store.createRecord('edgeCondition', {
-            //             ConditionID: NewGUID(),
-            //             GraphDataRelationID: _this.get('edgeID'),
-            //             JSON: JSON.stringify(_this.get('config')),// paul super easy array
-            //             Condition: _this.get('configEvaluation')(_this) // andy's js condition
-            //         })
-
-            //         _this.get('edge.EdgeConditions').addObject(newCondition);
-
-            //         // newCondition.save().then(function(){
-
-            //         // })
-
-            //          newCondition.save().then(function(){
-            //              Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
-            //         })
-
-            //      }
-            // });
         },
         'addRow': function (context) {
             var positionCurrent = this.get('config.JSON.fields').indexOf(context.itemInsertAfter) + 1;
@@ -4567,49 +4603,6 @@ App.Task = DS.Model.extend({
     Comment: DS.attr('string')
 });
 
-App.Trigger = DS.Model.extend({
-    TriggerID: DS.attr('string'), //same guid = id
-    CommonName: DS.attr('string'), //guid = id
-    TriggerType: DS.attr('string'),
-    JsonMethod: DS.attr('string'), //Webhook,email
-    JsonProxyApplicationID: DS.attr('string'),
-    JsonProxyContactID: DS.attr('string'),
-    JsonProxyCompanyID: DS.attr('string'),
-    JsonAuthorizedBy: DS.attr('string'), // JsonXXX - this is just for recieving trigger 
-    JsonUsername: DS.attr('string'),
-    JsonPassword: DS.attr('string'),
-    JsonPasswordType: DS.attr('string'),
-    JSON: DS.attr('string'), //PK, just for ui extra shit inside trigger not condition
-    SystemMethod: DS.attr('string'),
-    ConditionID: DS.attr('string'), //json for condition partidentical to last time
-    ExternalUrl: DS.attr('string'), //http://dothis/rest/url
-    ExternalRequestMethod: DS.attr('string', { defaultValue: 'POST' }),
-    ExternalFormType: DS.attr('string', { defaultValue: 'JSON' }), 
-    PassThrough: DS.attr('string', { defaultValue: true }),
-    RunOnce: DS.attr('string',  { defaultValue: true }),
-    DelaySeconds: DS.attr('string',  { defaultValue: 0 }),
-    DelayDays: DS.attr('string',  { defaultValue: 0 }),
-    DelayWeeks: DS.attr('string',  { defaultValue: 0 }),
-    DelayMonths: DS.attr('string',  { defaultValue: 0 }),
-    DelayYears: DS.attr('string',  { defaultValue: 0 }),
-    RepeatDelay: DS.attr('string',  { defaultValue: 0 }),
-    DelayUntil: DS.attr('string'), //Do this later? Repeat until later?
-    condition: DS.belongsTo('condition', { async: true }),
-});
-
-
-// This is the conditions on a graph
-App.GraphDataTrigger = App.Trigger.extend({
-    GraphDataTriggerID: DS.attr('string'),
-    GraphDataID: DS.attr('string'),
-    TriggerID: DS.attr('string'),
-    OnEnter: DS.attr('string'),
-    OnDataUpdate: DS.attr('string'),
-    OnExit: DS.attr('string')
-});
-
-
-
 
 App.Step = App.Node.extend({
     TaskName: DS.attr('string'),
@@ -4760,6 +4753,83 @@ App.EdgeCondition = App.Condition.extend({
     JoinedBy: DS.attr(''),
     ConditionID: DS.attr(''),
     GraphDataRelationID: DS.attr('')
+});
+
+App.Trigger = App.Condition.extend({
+    TriggerID: DS.attr('string'), //same guid = id
+    CommonName: DS.attr('string'), //guid = id
+    TriggerType: DS.attr('string'),
+    JsonMethod: DS.attr('string'), //Webhook,email
+    JsonProxyApplicationID: DS.attr('string'),
+    JsonProxyContactID: DS.attr('string'),
+    JsonProxyCompanyID: DS.attr('string'),
+    JsonAuthorizedBy: DS.attr('string'), // JsonXXX - this is just for recieving trigger 
+    JsonUsername: DS.attr('string'),
+    JsonPassword: DS.attr('string'),
+    JsonPasswordType: DS.attr('string'),
+    SystemMethod: DS.attr('string'),
+    ExternalUrl: DS.attr('string'), //http://dothis/rest/url
+    ExternalRequestMethod: DS.attr('string', { defaultValue: 'POST' }),
+    ExternalFormType: DS.attr('string', { defaultValue: 'JSON' }),
+    PassThrough: DS.attr('string', { defaultValue: true }),
+    RunOnce: DS.attr('string', { defaultValue: true }),
+    DelaySeconds: DS.attr('string', { defaultValue: 0 }),
+    DelayDays: DS.attr('string', { defaultValue: 0 }),
+    DelayWeeks: DS.attr('string', { defaultValue: 0 }),
+    DelayMonths: DS.attr('string', { defaultValue: 0 }),
+    DelayYears: DS.attr('string', { defaultValue: 0 }),
+    RepeatDelay: DS.attr('string', { defaultValue: 0 }),
+    DelayUntil: DS.attr('string'), //Do this later? Repeat until later?
+
+    ConditionID: DS.attr('string'), //json for condition partidentical to last time
+    ConditionJSON: DS.attr('string'), //PK, just for ui extra shit inside trigger not condition
+});
+
+
+// This is the conditions on a graph
+App.TriggerGraph = App.Trigger.extend({
+    TriggerGraphID: DS.attr('string'),
+    GraphDataID: DS.attr('string'),
+    GraphDataGroupID: DS.attr('string'),
+    TriggerID: DS.attr('string'),
+    OnEnter: DS.attr('string'),
+    OnDataUpdate: DS.attr('string'),
+    OnExit: DS.attr('string'),
+    MergeProjectData: DS.attr('string')
+});
+
+
+App.Contact = DS.Model.extend({
+    ContactID: DS.attr('string'),
+    ContactName: DS.attr('string'),
+    Title: DS.attr('string'),
+    Surname: DS.attr('string'),
+    Firstname: DS.attr('string'),
+    Username: DS.attr('string'),
+    DefaultEmail: DS.attr('string'),
+    DefaultMobile: DS.attr('string'),
+    MiddleNames: DS.attr('string'),
+    Initials: DS.attr('string'),
+    DOB: DS.attr('string'),
+    BirthCountryID: DS.attr('string'),
+    BirthCity: DS.attr('string'),
+    AspNetUserID: DS.attr('string'),
+    XafUserID: DS.attr('string'),
+    OAuthID: DS.attr('string'),
+    Photo: DS.attr('string'),
+    ShortBiography: DS.attr('string'),
+    companies: DS.hasMany('company'),
+});
+
+
+App.Company = DS.Model.extend({
+    CompanyID: DS.attr('string'),
+    ParentCompanyID: DS.attr('string'),
+    CompanyName: DS.attr('string'),
+    CountryID: DS.attr('string'),
+    PrimaryContactID: DS.attr('string'),
+    Comment: DS.attr('string'),
+    company: DS.belongsTo('contact')
 });
 
 

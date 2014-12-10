@@ -1161,3 +1161,7 @@ color: red;
 .ghostCircle, .activeDrag .ghostCircle{
      display: none;
 }
+#lateTasksReport .x.axis > .tick {
+    display: none;
+}
+

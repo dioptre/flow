@@ -202,8 +202,20 @@ namespace EXPEDIT.Flow.Services
         bool UpdateTrigger(TriggerViewModel m);
         [OperationContract]
         bool DeleteTrigger(TriggerViewModel m);
+       
 
         [OperationContract]
-        void Cleanup();
+        void Cleanup(); 
+        
+        [OperationContract]
+        bool GetTriggerGraph(TriggerGraphViewModel m);
+        [OperationContract]
+        bool CreateTriggerGraph(TriggerGraphViewModel m);
+        [OperationContract]
+        bool UpdateTriggerGraph(TriggerGraphViewModel m);
+        [OperationContract]
+        bool DeleteTriggerGraph(TriggerGraphViewModel m);
+
+
     }
 }
