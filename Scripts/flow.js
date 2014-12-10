@@ -5996,660 +5996,821 @@ Ember.HelloModalComponent = Ember.Component.extend({
 })
 
 
+
+// Try this with ember objects...
+App.TestObject = Ember.Object.extend({
+    name1: 'Hi',
+    lol: function() {
+        return this.get('name1') + '123';
+    }.property('name1')
+})
+
 App.HierachyTreeComponent = Ember.Component.extend({
-  // NAME LOOKUP VARIABLE WITH THIS.GET()...
-  wrap: {
-      data: {
-           "name": "flaretest",
-           // "data": 'Ember.Data.Record',
-           "children": [{
-               "name": "analyticstest",
-               "children": [{
-                  "name": "clustertest"
-               }, {
-                  "name": 'Test'
-               }]
-           }]
-      }
-  },
-  config: {
-      duration: 250, // Animation Speed
-
-      // Visualisation Configuration
-      color_circle_stroke: "#4682b4",
-      color_circle_active: "#b0c4de",
-      color_circle_standard: "#fff",
-      stroke_size: 1.5,
-      stroke_color: '#bbb',
-      circle_size: 3.5,
-      fill_margin : {
-          n: 150,
-          e: 150,
-          s: 30,
-          w: 100
-      }
-  },
-  status: {
-
-  },
-  dom: {
-      baseSVG: null,
-      groupSVG: null
-  },
-  helpers: function () {
-      return {
-          size: (function() {
-              var _this = this
-              var a = Ember.Object.extend({
-                  width: function() {
-                      console.log('helpers')
-                    return _this.get('dom').baseSVG[0][0].getBoundingClientRect().width;
-                  }.property(),
-                  height: function() {
-                    return _this.get('dom').baseSVG[0][0].getBoundingClientRect().height;
-                  }.property()
-              })
-              return a.create()
-          }).apply(this),
-          visit: function (parent, visitFn, childrenFn) {
-              if (!parent) return;
-
-              visitFn(parent);
-
-              var children = childrenFn(parent);
-              if (children) {
-                  var count = children.length;
-                  for (var i = 0; i < count; i++) {
-                      visit(children[i], visitFn, childrenFn);
-                  }
-              }
-          },
-          // Define the drag listeners for drag/drop behaviour of nodes.
-          dragListener: function () {
-
-              return d3.behavior.drag()
-              .on("dragstart", function(d) {
-                  if (d == root) {
-                      return;
-                  }
-                  dragStarted = true;
-                  nodes = status.tree.nodes(d);
-                  d3.event.sourceEvent.stopPropagation();
-                  // it's important that we suppress the mouseover event on the node being dragged. Otherwise it will absorb the mouseover event and the underlying node will not detect it d3.select(this).attr('pointer-events', 'none');
-              })
-              .on("drag", function(d) {
-                  if (d == root) {
-                      return;
-                  }
-                  if (dragStarted) {
-                      domNode = this;
-                      initiateDrag(d, domNode);
-                  }
-
-
-
-                  // get coords of mouseEvent relative to svg container to allow for panning
-                  relCoords = d3.mouse($(baseSVG[0][0]).get(0));
-                  if (relCoords[0] < panBoundary) {
-                      panTimer = true;
-                      pan(this, 'left');
-                  } else if (relCoords[0] > ($(baseSVG[0][0]).width() - panBoundary)) {
-
-                      panTimer = true;
-                      pan(this, 'right');
-                  } else if (relCoords[1] < panBoundary) {
-                      panTimer = true;
-                      pan(this, 'up');
-                  } else if (relCoords[1] > ($(baseSVG[0][0]).height() - panBoundary)) {
-                      panTimer = true;
-                      pan(this, 'down');
-                  } else {
-                      try {
-                          clearTimeout(panTimer);
-                      } catch (e) {
-
-                      }
-                  }
-
-                  d.x0 += d3.event.dy;
-                  d.y0 += d3.event.dx;
-                  var node = d3.select(this);
-                  node.attr("transform", "translate(" + d.y0 + "," + d.x0 + ")");
-                  updateTempConnector();
-              }).on("dragend", function(d) {
-                  if (d == root) {
-                      return;
-                  }
-                  domNode = this;
-                  if (selectedNode) {
-                      // now remove the element from the parent, and insert it into the new elements children
-                      var index = draggingNode.parent.children.indexOf(draggingNode);
-                      if (index > -1) {
-                          draggingNode.parent.children.splice(index, 1);
-                      }
-                      if (typeof selectedNode.children !== 'undefined' || typeof selectedNode._children !== 'undefined') {
-                          if (typeof selectedNode.children !== 'undefined') {
-                              selectedNode.children.push(draggingNode);
-                          } else {
-                              selectedNode._children.push(draggingNode);
-                          }
-                      } else {
-                          selectedNode.children = [];
-                          selectedNode.children.push(draggingNode);
-                      }
-                      // Make sure that the node being added to is expanded so user can see added node is correctly moved
-                      expand(selectedNode);
-                      sortTree();
-                      endDrag();
-                  } else {
-                      endDrag();
-                  }
-              })
-          }
-
-      }
-  }.property(),
-  setup: function(){
-      // This is so we don't need to use set with ember -- http://emberjs.jsbin.com/zerici/1/edit?js,console,output
-      var dom = this.get('dom'); // dom elemetns
-      var status = this.get('status') // any temporary global vars
-      var config = this.get('config'); // any configurable settings
-      var wrap = this.get('wrap'); // wrap for data variables
-      var helpers = this.get('helpers');
-
-
-
-      function zoom() {
-          dom.groupSVG.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-      }
-
-
-      // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
-      zoomListener = d3.behavior.zoom().scaleExtent([0.1, 15]).on("zoom", zoom);
-
-
-
-      // define the baseSvg, attaching a class for styling and the zoomListener
-      dom.baseSVG = d3.select(this.$()[0]).append("svg")
-          .style("width", '100%')
-          .style("height", '100%')
-          .attr("class", "overlay")
-          .attr("version", 1.1)
-          .attr("xmlns", "http://www.w3.org/2000/svg")
-          .call(zoomListener);
-
-
-
-
-      status.tree = d3.layout.tree()
-          .size([this.get('helpers.size.height'), this.get('helpers.size.width')]);
-
-
-
-      // A recursive helper function for performing some setup by walking through all nodes
-
-
-      // var maxLabelLength; // todo hack
-      // Call visit function to establish maxLabelLength
-      // visit(wrap.data, function(d) {
-      //     // totalNodes++;
-
-
-      //     //
-      //     maxLabelLength = Math.max(d.name.length, maxLabelLength);
-
-      // }, function(d) {
-      //     return d.children && d.children.length > 0 ? d.children : null;
-      // });
-
-
-      // sort the tree according to the node names
-
-      function sortTree() {
-          // tree.sort(function(a, b) {
-          //     return b.name.toLowerCase() < a.name.toLowerCase() ? 1 : -1;
-          // });
-      }
-      // Sort the tree initially incase the JSON isn't in a sorted order.
-      sortTree();
-
-      // TODO: Pan function, can be better implemented.
-
-
-
-
-
-      // Function to center node when clicked/dropped so node doesn't get lost when collapsing/moving with large amount of children.
-
-
-
-
-      // Append a group which holds all nodes and which the zoom Listener can act upon.
-      dom.groupSVG = dom.baseSVG.append("g");
-
-
-
-
-      // Setting base points so we can later use these as reference points for animation
-      wrap.data.x0 = this.get('helpers.size.height') / 2;
-      wrap.data.y0 = 0;
-
-      // Layout the tree initially and center on the root node.
-
-
-      this.update(wrap.data);
-
-      //this.centerNode(root)
-
-      // this.fillGraph(root);
-
-
-
-
-       //callback();
-  }.on('didInsertElement'),
-  update: function(source){
-      var dom = this.get('dom');
-      var status = this.get('status')
-      var config = this.get('config');
-      var wrap = this.get('wrap');
-      var helpers = this.get('helpers');
-
-
-
-
-      var _this = this;
-
-
-
-
-      // Compute the new height, function counts total children of root node and sets tree height accordingly.
-      // This prevents the layout looking squashed when new nodes are made visible or looking sparse when nodes are removed
-      // This makes the layout more consistent.
-
-      var animation_length;
-      if (typeof animation_length === "undefined") {
-        animation_length = config.duration;
-      }
-
-      var maxLabelLength = 10; // todo hack
-
-
-      var levelWidth = [1];
-      var childCount = function(level, n) {
-
-          if (n.children && n.children.length > 0) {
-              if (levelWidth.length <= level + 1) levelWidth.push(0);
-
-              levelWidth[level + 1] += n.children.length;
-              n.children.forEach(function(d) {
-                  childCount(level + 1, d);
-              });
-          }
-      };
-
-      var diagonal = d3.svg.diagonal()
-           .projection(function(d) {
-               return [d.y, d.x];
-       });
-
-      childCount(0, wrap.data);
-
-      var newHeight = d3.max(levelWidth) * 25; // 25 pixels per line
-
-      status.tree = status.tree.size([_this.get('helpers.size.height'), _this.get('helpers.size.width')]);
-
-
-
-
-      // Compute the new tree layout.
-      status.nodes = status.tree.nodes(wrap.data).reverse();
-      status.links = status.tree.links(status.nodes);
-
-
-
-
-      // Set widths between levels based on maxLabelLength.
-      status.nodes.forEach(function(d) {
-          d.y = (d.depth * (maxLabelLength * 10)); //maxLabelLength * 10px
-          // alternatively to keep a fixed scale one can set a fixed depth per level
-          // Normalize for fixed-depth by commenting out below line
-          // d.y = (d.depth * 500); //500px per level.
-      });
-
-      // Update the nodesâ€¦
-      status.node = dom.groupSVG.selectAll("g.node")
-          .data(status.nodes, function(d, i) {
-              return d.id || (d.id = ++i);
-          });
-
-      // Enter any new nodes at the parent's previous position.
-      status.nodeEnter = status.node.enter().append("g")
-          // .call(helpers.dragListener)
-          .attr("class", "node")
-          .attr("transform", function(d) {
-              return "translate(" + source.y0 + "," + source.x0 + ")";
-          });
-
-      status.nodeEnter.append("circle")
-          .attr('class', 'nodeCircle')
-          .attr("r", 0)
-          .on('click', click);
-
-      status.nodeEnter.append("text")
-          .attr("x", function(d) {
-              return d.children || d._children ? -10 : 10;
-          })
-          .attr("dy", ".35em")
-          .attr('class', 'nodeText')
-          .attr("text-anchor", function(d) {
-              return d.children || d._children ? "end" : "start";
-          })
-          .text(function(d) {
-              return d.name;
-          })
-          .style("font-size", "10px")
-          .style("font-family", "sans-serif")
-          .style("fill-opacity", 0)
-          .on('click', function(d){
-            var result = prompt('Change the name of the node', d.name);
-            if(result) {
-              d.name = result;
-              dataUpdatedFn(_this.data()); // This line is to call the updated data trigger
-              _this.update();
-            }
-          });
-
-      // phantom node to give us mouseover in a radius around it
-      status.nodeEnter.append("circle")
-          .attr('class', 'ghostCircle')
-          .attr("r", 30)
-          .attr("opacity", 0.2) // change this to zero to hide the target area
-          .style("fill", "red")
-          .attr('pointer-events', 'mouseover')
-          .on("mouseover", function(node) {
-              overCircle(node);
-          })
-          .on("mouseout", function(node) {
-              outCircle(node);
-          });
-
-      // Update the text to reflect whether node has children or not.
-      status.node.select('text')
-          .attr("x", function(d) {
-              return d.children || d._children ? -10 : 10;
-          })
-          .attr("text-anchor", function(d) {
-              return d.children || d._children ? "end" : "start";
-          })
-          .text(function(d) {
-              return d.name;
-          });
-
-      // Change the circle fill depending on whether it has children and is collapsed
-      status.node.select("circle.nodeCircle")
-          .attr("r", config.circle_size)
-          .style('stroke', config.color_circle_stroke)
-          .style('stroke-width', '1.5px')
-          .style("fill", function(d) {
-              return d._children ? config.color_circle_active : config.color_circle_standard;
-          });
-
-      // Transition nodes to their new position.
-      status.nodeUpdate = status.node.transition()
-          .duration(animation_length)
-          .attr("transform", function(d) {
-              return "translate(" + d.y + "," + d.x + ")";
-         });
-
-
-      // Fade the text in
-      status.nodeUpdate.select("text")
-          .style("fill-opacity", 1);
-
-      // Transition exiting nodes to the parent's new position.
-      status.nodeExit = status.node.exit().transition()
-          .duration(animation_length)
-          .attr("transform", function(d) {
-              return "translate(" + source.y + "," + source.x + ")";
-          })
-          .remove();
-
-      status.nodeExit.select("circle")
-          .attr("r", 0);
-
-      status.nodeExit.select("text")
-          .style("fill-opacity", 0);
-
-      // Update the linksâ€¦
-      status.link = dom.groupSVG.selectAll("path.link")
-          .data(status.links, function(d) {
-              return d.target.id;
-          });
-
-      // Enter any new links at the parent's previous position.
-      status.link.enter().insert("path", "g")
-          .attr("class", "link")
-          .attr("d", function(d) {
-              var o = {
-                  x: source.x0,
-                  y: source.y0
-              };
-              return diagonal({
-                  source: o,
-                  target: o
-              });
-          });
-
-      // Transition links to their new position.
-      status.link.transition()
-          .style('fill', 'none')
-          .style('stroke', config.stroke_color)
-          .style('stroke-width', config.stroke_size)
-          .duration(animation_length)
-          .attr("d", diagonal);
-
-      // Transition exiting nodes to the parent's new position.
-      status.link.exit().transition()
-          .duration(animation_length)
-          .attr("d", function(d) {
-              var o = {
-                  x: source.x,
-                  y: source.y
-              };
-              return diagonal({
-                  source: o,
-                  target: o
-              });
-          })
-          .remove();
-
-
-
-      // Stash the old positions for transition.
-      status.nodes.forEach(function(d) {
-          d.x0 = d.x;
-          d.y0 = d.y;
-      });
-
-      if (_this.forceFill) {
-        setTimeout(function(){
-          _this.fillGraph();
-        },animation_length)
-      }
-
-
-
-      // AWESOME FunctionS
-      // Toggle children function
-      function toggleChildren(d) {
-          if (d.children) {
-              d._children = d.children;
-              d.children = null;
-          } else if (d._children) {
-              d.children = d._children;
-              d._children = null;
-          }
-          return d;
-      }
-
-
-      function fillGraph(source) {
-              // Get the width of the g element - bit.ly/1oRiBe3
-              var e =  svgGroup[0][0].getBoundingClientRect();
-
-              // Add margin to width of element
-              var m = fill_margin;
-              viewerWidth_wm = viewerWidth() - m.e - m.w;
-              viewerHeight_wm = viewerHeight() - m.n - m.s;
-
-              // Check if the margin is to big
-              if (viewerWidth_wm < 50 || viewerHeight_wm < 50) {
-                console.log('The margin is too big for the window. Margin will be ignored.');
-                for (var i in m) { m[i] = 0; } // Reset margin to 0;
-                viewerWidth_wm = viewerWidth();  // Reset view size;
-                viewerHeight_wm = viewerHeight();
-              }
-
-              // Get ratio
-              var ratio = {
-                 w: viewerWidth_wm / e.width,
-                 h: viewerHeight_wm / e.height
-              };
-
-              // Focus on dimension, where the ratio is smaller
-              var dimension =  (ratio.w < ratio.h) ? 'w' : 'h';
-
-              // Calc what height should be set
-              scale = zoomListener.scale();
-              var newScale = ratio[dimension]*scale;
-
-              // Depending on the
-              var translate = {
-                  w: {
-                    x: m.e + 0, //root.x0, // Needs to be replaced with the width of the label!!! #TODO -1
-                    y: viewerHeight() / 2 - (e.height/ 2 * ratio.w)
-                  },
-                  h: {
-                    x: viewerWidth() / 2 - (e.width / 2 * ratio.h),
-                    y: m.n
-                  }
-              }[dimension];
-
-
-
-              // Do the transition
-              svgGroup.transition()
-                  .duration(_this.duration)
-                  .attr("transform", "translate(" + translate.x + "," + translate.y + ")scale(" + newScale + ")");
-
-             // Update zoom listener so there are no jumps
-             zoomListener.scale(newScale);
-             zoomListener.translate([translate.x, translate.y]);
-      };
-
-
-      function click(d) {
-          if (d3.event.defaultPrevented) return; // click suppressed
-          d = toggleChildren(d);
-          _this.update(d);
-          _this.centerNode(d);
-      }
-
-      function centerNode(source) {
-            if (!source) {
-              var source = root;
-            }
-
-            scale = zoomListener.scale();
-            x = -source.y0;
-            y = -source.x0;
-            x = x * scale + viewerWidth() / 2;
-            y = y * scale + viewerHeight() / 2;
-            svgGroup.transition()
-                .duration(_this.duration)
-                .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
-            zoomListener.scale(scale);
-            zoomListener.translate([x, y]);
+    // NAME LOOKUP VARIABLE WITH THIS.GET()...
+    wrap: {
+        data: {
+             "name": "flaretest",
+             "data": App.TestObject.create(),
+             "children": [{
+                 "name": "analyticstest",
+                 "data": App.TestObject.create(),
+
+                 "children": [{
+                    "name": "clustertest",
+                    "data": App.TestObject.create(),
+                 }, {
+                    "name": 'Test',
+                    "data": App.TestObject.create(),
+                 },{
+                     "name": "analyticstest",
+                     "data": App.TestObject.create(),
+
+                     "children": [{
+                        "name": "clustertest",
+                        "data": App.TestObject.create(),
+                         }, {
+                            "name": 'Test',
+                            "data": App.TestObject.create(),
+
+                         },{
+                             "name": "analyticstest",
+                             "data": App.TestObject.create(),
+
+                             "children": [{
+                                "name": "clustertest",
+                                "data": App.TestObject.create(),
+                                 }, {
+                                    "name": 'Test',
+                                    "data": App.TestObject.create(),
+                                 }]
+                    }]
+                }]
+
+             }]
+
+        }
+    },
+    config: {
+        duration: 250, // Animation Speed
+        width: '100%',
+        height: '500px',
+        // Visualisation Configuration
+        font_size: "10px",
+        font_weight: 500,
+        color_circle_stroke: "#4682b4",
+        color_circle_active: "#b0c4de",
+        color_circle_standard: "#fff",
+        stroke_size: 1.5,
+        stroke_color: '#bbb',
+        circle_size: 3.5,
+        fill_margin : {
+            n: 30,
+            e: 50,
+            s: 30,
+            w: 20
+        },
+        panSpeed: 200,
+        panBoundary: 20
+    },
+    status: {
+        selectedNode: null,
+        draggingNode: null
+    },
+    dom: {
+        baseSVG: null,
+        groupSVG: null
+    },
+    helpers: function () {
+        return {
+            "size": (function() {
+                var _this = this;
+                var a = Ember.Object.extend({
+                    width: function() {
+                        console.log('helpers')
+                      return _this.get('dom').baseSVG[0][0].getBoundingClientRect().width;
+                    }.property(),
+                    height: function() {
+                      return _this.get('dom').baseSVG[0][0].getBoundingClientRect().height;
+                    }.property()
+                })
+                return a.create()
+            }).apply(this),
+            "visit": function (parent, visitFn, childrenFn) {
+                if (!parent) return;
+
+                visitFn(parent);
+
+                var children = childrenFn(parent);
+                if (children) {
+                    var count = children.length;
+                    for (var i = 0; i < count; i++) {
+                        visit(children[i], visitFn, childrenFn);
+                    }
+                }
+            },
+            fillGraph: (function () {
+                var _this = this;
+
+                return function() {
+
+                    var dom = _this.get('dom'); // dom elemetns
+                    var status = _this.get('status') // any temporary global vars
+                    var config = _this.get('config'); // any configurable settings
+                    var wrap = _this.get('wrap'); // wrap for data variables
+
+                    var width = _this.get('helpers.size.width');
+                    var height = _this.get('helpers.size.height');
+
+                    // Get the width of the g element - bit.ly/1oRiBe3
+                    var e =  dom.groupSVG[0][0].getBoundingClientRect();
+
+                    // Add margin to width of element
+                    var m = config.fill_margin;
+                    viewerWidth_wm =  width - m.e - m.w;
+                    viewerHeight_wm =  height - m.n - m.s;
+
+                    // Check if the margin is to big
+                    if (viewerWidth_wm < 50 || viewerHeight_wm < 50) {
+                      console.log('The margin is too big for the window. Margin will be ignored.');
+                      for (var i in m) { m[i] = 0; } // Reset margin to 0;
+                      viewerWidth_wm = height;  // Reset view size;
+                      viewerHeight_wm = width;
+                    }
+
+                    // Get ratio
+                    var ratio = {
+                       w: viewerWidth_wm / e.width,
+                       h: viewerHeight_wm / e.height
+                    };
+
+                    // Focus on dimension, where the ratio is smaller
+                    var dimension =  (ratio.w < ratio.h) ? 'w' : 'h';
+
+                    // Calc what height should be set
+                    scale = status.zoomListener.scale();
+                    var newScale = ratio[dimension]*scale;
+
+                    // Depending on the
+                    var translate = {
+                        w: {
+                          x: m.e + 0, //root.x0, // Needs to be replaced with the width of the label!!! #TODO -1
+                          y: height / 2 - (e.height/ 2 * ratio.w)
+                        },
+                        h: {
+                          x: width / 2 - (e.width / 2 * ratio.h),
+                          y: m.n
+                        }
+                    }[dimension];
+
+                    // Do the transition
+                    dom.groupSVG.transition()
+                        .duration(config.duration)
+                        .attr("transform", "translate(" + translate.x + "," + translate.y + ")scale(" + newScale + ")");
+
+                   // Update zoom listener so there are no jumps
+                   status.zoomListener.scale(newScale);
+                   status.zoomListener.translate([translate.x, translate.y]);
+
+               }
+            }).apply(this)
+        }
+    }.property(),
+    actions: {
+        center: function(){
+            console.log('centering graph!')
+            this.get('helpers.fillGraph')();
+        },
+        left: function () {
+            var dom = this.get('dom'); // dom elemetns
+            var status = this.get('status') // any temporary global vars
+            var config = this.get('config'); // any configurable settings
+            var wrap = this.get('wrap'); // wrap for data variables
+            var helpers = this.get('helpers'); // helper functions
+
+            var scale = status.zoomListener.scale()
+
+            var translate = status.zoomListener.translate()
+
+            var x =  (scale * -25) + translate[0];
+            var y = translate[1];
+
+            dom.groupSVG.transition()
+                 .duration(config.duration)
+                 .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
+
+            // Update zoom listener so there are no akward jumps after moving stuff around :)
+            // status.zoomListener.scale(newScale);
+            status.zoomListener.translate([x, y]);
+        }
+    },
+    setup: function(){
+        // This is so we don't need to use set with ember -- http://emberjs.jsbin.com/zerici/1/edit?js,console,output
+        var dom = this.get('dom'); // dom elemetns
+        var status = this.get('status') // any temporary global vars
+        var config = this.get('config'); // any configurable settings
+        var wrap = this.get('wrap'); // wrap for data variables
+        var helpers = this.get('helpers'); // helper functions
+
+
+
+        function zoom() {
+            dom.groupSVG.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
         }
 
-      // Define function for panning
-      function pan(domNode, direction) {
-          var speed = panSpeed;
-          if (panTimer) {
-              clearTimeout(panTimer);
-              translateCoords = d3.transform(svgGroup.attr("transform"));
-              if (direction == 'left' || direction == 'right') {
-                  translateX = direction == 'left' ? translateCoords.translate[0] + speed : translateCoords.translate[0] - speed;
-                  translateY = translateCoords.translate[1];
-              } else if (direction == 'up' || direction == 'down') {
-                  translateX = translateCoords.translate[0];
-                  translateY = direction == 'up' ? translateCoords.translate[1] + speed : translateCoords.translate[1] - speed;
+
+        // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
+        status.zoomListener = d3.behavior.zoom().scaleExtent([0.1, 15]).on("zoom", zoom);
+
+
+
+        // define the baseSvg, attaching a class for styling and the zoomListener
+        dom.baseSVG = d3.select(this.$('.full-sitemap')[0]).append("svg")
+            .style("width", config.width)
+            .style("height", config.height)
+            .attr("class", "overlay")
+            .attr("version", 1.1)
+            .attr("xmlns", "http://www.w3.org/2000/svg")
+            .call(status.zoomListener);
+
+
+
+
+        status.tree = d3.layout.tree()
+            .size([this.get('helpers.size.height'), this.get('helpers.size.width')]);
+
+
+
+        // A recursive helper function for performing some setup by walking through all nodes
+
+
+        // var maxLabelLength; // todo hack
+        // Call visit function to establish maxLabelLength
+        // visit(wrap.data, function(d) {
+        //     // totalNodes++;
+
+
+        //     //
+        //     maxLabelLength = Math.max(d.name.length, maxLabelLength);
+
+        // }, function(d) {
+        //     return d.children && d.children.length > 0 ? d.children : null;
+        // });
+
+
+        // sort the tree according to the node names
+
+        function sortTree() {
+            // tree.sort(function(a, b) {
+            //     return b.name.toLowerCase() < a.name.toLowerCase() ? 1 : -1;
+            // });
+        }
+        // Sort the tree initially incase the JSON isn't in a sorted order.
+        sortTree();
+
+        // TODO: Pan function, can be better implemented.
+
+
+
+
+
+        // Function to center node when clicked/dropped so node doesn't get lost when collapsing/moving with large amount of children.
+
+
+
+
+        // Append a group which holds all nodes and which the zoom Listener can act upon.
+        dom.groupSVG = dom.baseSVG.append("g");
+
+
+
+
+        // Setting base points so we can later use these as reference points for animation
+        wrap.data.x0 = this.get('helpers.size.height') / 2;
+        wrap.data.y0 = 0;
+
+        // Layout the tree initially and center on the root node.
+
+
+        this.update();
+
+        // helpers.fillGraph();
+
+        //this.centerNode(root)
+
+        // this.fillGraph(root);
+
+
+
+
+         //callback();
+    }.on('didInsertElement'),
+    update: function(){
+        var dom = this.get('dom');
+        var status = this.get('status')
+        var config = this.get('config');
+        var wrap = this.get('wrap');
+        var helpers = this.get('helpers');
+
+
+
+
+        var _this = this;
+
+
+
+
+        // Compute the new height, function counts total children of root node and sets tree height accordingly.
+        // This prevents the layout looking squashed when new nodes are made visible or looking sparse when nodes are removed
+        // This makes the layout more consistent.
+
+        var animation_length;
+        if (typeof animation_length === "undefined") {
+          animation_length = config.duration;
+        }
+
+        var maxLabelLength = 10; // todo hack
+
+
+        var levelWidth = [1];
+        var childCount = function(level, n) {
+
+            if (n.children && n.children.length > 0) {
+                if (levelWidth.length <= level + 1) levelWidth.push(0);
+
+                levelWidth[level + 1] += n.children.length;
+                n.children.forEach(function(d) {
+                    childCount(level + 1, d);
+                });
+            }
+        };
+
+        var diagonal = d3.svg.diagonal()
+             .projection(function(d) {
+                 return [d.y, d.x];
+         });
+
+        childCount(0, wrap.data);
+
+        var newHeight = d3.max(levelWidth) * 25; // 25 pixels per line
+
+        status.tree = status.tree.size([_this.get('helpers.size.height'), _this.get('helpers.size.width')]);
+
+
+
+
+        // Compute the new tree layout.
+        status.nodes = status.tree.nodes(wrap.data).reverse();
+        status.links = status.tree.links(status.nodes);
+
+
+
+
+        // Set widths between levels based on maxLabelLength.
+        status.nodes.forEach(function(d) {
+            d.y = (d.depth * (maxLabelLength * 10)); //maxLabelLength * 10px
+            // alternatively to keep a fixed scale one can set a fixed depth per level
+            // Normalize for fixed-depth by commenting out below line
+            // d.y = (d.depth * 500); //500px per level.
+        });
+
+        // Update the nodesâ€¦
+        status.node = dom.groupSVG.selectAll("g.node")
+            .data(status.nodes, function(d, i) {
+                return d.id || (d.id = ++i);
+            });
+
+        // Enter any new nodes at the parent's previous position.
+        status.nodeEnter = status.node.enter().append("g")
+            .call(nodeDragHelper())
+            .attr("class", "node")
+            .attr("transform", function(d) {
+                return "translate(" + wrap.data.y0 + "," + wrap.data.x0 + ")";
+            });
+
+        status.nodeEnter.append("circle")
+            .attr('class', 'nodeCircle')
+            .attr("r", 0)
+            .on('click', showHelper);
+
+        status.nodeEnter.append("text")
+            .attr("x", function(d) {
+                return d.children || d._children ? -10 : 10;
+            })
+            .attr("dy", ".35em")
+            .attr('class', 'nodeText')
+            .attr("text-anchor", function(d) {
+                return d.children || d._children ? "end" : "start";
+            })
+            .text(function(d) {
+                return d.data.get('lol');
+                //return d.name;
+            })
+            .style("font-size", config.font_size)
+            .style("font-weight", config.font_weight)
+            .style("fill-opacity", 0)
+            .on('click', function(d){
+              var result = prompt('Change the name of the node', d.name);
+              if(result) {
+                d.name = result;
+                dataUpdatedFn(_this.data()); // This line is to call the updated data trigger
+                _this.update();
               }
-              scaleX = translateCoords.scale[0];
-              scaleY = translateCoords.scale[1];
-              scale = zoomListener.scale();
-              svgGroup.transition().attr("transform", "translate(" + translateX + "," + translateY + ")scale(" + scale + ")");
-              d3.select(domNode).select('g.node').attr("transform", "translate(" + translateX + "," + translateY + ")");
-              zoomListener.scale(zoomListener.scale());
-              zoomListener.translate([translateX, translateY]);
-              panTimer = setTimeout(function() {
-                  pan(domNode, speed, direction);
-              }, 50);
-          }
-      }
+            });
+
+        // phantom node to give us mouseover in a radius around it
+        status.nodeEnter.append("circle")
+            .attr('class', 'ghostCircle')
+            .attr("r", 30)
+            .attr("opacity", 0.2) // change this to zero to hide the target area
+            .style("fill", "red")
+            .attr('pointer-events', 'mouseover')
+            .on("mouseover", function(node) {
+                overCircle(node);
+            })
+            .on("mouseout", function(node) {
+                outCircle(node);
+            });
+
+        // Update the text to reflect whether node has children or not.
+        status.node.select('text')
+            .attr("x", function(d) {
+                return d.children || d._children ? -10 : 10;
+            })
+            .attr("text-anchor", function(d) {
+                return d.children || d._children ? "end" : "start";
+            })
+            .text(function(d) {
+                return d.data.get('lol');
+
+                //return d.name;
+            });
+
+        // Change the circle fill depending on whether it has children and is collapsed
+        status.node.select("circle.nodeCircle")
+            .attr("r", config.circle_size)
+            .style('stroke', config.color_circle_stroke)
+            .style('stroke-width', '1.5px')
+            .style("fill", function(d) {
+                return d._children ? config.color_circle_active : config.color_circle_standard;
+            });
+
+        // Transition nodes to their new position.
+        status.nodeUpdate = status.node.transition()
+            .duration(animation_length)
+            .attr("transform", function(d) {
+                return "translate(" + d.y + "," + d.x + ")";
+           });
+
+
+        // Fade the text in
+        status.nodeUpdate.select("text")
+            .style("fill-opacity", 1);
+
+        // Transition exiting nodes to the parent's new position.
+        status.nodeExit = status.node.exit().transition()
+            .duration(animation_length)
+            .attr("transform", function(d) {
+                // debugger;
+                var x = d.x || wrap.data.x;
+                var y = d.y || wrap.data.y;
+                return "translate(" + y + "," + x + ")";
+            })
+            .remove();
+
+        status.nodeExit.select("circle")
+            .attr("r", 0);
+
+        status.nodeExit.select("text")
+            .style("fill-opacity", 0);
+
+        // Update the linksâ€¦
+        status.link = dom.groupSVG.selectAll("path.link")
+            .data(status.links, function(d) {
+                return d.target.id;
+            });
+
+        // Enter any new links at the parent's previous position.
+        status.link.enter().insert("path", "g")
+            .attr("class", "link")
+            .attr("d", function(d) {
+                var o = {
+                    x: d.source.x0 || d.source.x,
+                    y: d.source.y0 || d.source.y
+                };
+                return diagonal({
+                    source: o,
+                    target: o
+                });
+            });
+
+        // Transition links to their new position.
+        status.link.transition()
+            .style('fill', 'none')
+            .style('stroke', config.stroke_color)
+            .style('stroke-width', config.stroke_size)
+            .duration(animation_length)
+            .attr("d", diagonal);
+
+        // Transition exiting nodes to the parent's new position.
+        status.link.exit().transition()
+            .duration(animation_length)
+            .attr("d", function(d) {
+                var o = {
+                    x: d.x || wrap.data.x,
+                    y: d.y || wrap.data.y
+                };
+                return diagonal({
+                    source: o,
+                    target: o
+                });
+            })
+            .remove();
 
 
 
-      function initiateDrag(d, domNode) {
-          draggingNode = d;
-          d3.select(domNode).select('.ghostCircle').attr('pointer-events', 'none');
-          baseSVG.selectAll('.ghostCircle').attr('class', 'ghostCircle show');
-          d3.select(domNode).attr('class', 'node activeDrag');
+        // Stash the old positions for transition.
+        status.nodes.forEach(function(d) {
+            d.x0 = d.x;
+            d.y0 = d.y;
+        });
 
-          svgGroup.selectAll("g.node").sort(function(a, b) { // select the parent and sort the path's
-              if (a.id != draggingNode.id) return 1; // a is not the hovered element, send "a" to the back
-              else return -1; // a is the hovered element, bring "a" to the front
-          });
-          // if nodes has children, remove the links and nodes
-          if (nodes.length > 1) {
-              // remove link paths
-              links = status.tree.links(nodes);
-              nodePaths = svgGroup.selectAll("path.link")
-                  .data(links, function(d) {
-                      return d.target.id;
-                  }).remove();
-              // remove child nodes
-              nodesExit = svgGroup.selectAll("g.node")
-                  .data(nodes, function(d) {
-                      return d.id;
-                  }).filter(function(d, i) {
-                      if (d.id == draggingNode.id) {
-                          return false;
-                      }
-                      return true;
-                  }).remove();
-          }
+        if (_this.forceFill) {
+          setTimeout(function(){
+            _this.fillGraph();
+          },animation_length)
+        }
 
-          // remove parent link
-          parentLink = status.tree.links(status.tree.nodes(draggingNode.parent));
-          svgGroup.selectAll('path.link').filter(function(d, i) {
-              if (d.target.id == draggingNode.id) {
-                  return true;
+
+
+        // AWESOME FunctionS
+        // Toggle children function
+        function toggleChildren(d) {
+            if (d.children) {
+                d._children = d.children;
+                d.children = null;
+            } else if (d._children) {
+                d.children = d._children;
+                d._children = null;
+            }
+            return d;
+        }
+
+
+
+
+
+        function click(d) {
+            if (d3.event.defaultPrevented) return; // click suppressed
+            d = toggleChildren(d);
+            _this.update(d);
+            _this.centerNode(d);
+        }
+
+        function showHelper(d) { // click was the old function that was used
+            if (d3.event.defaultPrevented) return; // click suppressed
+            d = toggleChildren(d);
+            _this.update(d);
+            // _this.centerNode(d);
+        }
+
+        function centerNode(source) {
+              if (!source) {
+                var source = wrap.data;
               }
-              return false;
-          }).remove();
 
-          dragStarted = null;
-      }
+              scale = status.zoomListener.scale();
+              x = -source.y0;
+              y = -source.x0;
+              x = x * scale + viewerWidth() / 2;
+              y = y * scale + viewerHeight() / 2;
+              svgGroup.transition()
+                  .duration(_this.duration)
+                  .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
+              status.zoomListener.scale(scale);
+              status.zoomListener.translate([x, y]);
+          }
+
+        // Define function for panning
+        function pan(domNode, direction) {
+            var speed = config.panSpeed;
+            if (panTimer) {
+                clearTimeout(panTimer);
+                translateCoords = d3.transform(dom.groupSVG.attr("transform"));
+                if (direction == 'left' || direction == 'right') {
+                    translateX = direction == 'left' ? translateCoords.translate[0] + speed : translateCoords.translate[0] - speed;
+                    translateY = translateCoords.translate[1];
+                } else if (direction == 'up' || direction == 'down') {
+                    translateX = translateCoords.translate[0];
+                    translateY = direction == 'up' ? translateCoords.translate[1] + speed : translateCoords.translate[1] - speed;
+                }
+                scaleX = translateCoords.scale[0];
+                scaleY = translateCoords.scale[1];
+                scale = status.zoomListener.scale();
+                dom.groupSVG.transition().attr("transform", "translate(" + translateX + "," + translateY + ")scale(" + scale + ")");
+                d3.select(domNode).select('g.node').attr("transform", "translate(" + translateX + "," + translateY + ")");
+                status.zoomListener.scale(status.zoomListener.scale());
+                status.zoomListener.translate([translateX, translateY]);
+                panTimer = setTimeout(function() {
+                    pan(domNode, speed, direction);
+                }, 50);
+            }
+        };
+
+        function collapse(d) {
+            if (d.children) {
+                d._children = d.children;
+                d._children.forEach(collapse);
+                d.children = null;
+            }
+        };
+
+        function expand(d) {
+            if (d._children) {
+                d.children = d._children;
+                d.children.forEach(expand);
+                d._children = null;
+            }
+        };
+
+        function overCircle(d) {
+            status.selectedNode = d;
+            updateTempConnector();
+        };
+        function outCircle(d) {
+            status.selectedNode = null;
+            updateTempConnector();
+        };
+
+        // Function to update the temporary connector indicating dragging affiliation
+        function updateTempConnector() {
+            var data = [];
+            if (status.draggingNode !== null && status.selectedNode !== null && status.selectedNode !== 'undefined') {
+                // have to flip the source coordinates since we did this for the existing connectors on the original tree
+
+                data = [{
+                    source: {
+                        x: status.selectedNode.y0,
+                        y: status.selectedNode.x0
+                    },
+                    target: {
+                        x: status.draggingNode.y0,
+                        y: status.draggingNode.x0
+                    }
+                }];
+            }
+            var link = dom.groupSVG.selectAll(".templink").data(data);
+
+            link.enter().append("path")
+                .attr("class", "templink")
+                .attr("d", d3.svg.diagonal())
+                .attr('pointer-events', 'none');
+
+            link.attr("d", d3.svg.diagonal());
+
+            link.exit().remove();
+        };
+
+        function nodeDragHelper() {
+            return d3.behavior.drag()
+            .on("dragstart", function(d) {
+                if (d == wrap.data) {
+                    return;
+                }
+                status.dragStarted = true;
+                status.nodes = status.tree.nodes(d);
+                d3.event.sourceEvent.stopPropagation();
+                // it's important that we suppress the mouseover event on the node being dragged. Otherwise it will absorb the mouseover event and the underlying node will not detect it d3.select(this).attr('pointer-events', 'none');
+            })
+            .on("drag", function(d) {
+                if (d == wrap.data) {
+                    return;
+                }
+                if (status.dragStarted) {
+                    domNode = this;
+                    initiateDrag(d, domNode);
+                }
 
 
 
+                // get coords of mouseEvent relative to svg container to allow for panning
+                relCoords = d3.mouse($(dom.baseSVG[0][0]).get(0));
+                if (relCoords[0] < config.panBoundary) {
+                    panTimer = true;
+                    pan(this, 'left');
+                } else if (relCoords[0] > ($(dom.baseSVG[0][0]).width() - config.panBoundary)) {
+
+                    panTimer = true;
+                    pan(this, 'right');
+                } else if (relCoords[1] < config.panBoundary) {
+                    panTimer = true;
+                    pan(this, 'up');
+                } else if (relCoords[1] > ($(dom.baseSVG[0][0]).height() - config.panBoundary)) {
+                    panTimer = true;
+                    pan(this, 'down');
+                } else {
+                    try {
+                        clearTimeout(panTimer);
+                    } catch (e) {
+
+                    }
+                }
+
+                d.x0 += d3.event.dy;
+                d.y0 += d3.event.dx;
+                var node = d3.select(this);
+                node.attr("transform", "translate(" + d.y0 + "," + d.x0 + ")");
+                updateTempConnector();
+            }).on("dragend", function(d) {
+                if (d == wrap.data) {
+                    return;
+                }
+                domNode = this;
+                if (status.selectedNode) {
+                    // now remove the element from the parent, and insert it into the new elements children
+                    var index = status.draggingNode.parent.children.indexOf(status.draggingNode);
+                    if (index > -1) {
+                        status.draggingNode.parent.children.splice(index, 1);
+                    }
+                    if (typeof status.selectedNode.children !== 'undefined' || typeof status.selectedNode._children !== 'undefined') {
+                        if (typeof status.selectedNode.children !== 'undefined') {
+                            status.selectedNode.children.push(status.draggingNode);
+                        } else {
+                            status.selectedNode._children.push(status.draggingNode);
+                        }
+                    } else {
+                        status.selectedNode.children = [];
+                        status.selectedNode.children.push(status.draggingNode);
+                    }
+                    // Make sure that the node being added to is expanded so user can see added node is correctly moved
+                    expand(status.selectedNode);
+                    // sortTree();
+                    endDrag(domNode);
+                } else {
+                    endDrag(domNode);
+                }
+            })
+        };
+
+        function initiateDrag(d, domNode) {
+            status.draggingNode = d;
+            d3.select(domNode).select('.ghostCircle').attr('pointer-events', 'none');
+            dom.baseSVG.selectAll('.ghostCircle').attr('class', 'ghostCircle show');
+            d3.select(domNode).attr('class', 'node activeDrag');
+
+            dom.groupSVG.selectAll("g.node").sort(function(a, b) { // select the parent and sort the path's
+                if (a.id != status.draggingNode.id) return 1; // a is not the hovered element, send "a" to the back
+                else return -1; // a is the hovered element, bring "a" to the front
+            });
+            // if nodes has children, remove the links and nodes
+            if (status.nodes.length > 1) {
+                // remove link paths
+                links = status.tree.links(status.nodes);
+                nodePaths = dom.groupSVG.selectAll("path.link")
+                    .data(links, function(d) {
+                        return d.target.id;
+                    }).remove();
+                // remove child nodes
+                nodesExit = dom.groupSVG.selectAll("g.node")
+                    .data(status.nodes, function(d) {
+                        return d.id;
+                    }).filter(function(d, i) {
+                        if (d.id == status.draggingNode.id) {
+                            return false;
+                        }
+                        return true;
+                    }).remove();
+            }
+
+            // remove parent link
+            parentLink = status.tree.links(status.tree.nodes(status.draggingNode.parent));
+            dom.groupSVG.selectAll('path.link').filter(function(d, i) {
+                if (d.target.id == status.draggingNode.id) {
+                    return true;
+                }
+                return false;
+            }).remove();
+
+            status.dragStarted = null;
+        }
+
+        function endDrag(domNode) {
+            status.selectedNode = null;
+            dom.baseSVG.selectAll('.ghostCircle').attr('class', 'ghostCircle');
+            d3.select(domNode).attr('class', 'node');
+            // now restore the mouseover event or we won't be able to drag a 2nd time
+            d3.select(domNode).select('.ghostCircle').attr('pointer-events', '');
+            updateTempConnector();
+            if (status.draggingNode !== null) {
+                // update(root);
+                _this.update()
 
 
+                //_this.centerNode(draggingNode);
+                status.draggingNode = null;
 
-
-
-  }
-
+                // Run function cause data was updated
+                //dataUpdatedFn(_this.data())
+            }
+        }
+   }
 })
