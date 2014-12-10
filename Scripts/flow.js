@@ -3768,16 +3768,32 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
         store.findQuery('triggerGraph', config).then(function (a) {
             // if problem do something else - needs error handeling
-
+            var construct = _this.get('defaultConfig');
             Enumerable.From(a.content).ForEach(function (value, index) {
+                triggerValue = JSON.parse(value.get('JSON'));
+                if (index == 0) {
+                    construct.trigger = [];
+                    triggerValue = JSON.parse(value.get('JSON'));
+                    construct.matchSelect = triggerValue.matchSelect;
+                    construct.triggerConditions = triggerValue.triggerConditions;
+                    construct.fields = JSON.parse(value.get('ConditionJSON'));
+                    if (triggerValue.delay) {
+                        construct.when = [{ type: 'delay', delay: triggerValue.delay}];
+                    }
+                    else if (triggerValue.now) {
+                        construct.when = [{ type: 'now', now: triggerValue.now }];
+                    }
+                }
+                if (triggerValue.webhook) {
+                    construct.trigger.push({ id: value.id, type: 'webhook', webhook: triggerValue.webhook });
+                }
+                else if (triggerValue.email) {
+                    construct.trigger.push({ id: value.id, type: 'email', email: triggerValue.email });
+                }
+            
                 _this.get('triggers').addObject(value);
             });
-            if (_this.get('triggers').length < 1) {
-                _this.set('triggersJSON', _this.get('defaultConfig'))
-            }
-            else {
-                _this.set('triggersJSON', JSON.parse(a.get('firstObject.JSON')));
-            }
+            _this.set('triggersJSON', construct)
             _this.set('loading', false);
         });
 
@@ -3918,7 +3934,6 @@ App.TriggerNodeComponent = Ember.Component.extend({
             //Now do all updates
             Enumerable.From(this.get('triggers')).ForEach(function(value) {
                 var temp = Enumerable.From(triggers).Where("$.id =='" + value.id + "'").Single();
-                value.set('JSON', JSON.stringify(triggersJSON));
                 value.set('MergeProjectData', true);
                 value.set('OnEnter', true);
                 value.set('OnDataUpdate', false);
@@ -3928,28 +3943,28 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 value.set('Condition', _this.get('configEvaluation')(triggersJSON));
                 value.set('ConditionJSON', JSON.stringify(triggersJSON.fields));
                 if (temp.type == "email") {
-                    value.set('ExternalURL', JSON.stringify(temp.email));
+                    value.set('ExternalURL', temp.email.recipient);
                 }
                 else if (temp.type == "webhook") {
-                    value.set('ExternalURL', JSON.stringify(temp.webhook));
+                    value.set('ExternalURL', temp.webhook.url);
                     value.set('ExternalRequestMethod', 'POST');
                     value.set('ExternalFormType', 'JSON');
                 }
                 value.set('OverrideProjectDataWithJsonCustomVars', true);
                 value.set('PassThrough', true);
                 value.set('RunOnce', true);
-                if (triggersJSON.when && triggersJSON.length > 0) {
-                    if (triggersJSON[0].delay) {
-                        if (triggersJSON[0].delay.hours && triggersJSON[0].delay.hours.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelaySeconds', triggersJSON[0].delay.hours * 60);
-                        if (triggersJSON[0].delay.days && triggersJSON[0].delay.days.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelayDays', triggersJSON[0].delay.days);
-                        if (triggersJSON[0].delay.weeks && triggersJSON[0].delay.weeks.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelayWeeks', triggersJSON[0].delay.weeks);
-                        if (triggersJSON[0].delay.months && triggersJSON[0].delay.months.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelayMonths', triggersJSON[0].delay.months);
-                        if (triggersJSON[0].delay.years && triggersJSON[0].delay.years.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelayYears', triggersJSON[0].delay.years);
+                if (triggersJSON.when && triggersJSON.when.length > 0) {
+                    if (triggersJSON.when[0].delay) {
+                        if (triggersJSON.when[0].delay.hours && triggersJSON.when[0].delay.hours.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelaySeconds', triggersJSON.when[0].delay.hours * 60);
+                        if (triggersJSON.when[0].delay.days && triggersJSON.when[0].delay.days.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayDays', triggersJSON.when[0].delay.days);
+                        if (triggersJSON.when[0].delay.weeks && triggersJSON.when[0].delay.weeks.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayWeeks', triggersJSON.when[0].delay.weeks);
+                        if (triggersJSON.when[0].delay.months && triggersJSON.when[0].delay.months.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayMonths', triggersJSON.when[0].delay.months);
+                        if (triggersJSON.when[0].delay.years && triggersJSON.when[0].delay.years.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayYears', triggersJSON.when[0].delay.years);
                         //,[RepeatDelay]
                         //,[DelayUntil]
                     } else {
@@ -3960,6 +3975,13 @@ App.TriggerNodeComponent = Ember.Component.extend({
                         value.set('DelayYears', 0);
                     }
                 }
+                var toSave = {};
+                toSave[triggersJSON.when[0].type] = triggersJSON.when[0][triggersJSON.when[0].type];
+                toSave[temp.type] = temp[temp.type];
+                toSave['matchSelect'] = triggersJSON.matchSelect;
+                toSave['triggerConditions'] = true;
+                value.set('JSON', JSON.stringify(toSave));
+
                 promises.push(value.save());
             });
 
