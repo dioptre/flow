@@ -3718,8 +3718,10 @@ App.ThenTrigger = App.TriggerOption.extend({
     type: 'email',
     options: ['webhook', 'email'],
     emailTemplate: {
-        sender: 'paul@flowpro.io',
-        messsage: 'Test message'
+        sender: '',
+        recipient: '', 
+        message: '',
+        subject: ''
     },
     webhookTemplate: {
         url: 'http://x.com/xxx'
@@ -3732,7 +3734,7 @@ App.WhenTrigger = App.TriggerOption.extend({
     select: [{value: 'now', text: "Immediately"}, {value: 'delay', text: "Time Delay"}],
     delayTemplate: {
         hours: '0',
-        seconds: '0'
+        days: '0'
     },
     nowTemplate: {}
 });
@@ -3748,9 +3750,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
     edge: '',
     loading: true,
     triggers: [],
-    triggersFirst: function () {
-        return this.get('triggers.firstObject');
-    }.property('triggers'),
+    triggersJSON: {},
     setup: function(){
         
         // Get graph & Workflow ID
@@ -3771,16 +3771,12 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
             Enumerable.From(a.content).ForEach(function (value, index) {
                 _this.get('triggers').addObject(value);
-                console.log(index);
-                //Construct JSON for 1st object                
             });
             if (_this.get('triggers').length < 1) {
-                _this.get('triggers').addObject(store.createRecord('triggerGraph',
-                    $.extend(config, { 
-                        JSON: _this.get('defaultConfig'), 
-                        ConditionID: NewGUID(),
-                        TriggerID: NewGUID()
-                    })));
+                _this.set('triggersJSON', _this.get('defaultConfig'))
+            }
+            else {
+                _this.set('triggersJSON', JSON.parse(a.get('firstObject.JSON')));
             }
             _this.set('loading', false);
         });
@@ -3802,6 +3798,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
         trigger: [
             
             App.ThenTrigger.create({
+                id: NewGUID(),
                 type: 'email'
             })
             //,
@@ -3884,55 +3881,98 @@ App.TriggerNodeComponent = Ember.Component.extend({
         'saveTriggerConditions': function(context){
             var _this = this;
             var store = _this.get('targetObject.store');
-            var firstTrigger = _this.get('triggersFirst');
-            var condition = firstTrigger.get('JSON').fields;
-            var triggers = firstTrigger.get('JSON').trigger;
-
-     //       [TriggerGraphID]
-     //, [TriggerID]
-    
-     //     , [MergeProjectData]
-     // , [OnEnter]
-     // , [OnDataUpdate]
-     // , [OnExit]
-     //, [OnEnter]
-   
-     // , [CommonName]
-     
-     // , [JsonMethod]
-
-     // , [JSON]
-     //       [OverrideProjectDataWithJsonCustomVars]
-     // , [JSON]
-     // , [Condition]
-
-     //        , [ExternalURL]
-     // , [ExternalRequestMethod]
-     // , [ExternalFormType]
-     // , [PassThrough]
-     // , [RunOnce]
-     // , [DelaySeconds]
-     // , [DelayDays]
-     // , [DelayWeeks]
-     // , [DelayMonths]
-     // , [DelayYears]
-     // , [RepeatDelay]
-     // , [DelayUntil]
-
-            //Destruct JSON objects
+            var graphID = _this.get('graphID');
+            var workflowID = _this.get('workflowID');
+            var triggersJSON = _this.get('triggersJSON');
+            var conditionID = triggersJSON.ConditionID;
+            if (!conditionID) {
+                conditionID = NewGUID();
+                triggersJSON.ConditionID = conditionID;
+            }                
+            var condition = triggersJSON.fields;
+            //delete triggersJSON.fields;
+            var triggers = triggersJSON.trigger;
+            //Fill up created triggers
+            var newTriggers = Enumerable.From(triggers).Except(this.get('triggers'), "$.id").ToArray();
+            //To delete
+            var deleteTriggers = Enumerable.From(this.get('triggers')).Except(triggers, "$.id").ToArray();
             //Merge with trigger array
-            Enumerable.From(this.get('triggers')).ForEach(function (value, index) {
-
+            Enumerable.From(newTriggers).ForEach(function (value, index) {
+                _this.get('triggers').addObject(store.createRecord('triggerGraph',
+                    {
+                        id: value.id,
+                        TriggerID: NewGUID(),
+                        GraphDataID: graphID,
+                        GraphDataGroupID: workflowID
+                    }));
             });
-    
+            //Delete from store
+            Enumerable.From(deleteTriggers).ForEach(function (value, index) {
+                if (value.get('isNew')) {
+                    value.unloadRecord();
+                } else {
+                    value.destroyRecord();
+                }
+            });
+            var promises = [];
+            //Now do all updates
+            Enumerable.From(this.get('triggers')).ForEach(function(value) {
+                var temp = Enumerable.From(triggers).Where("$.id =='" + value.id + "'").Single();
+                value.set('JSON', JSON.stringify(triggersJSON));
+                value.set('MergeProjectData', true);
+                value.set('OnEnter', true);
+                value.set('OnDataUpdate', false);
+                value.set('OnExit', false);
+                value.set('CommonName', temp.type);
+                value.set('ConditionID', conditionID);
+                value.set('Condition', _this.get('configEvaluation')(triggersJSON));
+                value.set('ConditionJSON', JSON.stringify(triggersJSON.fields));
+                if (temp.type == "email") {
+                    value.set('ExternalURL', JSON.stringify(temp.email));
+                }
+                else if (temp.type == "webhook") {
+                    value.set('ExternalURL', JSON.stringify(temp.webhook));
+                    value.set('ExternalRequestMethod', 'POST');
+                    value.set('ExternalFormType', 'JSON');
+                }
+                value.set('OverrideProjectDataWithJsonCustomVars', true);
+                value.set('PassThrough', true);
+                value.set('RunOnce', true);
+                if (triggersJSON.when && triggersJSON.length > 0) {
+                    if (triggersJSON[0].delay) {
+                        if (triggersJSON[0].delay.hours && triggersJSON[0].delay.hours.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelaySeconds', triggersJSON[0].delay.hours * 60);
+                        if (triggersJSON[0].delay.days && triggersJSON[0].delay.days.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayDays', triggersJSON[0].delay.days);
+                        if (triggersJSON[0].delay.weeks && triggersJSON[0].delay.weeks.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayWeeks', triggersJSON[0].delay.weeks);
+                        if (triggersJSON[0].delay.months && triggersJSON[0].delay.months.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayMonths', triggersJSON[0].delay.months);
+                        if (triggersJSON[0].delay.years && triggersJSON[0].delay.years.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayYears', triggersJSON[0].delay.years);
+                        //,[RepeatDelay]
+                        //,[DelayUntil]
+                    } else {
+                        value.set('DelaySeconds', 0);
+                        value.set('DelayDays', 0);
+                        value.set('DelayWeeks', 0);
+                        value.set('DelayMonths', 0);
+                        value.set('DelayYears', 0);
+                    }
+                }
+                promises.push(value.save());
+            });
 
-            //trigger.save().then(function(){
-            //     Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
 
-            //}, function(){
-            //     Messenger().post({ type: 'error', message: 'Error saving edge conditions' });
-
-            //});
+            Ember.RSVP.allSettled(promises).then(function (p) {
+                if (Enumerable.From(p).Any("f=>f.reason")) {
+                    //btn.set('loading', false);
+                    Messenger().post({ type: 'error', message: 'Error Saving Data' });
+                    return;
+                } else {
+                    Messenger().post({ type: 'success', message: 'Successfully saved trigger' });
+                }
+            })
 
         },
         'addRow': function (context) {
@@ -4768,7 +4808,7 @@ App.Trigger = App.Condition.extend({
     JsonPassword: DS.attr('string'),
     JsonPasswordType: DS.attr('string'),
     SystemMethod: DS.attr('string'),
-    ExternalUrl: DS.attr('string'), //http://dothis/rest/url
+    ExternalURL: DS.attr('string'), //http://dothis/rest/url
     ExternalRequestMethod: DS.attr('string', { defaultValue: 'POST' }),
     ExternalFormType: DS.attr('string', { defaultValue: 'JSON' }),
     PassThrough: DS.attr('string', { defaultValue: true }),

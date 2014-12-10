@@ -1287,20 +1287,20 @@
 
     {{else}}
 
-        {{eui-checkbox label='Enable Trigger Conditions' value=triggers.firstObject.JSON.triggerConditions}}
+        {{eui-checkbox label='Enable Trigger Conditions' value=triggersJSON.triggerConditions}}
 
         <br>
         <br>
 
-        {{#liquid-if triggers.firstObject.JSON.triggerConditions}}
+        {{#liquid-if triggersJSON.triggerConditions}}
    
             <h3>IF</h3>
-            Match {{eui-select value=triggers.firstObject.JSON.matchSelect required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
+            Match {{eui-select value=triggersJSON.matchSelect required='true' options=tSmatchesRules size='small' labelPath='value' width="75px"}} of the following rules: 
             
             <br>
             <br>
 
-            {{#each con in triggers.firstObject.JSON.fields}}
+            {{#each con in triggersJSON.fields}}
                 {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium'}}
                 {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
                 {{eui-input  value=con.type.matchInput size="medium" placeholder=''}}
@@ -1311,18 +1311,18 @@
             {{/each}}
 
             <h3>THEN</h3>
-            {{#each trig in triggers.firstObject.JSON.trigger}}
+            {{#each trig in triggersJSON.trigger}}
                 {{eui-select value=trig.type options=tStTriggerTypes labelPath='text' placeholder="Choose trigger type"  size='medium'}}
                 {{#if trig.email}}
                     <span>
                     <b>Send to</b>
-                    {{eui-input value=trig.mail.sender placeholder='example@mail.com' size='medium' required='true'}}
+                    {{eui-input value=trig.email.sender placeholder='example@mail.com' size='medium' required='true'}}
                     <br>
                     <b>Subject</b>
-                    {{eui-input value=trig.mail.subject placeholder='Subject' size='medium' required='true'}}                    
+                    {{eui-input value=trig.email.subject placeholder='Subject' size='medium' required='true'}}                    
                     </span>
                     <b>Message</b>
-                    {{eui-textarea value=trig.mail.message size="medium" placeholder='Enter your message here...'}}
+                    {{eui-textarea value=trig.email.message size="medium" placeholder='Enter your message here...'}}
                 {{/if}}
                 {{#if trig.webhook}}
                     <b>Webhook URL</b>
@@ -1337,11 +1337,11 @@
             {{/each}}
 
             <h3>WHEN</h3>
-            {{#each when in triggers.firstObject.JSON.when}}
+            {{#each when in triggersJSON.when}}{{when.type}}
                 {{eui-select value=when.type options=when.select size='medium' labelPath='text'}}
                 {{#if when.delay}}
                     <b>Seconds</b>
-                    {{eui-input value=when.delay.seconds placeholder='Enter for time delay in seconds'}}
+                    {{eui-input value=when.delay.days placeholder='Enter for time delay in days'}}
                     <b>Hours</b>
                     {{eui-input value=when.delay.hours placeholder='Enter for time delay in hours'}}
                 {{/if}}
