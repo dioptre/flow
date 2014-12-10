@@ -3850,7 +3850,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
     configEvaluation: function(config){
         var c = config;
 
-        var s = ''; // this is the magic string later
+        var s = ' '; // this is the magic string later
 
         if (!c.triggerConditions)
           return s; // if the trigger condition is false just return nothing
@@ -3859,7 +3859,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
         if (c.fields.length > 0) {
           $.each(c.fields, function(i, a){
     
-            if (a.type != null) {
+          if (a.type != null && a.type.varSelect) {
               b = a.type
 
               // Create the comparions part 
@@ -3910,12 +3910,45 @@ App.TriggerNodeComponent = Ember.Component.extend({
         }
     },
     actions: {
+        'cancelTriggerConditions' : function () {
+            this.sendAction('cancelled');
+        },
         'saveTriggerConditions': function(context){
             var _this = this;
             var store = _this.get('targetObject.store');
+            var triggersJSON = _this.get('triggersJSON');
+            if(!triggersJSON.triggerConditions) {
+                //Delete everything...
+                Enumerable.From(this.get('triggers')).ForEach(function (value) {
+                    if (value.get('isNew')) {
+                        value.unloadRecord();
+                    } else {
+                        value.destroyRecord();
+                    }
+                });
+                triggersJSON.trigger.clear();
+                triggersJSON.trigger.pushObject(App.ThenTrigger.create({
+                    id: NewGUID(),
+                    type: 'email'
+                }));
+                triggersJSON.fields.clear();
+                triggersJSON.fields.pushObject({
+                    type: {
+                        varLabel: '',
+                        varSelect: '',
+                        matchSelect: '',
+                        matchInput: ''
+                    }
+                });
+                triggersJSON.when.clear();
+                triggersJSON.when.pushObject(App.WhenTrigger.create({}));
+                Messenger().post({ type: 'success', message: 'Successfully cleared trigger' });
+                _this.sendAction('submitted')
+                return;
+            }
+
             var graphID = _this.get('graphID');
             var workflowID = _this.get('workflowID');
-            var triggersJSON = _this.get('triggersJSON');
             var conditionID = triggersJSON.ConditionID;
             if (!conditionID) {
                 conditionID = NewGUID();
@@ -4011,6 +4044,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
                     return;
                 } else {
                     Messenger().post({ type: 'success', message: 'Successfully saved trigger' });
+                    _this.sendAction('submitted')
                 }
             })
 

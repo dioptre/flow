@@ -1345,7 +1345,7 @@
             {{/each}}
 
             <h3>WHEN</h3>
-            {{#each when in triggersJSON.when}}{{when.type}}
+            {{#each when in triggersJSON.when}}
                 {{eui-select value=when.type options=when.select size='medium' labelPath='text'}}
                 {{#if when.delay}}
                     <b>Seconds</b>
@@ -1355,16 +1355,15 @@
                 {{/if}}
             {{/each}}
 
-            <br>
-
-            {{eui-button label='Save' action='saveTriggerConditions'}}
-
 
         {{else}}
-            No condition. Will change to next step either way.
+            No triggers.
         {{/liquid-if}}
 
         <br>
+        <br />
+        {{eui-button label="Cancel" action="cancelTriggerConditions" size='large'}}
+        {{eui-button label="Submit" action="saveTriggerConditions" style='primary' size='large'}}
 
     {{/if}}
 
@@ -1687,13 +1686,8 @@
                 <br>
                 <br>
 
-                {{trigger-node graphID=graphID workflowID=workflowID}}
+                {{trigger-node graphID=graphID workflowID=workflowID submitted="submitTriggerModal" cancelled="cancelTriggerModal"}}
 
-                <br>
-                <br>
-
-                {{eui-button label="Cancel" action="cancelTriggerModal" size='large'}}
-                {{eui-button label="Submit" action="submitTriggerModal" style='primary' size='large' @*disabled=validateNewName loading=loadingEditName*@}}
             </div>
             {{/eui-modal}}
 

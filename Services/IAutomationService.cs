@@ -35,5 +35,7 @@ namespace EXPEDIT.Flow.Services
 
         bool QuenchStep(NKDC d, AutomationViewModel m);
 
+        bool ProcessEvents();
+
     }
 }

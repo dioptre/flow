@@ -1323,6 +1323,7 @@
     <Compile Include="ResourceManifest.cs" />
     <Compile Include="Route.cs" />
     <Compile Include="Services\AutomationService.cs" />
+    <Compile Include="Services\AutomationBackgroundTask.cs" />
     <Compile Include="Services\IAutomationService.cs" />
     <Compile Include="Services\IFlowService.cs" />
     <Compile Include="Services\FlowService.cs" />

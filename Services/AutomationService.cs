@@ -730,5 +730,10 @@ namespace EXPEDIT.Flow.Services {
         }
 
 
+        public bool ProcessEvents()
+        {
+            return false;
+        }
+
     }
 }
