@@ -462,6 +462,7 @@ h1 > sub {
   font-weight: 400;
   margin-top: 5px;
   margin-bottom: 14px;
+  line-height: 1em;
 }
 
 span.item-box {
@@ -1131,6 +1132,35 @@ color: red;
     color: green;
 }
 
+
+
+/* D3 awesome */
+.full-sitemap {
+  background: #f7f7f7;
+}
+
+.full-sitemap * {
+  outline: 0;
+  margin: 0;
+  padding: 0;
+}
+.node {
+  cursor: pointer;
+}
+
+.templink {
+  fill: none;
+  stroke: red;
+  stroke-width: 3px;
+}
+
+.ghostCircle.show{
+    display:block;
+}
+
+.ghostCircle, .activeDrag .ghostCircle{
+     display: none;
+}
 #lateTasksReport .x.axis > .tick {
     display: none;
 }

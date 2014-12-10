@@ -494,23 +494,31 @@
 
 </script>
 
-        <script type="text/x-handlebars" id="organization">
-            {{#if loading}}
-            Loading...
-            {{else}}
-            {{#if controllers.application.isLoggedIn}}
+<script type="text/x-handlebars" id="organization">
+    {{#if loading}}
+        Loading...
+    {{else}}
+        {{#if controllers.application.isLoggedIn}}
             <h1>My Organization
+            
+            <!--
             <br /><br />
                 <sub>For security purposes, all organizations and divisions are managed by the FlowPro team.</sub>
                 <sub style="padding-top:6px;">Please contact <a href="mailto:support@flowpro.io">support@flowpro.io</a> to have your company or division added.</sub>
-            {{else}}
+            -->
+            <sub>
+                Manage users in different groups. You can also use this to manage your company structure.
+            </sub>
+
+            {{hierachy-tree}}
+        {{else}}
             <h1>
                 My Organization
                 <br /><br /><sub>You are not logged in. Please {{link-to 'login' 'login'}} to see your organization.</sub>
             </h1>
-            {{/if}}
-            {{/if}}
-        </script>
+        {{/if}}
+    {{/if}}
+</script>
 
 <script type="text/x-handlebars" id="permission">
      {{#if loading}}
@@ -3959,6 +3967,30 @@
         </script>
 
         <script type="text/x-handlebars" id="workflow">&nbsp;</script>
+
+        <script type="text/x-handlebars" id="components/hierachy-tree">
+            <buttons>
+                <button {{action 'center'}} class="btn btn-primary">
+                    Center Graph
+                </button>
+                <button {{action 'left'}} class="btn btn-primary">
+                    Left Graph
+                </button>
+                <button {{action 'top'}} class="btn btn-primary">
+                    Top Graph
+                </button>
+                <button {{action 'right'}} class="btn btn-primary">
+                    Right Graph
+                </button>
+                <button {{action 'down'}} class="btn btn-primary">
+                    Down Graph
+                </button>
+            </buttons>
+
+            <div class="full-sitemap">
+
+            </div>
+        </script>
 
         <script type="text/x-handlebars" id="mylicenses">
             <h1> My Licenses
