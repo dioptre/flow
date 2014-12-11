@@ -6616,94 +6616,100 @@ App.HierachyTreeComponent = Ember.Component.extend({
         }
     },
     setup: function(){
-        // This is so we don't need to use set with ember -- http://emberjs.jsbin.com/zerici/1/edit?js,console,output
-        var dom = this.get('dom'); // dom elemetns
-        var status = this.get('status') // any temporary global vars
-        var config = this.get('config'); // any configurable settings
-        var wrap = this.get('wrap'); // wrap for data variables
-        var helpers = this.get('helpers'); // helper functions
+
+
+        Ember.run.scheduleOnce('afterRender', this, function() {
+
+            // This is so we don't need to use set with ember -- http://emberjs.jsbin.com/zerici/1/edit?js,console,output
+            var dom = this.get('dom'); // dom elemetns
+            var status = this.get('status') // any temporary global vars
+            var config = this.get('config'); // any configurable settings
+            var wrap = this.get('wrap'); // wrap for data variables
+            var helpers = this.get('helpers'); // helper functions
 
 
 
-        function zoom() {
-            dom.groupSVG.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-        }
+            function zoom() {
+                console.log('zooming')
+                dom.groupSVG.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            }
 
 
-        // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
-        status.zoomListener = d3.behavior.zoom().scaleExtent([0.1, 15]).on("zoom", zoom);
+            // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
+            status.zoomListener = d3.behavior.zoom().scaleExtent([0.1, 15]).on("zoom", zoom);
 
 
-
-        // define the baseSvg, attaching a class for styling and the zoomListener
-        dom.baseSVG = d3.select(this.$('.full-sitemap')[0]).append("svg")
-            .style("width", config.width)
-            .style("height", config.height)
-            .attr("class", "overlay")
-            .attr("version", 1.1)
-            .attr("xmlns", "http://www.w3.org/2000/svg")
-            .call(status.zoomListener);
-
-
-
-
-        status.tree = d3.layout.tree()
-            .size([this.get('helpers.size.height'), this.get('helpers.size.width')]);
+            // define the baseSvg, attaching a class for styling and the zoomListener
+            dom.baseSVG = d3.select(this.$('.full-sitemap')[0]).append("svg")
+                .style("width", config.width)
+                .style("height", config.height)
+                .attr("class", "overlay")
+                .attr("version", 1.1)
+                .attr("xmlns", "http://www.w3.org/2000/svg")
+                .call(status.zoomListener);
 
 
 
-        // A recursive helper function for performing some setup by walking through all nodes
+
+            status.tree = d3.layout.tree()
+                .size([this.get('helpers.size.height'), this.get('helpers.size.width')]);
 
 
-        // var maxLabelLength; // todo hack
-        // Call visit function to establish maxLabelLength
-        // visit(wrap.data, function(d) {
-        //     // totalNodes++;
+
+            // A recursive helper function for performing some setup by walking through all nodes
 
 
-        //     //
-        //     maxLabelLength = Math.max(d.name.length, maxLabelLength);
-
-        // }, function(d) {
-        //     return d.children && d.children.length > 0 ? d.children : null;
-        // });
+            // var maxLabelLength; // todo hack
+            // Call visit function to establish maxLabelLength
+            // visit(wrap.data, function(d) {
+            //     // totalNodes++;
 
 
-        // sort the tree according to the node names
+            //     //
+            //     maxLabelLength = Math.max(d.name.length, maxLabelLength);
 
-        function sortTree() {
-            // tree.sort(function(a, b) {
-            //     return b.name.toLowerCase() < a.name.toLowerCase() ? 1 : -1;
+            // }, function(d) {
+            //     return d.children && d.children.length > 0 ? d.children : null;
             // });
-        }
-        // Sort the tree initially incase the JSON isn't in a sorted order.
-        sortTree();
-
-        // TODO: Pan function, can be better implemented.
 
 
+            // sort the tree according to the node names
 
+            function sortTree() {
+                // tree.sort(function(a, b) {
+                //     return b.name.toLowerCase() < a.name.toLowerCase() ? 1 : -1;
+                // });
+            }
+            // Sort the tree initially incase the JSON isn't in a sorted order.
+            sortTree();
 
-
-        // Function to center node when clicked/dropped so node doesn't get lost when collapsing/moving with large amount of children.
-
-
-
-
-        // Append a group which holds all nodes and which the zoom Listener can act upon.
-        dom.groupSVG = dom.baseSVG.append("g");
+            // TODO: Pan function, can be better implemented.
 
 
 
 
-        // Setting base points so we can later use these as reference points for animation
-        wrap.data.x0 = this.get('helpers.size.height') / 2;
-        wrap.data.y0 = 0;
 
-        // Layout the tree initially and center on the root node.
+            // Function to center node when clicked/dropped so node doesn't get lost when collapsing/moving with large amount of children.
 
 
-        this.update();
+
+
+            // Append a group which holds all nodes and which the zoom Listener can act upon.
+            dom.groupSVG = dom.baseSVG.append("g");
+
+
+
+
+            // Setting base points so we can later use these as reference points for animation
+            wrap.data.x0 = this.get('helpers.size.height') / 2;
+            wrap.data.y0 = 0;
+
+            // Layout the tree initially and center on the root node.
+
+
+            this.update();
+
+        })
 
         // helpers.fillGraph();
 
@@ -6717,6 +6723,8 @@ App.HierachyTreeComponent = Ember.Component.extend({
          //callback();
     }.on('didInsertElement'),
     update: function(){
+
+        Ember.run.scheduleOnce('afterRender', this, function(){
         var dom = this.get('dom');
         var status = this.get('status')
         var config = this.get('config');
@@ -6773,7 +6781,6 @@ App.HierachyTreeComponent = Ember.Component.extend({
         // Compute the new tree layout.
         status.nodes = status.tree.nodes(wrap.data).reverse();
         status.links = status.tree.links(status.nodes);
-
 
 
 
@@ -6841,6 +6848,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
             .style("fill", "green")
             .attr('pointer-events', 'mouseover')
             .on("mouseover", function(node) {
+                console.log(node)
                 overCircle(node);
             })
             .on("mouseout", function(node) {
@@ -6881,6 +6889,17 @@ App.HierachyTreeComponent = Ember.Component.extend({
         // Fade the text in
         status.nodeUpdate.select("text")
             .style("fill-opacity", 1);
+
+
+        // status.node.select('circle')
+        //     .attr('pointer-events', 'mouseover')
+
+        //     .on("mouseover", function(node) {
+        //         overCircle(node);
+        //     })
+        //     .on("mouseout", function(node) {
+        //         outCircle(node);
+        //     });
 
         // Transition exiting nodes to the parent's new position.
         status.nodeExit = status.node.exit().transition()
@@ -6946,6 +6965,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
 
         // Stash the old positions for transition.
         status.nodes.forEach(function(d) {
+            console.log(d.data.get('CompanyName'), d.x0, d.x, d.y0, d.y)
             d.x0 = d.x;
             d.y0 = d.y;
         });
@@ -6983,9 +7003,9 @@ App.HierachyTreeComponent = Ember.Component.extend({
         }
 
         function showHelper(d) { // click was the old function that was used
-            if (d3.event.defaultPrevented) return; // click suppressed
-            d = toggleChildren(d);
-            _this.update(d);
+            // if (d3.event.defaultPrevented) return; // click suppressed
+            // d = toggleChildren(d);
+            // _this.update(d);
             // _this.centerNode(d);
         }
 
@@ -7076,12 +7096,12 @@ App.HierachyTreeComponent = Ember.Component.extend({
 
                 // data = [{
                 //     source: {
-                //         x: status.selectedNode.y,
-                //         y: status.selectedNode.x
+                //         x: status.selectedNode.y0,
+                //         y: status.selectedNode.x0
                 //     },
                 //     target: {
-                //         x: status.draggingNode.y0,
-                //         y: status.draggingNode.x0
+                //         x: status.draggingNode.y,
+                //         y: status.draggingNode.x
                 //     }
                 // }];
             }
@@ -7245,5 +7265,6 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 //dataUpdatedFn(_this.data())
             }
         }
+        })
    }.observes('wrap')
 })
