@@ -16,8 +16,7 @@ namespace EXPEDIT.Flow.Services
     [ServiceContract]
     public interface IAutomationService : IDependency
     {
-        [OperationContract]
-        bool EvaluateCondition();
+       
 
         [OperationContract]
         bool ExecuteMethod(AutomationViewModel m,string method);
@@ -34,6 +33,8 @@ namespace EXPEDIT.Flow.Services
         AutomationViewModel GetStep(NKDC d, Guid sid, Guid? tid = null, bool includeContent = false);
 
         bool QuenchStep(NKDC d, AutomationViewModel m);
+
+        bool ProcessEvents();
 
     }
 }

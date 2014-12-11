@@ -3387,7 +3387,14 @@ namespace EXPEDIT.Flow.Services {
                                  ExternalRequestMethod = o.ExternalRequestMethod,
                                  ExternalFormType = o.ExternalFormType,
                                  PassThrough = o.PassThrough,
-                                 //RunOnce = o.RunOnce
+                                 DelaySeconds = o.DelaySeconds,
+                                 DelayDays = o.DelayDays,
+                                 DelayWeeks = o.DelayWeeks,
+                                 DelayMonths = o.DelayMonths,
+                                 DelayYears = o.DelayYears,
+                                 DelayUntil = o.DelayUntil,
+                                 RepeatAfterDays = o.RepeatAfterDays,
+                                 Repeats = o.Repeats,
                              }).SingleOrDefault();
                     return m;
                 }
@@ -3439,7 +3446,6 @@ namespace EXPEDIT.Flow.Services {
                                 //OnEnter = o.OnEnter,
                                 //OnDataUpdate = o.OnDataUpdate,
                                 //OnExit = o.OnExit,
-                                //RunOnce = o.RunOnce
                              }).SingleOrDefault();
                     return m;
                 }
@@ -3486,7 +3492,14 @@ namespace EXPEDIT.Flow.Services {
                         ExternalRequestMethod = m.ExternalRequestMethod,
                         ExternalFormType = m.ExternalFormType,
                         PassThrough = m.PassThrough,
-                        //RunOnce = m.RunOnce,
+                        DelaySeconds = m.DelaySeconds,
+                        DelayDays = m.DelayDays,
+                        DelayWeeks = m.DelayWeeks,
+                        DelayMonths = m.DelayMonths,
+                        DelayYears = m.DelayYears,
+                        DelayUntil = m.DelayUntil,
+                        RepeatAfterDays = m.RepeatAfterDays,
+                        Repeats = m.Repeats,
                         VersionUpdated = DateTime.UtcNow,
                         VersionUpdatedBy = contact,
                         VersionOwnerContactID = contact
@@ -3536,7 +3549,15 @@ namespace EXPEDIT.Flow.Services {
                     if (m.ExternalRequestMethod != null && cc.ExternalRequestMethod != m.ExternalRequestMethod) cc.ExternalRequestMethod = m.ExternalRequestMethod;
                     if (m.ExternalFormType != null && cc.ExternalFormType != m.ExternalFormType) cc.ExternalFormType = m.ExternalFormType;
                     if (m.PassThrough != null && cc.PassThrough != m.PassThrough) cc.PassThrough = m.PassThrough;
-                    //if (m.RunOnce != null && cc.RunOnce != m.RunOnce) cc.RunOnce = m.RunOnce;
+                    if (m.DelaySeconds != null && cc.DelaySeconds != m.DelaySeconds) cc.DelaySeconds = m.DelaySeconds;
+                    if (m.DelayDays != null && cc.DelayDays != m.DelayDays) cc.DelayDays = m.DelayDays;
+                    if (m.DelayWeeks != null && cc.DelayWeeks != m.DelayWeeks) cc.DelayWeeks = m.DelayWeeks;
+                    if (m.DelayMonths != null && cc.DelayMonths != m.DelayMonths) cc.DelayMonths = m.DelayMonths;
+                    if (m.DelayYears != null && cc.DelayYears != m.DelayYears) cc.DelayYears = m.DelayYears;
+                    if (m.DelayUntil != null && cc.DelayUntil != m.DelayUntil) cc.DelayUntil = m.DelayUntil;
+                    if (m.RepeatAfterDays != null && cc.RepeatAfterDays != m.RepeatAfterDays) cc.RepeatAfterDays = m.RepeatAfterDays;
+                    if (m.Repeats != null && cc.Repeats != m.Repeats) cc.Repeats = m.Repeats;
+
                     if (cc.EntityState == EntityState.Modified)
                     {
                         cc.VersionUpdated = DateTime.UtcNow;
@@ -3587,7 +3608,9 @@ namespace EXPEDIT.Flow.Services {
                 var oldWorkflows = (from o in d.GraphDataGroups
                                     where !(from r in d.GraphDataRelation select r.GraphDataGroupID).Contains(o.GraphDataGroupID)
                                     && o.VersionUpdated < cleanBefore
-                                    select o).Delete();               
+                                    select o);
+                if (oldWorkflows.Any())
+                    oldWorkflows.Delete();               
             }
 
         }
@@ -3615,7 +3638,7 @@ namespace EXPEDIT.Flow.Services {
                                            
                              select new TriggerGraphViewModel
                              {
-                                 id = o.TriggerID,                                 
+                                 id = gt.TriggerGraphID,                                 
                                  TriggerID = o.TriggerID,
                                  CommonName = o.CommonName,
                                  TriggerTypeID = o.TriggerTypeID,
@@ -3632,15 +3655,15 @@ namespace EXPEDIT.Flow.Services {
                                  OnEnter = gt.OnEnter,
                                  OnDataUpdate = gt.OnDataUpdate,
                                  OnExit = gt.OnExit,
-                                 RunOnce = o.RunOnce,
                                  PassThrough = o.PassThrough,
                                  DelaySeconds = o.DelaySeconds,
                                  DelayDays = o.DelayDays,
                                  DelayWeeks = o.DelayWeeks,
                                  DelayMonths = o.DelayMonths,
                                  DelayYears = o.DelayYears,
-                                 RepeatDelay = o.RepeatDelay,
                                  DelayUntil = o.DelayUntil,
+                                 RepeatAfterDays = o.RepeatAfterDays,
+                                 Repeats = o.Repeats,
                                  ConditionID = o.ConditionID,
                                  Condition = c.Condition,
                                  ConditionJSON = c.JSON,
@@ -3721,19 +3744,19 @@ namespace EXPEDIT.Flow.Services {
                         //JsonPasswordType = m.JsonPasswordType ?? "TEXT",
                         JSON = m.JSON,
                         SystemMethod = "USER", // m.SystemMethod ?? m.CommonName,
-                        ConditionID = m.ConditionID ?? ((c != null) ? c.ConditionID : default(Guid?)),
+                        ConditionID = ((c != null) ? c.ConditionID : default(Guid?)),
                         ExternalURL = m.ExternalURL,
                         ExternalRequestMethod = m.ExternalRequestMethod,
                         ExternalFormType = m.ExternalFormType,
                         PassThrough = m.PassThrough,    
-                        RunOnce = m.RunOnce,
                         DelaySeconds = m.DelaySeconds,
                         DelayDays = m.DelayDays,
                         DelayWeeks = m.DelayWeeks,
                         DelayMonths = m.DelayMonths,
                         DelayYears = m.DelayYears,
                         DelayUntil = m.DelayUntil,
-                        RepeatDelay = m.RepeatDelay,
+                        RepeatAfterDays = m.RepeatAfterDays,
+                        Repeats = m.Repeats,
                         VersionUpdated = DateTime.UtcNow,
                         VersionUpdatedBy = contact
                     };
@@ -3779,7 +3802,7 @@ namespace EXPEDIT.Flow.Services {
                     if (!CheckPermission(gt.GraphDataID, ActionPermission.Update, typeof(GraphData)))
                         return false;
                     //Update
-                    var cc = (from o in d.Triggers where o.TriggerID == m.id && o.VersionDeletedBy == null select o).Single();
+                    var cc = (from o in d.Triggers where o.TriggerID == gt.TriggerID && o.VersionDeletedBy == null select o).Single();
                     //Commented unsafe updates AG
                     //if (m.CommonName != null && cc.CommonName != m.CommonName) cc.CommonName = m.CommonName;
                     if (m.TriggerTypeID != null && cc.TriggerTypeID != m.TriggerTypeID) cc.TriggerTypeID = m.TriggerTypeID;
@@ -3803,14 +3826,14 @@ namespace EXPEDIT.Flow.Services {
                     if (m.OnEnter != null && gt.OnEnter != m.OnEnter) gt.OnEnter = m.OnEnter;
                     if (m.OnDataUpdate != null && gt.OnDataUpdate != m.OnDataUpdate) gt.OnDataUpdate = m.OnDataUpdate;
                     if (m.OnExit != null && gt.OnExit != m.OnExit) gt.OnExit = m.OnExit;
-                    if (m.RunOnce != null && cc.RunOnce != m.RunOnce) cc.RunOnce = m.RunOnce;                    
                     if (m.DelaySeconds != null && cc.DelaySeconds != m.DelaySeconds) cc.DelaySeconds = m.DelaySeconds;
                     if (m.DelayDays != null && cc.DelayDays != m.DelayDays) cc.DelayDays = m.DelayDays;
                     if (m.DelayWeeks != null && cc.DelayWeeks != m.DelayWeeks) cc.DelayWeeks = m.DelayWeeks;
                     if (m.DelayMonths != null && cc.DelayMonths != m.DelayMonths) cc.DelayMonths = m.DelayMonths;
                     if (m.DelayYears != null && cc.DelayYears != m.DelayYears) cc.DelayYears = m.DelayYears;
-                    if (m.RepeatDelay != null && cc.RepeatDelay != m.RepeatDelay) cc.RepeatDelay = m.RepeatDelay;
                     if (m.DelayUntil != null && cc.DelayUntil != m.DelayUntil) cc.DelayUntil = m.DelayUntil;
+                    if (m.RepeatAfterDays != null && cc.RepeatAfterDays != m.RepeatAfterDays) cc.RepeatAfterDays = m.RepeatAfterDays;                    
+                    if (m.Repeats != null && cc.Repeats != m.Repeats) cc.Repeats = m.Repeats;
 
                     if (m.Condition != null)
                     {
@@ -3869,13 +3892,12 @@ namespace EXPEDIT.Flow.Services {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (m.GraphDataID == null)
-                        return false;
-                    if (!CheckPermission(m.GraphDataID, ActionPermission.Delete, typeof(GraphData)))
+                    if (m.id == null)
                         return false;
                     //Delete
                     var pd = (from o in d.TriggerGraphs where o.TriggerGraphID == m.id && o.Version==0 && o.VersionDeletedBy == null select o).Single();
-
+                    if (!CheckPermission(pd.GraphDataID, ActionPermission.Delete, typeof(GraphData)))
+                        return false;
                     if (pd.Trigger.Condition != null && d.Triggers.Where(f=>f.Version ==0 && f.VersionDeletedBy == null && f.ConditionID==pd.Trigger.ConditionID).Count() == 1)
                         d.Precondition.DeleteObject(pd.Trigger.Condition);
                     d.Triggers.DeleteObject(pd.Trigger);

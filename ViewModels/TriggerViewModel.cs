@@ -32,14 +32,15 @@ namespace EXPEDIT.Flow.ViewModels
         public string ExternalRequestMethod { get; set; }
         public string ExternalFormType { get; set; }
         public bool? PassThrough { get; set; }
-        public bool? RunOnce { get; set; }
         public int? DelaySeconds { get; set; }
         public int? DelayDays { get; set; }
         public int? DelayWeeks { get; set; }
         public int? DelayMonths { get; set; }
         public int? DelayYears { get; set; }
-        public int? RepeatDelay { get; set; }
         public DateTime? DelayUntil { get; set; }
+
+        public int? RepeatAfterDays	{get;set;}
+        public int? Repeats	{get;set;}
 
         public Guid? ConditionID { get; set; }
         public string ConditionJSON { get; set; }

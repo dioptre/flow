@@ -3723,7 +3723,7 @@ App.TriggerOption = Ember.Object.extend({
         })
 
         // Setup new template
-        var template = this.get(type + 'Template');
+        var template = JSON.parse(JSON.stringify(this.get(type + 'Template')));
         this.set(type, template)
     }.observes('type').on('init')
 })
@@ -3732,8 +3732,10 @@ App.ThenTrigger = App.TriggerOption.extend({
     type: 'email',
     options: ['webhook', 'email'],
     emailTemplate: {
-        sender: 'paul@flowpro.io',
-        messsage: 'Test message'
+        sender: '',
+        recipient: '', 
+        message: '',
+        subject: ''
     },
     webhookTemplate: {
         url: 'http://x.com/xxx'
@@ -3746,7 +3748,7 @@ App.WhenTrigger = App.TriggerOption.extend({
     select: [{value: 'now', text: "Immediately"}, {value: 'delay', text: "Time Delay"}],
     delayTemplate: {
         hours: '0',
-        seconds: '0'
+        days: '0'
     },
     nowTemplate: {}
 });
@@ -3762,9 +3764,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
     edge: '',
     loading: true,
     triggers: [],
-    triggersFirst: function () {
-        return this.get('triggers.firstObject');
-    }.property('triggers'),
+    triggersJSON: {},
     setup: function(){
         
         // Get graph & Workflow ID
@@ -3779,23 +3779,52 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
         var config = { GraphDataID: graphID, GraphDataGroupID: workflowID };
 
+        // Load available variables
+        var contextName = store.findQuery('contextName', { wfid: workflowID }).then(function (al) {
+            var test = Enumerable.From(al.content).Select('i=>{value:i.get("CommonName"), label:i.get("CommonName")}').Distinct().ToArray();
+            _this.set('tSvariables', test);
+        })
 
         store.findQuery('triggerGraph', config).then(function (a) {
             // if problem do something else - needs error handeling
-
+            var construct;
+            construct = _this.get('triggersJSON');
+            if (!construct.matchSelect)
+                construct = _this.get('defaultConfig');
             Enumerable.From(a.content).ForEach(function (value, index) {
+                triggerValue = JSON.parse(value.get('JSON'));
+                if (index == 0) {
+                    construct.trigger.clear();
+                    construct.matchSelect = triggerValue.matchSelect;
+                    construct.onEnter = (triggerValue.onEnter && true);
+                    construct.triggerConditions = triggerValue.triggerConditions;
+                    construct.fields.clear();
+                    $.each(JSON.parse(value.get('ConditionJSON')), function (i, v) {
+                        construct.fields.pushObject(v);
+                    });
+                    if (triggerValue.delay) {
+                        construct.when[0].type = 'delay';
+                        construct.when[0].delay = triggerValue.delay;
+                    }
+                    else if (triggerValue.now) {
+                        construct.when[0].type = 'now';
+                        construct.when[0].now = triggerValue.now;
+                    }
+                }
+                if (triggerValue.webhook) {
+                    var p = construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'webhook' }));
+                    p.webhook.url = triggerValue.webhook.url;
+                }
+                else if (triggerValue.email) {
+                    var p = construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'email' }));
+                    p.email.recipient = triggerValue.email.recipient;
+                    p.email.subject = triggerValue.email.subject;
+                    p.email.message = triggerValue.email.message;
+                }
+            
                 _this.get('triggers').addObject(value);
-                console.log(index);
-                //Construct JSON for 1st object                
             });
-            if (_this.get('triggers').length < 1) {
-                _this.get('triggers').addObject(store.createRecord('triggerGraph',
-                    $.extend(config, { 
-                        JSON: _this.get('defaultConfig'), 
-                        ConditionID: NewGUID(),
-                        TriggerID: NewGUID()
-                    })));
-            }
+            _this.set('triggersJSON', construct)
             _this.set('loading', false);
         });
 
@@ -3803,6 +3832,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
     defaultConfig: {
         matchSelect: 'All',
         triggerConditions: false,
+        onEnter: true,
         fields: [
             {        
                 type: {
@@ -3816,6 +3846,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
         trigger: [
             
             App.ThenTrigger.create({
+                id: NewGUID(),
                 type: 'email'
             })
             //,
@@ -3835,7 +3866,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
     configEvaluation: function(config){
         var c = config;
 
-        var s = ''; // this is the magic string later
+        var s = ' '; // this is the magic string later
 
         if (!c.triggerConditions)
           return s; // if the trigger condition is false just return nothing
@@ -3844,7 +3875,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
         if (c.fields.length > 0) {
           $.each(c.fields, function(i, a){
     
-            if (a.type != null) {
+          if (a.type != null && a.type.varSelect) {
               b = a.type
 
               // Create the comparions part 
@@ -3895,84 +3926,175 @@ App.TriggerNodeComponent = Ember.Component.extend({
         }
     },
     actions: {
+        'cancelTriggerConditions' : function () {
+            this.sendAction('cancelled');
+        },
         'saveTriggerConditions': function(context){
             var _this = this;
             var store = _this.get('targetObject.store');
-            var firstTrigger = _this.get('triggersFirst');
-            var condition = firstTrigger.get('JSON').fields;
-            var triggers = firstTrigger.get('JSON').trigger;
+            var triggersJSON = _this.get('triggersJSON');
+            if(!triggersJSON.triggerConditions) {
+                //Delete everything...
+                Enumerable.From(this.get('triggers')).ForEach(function (value) {
+                    if (value.get('isNew')) {
+                        value.unloadRecord();
+                    } else {
+                        value.destroyRecord();
+                    }
+                });
+                triggersJSON.trigger.clear();
+                triggersJSON.trigger.pushObject(App.ThenTrigger.create({
+                    id: NewGUID(),
+                    type: 'email'
+                }));
+                triggersJSON.fields.clear();
+                triggersJSON.fields.pushObject({
+                    type: {
+                        varLabel: '',
+                        varSelect: '',
+                        matchSelect: '',
+                        matchInput: ''
+                    }
+                });
+                triggersJSON.when.clear();
+                triggersJSON.when.pushObject(App.WhenTrigger.create({}));
+                Messenger().post({ type: 'success', message: 'Successfully cleared trigger' });
+                _this.sendAction('submitted')
+                return;
+            }
 
-     //       [TriggerGraphID]
-     //, [TriggerID]
-    
-     //     , [MergeProjectData]
-     // , [OnEnter]
-     // , [OnDataUpdate]
-     // , [OnExit]
-     //, [OnEnter]
-   
-     // , [CommonName]
-     
-     // , [JsonMethod]
-
-     // , [JSON]
-     //       [OverrideProjectDataWithJsonCustomVars]
-     // , [JSON]
-     // , [Condition]
-
-     //        , [ExternalURL]
-     // , [ExternalRequestMethod]
-     // , [ExternalFormType]
-     // , [PassThrough]
-     // , [RunOnce]
-     // , [DelaySeconds]
-     // , [DelayDays]
-     // , [DelayWeeks]
-     // , [DelayMonths]
-     // , [DelayYears]
-     // , [RepeatDelay]
-     // , [DelayUntil]
-
-            //Destruct JSON objects
+            var graphID = _this.get('graphID');
+            var workflowID = _this.get('workflowID');
+            var conditionID = triggersJSON.ConditionID;
+            if (!conditionID) {
+                conditionID = NewGUID();
+                triggersJSON.ConditionID = conditionID;
+            }                
+            var condition = triggersJSON.fields;
+            //delete triggersJSON.fields;
+            var triggers = triggersJSON.trigger;
+            //Fill up created triggers
+            var newTriggers = Enumerable.From(triggers).Except(this.get('triggers'), "$.id").ToArray();
+            //To delete
+            var deleteTriggers = Enumerable.From(this.get('triggers')).Except(triggers, "$.id").ToArray();
             //Merge with trigger array
-            Enumerable.From(this.get('triggers')).ForEach(function (value, index) {
-
+            Enumerable.From(newTriggers).ForEach(function (value, index) {
+                _this.get('triggers').addObject(store.createRecord('triggerGraph',
+                    {
+                        id: value.id,
+                        TriggerID: NewGUID(),
+                        GraphDataID: graphID,
+                        GraphDataGroupID: workflowID
+                    }));
             });
-    
+            //Delete from store
+            Enumerable.From(deleteTriggers).ForEach(function (value, index) {
+                if (value.get('isNew')) {
+                    value.unloadRecord();
+                } else {
+                    value.destroyRecord();
+                }
+            });
+            var promises = [];
+            //Now do all updates
+            Enumerable.From(this.get('triggers')).ForEach(function(value) {
+                var temp = Enumerable.From(triggers).Where("$.id =='" + value.id + "'").FirstOrDefault();
+                if (!temp)
+                    return;
+                value.set('MergeProjectData', true);
+                value.set('OnEnter', triggersJSON.onEnter);
+                value.set('OnDataUpdate', false);
+                value.set('OnExit', !triggersJSON.onEnter);
+                value.set('CommonName', temp.type);
+                value.set('ConditionID', conditionID);
+                value.set('Condition', _this.get('configEvaluation')(triggersJSON));
+                value.set('ConditionJSON', JSON.stringify(triggersJSON.fields));
+                if (temp.type == "email") {
+                    value.set('ExternalURL', temp.email.recipient);
+                }
+                else if (temp.type == "webhook") {
+                    value.set('ExternalURL', temp.webhook.url);
+                    value.set('ExternalRequestMethod', 'POST');
+                    value.set('ExternalFormType', 'JSON');
+                }
+                value.set('OverrideProjectDataWithJsonCustomVars', true);
+                value.set('PassThrough', true);
+                value.set('RepeatAfterDays', 0);
+                value.set('Repeats', 0);
 
-            //trigger.save().then(function(){
-            //     Messenger().post({ type: 'success', message: 'Successfully saved edge conditions' });
+                if (triggersJSON.when && triggersJSON.when.length > 0) {
+                    if (triggersJSON.when[0].delay) {
+                        if (triggersJSON.when[0].delay.hours && triggersJSON.when[0].delay.hours.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelaySeconds', triggersJSON.when[0].delay.hours * 60);
+                        if (triggersJSON.when[0].delay.days && triggersJSON.when[0].delay.days.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayDays', triggersJSON.when[0].delay.days);
+                        if (triggersJSON.when[0].delay.weeks && triggersJSON.when[0].delay.weeks.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayWeeks', triggersJSON.when[0].delay.weeks);
+                        if (triggersJSON.when[0].delay.months && triggersJSON.when[0].delay.months.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayMonths', triggersJSON.when[0].delay.months);
+                        if (triggersJSON.when[0].delay.years && triggersJSON.when[0].delay.years.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayYears', triggersJSON.when[0].delay.years);
+                        //,[RepeatAfterDays, Repeats]
+                        //,[DelayUntil]
+                    } else {
+                        value.set('DelaySeconds', 0);
+                        value.set('DelayDays', 0);
+                        value.set('DelayWeeks', 0);
+                        value.set('DelayMonths', 0);
+                        value.set('DelayYears', 0);
+                    }
+                }
+                var toSave = {};
+                toSave[triggersJSON.when[0].type] = triggersJSON.when[0][triggersJSON.when[0].type];
+                toSave[temp.type] = temp[temp.type];
+                toSave['matchSelect'] = triggersJSON.matchSelect;
+                toSave['triggerConditions'] = true;
+                toSave['onEnter'] = triggersJSON.onEnter;
+                value.set('JSON', JSON.stringify(toSave));
 
-            //}, function(){
-            //     Messenger().post({ type: 'error', message: 'Error saving edge conditions' });
+                promises.push(value.save());
+            });
 
-            //});
+
+            Ember.RSVP.allSettled(promises).then(function (p) {
+                if (Enumerable.From(p).Any("f=>f.reason")) {
+                    //btn.set('loading', false);
+                    Messenger().post({ type: 'error', message: 'Error Saving Data' });
+                    return;
+                } else {
+                    Messenger().post({ type: 'success', message: 'Successfully saved trigger' });
+                    _this.sendAction('submitted')
+                }
+            })
 
         },
         'addRow': function (context) {
-            var positionCurrent = this.get('config.JSON.fields').indexOf(context.itemInsertAfter) + 1;
-            this.get('config.JSON.fields').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
+            var positionCurrent = this.get('triggersJSON.fields').indexOf(context.itemInsertAfter) + 1;
+            this.get('triggersJSON.fields').insertAt(positionCurrent, JSON.parse(JSON.stringify(this.get('defaultConfigItem'))));
 
         },
         'deleteRow': function(context) {
             // don't delete if the last one :)
-            if (this.get('config.JSON.fields.length') == 1) {
+            if (this.get('triggersJSON.fields.length') == 1) {
                 Messenger().post({ type: 'info', message: 'You need at least on row. Turn off Trigger alternatively.' });
             } else {
-                this.get('config.JSON.fields').removeObject(context.itemToDelete);
+                this.get('triggersJSON.fields').removeObject(context.itemToDelete);
             }
             
         },
         'addTriggerRow': function (context) {
-            var positionCurrent = this.get('config.JSON.trigger').indexOf(context.itemInsertAfter) + 1;
-            this.get('config.JSON.trigger').insertAt(positionCurrent, App.ThenTrigger.create({}));
+            var positionCurrent = this.get('triggersJSON.trigger').indexOf(context.itemInsertAfter) + 1;
+            this.get('triggersJSON.trigger').insertAt(positionCurrent, App.ThenTrigger.create({
+                id: NewGUID(),
+                type: 'email'
+            }));
 
         },
         'deleteTriggerRow': function(context) {
-            if (this.get('config.JSON.trigger.length') == 1) {
+            if (this.get('triggersJSON.trigger.length') == 1) {
                 Messenger().post({ type: 'info', message: 'You need at least on row. Turn off Trigger alternatively.' });
             } else {
-                this.get('config.JSON.trigger').removeObject(context.itemToDelete);
+                this.get('triggersJSON.trigger').removeObject(context.itemToDelete);
             }
         }                                                
     }
@@ -4782,18 +4904,18 @@ App.Trigger = App.Condition.extend({
     JsonPassword: DS.attr('string'),
     JsonPasswordType: DS.attr('string'),
     SystemMethod: DS.attr('string'),
-    ExternalUrl: DS.attr('string'), //http://dothis/rest/url
+    ExternalURL: DS.attr('string'), //http://dothis/rest/url
     ExternalRequestMethod: DS.attr('string', { defaultValue: 'POST' }),
     ExternalFormType: DS.attr('string', { defaultValue: 'JSON' }),
     PassThrough: DS.attr('string', { defaultValue: true }),
-    RunOnce: DS.attr('string', { defaultValue: true }),
     DelaySeconds: DS.attr('string', { defaultValue: 0 }),
     DelayDays: DS.attr('string', { defaultValue: 0 }),
     DelayWeeks: DS.attr('string', { defaultValue: 0 }),
     DelayMonths: DS.attr('string', { defaultValue: 0 }),
     DelayYears: DS.attr('string', { defaultValue: 0 }),
-    RepeatDelay: DS.attr('string', { defaultValue: 0 }),
     DelayUntil: DS.attr('string'), //Do this later? Repeat until later?
+    RepeatAfterDays: DS.attr('string', { defaultValue: 0 }),
+    Repeats: DS.attr('string', { defaultValue: 0 }),
 
     ConditionID: DS.attr('string'), //json for condition partidentical to last time
     ConditionJSON: DS.attr('string'), //PK, just for ui extra shit inside trigger not condition

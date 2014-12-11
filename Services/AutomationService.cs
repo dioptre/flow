@@ -22,6 +22,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Orchard.Environment.Configuration;
+using System.Net;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Runtime.Serialization.Formatters;
 
 namespace EXPEDIT.Flow.Services {
 
@@ -103,20 +107,49 @@ namespace EXPEDIT.Flow.Services {
             _shellSettings = shellSettings;
         }
 
+        private void ContactTick(Guid? contactID, int add = 1)
+        {
+            var key = string.Format("API-USER-TICKER-{0}", contactID);
+            var count = CacheHelper.AddToCache<int>(() =>
+            {
+                object val = CacheHelper.Cache[key];
+                if (val != null)
+                    return ((int)val) + add;
+                else
+                    return 1;
+            }, key, new TimeSpan(3, 0, 0));
+            if (count > 100)
+            {
+                //Disable it
+                _users.DisableContact(contactID.Value);
 
-        public bool EvaluateCondition() {
-            dynamic p = new  { Name = "Mickey Mouse"};
-
-            var result = new Engine()
-                    .SetValue("p", p)
-                    .Execute("p.Name === 'Mickey Mouse'")
-                    .GetCompletionValue() // get the latest statement completion value
-                    .ToObject()
-                    ;
-            return false; 
+            }
         }
 
-        public bool ExecuteMethod(AutomationViewModel m, string method) {
+
+        private void CompanyTick(Guid? companyID, int add = 1)
+        {
+            var key = string.Format("API-COMPANY-TICKER-{0}", companyID);
+            var count = CacheHelper.AddToCache<int>(() =>
+            {
+                object val = CacheHelper.Cache[key];
+                if (val != null)
+                    return ((int)val) + add;
+                else
+                    return 1;
+            }, key, new TimeSpan(3, 0, 0));           
+        }
+
+        private bool CompanyDisabled(Guid? companyID) {
+            var key = string.Format("API-COMPANY-TICKER-{0}", companyID);
+            object ticks = CacheHelper.Cache[key];
+            if (ticks == null)
+                return false;
+            int t = (int)ticks;
+            if (companyID.HasValue && t > 100)
+                return true;
+            if (!companyID.HasValue && t > 100)
+                return true;
             return false;
         }
 
@@ -153,9 +186,12 @@ namespace EXPEDIT.Flow.Services {
                 ContactID = trigger.JsonProxyContactID;
                 CompanyID = trigger.JsonProxyCompanyID;
                 ProxyAuthenticated = true;
-                return true;
-
             }
+            if (!ContactID.HasValue)
+                return false;
+            if (_users.IsContactDisabled(ContactID.Value))
+                return false;
+            return true;
         }
 
 
@@ -256,6 +292,8 @@ namespace EXPEDIT.Flow.Services {
 
         public bool Equate(string js)
         {
+            if (string.IsNullOrWhiteSpace(js))
+                return true;
             return new Engine()
                 .Execute(js)
                 .GetCompletionValue() // get the latest statement completion value
@@ -263,6 +301,8 @@ namespace EXPEDIT.Flow.Services {
         }
         public bool EquateAsync(string js)
         {
+            if (string.IsNullOrWhiteSpace(js))
+                return true; 
             int cancelms = 1000;
             CancellationTokenSource cts = new CancellationTokenSource();
             cts.CancelAfter(cancelms);
@@ -314,7 +354,14 @@ namespace EXPEDIT.Flow.Services {
             var contact = ContactID;
             var company = CompanyID;
             var application = ApplicationID;
+            ContactTick(contact);
             m.Status = "";
+            bool isNew = false;
+            bool isTransitioned = false;
+            bool isCompleted = false;
+            bool checkAuthorization = false;
+            Guid nextGid = default(Guid);
+            Guid? oldGid = default(Guid?);
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);                
@@ -403,6 +450,7 @@ namespace EXPEDIT.Flow.Services {
                             m.Error = "Couldn't identify distinct start in workflow.";
                             return false;
                         }
+                        nextGid = m.PreviousStep.ActualGraphDataID.Value;
                     }
 
                     if (Authorize(m, m.GraphDataGroupID, ActionPermission.Read, typeof(GraphDataGroup))
@@ -453,7 +501,6 @@ namespace EXPEDIT.Flow.Services {
                         d.WorkflowInstances.AddObject(wf);                        
                         m.PreviousStep.VersionWorkflowInstanceID = wfid;
 
-                        bool checkAuthorization = false;
                         if (!m.TaskID.HasValue)
                             m.PreviousTask = d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == m.GraphDataGroupID && f.GraphDataID == m.GraphDataID).FirstOrDefault();
 
@@ -513,24 +560,11 @@ namespace EXPEDIT.Flow.Services {
                                 VersionUpdatedBy = contact
                             };
                             d.ProjectDatas.AddObject(pd);
-                        }
-                        
+                        }                      
 
-                        d.SaveChanges();
+                       
 
-                        if (checkAuthorization)
-                        {
-                            if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
-                            {
-                                m.PreviousStep = null;
-                                m.PreviousTask = null;
-                                m.PreviousWorkflowInstance = null;
-                                m.Error = "Transitioned to a different department.";
-                                return false;
-                            }
-                        }
-                        
-                        return true;
+                        isNew = true;
                     }
                     else
                     {
@@ -571,8 +605,8 @@ namespace EXPEDIT.Flow.Services {
                         }
                     }
 
-                    bool isCompleted = false, isDefault = false;
-                    var nextStep = Guid.Empty;
+                    bool isDefault = false;
+                    oldGid = m.ActualGraphDataID;
                     var options = d.GraphDataRelation.Where(f=>
                         f.FromGraphDataID == m.ActualGraphDataID 
                         && f.VersionDeletedBy == null 
@@ -629,17 +663,17 @@ namespace EXPEDIT.Flow.Services {
                         }
                         if (correct)
                         {
-                            nextStep = option.ToGraphDataID.Value;
+                            nextGid = option.ToGraphDataID.Value;
                             break;
                         }
                     }
-                    if (nextStep == Guid.Empty)
+                    if (nextGid == Guid.Empty)
                     {
                         //Now do the default transition
                         var option = options.FirstOrDefault(f => !f.Condition.Any());
                         if (option != null)
                         {
-                            nextStep = option.ToGraphDataID.Value;
+                            nextGid = option.ToGraphDataID.Value;
                             isDefault = true;
                             m.Status += " Transition Default.";
                         }
@@ -649,9 +683,8 @@ namespace EXPEDIT.Flow.Services {
                     if (m.PreviousWorkflowInstance != null && m.PreviousWorkflowInstance.Idle.HasValue)
                         m.PreviousStep.Hours = (m.PreviousStep.Hours ?? 0) + ((decimal)((now - m.PreviousWorkflowInstance.Idle.Value.AddSeconds(-ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS)).TotalHours));
 
-                    if (nextStep != Guid.Empty || isCompleted)
-                    {
-                        bool checkAuthorization = false;
+                    if (nextGid != Guid.Empty || isCompleted)
+                    {                       
                         if (isCompleted)
                         {
                             m.PreviousStep.ActualGraphDataID = null;
@@ -660,9 +693,9 @@ namespace EXPEDIT.Flow.Services {
                         }
                         else
                         {
-                            m.PreviousStep.ActualGraphDataID = nextStep;
+                            m.PreviousStep.ActualGraphDataID = nextGid;
                             m.PreviousWorkflowInstance.Idle = now.AddSeconds(m.PreviousWorkflowInstance.IdleTimeoutSeconds ?? ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS);
-                            m.PreviousTask = d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == m.GraphDataGroupID && f.GraphDataID == nextStep).FirstOrDefault();
+                            m.PreviousTask = d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == m.GraphDataGroupID && f.GraphDataID == nextGid).FirstOrDefault();
                             if (m.PreviousTask != null)
                             {
                                 if (m.PreviousTask.WorkCompanyID.HasValue || m.PreviousTask.WorkContactID.HasValue)
@@ -679,54 +712,373 @@ namespace EXPEDIT.Flow.Services {
                         m.PreviousStep.VersionUpdatedBy = contact;
                         m.PreviousStep.VersionUpdated = now;      
 
-                        d.SaveChanges();
-                        if (!isCompleted)
-                        {
-                            if (checkAuthorization)
-                            {
-                                if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
-                                {
-                                    m.PreviousStep = null;
-                                    m.PreviousTask = null;
-                                    m.PreviousWorkflowInstance = null;
-                                    m.Error = "Transitioned to a different department.";
-                                    return false;
-                                }
-                            }
-                        }
-
-                        return true;
+                        isTransitioned = true;
                     }    
                 }
+                
+                if (isTransitioned || isNew)
+                {
+                    EnqueueEvents(d, m, oldGid, isCompleted ? default(Guid?) : nextGid, now);
+                }
+
+                d.SaveChanges();
+
+                if (!isCompleted)
+                {
+                    if (checkAuthorization)
+                    {
+                        if (!Authorize(m.PreviousStepID, ActionPermission.Read, typeof(ProjectPlanTaskResponse)))
+                        {
+                            m.PreviousStep = null;
+                            m.PreviousTask = null;
+                            m.PreviousWorkflowInstance = null;
+                            m.Error = "Transitioned to a different department.";
+                            return true;
+                        }
+                    }
+                }
+
+                if (isTransitioned || isNew)
+                    return true;
+
                 m.Error = "Could not find a valid transition. ";
                 m.Error += m.Status;
                 return false;
             }
         }
 
-        public bool SendEmail()
+
+        public bool ExecuteMethod(AutomationViewModel m, string method)
+        {
+            return false;
+
+        }
+
+        private void EnqueueEvents(NKDC d, AutomationViewModel m, Guid? oldgid, Guid? newgid, DateTime? now = default(DateTime?))
+        {
+            if (!now.HasValue)
+                now = DateTime.UtcNow;
+            var isExit = false;
+            var isEntry = false;
+            var isUpdate = false;
+            if (oldgid.HasValue && newgid == Guid.Empty)
+                isUpdate = true;
+            if (oldgid.HasValue && newgid == null)
+                isExit = true;
+            if (newgid.HasValue && newgid != Guid.Empty)
+                isEntry = true;
+            if (oldgid.HasValue && oldgid != Guid.Empty)
+                isExit = true;
+            isUpdate = isUpdate || isExit || isEntry;
+            var triggers = (from t in d.Triggers.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
+                            join g in d.TriggerGraphs.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
+                            on t.TriggerID equals g.TriggerID
+                            where
+                            (newgid.HasValue && isEntry && g.GraphDataID == newgid && g.GraphDataGroupID==m.ActualGraphDataGroupID && g.OnEnter == true) //entry
+                            || (isUpdate && g.GraphDataID == oldgid && g.GraphDataGroupID == m.ActualGraphDataGroupID && g.OnDataUpdate == true) //update
+                            || (oldgid.HasValue && isExit && g.GraphDataID == oldgid && g.GraphDataGroupID==m.ActualGraphDataGroupID && g.OnExit == true) //exit
+                            select new { t, g });
+            foreach(var trigger in triggers) {
+                var runNext = now.Value;
+                if (trigger.g.GraphDataGroup.VersionOwnerCompanyID == null && trigger.g.GraphDataGroup.VersionOwnerContactID == null)
+                    continue; //Only allow paid users to trigger
+                if (trigger.t.DelayUntil.HasValue)
+                {
+                    runNext = trigger.t.DelayUntil.Value;
+                    if (runNext < now)
+                        continue;
+                }
+                else
+                {
+                    var ts = new TimeSpan(0);
+                    if (trigger.t.DelayDays.HasValue)
+                        ts = ts.Add(new TimeSpan(trigger.t.DelayDays.Value, 0, 0, 0));
+                    if (trigger.t.DelaySeconds.HasValue)
+                        ts = ts.Add(new TimeSpan(0, 0, trigger.t.DelaySeconds.Value));
+                    if (trigger.t.DelayWeeks.HasValue)
+                        ts = ts.Add(new TimeSpan(7 * trigger.t.DelayWeeks.Value, 0, 0, 0));
+                    if (ts.Ticks < 0 || (trigger.t.DelayYears.HasValue && trigger.t.DelayYears < 0) || (trigger.t.DelayMonths.HasValue && trigger.t.DelayMonths < 0))
+                        continue;
+                    runNext = runNext.Add(ts);
+                    if (trigger.t.DelayMonths.HasValue)
+                        runNext = runNext.AddMonths(trigger.t.DelayMonths.Value);
+                    if (trigger.t.DelayYears.HasValue)
+                        runNext = runNext.AddYears(trigger.t.DelayYears.Value);
+
+                }
+                var evt = new ProjectPlanTaskResponseEvent
+                {
+                    ProjectPlanTaskResponseEventID = Guid.NewGuid(),
+                    ProjectPlanTaskResponseID = m.id,
+                    ProjectID = m.ProjectID,
+                    TaskID = m.TaskID,
+                    TriggerGraphID = trigger.g.TriggerGraphID,
+                    OriginTriggerID = trigger.t.TriggerID,
+                    //DestinationTriggerID = m.DestinationTriggerID,
+                    //JsonCustomVars = m.JsonCustomVars,
+                    RunNext = runNext,
+                    RunsLeft = (!trigger.t.Repeats.HasValue || trigger.t.Repeats == 0) ? 1 : trigger.t.Repeats.Value ,
+                    Executed = null,
+                    Failed = null,
+                    Reason = null,
+                    Version = 0,
+                    VersionUpdatedBy = ContactID,
+                    VersionOwnerContactID = trigger.g.GraphDataGroup.VersionOwnerContactID,
+                    VersionOwnerCompanyID = trigger.g.GraphDataGroup.VersionOwnerCompanyID,
+                    VersionUpdated = now.Value,
+                };
+                d.ProjectPlanTaskResponseEvents.AddObject(evt);
+            }
+
+        }
+
+        public bool ProcessEvents()
+        {
+            //Disable account if theyve done too many requests
+            var contactTicks = new Dictionary<Guid?, int>();
+            var companyTicks = new Dictionary<Guid?, int>();
+            var disabledCompanies = new List<Guid?>();
+            var now = DateTime.UtcNow;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var disabledContacts = d.Contacts.Where(f => f.Version == 0  && (( f.VersionCertainty.HasValue && f.VersionCertainty < 0) || f.VersionDeletedBy != null)).Select(f=>f.ContactID).ToArray();
+                var events = (from o in d.ProjectPlanTaskResponseEvents.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
+                              where o.RunsLeft > 0 && o.RunNext < now && (!o.VersionOwnerContactID.HasValue || !disabledContacts.Contains(o.VersionOwnerContactID.Value))
+                              select o);
+                foreach (var evt in events)
+                {
+                    if (disabledCompanies.Any(f => f == evt.VersionOwnerCompanyID))
+                        continue;
+                    if (CompanyDisabled(evt.VersionOwnerCompanyID))
+                    {
+                        disabledCompanies.Add(evt.VersionOwnerCompanyID);
+                        continue;
+                    }
+                    if (disabledContacts.Any(f => f == evt.VersionOwnerContactID))
+                        continue; //rate limited contact
+
+                    var trigger = d.TriggerGraphs.Where(f=>f.Version == 0 && f.VersionDeletedBy == null && f.TriggerGraphID == evt.TriggerGraphID).SingleOrDefault();
+                    if (trigger == null || trigger.Trigger == null || (string.Format("{0}",trigger.TriggerGraphID) != trigger.Trigger.CommonName)) //we use common name for additional security
+                    {
+                        evt.Reason = "NO TRIGGER FOUND"; //16 max
+                        evt.Failed = now;
+                        evt.RunsLeft = 0; //critical failure
+                        evt.Executed = now;
+                        evt.RunNext = null;
+                    }
+                    else
+                    {
+                        //OK Let's check it... 
+                        //condition
+                        bool conditionPassed = true;
+                        var data = (from o in d.ProjectDatas.Where(f => f.ProjectID == evt.ProjectID && f.VersionDeletedBy == null && f.Version == 0)
+                                        join t in d.ProjectDataTemplates.Where(f => f.Version == 0 && f.VersionDeletedBy == null) on o.ProjectDataTemplateID equals t.ProjectDataTemplateID
+                                        select new { t.CommonName, o.Value, t.SystemDataType, o.VersionUpdated }
+                                       ).GroupBy(f => f.CommonName, f => f, (key, g) => g.OrderByDescending(f => f.VersionUpdated).FirstOrDefault()).ToArray();                        
+                        if (trigger.Trigger.Condition != null &&  !string.IsNullOrWhiteSpace(trigger.Trigger.Condition.Condition))
+                        {                            
+                            var dict = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => (f.Value ?? "").Replace("\'", "\\\'").Replace("\"", "\\\""));
+                            foreach (var lookup in dict)
+                                trigger.Trigger.Condition.Condition = trigger.Trigger.Condition.Condition.Replace(lookup.Key, "\"" + lookup.Value + "\"");
+                            if (ConstantsHelper.REGEX_JS_CLEANER.IsMatch(trigger.Trigger.Condition.Condition))
+                            {
+                                evt.Reason = "ILLEGAL CONDITION"; //16 max
+                                evt.Failed = now;
+                                evt.RunsLeft = 0; //critical failure
+                                evt.RunNext = null;
+                                conditionPassed = false;
+                            }
+                            else
+                            {
+                                conditionPassed = EquateAsync(trigger.Trigger.Condition.Condition);
+                                if (!conditionPassed)
+                                {
+                                    evt.Reason = "CONDITION FAILED"; //16 max
+                                    evt.Failed = now;
+                                }
+                            }
+                           
+                        }
+                        if (conditionPassed)
+                        {                           
+                            //Execute here
+                            //Parse variables
+                            dynamic settings =  Newtonsoft.Json.Linq.JObject.Parse(HttpUtility.HtmlDecode(trigger.Trigger.JSON));
+                            var jsLookup = data.Where(f=>!string.IsNullOrWhiteSpace(f.CommonName))
+                                .ToDictionary(f => 
+                                    string.Format("{0}", f.CommonName).Replace(" ", "_").Replace("\'", "_").Replace("\"", "_")
+                                    , f => (f.Value ?? ""));
+                            var txtLookup = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => (f.Value ?? "").Replace("\'", "\\\'").Replace("\"", "\\\""));
+                            Func<string, string> clean = (string toClean) =>
+                            {
+                                if (string.IsNullOrWhiteSpace(toClean))
+                                    return "";
+                                foreach (var l in txtLookup)
+                                toClean = toClean.Replace(l.Key, l.Value);
+                                return toClean;
+                            };
+                            bool success = true;
+                            try
+                            {
+                                switch (string.Format("{0}", trigger.Trigger.JsonMethod).ToLowerInvariant())
+                                {
+                                    case "email":
+                                        settings.email.recipient.Value = clean(settings.email.recipient.Value);
+                                        if (!RegexHelper.IsEmail(settings.email.recipient.Value))
+                                        {
+                                            success = false;
+                                            evt.Reason = "INVALID EMAIL";
+                                            break;
+                                        }
+                                        settings.email.message.Value = clean(settings.email.message.Value);
+                                        settings.email.subject.Value = clean(settings.email.subject.Value);
+                                        success = SendEmail(settings);
+                                        if (!success)
+                                            evt.Reason = "SVR RESP FAILED";
+                                        break;
+                                    case "webhook":
+                                        string js = JsonConvert.SerializeObject(jsLookup, Formatting.Indented, new JsonSerializerSettings
+                                        {
+                                            TypeNameHandling = TypeNameHandling.All,
+                                            TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple
+                                        });
+                                        success = SendWebhook(settings, js);
+                                        if (!success)
+                                            evt.Reason = "HOOK RESP FAILED";
+                                        break;
+                                    default:
+                                        evt.Reason = "ILLEGAL METHOD"; //16 max
+                                        evt.Failed = now;
+                                        evt.RunsLeft = 0; //critical failure
+                                        evt.RunNext = null;
+                                        break;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                success = false;
+                                evt.Reason = string.Join("", string.Format("{0}", ex.Message).Take(16).ToArray());
+                            }
+                            if (!success)
+                            {
+                                if (string.IsNullOrWhiteSpace(evt.Reason))
+                                    evt.Reason = "UNKNOWN RESPONSE";
+                                evt.Failed = now;
+                            }
+                            
+                        }
+
+                         if (evt.RunsLeft > 0)
+                            evt.RunsLeft--;        
+                        if (evt.RunsLeft > 0 && evt.RunNext.HasValue)
+                        {
+                            var oldRunTime = evt.RunNext;
+                            //Calculate next run
+                            var ts = new TimeSpan(0);
+                            if (trigger.Trigger.DelayDays.HasValue)
+                                ts = ts.Add(new TimeSpan(trigger.Trigger.DelayDays.Value, 0, 0, 0));
+                            if (trigger.Trigger.DelaySeconds.HasValue)
+                                ts = ts.Add(new TimeSpan(0, 0, trigger.Trigger.DelaySeconds.Value));
+                            if (trigger.Trigger.DelayWeeks.HasValue)
+                                ts = ts.Add(new TimeSpan(7 * trigger.Trigger.DelayWeeks.Value, 0, 0, 0));
+                            evt.RunNext = evt.RunNext.Value.Add(ts);
+                            if (trigger.Trigger.DelayMonths.HasValue)
+                                evt.RunNext = evt.RunNext.Value.AddMonths(trigger.Trigger.DelayMonths.Value);
+                            if (trigger.Trigger.DelayYears.HasValue)
+                                evt.RunNext = evt.RunNext.Value.AddYears(trigger.Trigger.DelayYears.Value);
+                            if (evt.RunNext.Value.AddMinutes(-2) <= oldRunTime)
+                            {
+                                evt.RunNext = null;
+                                evt.RunsLeft = 0;
+                                evt.Reason = "REPEATED TOO SOON";
+                            }
+                        }
+                        else
+                        {
+                            evt.RunsLeft = 0;
+                        }
+                        evt.Executed = now;
+                    }
+                     
+
+
+                    //Count API requests
+                    if (contactTicks.ContainsKey(evt.VersionOwnerContactID))
+                        contactTicks[evt.VersionOwnerContactID]++;
+                    else
+                        contactTicks[evt.VersionOwnerContactID] = 1;
+                    
+                    if (companyTicks.ContainsKey(evt.VersionOwnerCompanyID))
+                        companyTicks[evt.VersionOwnerCompanyID]++;
+                    else
+                        companyTicks[evt.VersionOwnerCompanyID] = 1;
+                }
+                d.SaveChanges();
+            }
+            foreach(var tick in contactTicks.Keys)
+                ContactTick(tick, contactTicks[tick]);
+            foreach (var tick in companyTicks.Keys)
+                CompanyTick(tick, companyTicks[tick]);
+            return true;
+        }
+
+
+        private bool SendWebhook(dynamic settings, string js)
+        {
+
+            var webhook = (HttpWebRequest)WebRequest.Create(settings.webhook.url.Value);
+            webhook.ContentType = "text/json";
+            webhook.Method = "POST";
+            //httpWebRequest.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => { return true; };
+
+            using (var streamWriter = new StreamWriter(webhook.GetRequestStream()))
+            {              
+
+                streamWriter.Write(js);
+                streamWriter.Flush();
+                streamWriter.Close();
+
+                var response = (HttpWebResponse)webhook.GetResponse();
+                int statusCode = (int)response.StatusCode;
+                if (statusCode >= 100 && statusCode < 400) //Good requests
+                    return true;
+                //using (var streamReader = new StreamReader(response.GetResponseStream()))
+                //{
+                //    var result = streamReader.ReadToEnd();
+                //}
+            }
+            return false;
+        }
+
+        private bool SendEmail(dynamic settings)
+        {
+            try
+            {
+                _users.EmailUsers(new string[] { settings.email.recipient.Value }, settings.email.subject.Value, settings.email.message.Value);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private bool SendSMS(dynamic settings)
         {
             return false;
         }
 
-        public bool SendSMS()
+
+        private bool CancelWorkflow()
         {
             return false;
         }
 
-        public bool InstantiateWorkflow()
+        private bool PauseWorkflow()
         {
             return false;
-        }
 
-        public bool TransitionWorkflow()
-        {
-            return false;
-        }
-
-        public bool CancelWorkflow()
-        {
-            return false;
         }
 
 
