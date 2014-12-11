@@ -1245,8 +1245,9 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Companies")]
         public ActionResult GetCompany(CompanyViewModel m)
         {
-            if (_Flow.GetCompany(m))
-                return new JsonHelper.JsonNetResult(new { companies = m.companies }, JsonRequestBehavior.AllowGet);
+            var result = _Flow.GetCompany(m);
+            if (result != null)
+                return new JsonHelper.JsonNetResult(new { companies = result }, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
 
@@ -1300,64 +1301,7 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
 
-        [Authorize]
-        [ActionName("Companies")]
-        public ActionResult GetCompany(CompanyViewModel m)
-        {
-            if (_Flow.GetCompany(m))
-                return new JsonHelper.JsonNetResult(new { companies = m.companies }, JsonRequestBehavior.AllowGet);
-            else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
-
-        }
-
-
-        [Authorize]
-        [Themed(false)]
-        [HttpPost]
-        [ActionName("Companies")]
-        public ActionResult CreateCompany(CompanyViewModel m)
-        {
-            if (m.company != null)
-                m = m.company;
-            if (_Flow.CreateCompany(m))
-                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
-            else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
-        }
-
-        [Authorize]
-        [Themed(false)]
-        [HttpPut]
-        [ActionName("Companies")]
-        public ActionResult UpdateCompany(CompanyViewModel m)
-        {
-            if (m.company != null && m.id != null)
-            {
-                m.company.id = m.id;
-                m = m.company;
-            }
-            if (_Flow.UpdateCompany(m))
-                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
-            else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
-        }
-
-        [Authorize]
-        [Themed(false)]
-        [HttpDelete]
-        [ActionName("Companies")]
-        public ActionResult DeleteCompany(CompanyViewModel m)
-        {
-            if (!m.id.HasValue)
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
-            if (_Flow.DeleteCompany(m))
-                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
-            else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
-
-        }
-
+        
 
 
     }

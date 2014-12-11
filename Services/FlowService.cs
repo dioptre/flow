@@ -1109,7 +1109,7 @@ namespace EXPEDIT.Flow.Services {
             try
             {
                 var contact = _users.ContactID;
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -2924,7 +2924,7 @@ namespace EXPEDIT.Flow.Services {
             try
             {
                 var contact = _users.ContactID;
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -3099,7 +3099,7 @@ namespace EXPEDIT.Flow.Services {
             try
             {
                 var contact = _users.ContactID;
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -3289,7 +3289,7 @@ namespace EXPEDIT.Flow.Services {
             try
             {
                 var contact = _users.ContactID;
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -3521,7 +3521,7 @@ namespace EXPEDIT.Flow.Services {
             try
             {
                 var contact = _users.ContactID;
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -3791,7 +3791,7 @@ namespace EXPEDIT.Flow.Services {
             try
             {
                 var contact = _users.ContactID;
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
@@ -3902,6 +3902,227 @@ namespace EXPEDIT.Flow.Services {
                         d.Precondition.DeleteObject(pd.Trigger.Condition);
                     d.Triggers.DeleteObject(pd.Trigger);
                     d.TriggerGraphs.DeleteObject(pd);
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+
+
+
+
+
+
+        public CompanyViewModel[] GetCompany(CompanyViewModel m)
+        {
+            try
+            {
+                var contact = _users.ContactID;
+                var now = DateTime.UtcNow;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var companies = (from o in d.E_UDF_ContactCompanies(contact) select o).ToArray(); //is recursive
+                    var mycompanies = (from c in d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null)
+                                       where companies.Contains(c.CompanyID)
+                                       select new CompanyViewModel
+                                       {
+                                           id = c.CompanyID,
+                                           ParentCompanyID = c.CompanyChildren.Select(f => f.ParentCompanyID).FirstOrDefault(),
+                                           CompanyName = c.CompanyName,
+                                           CountryID = c.CountryID,
+                                           PrimaryContactID = c.PrimaryContactID,
+                                           Comment = c.Comment,
+                                           People = c.Experience.Select(f => f.ContactID).ToArray()
+                                       }
+                                           ).ToArray();
+                    return mycompanies;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+
+        public bool CreateCompany(CompanyViewModel m)
+        {
+            var contact = _users.ContactID;
+            var company = _users.DefaultContactCompanyID;
+            var now = DateTime.UtcNow;
+            if (string.IsNullOrWhiteSpace(m.CompanyName) || !m.CompanyID.HasValue)
+                return false;
+            try
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(null, ActionPermission.Create, typeof(Company)))
+                        return false;
+                    var c = new Company
+                    {
+                        CompanyID = m.id.Value,
+                        CompanyName = m.CompanyName + "*",
+                        CountryID = m.CountryID,
+                        PrimaryContactID = contact,
+                        Comment = m.Comment,
+                        VersionUpdated = now,
+                        VersionUpdatedBy = contact,
+                        VersionOwnerContactID = contact,
+                        VersionOwnerCompanyID = company
+                    };
+                    d.Companies.AddObject(c);
+                    if (m.ParentCompanyID.HasValue)
+                    {
+                        var cr = new CompanyRelation
+                        {
+                            CompanyRelationID = Guid.NewGuid(),
+                            ParentCompanyID = m.ParentCompanyID.Value,
+                            CompanyID = m.CompanyID.Value,
+                            VersionOwnerContactID = contact,
+                            VersionOwnerCompanyID = company
+                        };
+                        d.CompanyRelations.AddObject(cr);
+                    }
+                    d.SaveChanges();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool UpdateCompany(CompanyViewModel m)
+        {
+
+            try
+            {
+                var contact = _users.ContactID;
+                var company = _users.DefaultContactCompanyID;
+                var now = DateTime.UtcNow;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    if (!CheckPermission(m.CompanyID, ActionPermission.Update, typeof(Company)))
+                        return false;
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var c = d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null && f.CompanyID == m.id).Single();
+                    if (m.IsParentCompanyUpdated)
+                    {
+                        (from o in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
+                         where o.CompanyID == m.CompanyID
+                         select o).Delete();
+                        var cr = new CompanyRelation
+                        {
+                            CompanyRelationID = Guid.NewGuid(),
+                            ParentCompanyID = m.ParentCompanyID.Value,
+                            CompanyID = m.CompanyID.Value,
+                            VersionUpdated = now,
+                            VersionUpdatedBy = contact,
+                            VersionOwnerContactID = contact,
+                            VersionOwnerCompanyID = company
+                        };
+                        d.CompanyRelations.AddObject(cr);
+                    }
+
+                    if (m.CountryID != null && c.CountryID != m.CountryID) c.CountryID = m.CountryID;
+                    if (m.Comment != null && c.Comment != m.Comment) c.Comment = m.Comment;
+                    if (!string.IsNullOrWhiteSpace(m.CompanyName))
+                    {
+                        m.CompanyName = m.CompanyName.Trim();
+                        if (m.CompanyName[m.CompanyName.Length - 1] != '*')
+                            m.CompanyName += "*";
+                        if (c.CompanyName != m.CompanyName) c.CompanyName = m.CompanyName;
+                    }
+                    if (c.EntityState == EntityState.Modified)
+                    {
+                        c.VersionUpdated = now;
+                        c.VersionUpdatedBy = contact;
+                    }
+
+                    if (m.IsPeopleSet)
+                    {
+                        //Add
+                        var unknown = (from o in m.People
+                                       where
+                                           !d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null 
+                                            && (f.DateFinished == null || f.DateFinished > DateTime.UtcNow)
+                                            && (f.Expiry == null || f.Expiry > DateTime.UtcNow)
+                                            && (f.DateStart <= DateTime.UtcNow || f.DateStart == null)
+                                           && f.CompanyID == m.CompanyID).Select(f => f.ContactID).Contains(o)
+                                       select o);
+                        foreach (var added in unknown)
+                        {
+                            var username = d.Contacts.Where(f=>f.Version == 0 && f.VersionDeletedBy == null && f.ContactID == added).Select(f=>f.Username).Single();
+                            var exp = new Experience
+                            {
+                                ExperienceID = Guid.NewGuid(),
+                                ExperienceName = string.Format("{0} - {1}", c.CompanyName, username),
+                                ContactID = added,
+                                CompanyID = m.CompanyID,
+                                DateStart = now,
+                                VersionUpdated = now,
+                                VersionUpdatedBy = contact,
+                                VersionOwnerContactID = contact,
+                                VersionOwnerCompanyID = company
+                            };
+                            d.Experiences.AddObject(exp);
+                        }
+                        //Remove
+                        var retired = (from o in d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null 
+                                            && (f.DateFinished == null || f.DateFinished > DateTime.UtcNow)
+                                            && (f.Expiry == null || f.Expiry > DateTime.UtcNow)
+                                            && (f.DateStart <= DateTime.UtcNow || f.DateStart == null)
+                                           && f.CompanyID == m.CompanyID) where !m.People.Contains(o.ContactID) select o);
+                        foreach (var retire in retired)
+                        {
+                            retire.DateFinished = now;
+                            retire.Expiry = now;
+                            retire.VersionUpdated = now;
+                            retire.VersionUpdatedBy = contact;
+                        }
+
+
+                    }
+
+                    d.SaveChanges();
+                    return true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool DeleteCompany(CompanyViewModel m)
+        {
+            try
+            {
+                var contact = _users.ContactID;
+                var now = DateTime.UtcNow;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    if (!CheckPermission(m.id, ActionPermission.Delete, typeof(Company)))
+                        return false;
+                    //Lets just go ahead and delete with versioning
+                    //Only the owner can delete
+                    var companies = (from o in d.Companies where o.CompanyID == m.CompanyID && o.PrimaryContactID == contact select o);
+                    if (!companies.Any())
+                        return false;
+                    companies.Delete();
                     d.SaveChanges();
                     return true;
                 }
