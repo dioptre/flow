@@ -3723,6 +3723,30 @@ App.MyCompanySelectorComponent = App.UserSelectorComponent.extend({
     value: '',
     valueBeingUpdated: false,
     multiple: true,
+    valueBeingUpdated: false,
+    valueUpdated: function () {
+        var _this = this;
+        if (!this.get('valueBeingUpdated')) {
+            var orgVal = _this.get('value');
+            var id = '#' + _this.get('internalID');
+
+            $(id).select2('data', '');
+
+            // must have been updated externaly then
+            $.ajax(_this.get('url') + "/" + orgVal, {
+                dataType: "json"
+            }).done(function (data) {
+                if (!data || data.length == 0)
+                    return;
+                var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                if (_this.get('multiple'))
+                    $(id).select2('data', results);
+                else
+                    $(id).select2('data', results[0]);
+
+            });
+        }
+    }.observes('value'),
     setup: function () {
         var _this = this;
         Ember.run.scheduleOnce('afterRender', this, function () {
@@ -3732,22 +3756,6 @@ App.MyCompanySelectorComponent = App.UserSelectorComponent.extend({
                 cache: [],
                 placeholder: _this.get('placeholder'),
                 minimumInputLength: _this.get('minimumInput'),
-                //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
-                //ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                //    url: _this.get('url'),
-                //    dataType: 'json',
-                //    multiple: _this.get('multiple'),
-                //    data: function (term, page) {
-                //        return { id: term };
-                //    },
-                //    results: function (data, page) { // parse the results into the format expected by Select2.
-                //        if (data.length === 0) {
-                //            return { results: [] };
-                //        }
-                //        var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray(); // Use linq ;)
-                //        return { results: results, text: 'tag' };
-                //    }
-                //},
                 query: function (query) {
                     var self = this;
                     var key = query.term;
@@ -3786,7 +3794,9 @@ App.MyCompanySelectorComponent = App.UserSelectorComponent.extend({
             //$(id).val(orgVal);
             // Setup Select2
             $(id).select2(settings).on("change", function (e) {
+                _this.set('valueBeingUpdated', true);
                 _this.set('value', e.val);
+                _this.set('valueBeingUpdated', false);
             });
 
             $(id).select2('data', { id: _this.get('value'), tag: _this.get('name') });
