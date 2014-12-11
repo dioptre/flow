@@ -506,11 +506,54 @@
                 <sub>For security purposes, all organizations and divisions are managed by the FlowPro team.</sub>
                 <sub style="padding-top:6px;">Please contact <a href="mailto:support@flowpro.io">support@flowpro.io</a> to have your company or division added.</sub>
             -->
-            <sub>
-                Manage users in different groups. You can also use this to manage your company structure.
-            </sub>
+                <sub>
+                    Manage users in different groups. You can also use this to manage your company structure.
+                </sub>
+            </h1>
 
-            {{hierachy-tree}}
+            {{eui-button label='Save New Layout' action='saveAll'}} 
+
+            {{eui-button label='Add New Organisation' action='addItem'}}        
+
+           
+            <div class='container-fluid'>
+                <div class="row">
+                    <div class="col-md-6">
+                         {{hierachy-tree wrap=data selected=selected}}                    
+                    </div>                    
+                    <div class="col-md-6">
+                        {{#if selected}}
+
+                        
+
+                            {{#if selecteddaddy}}
+                                
+                                <i>You cannot edit the head organisation.</i>
+
+                            {{else}}
+                                <h5>Department Name</h5>
+                                {{eui-input value=selected.CompanyName}}
+
+                                <br>
+                                <br>
+
+                                <h5>Choose People for the department</h5>
+                                {{contact-selector value=selected.People multiple=true}}
+
+                                <br>
+
+                                {{eui-button label='Delete this Department' action='deleteItem' selected=selected}}        
+                                {{eui-button label='Save Details' style='primary' action='saveItem' selected=selected}}   
+                            {{/if}}
+
+                        {{else}}
+                            Click on the departments on the graph on the left to add/remove users to a department.
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+
+           
         {{else}}
             <h1>
                 My Organization
@@ -3965,9 +4008,10 @@
 
         <script type="text/x-handlebars" id="components/hierachy-tree">
             <buttons>
+              <!--
                 <button {{action 'center'}} class="btn btn-primary">
                     Center Graph
-                </button>
+                </button
                 <button {{action 'left'}} class="btn btn-primary">
                     Left Graph
                 </button>
@@ -3980,9 +4024,15 @@
                 <button {{action 'down'}} class="btn btn-primary">
                     Down Graph
                 </button>
+                -->
             </buttons>
+            
+            <br>
+            <br>
 
-            <div class="full-sitemap">
+
+                        <div class="full-sitemap">
+
 
             </div>
         </script>
