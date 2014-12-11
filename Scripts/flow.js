@@ -6942,8 +6942,14 @@ App.HierachyTreeComponent = Ember.Component.extend({
             .attr("opacity", 0.2) // change this to zero to hide the target area
             .style("fill", "green")
             .attr('pointer-events', 'mouseover')
+            .call(function(d){console.log('Enter run ', d)})
+            .on(".mouseover", null)
+            .on(".mouseout", null)
+            
+
+        status.node
             .on("mouseover", function(node) {
-                console.log(node)
+                console.log('ENTER RUN ONT THIS', node.data.get('CompanyName'))
                 overCircle(node);
             })
             .on("mouseout", function(node) {
@@ -6986,15 +6992,15 @@ App.HierachyTreeComponent = Ember.Component.extend({
             .style("fill-opacity", 1);
 
 
-        // status.node.select('circle')
-        //     .attr('pointer-events', 'mouseover')
+        status.node.select('circle')
+            .attr('pointer-events', 'mouseover')
 
-        //     .on("mouseover", function(node) {
-        //         overCircle(node);
-        //     })
-        //     .on("mouseout", function(node) {
-        //         outCircle(node);
-        //     });
+            .on("mouseover", function(node) {
+                overCircle(node);
+            })
+            .on("mouseout", function(node) {
+                outCircle(node);
+            });
 
         // Transition exiting nodes to the parent's new position.
         status.nodeExit = status.node.exit().transition()
