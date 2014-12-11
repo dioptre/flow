@@ -924,15 +924,15 @@ namespace EXPEDIT.Flow.Services {
                                 switch (string.Format("{0}", trigger.Trigger.JsonMethod).ToLowerInvariant())
                                 {
                                     case "email":
-                                        settings.recipient = clean(settings.recipient);
-                                        if (!RegexHelper.IsEmail(settings.recipient))
+                                        settings.email.recipient.Value = clean(settings.email.recipient.Value);
+                                        if (!RegexHelper.IsEmail(settings.email.recipient.Value))
                                         {
                                             success = false;
                                             evt.Reason = "INVALID EMAIL";
                                             break;
                                         }
-                                        settings.message = clean(settings.message);
-                                        settings.subject = clean(settings.subject);
+                                        settings.email.message.Value = clean(settings.email.message.Value);
+                                        settings.email.subject.Value = clean(settings.email.subject.Value);
                                         success = SendEmail(settings);
                                         if (!success)
                                             evt.Reason = "SVR RESP FAILED";
@@ -1027,7 +1027,7 @@ namespace EXPEDIT.Flow.Services {
         private bool SendWebhook(dynamic settings, string js)
         {
 
-            var webhook = (HttpWebRequest)WebRequest.Create(settings.url);
+            var webhook = (HttpWebRequest)WebRequest.Create(settings.webhook.url.Value);
             webhook.ContentType = "text/json";
             webhook.Method = "POST";
             //httpWebRequest.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => { return true; };
@@ -1055,7 +1055,7 @@ namespace EXPEDIT.Flow.Services {
         {
             try
             {
-                _users.EmailUsers(new string[] { settings.recipient }, settings.subject, settings.message);
+                _users.EmailUsers(new string[] { settings.email.recipient.Value }, settings.email.subject.Value, settings.email.message.Value);
             }
             catch
             {
