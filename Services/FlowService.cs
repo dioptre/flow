@@ -1734,6 +1734,7 @@ namespace EXPEDIT.Flow.Services {
 
         public UserProfileViewModel GetMyProfile()
         {
+            var myCompany = _users.DefaultContactCompany;
             var contact = _users.ContactID;
             if (contact == null)
                 return null;
@@ -1766,7 +1767,9 @@ namespace EXPEDIT.Flow.Services {
                     XafUserID = r.XafUserID,
                     OAuthID = r.OAuthID,
                     Photo = r.Photo,
-                    ShortBiography = r.ShortBiography
+                    ShortBiography = r.ShortBiography,
+                    DefaultCompanyID = myCompany.Item1,
+                    DefaultCompanyName = myCompany.Item2
                 };
 
                 var address = (from o in d.ContactAddresses where o.ContactID == contact && o.Version == 0 && o.VersionDeletedBy == null && o.Address.Version == 0 && o.Address.VersionDeletedBy == null orderby o.VersionUpdated descending select o.Address).FirstOrDefault();
@@ -1799,7 +1802,9 @@ namespace EXPEDIT.Flow.Services {
 
         public bool UpdateProfile(UserProfileViewModel m)
         {
+            var now = DateTime.UtcNow;
             var contact = _users.ContactID;
+            var company = _users.DefaultContactCompanyID;
             var application = _users.ApplicationID;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
@@ -1858,7 +1863,41 @@ namespace EXPEDIT.Flow.Services {
                     a.Country = m.Country;
                 if (!string.IsNullOrWhiteSpace(m.Postcode) && a.Postcode != m.Postcode)
                     a.Postcode = m.Postcode;
-
+                if (m.DefaultCompanyID.HasValue && m.DefaultCompanyID != company && d.E_UDF_ContactCompanies(contact).Contains(m.DefaultCompanyID.Value)) //First check we are in our list
+                {                    
+                    //Then update if exists (versionupdated)
+                    var exp = (from o in d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null
+                                            && (f.DateFinished == null || f.DateFinished > DateTime.UtcNow)
+                                            && (f.Expiry == null || f.Expiry > DateTime.UtcNow)
+                                            && (f.DateStart <= DateTime.UtcNow || f.DateStart == null)
+                                           && f.CompanyID == m.DefaultCompanyID.Value && f.ContactID == contact)
+                               orderby  o.VersionUpdated descending
+                               select o).FirstOrDefault();
+                    if (exp != null)
+                    {
+                        exp.VersionUpdated = now;
+                        exp.VersionUpdatedBy = contact;
+                    }
+                    else
+                    {
+                        //Else add to experience
+                        var cn = d.Companies.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.CompanyID == m.DefaultCompanyID.Value)
+                            .Select(f => f.CompanyName).Single();
+                        exp = new Experience
+                        {
+                            ExperienceID = Guid.NewGuid(),
+                            ExperienceName = string.Format("{0} - {1}", cn, m.Username),
+                            ContactID = contact,
+                            CompanyID = m.DefaultCompanyID.Value,
+                            DateStart = now,
+                            VersionUpdated = now,
+                            VersionUpdatedBy = contact,
+                            VersionOwnerContactID = contact,
+                            VersionOwnerCompanyID = m.DefaultCompanyID.Value
+                        };
+                        d.Experiences.AddObject(exp);
+                    }
+                }
                 d.SaveChanges();
                 return true;
             }           
