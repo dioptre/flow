@@ -3624,6 +3624,30 @@ App.UserSelectorComponent = Ember.Component.extend({
     placeholder: "Enter Usernames...",
     internalID: NewGUID(),
     value: '',
+    valueBeingUpdated: false,
+    valueUpdated: function(){
+      var _this = this;
+      if (!this.get('valueBeingUpdated')) {
+        var orgVal = _this.get('value'); 
+        var id = '#' + _this.get('internalID');
+
+        $(id).select2('data', '');
+
+        // must have been updated externaly then
+        $.ajax(_this.get('url') + "/" + orgVal, {
+            dataType: "json"
+        }).done(function (data) {
+            if (!data || data.length == 0)
+                return;
+            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+            if (_this.get('multiple'))
+                $(id).select2('data', results);
+            else
+                $(id).select2('data', results[0]);
+            
+        });
+      }
+    }.observes('value'),
     multiple: true,
     setup: function(){
         var _this = this;
@@ -3659,26 +3683,16 @@ App.UserSelectorComponent = Ember.Component.extend({
                 settings.tags = true;
             }
 
-            var orgVal = _this.get('value'); 
             // need to preload old value here...
             //$(id).val(orgVal);
             // Setup Select2
             $(id).select2(settings).on("change", function(e) { 
+                _this.set('valueBeingUpdated', true); 
                 _this.set('value', e.val); 
+                _this.set('valueBeingUpdated', false); 
             });
 
-            $.ajax(_this.get('url') + "/" + orgVal, {
-                dataType: "json"
-            }).done(function (data) {
-                if (!data || data.length == 0)
-                    return;
-                var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                if (_this.get('multiple'))
-                    $(id).select2('data', results);
-                else
-                    $(id).select2('data', results[0]);
-                
-            });
+            _this.get('valueUpdated').apply(this);
 
             
         });
@@ -4818,7 +4832,8 @@ App.Contact = DS.Model.extend({
     OAuthID: DS.attr('string'),
     Photo: DS.attr('string'),
     ShortBiography: DS.attr('string'),
-    companies: DS.hasMany('company'),
+    companies: DS.hasMany('company', { async: true }),
+    experiences: DS.hasMany('experience', { async: true })
 });
 
 
@@ -4829,7 +4844,17 @@ App.Company = DS.Model.extend({
     CountryID: DS.attr('string'),
     PrimaryContactID: DS.attr('string'),
     Comment: DS.attr('string'),
-    company: DS.belongsTo('contact')
+    Owner: DS.belongsTo('contact', { async: true }),
+    People: DS.attr('string'), //[]
+    Experiences: DS.hasMany('experience', { async: true })
+});
+
+App.Experience = DS.Model.extend({
+  ExperienceID: DS.attr('string'),
+  ContactID: DS.attr('string'),
+  CompanyID: DS.attr('string'),
+  company: DS.belongsTo('company', { async: true }),
+  contact: DS.belongsTo('contact', { async: true }),
 });
 
 
@@ -5856,26 +5881,200 @@ App.MyprofilesController = Ember.ObjectController.extend({
 
 App.OrganizationRoute = Ember.Route.extend({
     model: function () {
+        this.store.createRecord('company', {
+            id: company1finish,
+            CompanyName: 'Company 1'
+        });
+
+        this.store.createRecord('company', {
+            id: company2afinish,
+            ParentCompanyID: company1finish,
+            CompanyName: 'Company 2a'
+
+        })
+
+        this.store.createRecord('company', {
+            id: company2bfinish,
+            ParentCompanyID: company1finish,
+            CompanyName: 'Company 2b'
+
+        })
+
+        this.store.createRecord('company', {
+            id: company3finish,
+            ParentCompanyID: company2afinish,
+            CompanyName: 'Company 3'
+
+        })
+
+        return this.store.all('company');
+
         var _this = this;
         return Ember.RSVP.hash({
      
         });
     },
-    afterModel: function (m) {
-        //if (m.profiles.content && m.profiles.content.length > 0)
-        //    m.profile = m.profiles.get('firstObject');
-    }
+    // afterModel: function (m) {
+    //     // http://jsbin.com/xoqanarevi/2/edit
+    //     // debugger;
+    //     // TURN ARRAY INTO A NESTED ARRAY THAT CAN BE READ BY D3.JS
+
+
+    //   m.actualData = { data: m.content[0] }
+    //     console.log(m);
+
+    //     return m;
+
+    //     //if (m.profiles.content && m.profiles.content.length > 0)
+    //     //    m.profile = m.profiles.get('firstObject');
+    // }
 });
 
 App.OrganizationController = Ember.ObjectController.extend({
     needs: ['application'],
+    DaddyID: NewGUID(),
+    update: null,
+    data: function() {
+      // this whole thing is a bit of a hack. when I was loading the data straight from the model it would actually not complete the afterModel render in sync
+
+      function transform(itms){
+          var resultArray=[];
+          var parentsById={}; //this acts as a dictionary for storing the myObj parents for adding children after.
+          
+          for(var i=0;i<itms.length;i++) {
+              var item=itms[i];
+              var transformedItem = { data: item, children: []};
+
+              parentsById[item.id]=transformedItem;
+              
+              if (parentsById[item.get('ParentCompanyID')]) {
+                parentsById[item.get('ParentCompanyID')].children.push(transformedItem);   
+              } else {
+                resultArray.push(transformedItem);
+              }    
+          }
+          return resultArray;
+      }
+
+
+      var results = this.get('model').content
+
+      // The goal of this is to have an always present super node that can't be deleted.
+      var org = Ember.Object.create({
+        id: this.get('DaddyID'),
+        ParentCompanyID: null,
+        CompanyName: 'My Organization'
+      })
+      // debugger;
+      console.log('Setup again...')
+
+      var wrap =  {data: org,  children: transform(results) };
+      return {data: wrap } // the data wrapper is what the hierachy component needs ;)
+
+    }.property('model.content', 'model', 'update'),
+    selected: null,
+    selecteddaddy: function(){
+      var a = this.get('selected');
+      if (a) {
+        return (this.get('DaddyID') == a.get('id'))
+      } else {
+        return false;
+      }
+
+    }.property('selected'),
     organization: null,
     title: function () {
         return 'My Organization'
     }.property('organization'),
     
     actions: {
-        
+        saveAll: function(){
+
+          var PromiseArray = [];
+          this.get('model').forEach(function(a,i){
+
+            if(a.get('isDirty')) {
+              PromiseArray.push(a.save());
+            }
+          });
+
+          if (PromiseArray.length == 0) {
+            
+            Messenger().post({ type: 'success', message: "Looks like you haven't made any change that could be saved" });
+
+          } else {
+
+            // Wait for promise record to finish off
+            Ember.RSVP.allSettled(PromiseArray).then(function(array){
+                array.forEach(function(a){
+                  if(a.state == 'fullfilled') {
+                    Messenger().post({ type: 'success', message: 'Some companies saved succesfully...' });
+                  } else {
+                    Messenger().post({ type: 'error', message: 'There were some errors at least. Try again.', id: 'organ-save' });
+
+                  }
+                });
+            }, function(){
+              Messenger().post({ type: 'error', message: 'Could not save any record. Check your internet.' });
+
+            })
+          }
+
+
+        },
+        saveItem: function(context){
+          context.selected.save().then(function(){
+                 Messenger().post({ type: 'success', message: 'Saved Succesfully.' });
+          }, function(){
+                 Messenger().post({ type: 'error', message: 'Error saving to server.' });
+          })
+        },
+        deleteItem: function(context){
+          // go into the model a remove an item
+          var model = this.get('model');
+
+          var notandendnode = true;
+
+          model.forEach(function(a,i){
+            if (context.selected.id == a.get('ParentCompanyID')) {
+              notandendnode = false;
+            }
+          });
+
+          if (notandendnode) {
+
+            // remove it from the model isn't quite enough, but yeah
+            // HACK NEEDS TO MAKE API CALL HERE TO DELETE THE OBJECT
+            model.removeObject(context.selected);
+
+            this.set('selected', null);
+            this.set('update', NewGUID())
+
+          } else {
+            Messenger().post({ type: 'info', message: 'You cannot delete a node which is not an end node' });
+
+          }
+
+          // context.selected.save().then(function(){
+          //        Messenger().post({ type: 'success', message: 'Saved Succesfully.' });
+          // }, function(){
+          // })
+        },
+        addItem: function(){
+
+
+          var itm = this.store.createRecord('company', {
+            ParentCompanyID: null,
+            CompanyName: 'New Organization'
+          })
+
+          var model = this.get('model');
+
+          model.addObject(itm);
+
+          this.set('update', NewGUID())
+
+        }
     }
 });
 
@@ -6067,6 +6266,26 @@ Ember.HelloModalComponent = Ember.Component.extend({
 
 
 
+
+App.Company = DS.Model.extend({
+    CompanyID: DS.attr('string'),
+    ParentCompanyID: DS.attr('string'),
+    CompanyName: DS.attr('string'),
+    CountryID: DS.attr('string'),
+    PrimaryContactID: DS.attr('string'),
+    Comment: DS.attr('string'),
+    company: DS.belongsTo('contact')
+});
+
+var company1finish = NewGUID();
+var company2afinish = NewGUID();
+var company2bfinish = NewGUID();
+var company3finish = NewGUID();
+
+
+
+
+
 // Try this with ember objects...
 App.TestObject = Ember.Object.extend({
     name1: 'Hi',
@@ -6120,9 +6339,10 @@ App.HierachyTreeComponent = Ember.Component.extend({
 
         }
     },
+    selected: null,
     config: {
         duration: 250, // Animation Speed
-        width: '100%',
+        width: '500px',
         height: '500px',
         // Visualisation Configuration
         font_size: "10px",
@@ -6454,7 +6674,9 @@ App.HierachyTreeComponent = Ember.Component.extend({
             .call(nodeDragHelper())
             .attr("class", "node")
             .attr("transform", function(d) {
-                return "translate(" + wrap.data.y0 + "," + wrap.data.x0 + ")";
+                var y = wrap.data.y0 || d.y;
+                var x = wrap.data.x0 || d.x;
+                return "translate(" + y + "," + x + ")";
             });
 
         status.nodeEnter.append("circle")
@@ -6472,19 +6694,21 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 return d.children || d._children ? "end" : "start";
             })
             .text(function(d) {
-                return d.data.get('lol');
+                return d.data.get('CompanyName');
                 //return d.name;
             })
             .style("font-size", config.font_size)
             .style("font-weight", config.font_weight)
             .style("fill-opacity", 0)
             .on('click', function(d){
-              var result = prompt('Change the name of the node', d.name);
-              if(result) {
-                d.name = result;
-                dataUpdatedFn(_this.data()); // This line is to call the updated data trigger
-                _this.update();
-              }
+
+              _this.set('selected', d.data);
+              // var result = prompt('Change the name of the node', d.name);
+              // if(result) {
+              //   d.name = result;
+              //   dataUpdatedFn(_this.data()); // This line is to call the updated data trigger
+              //   _this.update();
+              // }
             });
 
         // phantom node to give us mouseover in a radius around it
@@ -6492,7 +6716,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
             .attr('class', 'ghostCircle')
             .attr("r", 30)
             .attr("opacity", 0.2) // change this to zero to hide the target area
-            .style("fill", "red")
+            .style("fill", "green")
             .attr('pointer-events', 'mouseover')
             .on("mouseover", function(node) {
                 overCircle(node);
@@ -6510,7 +6734,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 return d.children || d._children ? "end" : "start";
             })
             .text(function(d) {
-                return d.data.get('lol');
+                return d.data.get('CompanyName');
 
                 //return d.name;
             });
@@ -6727,6 +6951,17 @@ App.HierachyTreeComponent = Ember.Component.extend({
                         y: status.draggingNode.x0
                     }
                 }];
+
+                // data = [{
+                //     source: {
+                //         x: status.selectedNode.y,
+                //         y: status.selectedNode.x
+                //     },
+                //     target: {
+                //         x: status.draggingNode.y0,
+                //         y: status.draggingNode.x0
+                //     }
+                // }];
             }
             var link = dom.groupSVG.selectAll(".templink").data(data);
 
@@ -6797,6 +7032,12 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 domNode = this;
                 if (status.selectedNode) {
                     // now remove the element from the parent, and insert it into the new elements children
+
+                    // THE DRAGGIND NODE PARENT ID GET"S THE SELECTED NODE'S ID
+                    if (status.selectedNode.data && status.selectedNode.data.id) {
+                      status.draggingNode.data.set('ParentCompanyID', status.selectedNode.data.id);
+                    }
+
                     var index = status.draggingNode.parent.children.indexOf(status.draggingNode);
                     if (index > -1) {
                         status.draggingNode.parent.children.splice(index, 1);
@@ -6882,5 +7123,5 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 //dataUpdatedFn(_this.data())
             }
         }
-   }
+   }.observes('wrap')
 })
