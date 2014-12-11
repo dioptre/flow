@@ -15,6 +15,8 @@ namespace EXPEDIT.Flow.ViewModels
         [HiddenInput, Required, DisplayName("Contact ID:")]
         public Guid? ContactID { get; set; }
         public string ContactName { get; set; }
+        public Guid? DefaultCompanyID { get; set; }
+        public string DefaultCompanyName { get; set; }
         public string Title { get; set; }
         public string Surname { get; set; }
         public string Firstname { get; set; }

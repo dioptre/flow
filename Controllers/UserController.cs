@@ -1242,11 +1242,12 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
         [Authorize]
-        [ActionName("TriggerGraphs")]
-        public ActionResult GetTriggerGraph(TriggerGraphViewModel m)
+        [ActionName("Companies")]
+        public ActionResult GetCompany(CompanyViewModel m)
         {
-            if (_Flow.GetTriggerGraph(m))
-                return new JsonHelper.JsonNetResult(new { triggerGraphs = m.triggerGraphs }, JsonRequestBehavior.AllowGet);
+            var result = _Flow.GetCompany(m);
+            if (result != null)
+                return new JsonHelper.JsonNetResult(new { companies = result }, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
 
@@ -1256,12 +1257,12 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpPost]
-        [ActionName("TriggerGraphs")]
-        public ActionResult CreateTriggerGraph(TriggerGraphViewModel m)
+        [ActionName("Companies")]
+        public ActionResult CreateCompany(CompanyViewModel m)
         {
-            if (m.triggerGraph != null)
-                m = m.triggerGraph;
-            if (_Flow.CreateTriggerGraph(m))
+            if (m.company != null)
+                m = m.company;
+            if (_Flow.CreateCompany(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
@@ -1270,15 +1271,15 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpPut]
-        [ActionName("TriggerGraphs")]
-        public ActionResult UpdateTriggerGraph(TriggerGraphViewModel m)
+        [ActionName("Companies")]
+        public ActionResult UpdateCompany(CompanyViewModel m)
         {
-            if (m.triggerGraph != null && m.id != null)
+            if (m.company != null && m.id != null)
             {
-                m.triggerGraph.id = m.id;
-                m = m.triggerGraph;
+                m.company.id = m.id;
+                m = m.company;
             }
-            if (_Flow.UpdateTriggerGraph(m))
+            if (_Flow.UpdateCompany(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
@@ -1287,17 +1288,20 @@ namespace EXPEDIT.Flow.Controllers {
         [Authorize]
         [Themed(false)]
         [HttpDelete]
-        [ActionName("TriggerGraphs")]
-        public ActionResult DeleteTriggerGraph(TriggerGraphViewModel m)
+        [ActionName("Companies")]
+        public ActionResult DeleteCompany(CompanyViewModel m)
         {
             if (!m.id.HasValue)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
-            if (_Flow.DeleteTriggerGraph(m))
+            if (_Flow.DeleteCompany(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
 
         }
+
+
+        
 
 
     }

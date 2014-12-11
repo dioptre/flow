@@ -3649,6 +3649,7 @@ App.UserSelectorComponent = Ember.Component.extend({
       }
     }.observes('value'),
     multiple: true,
+    minimumInput: 2,
     setup: function(){
         var _this = this;
         Ember.run.scheduleOnce('afterRender', this, function(){
@@ -3656,7 +3657,7 @@ App.UserSelectorComponent = Ember.Component.extend({
 
             var settings = {
                 placeholder: _this.get('placeholder'),
-                minimumInputLength: 2,
+                minimumInputLength: _this.get('minimumInput'),
                 //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
                 ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
                     url: _this.get('url'),
@@ -3711,6 +3712,98 @@ App.ContactSelectorComponent = App.UserSelectorComponent.extend({
     url: "/share/getcontacts"
 });
 
+//TODO Refactor so that query only happens on click - 
+App.MyCompanySelectorComponent = App.UserSelectorComponent.extend({
+    minimumInput: 0,
+    layout: Ember.Handlebars.compile("<div {{bind-attr id=internalID}} style='width: 275px;' class='select2' type='hidden'></div>"),
+    url: "/share/getmycompanies",
+    placeholder: "Select Company...",
+    internalID: NewGUID(),
+    name: '',
+    value: '',
+    valueBeingUpdated: false,
+    multiple: true,
+    valueBeingUpdated: false,
+    valueUpdated: function () {
+        var _this = this;
+        if (!this.get('valueBeingUpdated')) {
+            var orgVal = _this.get('value');
+            var id = '#' + _this.get('internalID');
+
+            $(id).select2('data', '');
+
+            // must have been updated externaly then
+            $.ajax(_this.get('url') + "/" + orgVal, {
+                dataType: "json"
+            }).done(function (data) {
+                if (!data || data.length == 0)
+                    return;
+                var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                if (_this.get('multiple'))
+                    $(id).select2('data', results);
+                else
+                    $(id).select2('data', results[0]);
+
+            });
+        }
+    }.observes('value'),
+    setup: function () {
+        var _this = this;
+        Ember.run.scheduleOnce('afterRender', this, function () {
+            var id = '#' + _this.get('internalID');
+
+            var settings = {
+                cache: [],
+                placeholder: _this.get('placeholder'),
+                minimumInputLength: _this.get('minimumInput'),
+                query: function (query) {
+                    var self = this;
+                    var key = query.term;
+                    var cachedData = self.cache[key];
+
+                    if (cachedData) {
+                        query.callback(cachedData);
+                        return;
+                    } else {
+                        $.ajax({
+                            url: _this.get('url'),
+                            data: {
+                                q: query.term
+                            },
+                            dataType: 'json',
+                            type: 'GET',
+                            success: function (data) {
+                                var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray(); // Use linq ;)
+                                self.cache[key] = { results: results, text: 'tag' };
+                                query.callback(self.cache[key]);
+                            }
+                        })
+                    }
+                },
+                formatResult: function (state) { return state.tag; },
+                formatSelection: function (state) { return state.tag; },
+                escapeMarkup: function (m) { return m; }
+            };
+
+            // Setup tags depeding if multiple is enabled :)
+            if (_this.get('multiple')) {
+                settings.tags = true;
+            }
+
+            // need to preload old value here...
+            //$(id).val(orgVal);
+            // Setup Select2
+            $(id).select2(settings).on("change", function (e) {
+                _this.set('valueBeingUpdated', true);
+                _this.set('value', e.val);
+                _this.set('valueBeingUpdated', false);
+            });
+
+            $(id).select2('data', { id: _this.get('value'), tag: _this.get('name') });
+
+        });
+    }.on('didInsertElement')
+});
 
 App.TriggerOption = Ember.Object.extend({
     cleaner: function(){
@@ -5133,6 +5226,8 @@ App.MyLicense = DS.Model.extend({
 
 App.MyProfile = DS.Model.extend({
     ContactID: DS.attr(''),
+    DefaultCompanyID: DS.attr(''),
+    DefaultCompanyName: DS.attr(''),
     ContactName: DS.attr(''),
     Title: DS.attr(''),
     Surname: DS.attr(''),

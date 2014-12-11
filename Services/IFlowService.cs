@@ -216,6 +216,15 @@ namespace EXPEDIT.Flow.Services
         [OperationContract]
         bool DeleteTriggerGraph(TriggerGraphViewModel m);
 
+        [OperationContract]
+        CompanyViewModel[] GetCompany(CompanyViewModel m);
+        [OperationContract]
+        bool CreateCompany(CompanyViewModel m);
+        [OperationContract]
+        bool UpdateCompany(CompanyViewModel m);
+        [OperationContract]
+        bool DeleteCompany(CompanyViewModel m);
+
 
     }
 }
