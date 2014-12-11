@@ -3782,6 +3782,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 if (index == 0) {
                     construct.trigger.clear();
                     construct.matchSelect = triggerValue.matchSelect;
+                    construct.onEnter = (triggerValue.onEnter && true);
                     construct.triggerConditions = triggerValue.triggerConditions;
                     construct.fields.clear();
                     $.each(JSON.parse(value.get('ConditionJSON')), function (i, v) {
@@ -3817,6 +3818,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
     defaultConfig: {
         matchSelect: 'All',
         triggerConditions: false,
+        onEnter: true,
         fields: [
             {        
                 type: {
@@ -3986,9 +3988,9 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 if (!temp)
                     return;
                 value.set('MergeProjectData', true);
-                value.set('OnEnter', true);
+                value.set('OnEnter', triggersJSON.onEnter);
                 value.set('OnDataUpdate', false);
-                value.set('OnExit', false);
+                value.set('OnExit', !triggersJSON.onEnter);
                 value.set('CommonName', temp.type);
                 value.set('ConditionID', conditionID);
                 value.set('Condition', _this.get('configEvaluation')(triggersJSON));
@@ -4033,6 +4035,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 toSave[temp.type] = temp[temp.type];
                 toSave['matchSelect'] = triggersJSON.matchSelect;
                 toSave['triggerConditions'] = true;
+                toSave['onEnter'] = triggersJSON.onEnter;
                 value.set('JSON', JSON.stringify(toSave));
 
                 promises.push(value.save());

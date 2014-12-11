@@ -3608,7 +3608,9 @@ namespace EXPEDIT.Flow.Services {
                 var oldWorkflows = (from o in d.GraphDataGroups
                                     where !(from r in d.GraphDataRelation select r.GraphDataGroupID).Contains(o.GraphDataGroupID)
                                     && o.VersionUpdated < cleanBefore
-                                    select o).Delete();               
+                                    select o);
+                if (oldWorkflows.Any())
+                    oldWorkflows.Delete();               
             }
 
         }
@@ -3742,7 +3744,7 @@ namespace EXPEDIT.Flow.Services {
                         //JsonPasswordType = m.JsonPasswordType ?? "TEXT",
                         JSON = m.JSON,
                         SystemMethod = "USER", // m.SystemMethod ?? m.CommonName,
-                        ConditionID = m.ConditionID ?? ((c != null) ? c.ConditionID : default(Guid?)),
+                        ConditionID = ((c != null) ? c.ConditionID : default(Guid?)),
                         ExternalURL = m.ExternalURL,
                         ExternalRequestMethod = m.ExternalRequestMethod,
                         ExternalFormType = m.ExternalFormType,
