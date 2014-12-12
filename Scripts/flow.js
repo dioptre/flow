@@ -6159,6 +6159,41 @@ App.OrganizationController = Ember.ObjectController.extend({
 
     }.property('model.content', 'model', 'update'),
     selected: null,
+    isValidNameLoading: true,
+    isValidName: true, 
+    isValidNameObserver: function() {
+      var selected = this.get('selected');
+      var name = selected.get('CompanyName').toLowerCase()
+      var oldName = selected._data.CompanyName.toLowerCase()
+
+
+        this.set('isValidNameLoading', true);
+        this.set('isValidName', true);
+
+        if(name == "") {
+            this.set('isValidNameLoading', false);
+            this.set('isValidName', true);
+        } else {
+
+              if(oldName == name){
+                this.set('isValidNameLoading', false);
+                this.set('isValidName', false);
+              } else {
+
+          
+                    var _this = this;
+                  $.post('/share/duplicatecompany/' + name).then(function(a){
+                    _this.set('isValidNameLoading', false);
+                    console.log(a)
+                    // debugger;
+                    _this.set('isValidName', a);
+                  })
+              }
+
+      }
+
+
+    }.observes('selected', 'selected.CompanyName'),
     selecteddaddy: function(){
       var a = this.get('selected');
       if (a) {
@@ -6170,9 +6205,12 @@ App.OrganizationController = Ember.ObjectController.extend({
     }.property('selected'),
     organization: null,
     title: function () {
+
+
         return 'My Organization'
     }.property('organization'),
-    
+      
+
     actions: {
         saveAll: function(){
 
@@ -6518,7 +6556,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
     selected: null,
     config: {
         duration: 250, // Animation Speed
-        width: '500px',
+        width: '100%',
         height: '500px',
         // Visualisation Configuration
         font_size: "10px",
