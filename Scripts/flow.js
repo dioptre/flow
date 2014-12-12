@@ -4287,6 +4287,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
                 }
                 if (a.get('length') < 1) {
                     _this.set('config', _this.get('defaultConfig'));
+                    _this.set('config.triggerConditions', false);
                 }
 
                  if (a.get('length') > 1) {
