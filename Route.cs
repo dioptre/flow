@@ -516,7 +516,7 @@ namespace EXPEDIT.Flow
                             new MvcRouteHandler())
                 },                
                 new RouteDescriptor {
-                        Priority = 5,
+                        Priority = 15,
                         Route = new Route(
                             "Flow/EdgeConditions",
                             new RouteValueDictionary {

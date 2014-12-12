@@ -16,7 +16,7 @@ namespace EXPEDIT.Flow.ViewModels
     {
         public Guid? id { get; set; }
         public bool? OverrideProjectDataWithJsonCustomVars { get; set; }
-        public string Condition { get; set; }
+        public string Precondition { get; set; }
 
        
         

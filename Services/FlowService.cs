@@ -3089,7 +3089,7 @@ namespace EXPEDIT.Flow.Services {
                                  id = c.ConditionID,
                                  JSON = c.JSON,
                                  OverrideProjectDataWithJsonCustomVars = c.OverrideProjectDataWithJsonCustomVars,
-                                 Condition = c.Condition
+                                 Precondition = c.Condition
                              }).SingleOrDefault();
                     return m;
                 }
@@ -3115,7 +3115,7 @@ namespace EXPEDIT.Flow.Services {
                     var c = new Precondition
                     {
                         ConditionID = m.id.Value,
-                        Condition = m.Condition,
+                        Condition = m.Precondition,
                         JSON = m.JSON,
                         OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
                         VersionUpdated = DateTime.UtcNow,
@@ -3148,8 +3148,8 @@ namespace EXPEDIT.Flow.Services {
                     var cc = (from o in d.Precondition where o.ConditionID == m.id && o.Version==0 && o.VersionDeletedBy == null select o).Single();
                     if (m.JSON != null && cc.JSON != m.JSON)
                         cc.JSON = m.JSON;
-                    if (m.Condition != null && cc.Condition != m.Condition)
-                        cc.Condition = m.Condition;
+                    if (m.Precondition != null && cc.Condition != m.Precondition)
+                        cc.Condition = m.Precondition;
                     if (m.OverrideProjectDataWithJsonCustomVars != null && cc.OverrideProjectDataWithJsonCustomVars != m.OverrideProjectDataWithJsonCustomVars)
                         cc.OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars;                 
                     if (cc.EntityState == EntityState.Modified)
