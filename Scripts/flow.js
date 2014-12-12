@@ -3121,11 +3121,11 @@ App.VizEditorComponent = Ember.Component.extend({
             physics: {
                 barnesHut: {enabled: true, //},
                 //repulsion: {
-                    centralGravity: 0.8,
-                    springLength: 200,
+                    centralGravity: 0.9,
+                    springLength: 190,
                     springConstant: 0.2,
                     //nodeDistance: 200,
-                    damping: 0.082,
+                    damping: 0.092,
                     gravitationalConstant: -80000
                 }
             },
