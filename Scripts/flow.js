@@ -4,35 +4,35 @@ if ((_ref = Ember.libraries) != null) {
 
 //Leave this!
 //<meta name="__RequestVerificationToken" content="@Html.AntiForgeryTokenValueOrchard()">
-$.ajaxPrefilter(function (options, originalOptions, jqXHR) {
-    if ((originalOptions.type && originalOptions.type.match(/get/ig) !== null) || (options.type && options.type.match(/get/ig) !== null)) {
-        return;
-    }
-    var verificationToken = $("meta[name='__RequestVerificationToken']").attr('content');
-    if (verificationToken) {
-        jqXHR.setRequestHeader("X-Request-Verification-Token", verificationToken);
-        var data = originalOptions.data;
-        if (originalOptions.dataType && originalOptions.dataType.match(/json/ig) !== null) {
-            if (data && Object.prototype.toString.call(originalOptions.data) === '[object String]') {
-                var temp = JSON.parse(originalOptions.data);                
-            } else
-            {
-                data = {};
-            }
-            options.data = JSON.stringify($.extend(temp, { __RequestVerificationToken: verificationToken }));
-        }
-        else {            
-            if (data !== undefined) {
-                if (Object.prototype.toString.call(originalOptions.data) === '[object String]') {
-                    data = $.deparam(originalOptions.data); // see http://benalman.com/code/projects/jquery-bbq/examples/deparam/
-                }
-            } else {
-                data = {};
-            }
-            options.data = $.param($.extend(data, { __RequestVerificationToken: verificationToken }));
-        }
-    }
-});
+//$.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+//    if ((originalOptions.type && originalOptions.type.match(/get/ig) !== null) || (options.type && options.type.match(/get/ig) !== null)) {
+//        return;
+//    }
+//    var verificationToken = $("meta[name='__RequestVerificationToken']").attr('content');
+//    if (verificationToken) {
+//        jqXHR.setRequestHeader("X-Request-Verification-Token", verificationToken);
+//        var data = originalOptions.data;
+//        if (originalOptions.dataType && originalOptions.dataType.match(/json/ig) !== null) {
+//            if (data && Object.prototype.toString.call(originalOptions.data) === '[object String]') {
+//                var temp = JSON.parse(originalOptions.data);                
+//            } else
+//            {
+//                data = {};
+//            }
+//            options.data = JSON.stringify($.extend(temp, { __RequestVerificationToken: verificationToken }));
+//        }
+//        else {            
+//            if (data !== undefined) {
+//                if (Object.prototype.toString.call(originalOptions.data) === '[object String]') {
+//                    data = $.deparam(originalOptions.data); // see http://benalman.com/code/projects/jquery-bbq/examples/deparam/
+//                }
+//            } else {
+//                data = {};
+//            }
+//            options.data = $.param($.extend(data, { __RequestVerificationToken: verificationToken }));
+//        }
+//    }
+//});
 
 $(function () {
     FastClick.attach(document.body);
@@ -3636,7 +3636,7 @@ App.UserSelectorComponent = Ember.Component.extend({
         if (_this.get('httpMethod') == 'GET')
             url+= orgVal;
         else
-            data = JSON.stringify({val: orgVal});
+            data = JSON.stringify({id: orgVal});
         $(id).select2('data', '');
         // must have been updated externaly then
         $.ajax(url , {
@@ -6126,7 +6126,7 @@ App.OrganizationController = Ember.ObjectController.extend({
           var resultArray=[];
           var parentsById={}; //this acts as a dictionary for storing the myObj parents for adding children after.
           
-          for(var i=0;i<itms.length;i++) {
+          for (var i = 0; i < itms.length; i++) {
               var item=itms[i];
               var transformedItem = { data: item, children: []};
 
@@ -6143,6 +6143,7 @@ App.OrganizationController = Ember.ObjectController.extend({
 
 
       var results = this.get('model').content
+      results = Enumerable.From(this.get('model').content).Where("$.get('People') !== null && $.get('People') !== ''").ToArray();
 
       // The goal of this is to have an always present super node that can't be deleted.
       var org = Ember.Object.create({
@@ -6231,7 +6232,7 @@ App.OrganizationController = Ember.ObjectController.extend({
             // remove it from the model isn't quite enough, but yeah
             // HACK NEEDS TO MAKE API CALL HERE TO DELETE THE OBJECT
             model.removeObject(context.selected);
-
+            context.selected.destroyRecord();
             this.set('selected', null);
             this.set('update', NewGUID())
 

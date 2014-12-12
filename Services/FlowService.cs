@@ -3968,13 +3968,18 @@ namespace EXPEDIT.Flow.Services {
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
                     d.ContextOptions.LazyLoadingEnabled = false;
-                    var companies = (from o in d.E_UDF_ContactCompanies(contact) select o).ToArray(); //is recursive
+                    var companies = (from o in d.E_UDF_ContactCompanies(contact) select o).Except(new Guid?[]{ _users.ApplicationCompanyID}).ToArray(); //is recursive
                     var mycompanies = (from r in
-                                           (from c in d.Companies.Include("Experiences").Where(f => f.Version == 0 && f.VersionDeletedBy == null && companies.Contains(f.CompanyID))
+                                           (from c in d.Companies.Where(f => f.Version == 0 && f.VersionDeletedBy == null
+                                               && companies.Contains(f.CompanyID))
                                             join p in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null).Take(1)
                                             on c.CompanyID equals p.CompanyID into pc
                                             from parent in pc.DefaultIfEmpty()
-                                            join e in d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
+                                            join e in d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null
+                                                && (f.DateFinished == null || f.DateFinished > DateTime.UtcNow)
+                                                && (f.Expiry == null || f.Expiry > DateTime.UtcNow)
+                                                && (f.DateStart <= DateTime.UtcNow || f.DateStart == null)
+                                            )
                                             on c.CompanyID equals e.CompanyID into ex
                                             from experience in ex.DefaultIfEmpty()
                                             select new
@@ -3986,9 +3991,9 @@ namespace EXPEDIT.Flow.Services {
                                                 PrimaryContactID = c.PrimaryContactID,
                                                 Comment = c.Comment,
                                                 ContactID = (experience != null) ? experience.ContactID : null
-                                            }).ToArray()
+                                            }).ToArray()                                        
                                        group r by new { r.id, r.ParentCompanyID, r.CompanyName, r.CountryID, r.PrimaryContactID, r.Comment }
-                                           into g
+                                           into g                                           
                                            select new CompanyViewModel
                                            {
                                                id = g.Key.id,
@@ -4087,6 +4092,8 @@ namespace EXPEDIT.Flow.Services {
 
             try
             {
+                if (!m.id.HasValue || m.id.Value == _users.ApplicationCompanyID)
+                    return false;
                 var contact = _users.ContactID;
                 var company = _users.DefaultContactCompanyID;
                 var now = DateTime.UtcNow;
@@ -4096,11 +4103,13 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     var d = new NKDC(_users.ApplicationConnectionString, null);
                     var c = d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null && f.CompanyID == m.id).Single();
-                    if (m.IsParentCompanyUpdated)
+                    
+                    //Update hierarchy
+                    (from o in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
+                        where o.CompanyID == m.id
+                        select o).Delete();
+                    if (m.ParentCompanyID.HasValue)
                     {
-                        (from o in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
-                         where o.CompanyID == m.id
-                         select o).Delete();
                         var cr = new CompanyRelation
                         {
                             CompanyRelationID = Guid.NewGuid(),
@@ -4113,6 +4122,7 @@ namespace EXPEDIT.Flow.Services {
                         };
                         d.CompanyRelations.AddObject(cr);
                     }
+                    
 
                     if (m.CountryID != null && c.CountryID != m.CountryID) c.CountryID = m.CountryID;
                     if (m.Comment != null && c.Comment != m.Comment) c.Comment = m.Comment;
@@ -4129,7 +4139,7 @@ namespace EXPEDIT.Flow.Services {
                         c.VersionUpdatedBy = contact;
                     }
 
-                    if (m.IsPeopleSet)
+                    if (m.PeopleArray != null)
                     {
                         m.PeopleArray = m.PeopleArray.Union(new Guid?[] { contact }).ToArray();
                         //Add
@@ -4190,6 +4200,8 @@ namespace EXPEDIT.Flow.Services {
         {
             try
             {
+                if (!m.id.HasValue || m.id.Value == _users.ApplicationCompanyID)
+                    return false;
                 var contact = _users.ContactID;
                 var now = DateTime.UtcNow;
                 using (new TransactionScope(TransactionScopeOption.Suppress))
@@ -4201,12 +4213,19 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     //Lets just go ahead and delete with versioning
                     //Only the owner can delete
-                    (from o in d.Experiences.Where(f=>f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id select o).Delete();
-                    (from o in d.CompanyRelations.Where(f=>f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id || o.ParentCompanyID == m.id select o).Delete();
-                    var companies = (from o in d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id && o.PrimaryContactID == contact select o);
-                    if (!companies.Any())
-                        return false;
-                    companies.Delete();
+                    (from o in d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id select o)
+                        .Update(retire => new Experience
+                        {
+                            DateFinished = now,
+                            Expiry = now,
+                            VersionUpdated = now,
+                            VersionUpdatedBy = contact
+                        });
+                    //(from o in d.CompanyRelations.Where(f=>f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id || o.ParentCompanyID == m.id select o).Delete();
+                    //var companies = (from o in d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id && o.PrimaryContactID == contact select o);
+                    //if (!companies.Any())
+                    //    return false;
+                    //companies.Delete();
                     return true;
                 }
 

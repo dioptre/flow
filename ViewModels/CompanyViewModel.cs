@@ -15,19 +15,15 @@ namespace EXPEDIT.Flow.ViewModels
     public class CompanyViewModel
     {
         public Guid? id { get; set; }
-
-        private Guid? _parentCompanyID { get; set; }
-        public bool IsParentCompanyUpdated { get; set; }
-        public Guid? ParentCompanyID { get { return _parentCompanyID; } set { IsParentCompanyUpdated = true; _parentCompanyID = value; } }
+        public Guid? ParentCompanyID { get; set; }
         public string CompanyName {get; set;}
         public string CountryID {get; set;}
         public Guid? PrimaryContactID {get; set;}
         public string Comment {get; set;}
         public Guid? Owner {get; set;}
-        public bool IsPeopleSet { get; set; }
         private Guid?[] _people { get; set; }
-        public IEnumerable<Guid?> PeopleEnum { get { return _people; } set { IsPeopleSet = true; _people = value.ToArray(); } }
-        public Guid?[] PeopleArray { get { return _people; } set { IsPeopleSet = true; _people = value; } }
+        public IEnumerable<Guid?> PeopleEnum { get { return _people; } set {  _people = value.ToArray(); } }
+        public Guid?[] PeopleArray { get { return _people; } set { _people = value; } }
         public string People
         {
             get { if (_people != null) return string.Join(",", _people); else return null; }
