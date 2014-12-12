@@ -3672,7 +3672,8 @@ namespace EXPEDIT.Flow.Services {
                                             join gt in d.TriggerGraphs.Where(f=>f.Version == 0 && f.VersionDeletedBy == null)
                                             on o.TriggerID equals gt.TriggerID
                                             join c in d.Precondition.Where(f=>f.Version == 0 && f.VersionDeletedBy == null)
-                                            on o.ConditionID equals c.ConditionID
+                                            on o.ConditionID equals c.ConditionID into cond
+                                            from condition in cond.DefaultIfEmpty() 
                                             where gt.GraphDataID == m.GraphDataID && gt.GraphDataGroupID == m.GraphDataGroupID
                                            
                              select new TriggerGraphViewModel
@@ -3704,9 +3705,9 @@ namespace EXPEDIT.Flow.Services {
                                  RepeatAfterDays = o.RepeatAfterDays,
                                  Repeats = o.Repeats,
                                  ConditionID = o.ConditionID,
-                                 Condition = c.Condition,
-                                 ConditionJSON = c.JSON,
-                                 OverrideProjectDataWithJsonCustomVars = c.OverrideProjectDataWithJsonCustomVars
+                                 Condition =  (condition != null) ? condition.Condition : null,
+                                 ConditionJSON = (condition != null) ? condition.JSON : null,
+                                 OverrideProjectDataWithJsonCustomVars = (condition != null) ? condition.OverrideProjectDataWithJsonCustomVars : null
                              }).ToArray();
                     return true;
                 }
@@ -3876,18 +3877,30 @@ namespace EXPEDIT.Flow.Services {
 
                     if (m.Condition != null)
                     {
+                        var condition = d.Precondition.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ConditionID == m.ConditionID).FirstOrDefault();
                         if (cc.ConditionID == null)
                         {
-                            var pc = new Precondition
+                            if (condition == null)
                             {
-                                ConditionID = m.ConditionID ?? Guid.NewGuid(),
-                                Condition = m.Condition,
-                                JSON = m.ConditionJSON,
-                                OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
-                                VersionUpdated = DateTime.UtcNow,
-                                VersionUpdatedBy = contact
-                            };
-                            d.Precondition.AddObject(pc);
+                                var pc = new Precondition
+                                {
+                                    ConditionID = m.ConditionID ?? Guid.NewGuid(),
+                                    Condition = m.Condition,
+                                    JSON = m.ConditionJSON,
+                                    OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
+                                    VersionUpdated = DateTime.UtcNow,
+                                    VersionUpdatedBy = contact
+                                };
+                                d.Precondition.AddObject(pc);
+                            }
+                            else
+                            {
+                                cc.ConditionID = condition.ConditionID;
+                                if (condition.Condition != null && condition.Condition != m.Condition) condition.Condition = m.Condition;
+                                if (condition.JSON != null && condition.JSON != m.ConditionJSON) condition.JSON = m.ConditionJSON;
+                                if (condition.OverrideProjectDataWithJsonCustomVars != null && condition.OverrideProjectDataWithJsonCustomVars != m.OverrideProjectDataWithJsonCustomVars) condition.OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars;
+                                
+                            }
                         }
                         else
                         {

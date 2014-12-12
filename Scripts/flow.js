@@ -3887,27 +3887,47 @@ App.TriggerNodeComponent = Ember.Component.extend({
             _this.set('tSvariables', test);
         })
 
-        store.findQuery('triggerGraph', config).then(function (a) {
+        store.find('triggerGraph', config).then(function (a) {
             // if problem do something else - needs error handeling
             var construct;
-            construct = _this.get('triggersJSON');
-            if (!construct.matchSelect)
-                construct = _this.get('defaultConfig');
-            else {
-                construct.trigger.clear();
-            }
+            var found = false;
+
+            _this.get('triggers').clear();
+            construct = _this.get('defaultConfig');
+            construct.trigger.clear();
+            construct.fields.clear();
+            construct.matchSelect = 'All';
+            construct.onEnter = true;
+            construct.triggerConditions = false;
+            construct.when[0].type = 'now';
+            construct.when[0].now = {};
 
             Enumerable.From(a.content).ForEach(function (value, index) {
                 var triggerValue = JSON.parse(value.get('JSON'));
                 if (index == 0) {
+                    found = true;
                     construct.trigger.clear();
+                    construct.fields.clear();
                     construct.matchSelect = triggerValue.matchSelect;
                     construct.onEnter = (triggerValue.onEnter && true);
                     construct.triggerConditions = triggerValue.triggerConditions;
-                    construct.fields.clear();
-                    $.each(JSON.parse(value.get('ConditionJSON')), function (i, v) {
-                        construct.fields.pushObject(v);
-                    });
+                    if (value.get('ConditionJSON')) {
+                        $.each(JSON.parse(value.get('ConditionJSON')), function (i, v) {
+                            construct.fields.pushObject(v);
+                        });
+                    } else {
+                        construct.fields.pushObject(
+                        {
+                            type: {
+                                varLabel: '',
+                                varSelect: '',
+                                matchSelect: '',
+                                matchInput: ''
+                            }
+                        }
+                    );
+                    }
+
                     if (triggerValue.delay) {
                         construct.when[0].type = 'delay';
                         construct.when[0].delay = triggerValue.delay;
@@ -3930,6 +3950,24 @@ App.TriggerNodeComponent = Ember.Component.extend({
             
                 _this.get('triggers').addObject(value);
             });
+            if (!found) {
+                construct.fields.pushObject(
+                    {
+                        type: {
+                            varLabel: '',
+                            varSelect: '',
+                            matchSelect: '',
+                            matchInput: ''
+                        }
+                    }
+                );
+                construct.trigger.pushObject(
+                    App.ThenTrigger.create({
+                        id: NewGUID(),
+                        type: 'email'
+                    })
+                );
+            }
             _this.set('triggersJSON', construct)
             _this.set('loading', false);
         });
