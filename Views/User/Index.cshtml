@@ -1727,7 +1727,7 @@
                 {{#if api}}
                 <h6>Start a new workflow instance</h6>
                 <br />
-                <p>REST (GET or POST)</p>
+                <p>You can do this by clicking on the link below. <br>For more advanced use cases you can also start an instance by hitting the URL via REST (GET or POST).</p>
                 <br/>
                 <a target="_blank" {{bind-attr href="triggerWFURL"}}>{{triggerWFURL}}</a>
                 {{else}}                
@@ -1736,7 +1736,7 @@
                 <br>
                 <br>
                 <br />
-                {{eui-button label="OK" action="toggleWorkflowTriggersModal" style='primary' size='large'}}
+                {{eui-button label="Close Modal" action="toggleWorkflowTriggersModal" style='primary' size='large'}}
             </div>
             {{/eui-modal}}
 
