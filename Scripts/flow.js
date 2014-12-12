@@ -3122,8 +3122,8 @@ App.VizEditorComponent = Ember.Component.extend({
                 barnesHut: {enabled: true, //},
                 //repulsion: {
                     centralGravity: 0.9,
-                    springLength: 190,
-                    springConstant: 0.2,
+                    springLength: 180,
+                    springConstant: 0.08,
                     //nodeDistance: 200,
                     damping: 0.092,
                     gravitationalConstant: -80000
@@ -6386,7 +6386,18 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
             height: '400px',
             navigation: false,
             smoothCurves: true,
-            physics: { barnesHut: { centralGravity: 0.0155, springConstant: 0.01, damping: 0.1, springLength: 170 } },
+            physics: {
+                barnesHut: {
+                    enabled: true, //},
+                    //repulsion: {
+                    centralGravity: 0.9,
+                    springLength: 180,
+                    springConstant: 0.08,
+                    //nodeDistance: 200,
+                    damping: 0.092,
+                    gravitationalConstant: -80000
+                }
+            },
             stabilize: false,
             stabilizationIterations: 200,
             dataManipulation: {
