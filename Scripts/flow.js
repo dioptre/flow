@@ -6204,9 +6204,13 @@ App.OrganizationController = Ember.ObjectController.extend({
     isValidNameLoading: true,
     isValidName: true, 
     isValidNameObserver: function() {
-      var selected = this.get('selected');
+        var selected = this.get('selected');
+        if (!selected)
+            return;
       var name = selected.get('CompanyName').toLowerCase()
-      var oldName = selected._data.CompanyName.toLowerCase()
+      var oldName = name;
+      if (selected._data.CompanyName)
+          oldName = selected._data.CompanyName.toLowerCase()
 
 
         this.set('isValidNameLoading', true);
@@ -6311,8 +6315,11 @@ App.OrganizationController = Ember.ObjectController.extend({
 
             // remove it from the model isn't quite enough, but yeah
             // HACK NEEDS TO MAKE API CALL HERE TO DELETE THE OBJECT
-            model.removeObject(context.selected);
-            context.selected.destroyRecord();
+              model.removeObject(context.selected);
+              if (context.selected.get('isNew'))
+                context.selected.unloadRecord();
+              else
+                context.selected.destroyRecord();
             this.set('selected', null);
             this.set('update', NewGUID())
 
@@ -7322,7 +7329,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 }
                 domNode = this;
                 // debugger;
-                if (status.selectedNode) {
+                if (status.selectedNode && status.draggingNode) {
                     // now remove the element from the parent, and insert it into the new elements children
 
                     // THE DRAGGIND NODE PARENT ID GET"S THE SELECTED NODE'S ID

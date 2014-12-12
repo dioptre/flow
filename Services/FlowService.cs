@@ -4035,6 +4035,7 @@ namespace EXPEDIT.Flow.Services {
             var contact = _users.ContactID;
             var company = _users.DefaultContactCompanyID;
             var now = DateTime.UtcNow;
+            var old = new DateTime(1970, 1, 1);
             if (string.IsNullOrWhiteSpace(m.CompanyName) || !m.id.HasValue)
                 return false;
             try
@@ -4080,7 +4081,7 @@ namespace EXPEDIT.Flow.Services {
                                 ExperienceName = string.Format("{0} - {1}", m.CompanyName, username),
                                 ContactID = added,
                                 CompanyID = m.id,
-                                DateStart = now,
+                                DateStart = old,
                                 VersionUpdated = now,
                                 VersionUpdatedBy = contact,
                                 VersionOwnerContactID = contact,
@@ -4107,6 +4108,7 @@ namespace EXPEDIT.Flow.Services {
             {
                 if (!m.id.HasValue || m.id.Value == _users.ApplicationCompanyID)
                     return false;
+                var old = new DateTime(1970, 1, 1);
                 var contact = _users.ContactID;
                 var company = _users.DefaultContactCompanyID;
                 var now = DateTime.UtcNow;
@@ -4173,7 +4175,7 @@ namespace EXPEDIT.Flow.Services {
                                 ExperienceName = string.Format("{0} - {1}", c.CompanyName, username),
                                 ContactID = added,
                                 CompanyID = m.id,
-                                DateStart = now,
+                                DateStart = old,
                                 VersionUpdated = now,
                                 VersionUpdatedBy = contact,
                                 VersionOwnerContactID = contact,
