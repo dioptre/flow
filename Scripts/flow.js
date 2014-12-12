@@ -4321,7 +4321,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
     configEvaluation: function(config){
         var c = config;
 
-        var s = ''; // this is the magic string later
+        var s = ' '; // this is the magic string later
 
         if (!c.triggerConditions)
           return s; // if the trigger condition is false just return nothing
@@ -4330,9 +4330,8 @@ App.TriggerSetupComponent = Ember.Component.extend({
         if (c.fields.length > 0) {
           $.each(c.fields, function(i, a){
     
-            if (a.type != null) {
+            if (a.type != null && a.type.varSelect) {
               b = a.type
-
               // Create the comparions part 
               var l = '';
               if (b.matchSelect == 'contains') {
@@ -4407,7 +4406,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
                         ConditionID: NewGUID(),
                         GraphDataRelationID: _this.get('edgeID'),
                         JSON: JSON.stringify(_this.get('config')),// paul super easy array
-                        Condition: _this.get('configEvaluation')(_this) // andy's js condition
+                        Condition: _this.get('configEvaluation')(_this.get('config')) // andy's js condition
                     })
 
                     _this.get('edge.EdgeConditions').addObject(newCondition);
