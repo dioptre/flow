@@ -4081,8 +4081,8 @@ namespace EXPEDIT.Flow.Services {
                             ExperienceName = string.Format("{0} - {1}", m.CompanyName, username),
                             ContactID = added,
                             CompanyID = m.id,
-                            DateStart = old,
-                            VersionUpdated = now,
+                            DateStart = now,
+                            VersionUpdated = old,
                             VersionUpdatedBy = contact,
                             VersionOwnerContactID = contact,
                             VersionOwnerCompanyID = company
@@ -4176,8 +4176,8 @@ namespace EXPEDIT.Flow.Services {
                                 ExperienceName = string.Format("{0} - {1}", c.CompanyName, username),
                                 ContactID = added,
                                 CompanyID = m.id,
-                                DateStart = old,
-                                VersionUpdated = now,
+                                DateStart = now,
+                                VersionUpdated = old,
                                 VersionUpdatedBy = contact,
                                 VersionOwnerContactID = contact,
                                 VersionOwnerCompanyID = company
