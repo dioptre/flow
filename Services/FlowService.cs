@@ -3985,7 +3985,7 @@ namespace EXPEDIT.Flow.Services {
                     var mycompanies = (from r in
                                            (from c in d.Companies.Where(f => f.Version == 0 && f.VersionDeletedBy == null
                                                && companies.Contains(f.CompanyID))
-                                            join p in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null).Take(1)
+                                            join p in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
                                             on c.CompanyID equals p.CompanyID into pc
                                             from parent in pc.DefaultIfEmpty()
                                             join e in d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null
@@ -3998,7 +3998,7 @@ namespace EXPEDIT.Flow.Services {
                                             select new
                                             {
                                                 id = c.CompanyID,
-                                                ParentCompanyID = (parent != null) ? parent.CompanyID : default(Guid?),
+                                                ParentCompanyID = (parent != null) ? parent.ParentCompanyID : default(Guid?),
                                                 CompanyName = c.CompanyName,
                                                 CountryID = c.CountryID,
                                                 PrimaryContactID = c.PrimaryContactID,
@@ -4058,7 +4058,7 @@ namespace EXPEDIT.Flow.Services {
                         VersionOwnerCompanyID = company
                     };
                     d.Companies.AddObject(c);
-                    if (m.ParentCompanyID.HasValue)
+                    if (m.ParentCompanyID.HasValue && m.ParentCompanyID != m.id)
                     {
                         var cr = new CompanyRelation
                         {
@@ -4070,27 +4070,26 @@ namespace EXPEDIT.Flow.Services {
                         };
                         d.CompanyRelations.AddObject(cr);
                     }
-                    if (m.PeopleArray != null)
+                    if (m.PeopleArray == null)
+                        m.PeopleArray = new Guid?[] { };
+                    foreach (var added in m.PeopleArray.Union(new Guid?[] { contact }).ToArray())
                     {
-                        foreach (var added in m.PeopleArray.Union(new Guid?[]{contact}).ToArray())
+                        var username = d.Contacts.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ContactID == added).Select(f => f.Username).Single();
+                        var exp = new Experience
                         {
-                            var username = d.Contacts.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ContactID == added).Select(f => f.Username).Single();
-                            var exp = new Experience
-                            {
-                                ExperienceID = Guid.NewGuid(),
-                                ExperienceName = string.Format("{0} - {1}", m.CompanyName, username),
-                                ContactID = added,
-                                CompanyID = m.id,
-                                DateStart = old,
-                                VersionUpdated = now,
-                                VersionUpdatedBy = contact,
-                                VersionOwnerContactID = contact,
-                                VersionOwnerCompanyID = company
-                            };
-                            d.Experiences.AddObject(exp);
-                        }
+                            ExperienceID = Guid.NewGuid(),
+                            ExperienceName = string.Format("{0} - {1}", m.CompanyName, username),
+                            ContactID = added,
+                            CompanyID = m.id,
+                            DateStart = old,
+                            VersionUpdated = now,
+                            VersionUpdatedBy = contact,
+                            VersionOwnerContactID = contact,
+                            VersionOwnerCompanyID = company
+                        };
+                        d.Experiences.AddObject(exp);
                     }
-                    
+
                     d.SaveChanges();
                 }
                 return true;
@@ -4120,10 +4119,12 @@ namespace EXPEDIT.Flow.Services {
                     var c = d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null && f.CompanyID == m.id).Single();
                     
                     //Update hierarchy
-                    (from o in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
-                        where o.CompanyID == m.id
-                        select o).Delete();
-                    if (m.ParentCompanyID.HasValue)
+                    var oldRelations = (from o in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
+                                        where o.CompanyID == m.id
+                                        select o);
+                    if (oldRelations.Any())
+                        oldRelations.Delete();
+                    if (m.ParentCompanyID.HasValue && m.id != m.ParentCompanyID)
                     {
                         var cr = new CompanyRelation
                         {

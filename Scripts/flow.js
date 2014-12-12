@@ -6159,11 +6159,11 @@ App.OrganizationRoute = Ember.Route.extend({
 
 App.OrganizationController = Ember.ObjectController.extend({
     needs: ['application'],
-    DaddyID: NewGUID(),
+    DaddyID: 'B3230E6F-241C-416A-A2C8-6401CF1EFAB9',
     update: null,
     data: function() {
       // this whole thing is a bit of a hack. when I was loading the data straight from the model it would actually not complete the afterModel render in sync
-
+        var _this = this;
       function transform(itms){
           var resultArray=[];
           var parentsById={}; //this acts as a dictionary for storing the myObj parents for adding children after.
@@ -6184,14 +6184,19 @@ App.OrganizationController = Ember.ObjectController.extend({
       }
 
 
-      var results = this.get('model').content
-      results = Enumerable.From(this.get('model').content).Where("$.get('People') !== null && $.get('People') !== ''").ToArray();
+
+      Enumerable.From(this.get('model').content).Where("!$.get('People') || $.get('People') === null || $.get('People') === ''").ForEach(function (value) {
+            value.unloadRecord();
+      });
+
+      var results = Enumerable.From(this.get('model').content).Where("$.get('People') && $.get('People') !== null && $.get('People') !== ''").ToArray();
 
       // The goal of this is to have an always present super node that can't be deleted.
       var org = Ember.Object.create({
         id: this.get('DaddyID'),
         ParentCompanyID: null,
-        CompanyName: 'My Organization'
+        CompanyName: 'My Organization',
+        People: ','
       })
       // debugger;
       console.log('Setup again...')
@@ -6275,15 +6280,12 @@ App.OrganizationController = Ember.ObjectController.extend({
           } else {
 
             // Wait for promise record to finish off
-            Ember.RSVP.allSettled(PromiseArray).then(function(array){
-                array.forEach(function(a){
-                  if(a.state == 'fullfilled') {
-                    Messenger().post({ type: 'success', message: 'Some companies saved succesfully...' });
+              Ember.RSVP.allSettled(PromiseArray).then(function (array) {
+                  if (Enumerable.From(array).Where("$.state !== 'fulfilled'").Any()) {
+                      Messenger().post({ type: 'error', message: 'There were some errors at least. Try again.', id: 'organ-save' });
                   } else {
-                    Messenger().post({ type: 'error', message: 'There were some errors at least. Try again.', id: 'organ-save' });
-
+                      Messenger().post({ type: 'success', message: 'Some companies saved succesfully...' });
                   }
-                });
             }, function(){
               Messenger().post({ type: 'error', message: 'Could not save any record. Check your internet.' });
 
@@ -6338,7 +6340,8 @@ App.OrganizationController = Ember.ObjectController.extend({
 
           var itm = this.store.createRecord('company', {
             ParentCompanyID: null,
-            CompanyName: 'New Organization'
+            CompanyName: 'New Organization',
+              People: ','
           })
 
           var model = this.get('model');
