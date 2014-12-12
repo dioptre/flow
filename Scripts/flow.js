@@ -4752,10 +4752,10 @@ DS.Model.reopen({
                     Ember.run.debounce(_this, refetchLocale, _this, 150, true);
             }
             else {
-                _this.set('_localePromise', new Promise(function (resolve, reject) {
+                _this.set('_localePromise', new Ember.RSVP.Promise(function (resolve, reject) {
                     _this.set('_localName', _this.get('humanName'));
                     _this.set('_localContent', _this.get('humanContent'));
-                    resolve(value);
+                    resolve();
                 }));
             }
 
