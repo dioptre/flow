@@ -6555,7 +6555,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
     selected: null,
     config: {
         duration: 250, // Animation Speed
-        width: '500px',
+        width: '100%',
         height: '500px',
         // Visualisation Configuration
         font_size: "10px",

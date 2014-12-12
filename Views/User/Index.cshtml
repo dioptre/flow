@@ -511,11 +511,15 @@
                 </sub>
             </h1>
 
-            {{eui-button label='Save New Layout' action='saveAll'}} 
+            <br>
 
-            {{eui-button label='Add New Organisation' action='addItem'}}        
+            {{eui-button label='Save Layout Changes' action='saveAll'}} 
 
-           
+            {{eui-button label='Add New Organisation' style='primary' action='addItem'}}        
+
+            <br>
+            <br>
+
             <div class='container-fluid'>
                 <div class="row">
                     <div class="col-md-6">
@@ -551,7 +555,10 @@
 
                                 <br>
 
-                                {{eui-button label='Delete this Department' action='deleteItem' selected=selected}}        
+                                {{!--
+                                {{eui-button label='Delete this Department' action='deleteItem' selected=selected}}   
+                                --}}
+
                                 {{eui-button label='Save Details' style='primary' action='saveItem' disabled=isValidName loading=isValidNameLoading selected=selected}}   
                             {{/if}}
 
@@ -4022,11 +4029,16 @@
         <script type="text/x-handlebars" id="workflow">&nbsp;</script>
 
         <script type="text/x-handlebars" id="components/hierachy-tree">
+             <!--
             <buttons>
-              <!--
+
+               
+              
                 <button {{action 'center'}} class="btn btn-primary">
                     Center Graph
-                </button
+                </button>
+
+                
                 <button {{action 'left'}} class="btn btn-primary">
                     Left Graph
                 </button>
@@ -4039,11 +4051,12 @@
                 <button {{action 'down'}} class="btn btn-primary">
                     Down Graph
                 </button>
-                -->
+              
             </buttons>
             
             <br>
             <br>
+              -->
 
 
                         <div class="full-sitemap">
