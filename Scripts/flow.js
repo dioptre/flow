@@ -7282,7 +7282,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
                     return;
                 }
                 domNode = this;
-                debugger;
+                // debugger;
                 if (status.selectedNode) {
                     // now remove the element from the parent, and insert it into the new elements children
 
@@ -7366,7 +7366,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
             updateTempConnector();
             if (status.draggingNode !== null) {
                 // update(root);
-                debugger;
+                // debugger;
                 _this.get('update').apply(_this)
 
 
