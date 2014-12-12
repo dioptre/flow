@@ -32,7 +32,7 @@ namespace EXPEDIT.Flow.Controllers {
 
     [Themed]
     public class UserController : Controller
-    {      
+    {
         public IOrchardServices Services { get; set; }
         private IFlowService _Flow { get; set; }
         public ILogger Logger { get; set; }
@@ -411,7 +411,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (m == null)
                 return new HttpUnauthorizedResult("Unauthorized access to protected workflow.");
             else
-                return new JsonHelper.JsonNetResult(new { workflow = m}, JsonRequestBehavior.AllowGet);
+                return new JsonHelper.JsonNetResult(new { workflow = m }, JsonRequestBehavior.AllowGet);
 
         }
 
@@ -531,7 +531,7 @@ namespace EXPEDIT.Flow.Controllers {
         {
             var profile = _Flow.GetMyProfile();
             if (profile != null)
-                return new JsonHelper.JsonNetResult(new { myProfiles = new[] {profile} }, JsonRequestBehavior.AllowGet);
+                return new JsonHelper.JsonNetResult(new { myProfiles = new[] { profile } }, JsonRequestBehavior.AllowGet);
             else
                 return new JsonHelper.JsonNetResult(new { myProfiles = new object[] { } }, JsonRequestBehavior.AllowGet);
         }
@@ -591,7 +591,7 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
 
         }
-     
+
 
         [Authorize]
         [Themed(true)]
@@ -600,7 +600,7 @@ namespace EXPEDIT.Flow.Controllers {
             return View();
         }
 
-        
+
 
         [Themed(false)]
         [HttpGet]
@@ -767,7 +767,7 @@ namespace EXPEDIT.Flow.Controllers {
                 if (!Services.Authorizer.Authorize(StandardPermissions.SiteOwner))
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
                 m.Refresh = true;
-            }          
+            }
             if (_Flow.GetLocale(m))
                 return new JsonHelper.JsonNetResult(new { locales = m.LocaleQueue }, JsonRequestBehavior.AllowGet);
             else
@@ -867,14 +867,15 @@ namespace EXPEDIT.Flow.Controllers {
         public ActionResult GetProjectData(string id)
         {
             var ids = Request.Params["ids[]"];
-            ProjectDataViewModel[] result = new ProjectDataViewModel[] {};
+            ProjectDataViewModel[] result = new ProjectDataViewModel[] { };
             if (!string.IsNullOrWhiteSpace(id))
             {
-                result = _Flow.GetProjectData(new Guid[] {Guid.Parse(id)});
+                result = _Flow.GetProjectData(new Guid[] { Guid.Parse(id) });
 
-            } else if (!string.IsNullOrWhiteSpace(ids))
+            }
+            else if (!string.IsNullOrWhiteSpace(ids))
             {
-               result = _Flow.GetProjectData((from o in ids.Split(',') select Guid.Parse(o)).ToArray());
+                result = _Flow.GetProjectData((from o in ids.Split(',') select Guid.Parse(o)).ToArray());
             }
 
             if (result == null)
@@ -937,14 +938,15 @@ namespace EXPEDIT.Flow.Controllers {
         public ActionResult GetEdgeCondition(string id)
         {
             var ids = Request.Params["ids[]"];
-            EdgeConditionViewModel[] result = new EdgeConditionViewModel[] {};
+            EdgeConditionViewModel[] result = new EdgeConditionViewModel[] { };
             if (!string.IsNullOrWhiteSpace(id))
             {
-                result = _Flow.GetEdgeCondition(new Guid[] {Guid.Parse(id)});
+                result = _Flow.GetEdgeCondition(new Guid[] { Guid.Parse(id) });
 
-            } else if (!string.IsNullOrWhiteSpace(ids))
+            }
+            else if (!string.IsNullOrWhiteSpace(ids))
             {
-               result = _Flow.GetEdgeCondition((from o in ids.Split(',') select Guid.Parse(o)).ToArray());
+                result = _Flow.GetEdgeCondition((from o in ids.Split(',') select Guid.Parse(o)).ToArray());
             }
 
             if (result == null)
@@ -1011,7 +1013,7 @@ namespace EXPEDIT.Flow.Controllers {
             {
                 result = _Flow.GetContextNames(Guid.Parse(wfid));
 
-            } 
+            }
             if (result == null)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
             return new JsonHelper.JsonNetResult(new { contextNames = result }, JsonRequestBehavior.AllowGet);
@@ -1024,7 +1026,7 @@ namespace EXPEDIT.Flow.Controllers {
             ConditionViewModel result = _Flow.GetCondition(Guid.Parse(id));
             if (result == null)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
-            return new JsonHelper.JsonNetResult(new { conditions = new ConditionViewModel[] {result} }, JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(new { conditions = new ConditionViewModel[] { result } }, JsonRequestBehavior.AllowGet);
         }
 
         [Authorize]
@@ -1094,10 +1096,10 @@ namespace EXPEDIT.Flow.Controllers {
                     nid = tnid;
 
                 if (!nid.HasValue || !gid.HasValue)
-                    return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest); 
+                    return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
 
                 result = _Flow.GetTask(gid.Value, nid.Value);
-               
+
             }
             else
             {
@@ -1105,7 +1107,7 @@ namespace EXPEDIT.Flow.Controllers {
             }
             if (result == null)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
-            return new JsonHelper.JsonNetResult(new { tasks = new object[] {result} }, JsonRequestBehavior.AllowGet);            
+            return new JsonHelper.JsonNetResult(new { tasks = new object[] { result } }, JsonRequestBehavior.AllowGet);
 
         }
 
@@ -1237,7 +1239,7 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("Reports")]
         public ActionResult GetReports()
         {
-                return new JsonHelper.JsonNetResult(_Flow.Report(), JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(_Flow.Report(), JsonRequestBehavior.AllowGet);
 
         }
 
@@ -1301,7 +1303,62 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
 
-        
+
+        [Authorize]
+        [ActionName("TriggerGraphs")]
+        public ActionResult GetTriggerGraph(TriggerGraphViewModel m)
+        {
+            if (_Flow.GetTriggerGraph(m))
+                return new JsonHelper.JsonNetResult(new { triggerGraphs = m.triggerGraphs }, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+        }
+
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("TriggerGraphs")]
+        public ActionResult CreateTriggerGraph(TriggerGraphViewModel m)
+        {
+            if (m.triggerGraph != null)
+                m = m.triggerGraph;
+            if (_Flow.CreateTriggerGraph(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+        [Authorize]
+        [Themed(false)]
+        [HttpPut]
+        [ActionName("TriggerGraphs")]
+        public ActionResult UpdateTriggerGraph(TriggerGraphViewModel m)
+        {
+            if (m.triggerGraph != null && m.id != null)
+            {
+                m.triggerGraph.id = m.id;
+                m = m.triggerGraph;
+
+            }
+            if (_Flow.UpdateTriggerGraph(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+        }
+        [Authorize]
+        [Themed(false)]
+        [HttpDelete]
+        [ActionName("TriggerGraphs")]
+        public ActionResult DeleteTriggerGraph(TriggerGraphViewModel m)
+        {
+            if (!m.id.HasValue)
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            if (_Flow.DeleteTriggerGraph(m))
+                return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
+
+        }
+
 
 
     }

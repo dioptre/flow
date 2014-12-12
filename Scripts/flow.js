@@ -3893,8 +3893,12 @@ App.TriggerNodeComponent = Ember.Component.extend({
             construct = _this.get('triggersJSON');
             if (!construct.matchSelect)
                 construct = _this.get('defaultConfig');
+            else {
+                construct.trigger.clear();
+            }
+
             Enumerable.From(a.content).ForEach(function (value, index) {
-                triggerValue = JSON.parse(value.get('JSON'));
+                var triggerValue = JSON.parse(value.get('JSON'));
                 if (index == 0) {
                     construct.trigger.clear();
                     construct.matchSelect = triggerValue.matchSelect;
