@@ -4,35 +4,35 @@ if ((_ref = Ember.libraries) != null) {
 
 //Leave this!
 //<meta name="__RequestVerificationToken" content="@Html.AntiForgeryTokenValueOrchard()">
-//$.ajaxPrefilter(function (options, originalOptions, jqXHR) {
-//    if ((originalOptions.type && originalOptions.type.match(/get/ig) !== null) || (options.type && options.type.match(/get/ig) !== null)) {
-//        return;
-//    }
-//    var verificationToken = $("meta[name='__RequestVerificationToken']").attr('content');
-//    if (verificationToken) {
-//        jqXHR.setRequestHeader("X-Request-Verification-Token", verificationToken);
-//        var data = originalOptions.data;
-//        if (originalOptions.dataType && originalOptions.dataType.match(/json/ig) !== null) {
-//            if (data && Object.prototype.toString.call(originalOptions.data) === '[object String]') {
-//                var temp = JSON.parse(originalOptions.data);                
-//            } else
-//            {
-//                data = {};
-//            }
-//            options.data = JSON.stringify($.extend(temp, { __RequestVerificationToken: verificationToken }));
-//        }
-//        else {            
-//            if (data !== undefined) {
-//                if (Object.prototype.toString.call(originalOptions.data) === '[object String]') {
-//                    data = $.deparam(originalOptions.data); // see http://benalman.com/code/projects/jquery-bbq/examples/deparam/
-//                }
-//            } else {
-//                data = {};
-//            }
-//            options.data = $.param($.extend(data, { __RequestVerificationToken: verificationToken }));
-//        }
-//    }
-//});
+$.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+    if ((originalOptions.type && originalOptions.type.match(/get/ig) !== null) || (options.type && options.type.match(/get/ig) !== null)) {
+        return;
+    }
+    var verificationToken = $("meta[name='__RequestVerificationToken']").attr('content');
+    if (verificationToken) {
+        jqXHR.setRequestHeader("X-Request-Verification-Token", verificationToken);
+        var data = originalOptions.data;
+        if (originalOptions.dataType && originalOptions.dataType.match(/json/ig) !== null) {
+            if (data && Object.prototype.toString.call(originalOptions.data) === '[object String]') {
+                var temp = JSON.parse(originalOptions.data);                
+            } else
+            {
+                data = {};
+            }
+            options.data = JSON.stringify($.extend(temp, { __RequestVerificationToken: verificationToken }));
+        }
+        else {            
+            if (data !== undefined) {
+                if (Object.prototype.toString.call(originalOptions.data) === '[object String]') {
+                    data = $.deparam(originalOptions.data); // see http://benalman.com/code/projects/jquery-bbq/examples/deparam/
+                }
+            } else {
+                data = {};
+            }
+            options.data = $.param($.extend(data, { __RequestVerificationToken: verificationToken }));
+        }
+    }
+});
 
 $(function () {
     FastClick.attach(document.body);
@@ -3624,18 +3624,25 @@ App.UserSelectorComponent = Ember.Component.extend({
     placeholder: "Enter Usernames...",
     internalID: NewGUID(),
     value: '',
+    httpMethod: 'GET',
     valueBeingUpdated: false,
     valueUpdated: function(){
       var _this = this;
       if (!this.get('valueBeingUpdated')) {
         var orgVal = _this.get('value'); 
         var id = '#' + _this.get('internalID');
-
+        var url =  _this.get('url') + "/";
+        var data = '';
+        if (_this.get('httpMethod') == 'GET')
+            url+= orgVal;
+        else
+            data = JSON.stringify({val: orgVal});
         $(id).select2('data', '');
-
         // must have been updated externaly then
-        $.ajax(_this.get('url') + "/" + orgVal, {
-            dataType: "json"
+        $.ajax(url , {
+            dataType: "json",
+            type: _this.get('httpMethod'),
+            data: data
         }).done(function (data) {
             if (!data || data.length == 0)
                 return;
@@ -3703,13 +3710,15 @@ App.UserSelectorComponent = Ember.Component.extend({
 App.CompanySelectorComponent = App.UserSelectorComponent.extend({
     internalID: NewGUID(),
     placeholder: "Enter Companies...",
-    url: "/share/getcompanies"
+    url: "/share/getcompanies",
+    httpMethod: 'GET',
 });
 
 App.ContactSelectorComponent = App.UserSelectorComponent.extend({
     internalID: NewGUID(),
     placeholder: "Enter Contacts...",
-    url: "/share/getcontacts"
+    url: "/share/getcontacts",
+    httpMethod: 'POST'
 });
 
 //TODO Refactor so that query only happens on click - 
@@ -5064,6 +5073,7 @@ App.Company = DS.Model.extend({
     Experiences: DS.hasMany('experience', { async: true })
 });
 
+
 App.Experience = DS.Model.extend({
   ExperienceID: DS.attr('string'),
   ContactID: DS.attr('string'),
@@ -6098,53 +6108,11 @@ App.MyprofilesController = Ember.ObjectController.extend({
 
 App.OrganizationRoute = Ember.Route.extend({
     model: function () {
-        this.store.createRecord('company', {
-            id: company1finish,
-            CompanyName: 'Company 1'
-        });
+        
+        return this.store.findQuery('company', {});
 
-        this.store.createRecord('company', {
-            id: company2afinish,
-            ParentCompanyID: company1finish,
-            CompanyName: 'Company 2a'
-
-        })
-
-        this.store.createRecord('company', {
-            id: company2bfinish,
-            ParentCompanyID: company1finish,
-            CompanyName: 'Company 2b'
-
-        })
-
-        this.store.createRecord('company', {
-            id: company3finish,
-            ParentCompanyID: company2afinish,
-            CompanyName: 'Company 3'
-
-        })
-
-        return this.store.all('company');
-
-        var _this = this;
-        return Ember.RSVP.hash({
-     
-        });
-    },
-    // afterModel: function (m) {
-    //     // http://jsbin.com/xoqanarevi/2/edit
-    //     // debugger;
-    //     // TURN ARRAY INTO A NESTED ARRAY THAT CAN BE READ BY D3.JS
-
-
-    //   m.actualData = { data: m.content[0] }
-    //     console.log(m);
-
-    //     return m;
-
-    //     //if (m.profiles.content && m.profiles.content.length > 0)
-    //     //    m.profile = m.profiles.get('firstObject');
-    // }
+    
+    }
 });
 
 App.OrganizationController = Ember.ObjectController.extend({
@@ -6483,16 +6451,6 @@ Ember.HelloModalComponent = Ember.Component.extend({
 
 
 
-
-App.Company = DS.Model.extend({
-    CompanyID: DS.attr('string'),
-    ParentCompanyID: DS.attr('string'),
-    CompanyName: DS.attr('string'),
-    CountryID: DS.attr('string'),
-    PrimaryContactID: DS.attr('string'),
-    Comment: DS.attr('string'),
-    company: DS.belongsTo('contact')
-});
 
 var company1finish = NewGUID();
 var company2afinish = NewGUID();

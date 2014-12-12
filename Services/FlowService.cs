@@ -3967,21 +3967,41 @@ namespace EXPEDIT.Flow.Services {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
+                    d.ContextOptions.LazyLoadingEnabled = false;
                     var companies = (from o in d.E_UDF_ContactCompanies(contact) select o).ToArray(); //is recursive
-                    var mycompanies = (from c in d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null)
-                                       where companies.Contains(c.CompanyID)
-                                       select new CompanyViewModel
-                                       {
-                                           id = c.CompanyID,
-                                           ParentCompanyID = c.CompanyChildren.Select(f => f.ParentCompanyID).FirstOrDefault(),
-                                           CompanyName = c.CompanyName,
-                                           CountryID = c.CountryID,
-                                           PrimaryContactID = c.PrimaryContactID,
-                                           Comment = c.Comment,
-                                           People = c.Experience.Select(f => f.ContactID).ToArray()
-                                       }
-                                           ).ToArray();
-                    return mycompanies;
+                    var mycompanies = (from r in
+                                           (from c in d.Companies.Include("Experiences").Where(f => f.Version == 0 && f.VersionDeletedBy == null && companies.Contains(f.CompanyID))
+                                            join p in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null).Take(1)
+                                            on c.CompanyID equals p.CompanyID into pc
+                                            from parent in pc.DefaultIfEmpty()
+                                            join e in d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
+                                            on c.CompanyID equals e.CompanyID into ex
+                                            from experience in ex.DefaultIfEmpty()
+                                            select new
+                                            {
+                                                id = c.CompanyID,
+                                                ParentCompanyID = (parent != null) ? parent.CompanyID : default(Guid?),
+                                                CompanyName = c.CompanyName,
+                                                CountryID = c.CountryID,
+                                                PrimaryContactID = c.PrimaryContactID,
+                                                Comment = c.Comment,
+                                                ContactID = (experience != null) ? experience.ContactID : null
+                                            }).ToArray()
+                                       group r by new { r.id, r.ParentCompanyID, r.CompanyName, r.CountryID, r.PrimaryContactID, r.Comment }
+                                           into g
+                                           select new CompanyViewModel
+                                           {
+                                               id = g.Key.id,
+                                               ParentCompanyID = g.Key.ParentCompanyID,
+                                               CompanyName = g.Key.CompanyName,
+                                               CountryID = g.Key.CountryID,
+                                               PrimaryContactID = g.Key.PrimaryContactID,
+                                               Comment = g.Key.Comment,
+                                               PeopleEnum = g.Select(f => f.ContactID)
+                                           });
+
+
+                    return mycompanies.ToArray();
                 }
 
             }
@@ -3997,7 +4017,7 @@ namespace EXPEDIT.Flow.Services {
             var contact = _users.ContactID;
             var company = _users.DefaultContactCompanyID;
             var now = DateTime.UtcNow;
-            if (string.IsNullOrWhiteSpace(m.CompanyName) || !m.CompanyID.HasValue)
+            if (string.IsNullOrWhiteSpace(m.CompanyName) || !m.id.HasValue)
                 return false;
             try
             {
@@ -4025,12 +4045,33 @@ namespace EXPEDIT.Flow.Services {
                         {
                             CompanyRelationID = Guid.NewGuid(),
                             ParentCompanyID = m.ParentCompanyID.Value,
-                            CompanyID = m.CompanyID.Value,
+                            CompanyID = m.id.Value,
                             VersionOwnerContactID = contact,
                             VersionOwnerCompanyID = company
                         };
                         d.CompanyRelations.AddObject(cr);
                     }
+                    if (m.PeopleArray != null)
+                    {
+                        foreach (var added in m.PeopleArray.Union(new Guid?[]{contact}).ToArray())
+                        {
+                            var username = d.Contacts.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ContactID == added).Select(f => f.Username).Single();
+                            var exp = new Experience
+                            {
+                                ExperienceID = Guid.NewGuid(),
+                                ExperienceName = string.Format("{0} - {1}", m.CompanyName, username),
+                                ContactID = added,
+                                CompanyID = m.id,
+                                DateStart = now,
+                                VersionUpdated = now,
+                                VersionUpdatedBy = contact,
+                                VersionOwnerContactID = contact,
+                                VersionOwnerCompanyID = company
+                            };
+                            d.Experiences.AddObject(exp);
+                        }
+                    }
+                    
                     d.SaveChanges();
                 }
                 return true;
@@ -4051,20 +4092,20 @@ namespace EXPEDIT.Flow.Services {
                 var now = DateTime.UtcNow;
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
-                    if (!CheckPermission(m.CompanyID, ActionPermission.Update, typeof(Company)))
+                    if (!CheckPermission(m.id, ActionPermission.Update, typeof(Company)))
                         return false;
                     var d = new NKDC(_users.ApplicationConnectionString, null);
                     var c = d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null && f.CompanyID == m.id).Single();
                     if (m.IsParentCompanyUpdated)
                     {
                         (from o in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
-                         where o.CompanyID == m.CompanyID
+                         where o.CompanyID == m.id
                          select o).Delete();
                         var cr = new CompanyRelation
                         {
                             CompanyRelationID = Guid.NewGuid(),
                             ParentCompanyID = m.ParentCompanyID.Value,
-                            CompanyID = m.CompanyID.Value,
+                            CompanyID = m.id.Value,
                             VersionUpdated = now,
                             VersionUpdatedBy = contact,
                             VersionOwnerContactID = contact,
@@ -4090,14 +4131,15 @@ namespace EXPEDIT.Flow.Services {
 
                     if (m.IsPeopleSet)
                     {
+                        m.PeopleArray = m.PeopleArray.Union(new Guid?[] { contact }).ToArray();
                         //Add
-                        var unknown = (from o in m.People
+                        var unknown = (from o in m.PeopleArray
                                        where
                                            !d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null 
                                             && (f.DateFinished == null || f.DateFinished > DateTime.UtcNow)
                                             && (f.Expiry == null || f.Expiry > DateTime.UtcNow)
                                             && (f.DateStart <= DateTime.UtcNow || f.DateStart == null)
-                                           && f.CompanyID == m.CompanyID).Select(f => f.ContactID).Contains(o)
+                                           && f.CompanyID == m.id).Select(f => f.ContactID).Contains(o)
                                        select o);
                         foreach (var added in unknown)
                         {
@@ -4107,7 +4149,7 @@ namespace EXPEDIT.Flow.Services {
                                 ExperienceID = Guid.NewGuid(),
                                 ExperienceName = string.Format("{0} - {1}", c.CompanyName, username),
                                 ContactID = added,
-                                CompanyID = m.CompanyID,
+                                CompanyID = m.id,
                                 DateStart = now,
                                 VersionUpdated = now,
                                 VersionUpdatedBy = contact,
@@ -4121,7 +4163,7 @@ namespace EXPEDIT.Flow.Services {
                                             && (f.DateFinished == null || f.DateFinished > DateTime.UtcNow)
                                             && (f.Expiry == null || f.Expiry > DateTime.UtcNow)
                                             && (f.DateStart <= DateTime.UtcNow || f.DateStart == null)
-                                           && f.CompanyID == m.CompanyID) where !m.People.Contains(o.ContactID) select o);
+                                           && f.CompanyID == m.id) where !m.PeopleArray.Contains(o.ContactID) select o);
                         foreach (var retire in retired)
                         {
                             retire.DateFinished = now;
@@ -4154,15 +4196,17 @@ namespace EXPEDIT.Flow.Services {
                 {
 
                     var d = new NKDC(_users.ApplicationConnectionString, null);
-                    if (!CheckPermission(m.id, ActionPermission.Delete, typeof(Company)))
+                    if (!CheckPermission(m.id, ActionPermission.Delete, typeof(Company)) ||
+                        !d.Companies.Where(f => f.PrimaryContactID==contact && f.CompanyID==m.id && f.Version == 0 && f.VersionDeletedBy == null ).Any())
                         return false;
                     //Lets just go ahead and delete with versioning
                     //Only the owner can delete
-                    var companies = (from o in d.Companies where o.CompanyID == m.CompanyID && o.PrimaryContactID == contact select o);
+                    (from o in d.Experiences.Where(f=>f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id select o).Delete();
+                    (from o in d.CompanyRelations.Where(f=>f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id || o.ParentCompanyID == m.id select o).Delete();
+                    var companies = (from o in d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id && o.PrimaryContactID == contact select o);
                     if (!companies.Any())
                         return false;
                     companies.Delete();
-                    d.SaveChanges();
                     return true;
                 }
 
