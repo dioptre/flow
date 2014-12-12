@@ -6819,7 +6819,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
     }.on('didInsertElement'),
     update: function(){
 
-        Ember.run.scheduleOnce('afterRender', this, function(){
+        // Ember.run.scheduleOnce('afterRender', this, function(){
         var dom = this.get('dom');
         var status = this.get('status')
         var config = this.get('config');
@@ -6943,11 +6943,12 @@ App.HierachyTreeComponent = Ember.Component.extend({
             .style("fill", "green")
             .attr('pointer-events', 'mouseover')
             .call(function(d){console.log('Enter run ', d)})
-            .on(".mouseover", null)
-            .on(".mouseout", null)
+
             
 
         status.node
+            // .on(".mouseover", null)
+            // .on(".mouseout", null)
             .on("mouseover", function(node) {
                 console.log('ENTER RUN ONT THIS', node.data.get('CompanyName'))
                 overCircle(node);
@@ -6992,15 +6993,15 @@ App.HierachyTreeComponent = Ember.Component.extend({
             .style("fill-opacity", 1);
 
 
-        status.node.select('circle')
-            .attr('pointer-events', 'mouseover')
+        // status.node.select('circle')
+        //     .attr('pointer-events', 'mouseover')
 
-            .on("mouseover", function(node) {
-                overCircle(node);
-            })
-            .on("mouseout", function(node) {
-                outCircle(node);
-            });
+        //     .on("mouseover", function(node) {
+        //         overCircle(node);
+        //     })
+        //     .on("mouseout", function(node) {
+        //         outCircle(node);
+        //     });
 
         // Transition exiting nodes to the parent's new position.
         status.nodeExit = status.node.exit().transition()
@@ -7170,12 +7171,18 @@ App.HierachyTreeComponent = Ember.Component.extend({
         };
 
         function overCircle(d) {
-            status.selectedNode = d;
+          if (d != status.draggingNode){
+            status.selectedNode = d;            
+          }
             updateTempConnector();
+          console.log('overCircle', status.selectedNode)
+
         };
         function outCircle(d) {
             status.selectedNode = null;
             updateTempConnector();
+          console.log('outCircle', status.selectedNode)
+
         };
 
         // Function to update the temporary connector indicating dragging affiliation
@@ -7226,6 +7233,8 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 }
                 status.dragStarted = true;
                 status.nodes = status.tree.nodes(d);
+               
+                // debugger;
                 d3.event.sourceEvent.stopPropagation();
                 // it's important that we suppress the mouseover event on the node being dragged. Otherwise it will absorb the mouseover event and the underlying node will not detect it d3.select(this).attr('pointer-events', 'none');
             })
@@ -7273,6 +7282,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
                     return;
                 }
                 domNode = this;
+                debugger;
                 if (status.selectedNode) {
                     // now remove the element from the parent, and insert it into the new elements children
 
@@ -7356,7 +7366,8 @@ App.HierachyTreeComponent = Ember.Component.extend({
             updateTempConnector();
             if (status.draggingNode !== null) {
                 // update(root);
-                _this.update()
+                debugger;
+                _this.get('update').apply(_this)
 
 
                 //_this.centerNode(draggingNode);
@@ -7366,6 +7377,6 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 //dataUpdatedFn(_this.data())
             }
         }
-        })
+        // })
    }.observes('wrap')
 })
