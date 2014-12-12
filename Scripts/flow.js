@@ -3082,6 +3082,7 @@ App.VizEditorComponent = Ember.Component.extend({
         if (!this.get('isWorkflow')) {
             centralGravity = 0.5;
         }
+        var mass = 1;
         var container = $('<div>').appendTo(this.$())[0];
         var data = this.get('vizDataSet');
         var options = {
@@ -3120,12 +3121,12 @@ App.VizEditorComponent = Ember.Component.extend({
             physics: {
                 barnesHut: {enabled: true, //},
                 //repulsion: {
-                    centralGravity: 0.3,
+                    centralGravity: 0.8,
                     springLength: 200,
                     springConstant: 0.2,
                     //nodeDistance: 200,
-                    damping: 0.096,
-                    gravitationalConstant: -8000
+                    damping: 0.082,
+                    gravitationalConstant: -80000
                 }
             },
             stabilize: true,
@@ -3293,6 +3294,11 @@ App.VizEditorComponent = Ember.Component.extend({
                         value.color = "#6fa5d7"; //Current
                         value.fontColor = "#000000";
                     }
+                    //Disconnected
+                    if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id.replace(/'/ig, '\\\'') + "'").Any() && !Enumerable.From(edges).Where("f=>f.from=='" + value.id.replace(/'/ig, '\\\'') + "'").Any()) {
+                        value.mass = 0.16;
+                    }
+
                     return value;
                 });
 
@@ -3573,7 +3579,7 @@ App.VizEditorComponent = Ember.Component.extend({
                         var o = newNode.get('workflows').then(function (w) {
                             w.content.pushObject(App.Node.store.getById('workflow', _this.get('workflowID')));
                         });
-                        var a = { id: newNode.get('id'), label: newNode.get('label'), shape: newNode.get('shape'), group: newNode.get('group') };
+                        var a = { id: newNode.get('id'), label: newNode.get('label'), mass: 0.16, shape: newNode.get('shape'), group: newNode.get('group') };
                         currentNodesonScreen.nodes.add(a);
                         //_this.get('data').nodes.push(a); //, currentNodesonScreen.nodes.concat([]));
 
