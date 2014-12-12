@@ -534,6 +534,15 @@
                                 <h5>Department Name</h5>
                                 {{eui-input value=selected.CompanyName}}
 
+                                {{#if isValidNameLoading}}
+                                    Loading...
+                                {{else}}
+
+                                    {{#if isValidName}}
+                                        Name is invalid. Name is probably already in use or not minimum length.
+                                    {{/if}}
+                                {{/if}}
+
                                 <br>
                                 <br>
 
@@ -543,7 +552,7 @@
                                 <br>
 
                                 {{eui-button label='Delete this Department' action='deleteItem' selected=selected}}        
-                                {{eui-button label='Save Details' style='primary' action='saveItem' selected=selected}}   
+                                {{eui-button label='Save Details' style='primary' action='saveItem' disabled=isValidName loading=isValidNameLoading selected=selected}}   
                             {{/if}}
 
                         {{else}}
