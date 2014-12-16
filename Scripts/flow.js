@@ -6354,6 +6354,7 @@ App.OrganizationController = Ember.ObjectController.extend({
 
           model.addObject(itm);
 
+          this.set('selected', itm);
           this.set('update', NewGUID())
 
         }
