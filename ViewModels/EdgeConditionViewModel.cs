@@ -12,9 +12,16 @@ namespace EXPEDIT.Flow.ViewModels
 {
 
     [JsonObject]
-    public class EdgeConditionViewModel : ConditionViewModel
+    public class EdgeConditionViewModel 
     {
+        public Guid? id { get; set; }
+        public bool? OverrideProjectDataWithJsonCustomVars { get; set; }
+        public string Condition { get; set; }
 
+        public string JSON { get; set; }
+
+        public string Error { get; set; }
+        
         public int? Grouping { get; set; }
         public int? Sequence { get; set; }
         public string JoinedBy { get; set; }

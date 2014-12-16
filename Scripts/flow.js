@@ -3082,6 +3082,7 @@ App.VizEditorComponent = Ember.Component.extend({
         if (!this.get('isWorkflow')) {
             centralGravity = 0.5;
         }
+        var mass = 1;
         var container = $('<div>').appendTo(this.$())[0];
         var data = this.get('vizDataSet');
         var options = {
@@ -3120,12 +3121,12 @@ App.VizEditorComponent = Ember.Component.extend({
             physics: {
                 barnesHut: {enabled: true, //},
                 //repulsion: {
-                    centralGravity: 0.3,
-                    springLength: 200,
-                    springConstant: 0.2,
+                    centralGravity: 0.9,
+                    springLength: 180,
+                    springConstant: 0.08,
                     //nodeDistance: 200,
-                    damping: 0.096,
-                    gravitationalConstant: -8000
+                    damping: 0.092,
+                    gravitationalConstant: -80000
                 }
             },
             stabilize: true,
@@ -3293,6 +3294,11 @@ App.VizEditorComponent = Ember.Component.extend({
                         value.color = "#6fa5d7"; //Current
                         value.fontColor = "#000000";
                     }
+                    //Disconnected
+                    if (!Enumerable.From(edges).Where("f=>f.to=='" + value.id.replace(/'/ig, '\\\'') + "'").Any() && !Enumerable.From(edges).Where("f=>f.from=='" + value.id.replace(/'/ig, '\\\'') + "'").Any()) {
+                        value.mass = 0.16;
+                    }
+
                     return value;
                 });
 
@@ -3573,7 +3579,7 @@ App.VizEditorComponent = Ember.Component.extend({
                         var o = newNode.get('workflows').then(function (w) {
                             w.content.pushObject(App.Node.store.getById('workflow', _this.get('workflowID')));
                         });
-                        var a = { id: newNode.get('id'), label: newNode.get('label'), shape: newNode.get('shape'), group: newNode.get('group') };
+                        var a = { id: newNode.get('id'), label: newNode.get('label'), mass: 0.16, shape: newNode.get('shape'), group: newNode.get('group') };
                         currentNodesonScreen.nodes.add(a);
                         //_this.get('data').nodes.push(a); //, currentNodesonScreen.nodes.concat([]));
 
@@ -3887,27 +3893,47 @@ App.TriggerNodeComponent = Ember.Component.extend({
             _this.set('tSvariables', test);
         })
 
-        store.findQuery('triggerGraph', config).then(function (a) {
+        store.find('triggerGraph', config).then(function (a) {
             // if problem do something else - needs error handeling
             var construct;
-            construct = _this.get('triggersJSON');
-            if (!construct.matchSelect)
-                construct = _this.get('defaultConfig');
-            else {
-                construct.trigger.clear();
-            }
+            var found = false;
+
+            _this.get('triggers').clear();
+            construct = _this.get('defaultConfig');
+            construct.trigger.clear();
+            construct.fields.clear();
+            construct.matchSelect = 'All';
+            construct.onEnter = true;
+            construct.triggerConditions = false;
+            construct.when[0].type = 'now';
+            construct.when[0].now = {};
 
             Enumerable.From(a.content).ForEach(function (value, index) {
                 var triggerValue = JSON.parse(value.get('JSON'));
                 if (index == 0) {
+                    found = true;
                     construct.trigger.clear();
+                    construct.fields.clear();
                     construct.matchSelect = triggerValue.matchSelect;
                     construct.onEnter = (triggerValue.onEnter && true);
                     construct.triggerConditions = triggerValue.triggerConditions;
-                    construct.fields.clear();
-                    $.each(JSON.parse(value.get('ConditionJSON')), function (i, v) {
-                        construct.fields.pushObject(v);
-                    });
+                    if (value.get('ConditionJSON')) {
+                        $.each(JSON.parse(value.get('ConditionJSON')), function (i, v) {
+                            construct.fields.pushObject(v);
+                        });
+                    } else {
+                        construct.fields.pushObject(
+                        {
+                            type: {
+                                varLabel: '',
+                                varSelect: '',
+                                matchSelect: '',
+                                matchInput: ''
+                            }
+                        }
+                    );
+                    }
+
                     if (triggerValue.delay) {
                         construct.when[0].type = 'delay';
                         construct.when[0].delay = triggerValue.delay;
@@ -3930,6 +3956,24 @@ App.TriggerNodeComponent = Ember.Component.extend({
             
                 _this.get('triggers').addObject(value);
             });
+            if (!found) {
+                construct.fields.pushObject(
+                    {
+                        type: {
+                            varLabel: '',
+                            varSelect: '',
+                            matchSelect: '',
+                            matchInput: ''
+                        }
+                    }
+                );
+                construct.trigger.pushObject(
+                    App.ThenTrigger.create({
+                        id: NewGUID(),
+                        type: 'email'
+                    })
+                );
+            }
             _this.set('triggersJSON', construct)
             _this.set('loading', false);
         });
@@ -4249,6 +4293,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
                 }
                 if (a.get('length') < 1) {
                     _this.set('config', _this.get('defaultConfig'));
+                    _this.set('config.triggerConditions', false);
                 }
 
                  if (a.get('length') > 1) {
@@ -4283,7 +4328,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
     configEvaluation: function(config){
         var c = config;
 
-        var s = ''; // this is the magic string later
+        var s = ' '; // this is the magic string later
 
         if (!c.triggerConditions)
           return s; // if the trigger condition is false just return nothing
@@ -4292,9 +4337,8 @@ App.TriggerSetupComponent = Ember.Component.extend({
         if (c.fields.length > 0) {
           $.each(c.fields, function(i, a){
     
-            if (a.type != null) {
+            if (a.type != null && a.type.varSelect) {
               b = a.type
-
               // Create the comparions part 
               var l = '';
               if (b.matchSelect == 'contains') {
@@ -4369,7 +4413,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
                         ConditionID: NewGUID(),
                         GraphDataRelationID: _this.get('edgeID'),
                         JSON: JSON.stringify(_this.get('config')),// paul super easy array
-                        Condition: _this.get('configEvaluation')(_this) // andy's js condition
+                        Condition: _this.get('configEvaluation')(_this.get('config')) // andy's js condition
                     })
 
                     _this.get('edge.EdgeConditions').addObject(newCondition);
@@ -6121,11 +6165,11 @@ App.OrganizationRoute = Ember.Route.extend({
 
 App.OrganizationController = Ember.ObjectController.extend({
     needs: ['application'],
-    DaddyID: NewGUID(),
+    DaddyID: 'B3230E6F-241C-416A-A2C8-6401CF1EFAB9',
     update: null,
     data: function() {
       // this whole thing is a bit of a hack. when I was loading the data straight from the model it would actually not complete the afterModel render in sync
-
+        var _this = this;
       function transform(itms){
           var resultArray=[];
           var parentsById={}; //this acts as a dictionary for storing the myObj parents for adding children after.
@@ -6146,14 +6190,19 @@ App.OrganizationController = Ember.ObjectController.extend({
       }
 
 
-      var results = this.get('model').content
-      results = Enumerable.From(this.get('model').content).Where("$.get('People') !== null && $.get('People') !== ''").ToArray();
+
+      Enumerable.From(this.get('model').content).Where("!$.get('People') || $.get('People') === null || $.get('People') === ''").ForEach(function (value) {
+            value.unloadRecord();
+      });
+
+      var results = Enumerable.From(this.get('model').content).Where("$.get('People') && $.get('People') !== null && $.get('People') !== ''").ToArray();
 
       // The goal of this is to have an always present super node that can't be deleted.
       var org = Ember.Object.create({
         id: this.get('DaddyID'),
         ParentCompanyID: null,
-        CompanyName: 'My Organization'
+        CompanyName: 'My Organization',
+        People: ','
       })
       // debugger;
       console.log('Setup again...')
@@ -6166,9 +6215,13 @@ App.OrganizationController = Ember.ObjectController.extend({
     isValidNameLoading: true,
     isValidName: true, 
     isValidNameObserver: function() {
-      var selected = this.get('selected');
+        var selected = this.get('selected');
+        if (!selected)
+            return;
       var name = selected.get('CompanyName').toLowerCase()
-      var oldName = selected._data.CompanyName.toLowerCase()
+      var oldName = name;
+      if (selected._data.CompanyName)
+          oldName = selected._data.CompanyName.toLowerCase()
 
 
         this.set('isValidNameLoading', true);
@@ -6233,15 +6286,12 @@ App.OrganizationController = Ember.ObjectController.extend({
           } else {
 
             // Wait for promise record to finish off
-            Ember.RSVP.allSettled(PromiseArray).then(function(array){
-                array.forEach(function(a){
-                  if(a.state == 'fullfilled') {
-                    Messenger().post({ type: 'success', message: 'Some companies saved succesfully...' });
+              Ember.RSVP.allSettled(PromiseArray).then(function (array) {
+                  if (Enumerable.From(array).Where("$.state !== 'fulfilled'").Any()) {
+                      Messenger().post({ type: 'error', message: 'There were some errors at least. Try again.', id: 'organ-save' });
                   } else {
-                    Messenger().post({ type: 'error', message: 'There were some errors at least. Try again.', id: 'organ-save' });
-
+                      Messenger().post({ type: 'success', message: 'Some companies saved succesfully...' });
                   }
-                });
             }, function(){
               Messenger().post({ type: 'error', message: 'Could not save any record. Check your internet.' });
 
@@ -6273,8 +6323,11 @@ App.OrganizationController = Ember.ObjectController.extend({
 
             // remove it from the model isn't quite enough, but yeah
             // HACK NEEDS TO MAKE API CALL HERE TO DELETE THE OBJECT
-            model.removeObject(context.selected);
-            context.selected.destroyRecord();
+              model.removeObject(context.selected);
+              if (context.selected.get('isNew'))
+                context.selected.unloadRecord();
+              else
+                context.selected.destroyRecord();
             this.set('selected', null);
             this.set('update', NewGUID())
 
@@ -6293,7 +6346,8 @@ App.OrganizationController = Ember.ObjectController.extend({
 
           var itm = this.store.createRecord('company', {
             ParentCompanyID: null,
-            CompanyName: 'New Organization'
+            CompanyName: 'New Organization',
+              People: ','
           })
 
           var model = this.get('model');
@@ -6332,7 +6386,18 @@ App.WorkflowView = Ember.View.extend(Ember.ViewTargetActionSupport, {
             height: '400px',
             navigation: false,
             smoothCurves: true,
-            physics: { barnesHut: { centralGravity: 0.0155, springConstant: 0.01, damping: 0.1, springLength: 170 } },
+            physics: {
+                barnesHut: {
+                    enabled: true, //},
+                    //repulsion: {
+                    centralGravity: 0.9,
+                    springLength: 180,
+                    springConstant: 0.08,
+                    //nodeDistance: 200,
+                    damping: 0.092,
+                    gravitationalConstant: -80000
+                }
+            },
             stabilize: false,
             stabilizationIterations: 200,
             dataManipulation: {
@@ -7284,7 +7349,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 }
                 domNode = this;
                 // debugger;
-                if (status.selectedNode) {
+                if (status.selectedNode && status.draggingNode) {
                     // now remove the element from the parent, and insert it into the new elements children
 
                     // THE DRAGGIND NODE PARENT ID GET"S THE SELECTED NODE'S ID

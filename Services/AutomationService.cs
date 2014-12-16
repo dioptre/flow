@@ -626,6 +626,7 @@ namespace EXPEDIT.Flow.Services {
                                 select new { t.CommonName, o.Value, t.SystemDataType, o.VersionUpdated }
                                     ).GroupBy(f => f.CommonName, f => f, (key, g) => g.OrderByDescending(f=>f.VersionUpdated).FirstOrDefault());
                     var dict = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => (f.Value ?? "").Replace("\'","\\\'").Replace("\"", "\\\""));
+                    Guid? firstDefault = null;
                     foreach (var option in options)
                     {
                         if (option.Condition == null || !option.Condition.Any())
@@ -638,7 +639,10 @@ namespace EXPEDIT.Flow.Services {
                         {
                             var toCheck = condition.Condition.Condition;
                             if (string.IsNullOrWhiteSpace(toCheck))
+                            {
+                                firstDefault = option.ToGraphDataID.Value;
                                 continue;
+                            }
                             foreach (var lookup in dict)
                                 toCheck = toCheck.Replace(lookup.Key, "\"" + lookup.Value + "\"");
                             if (ConstantsHelper.REGEX_JS_CLEANER.IsMatch(toCheck))
@@ -669,13 +673,22 @@ namespace EXPEDIT.Flow.Services {
                     }
                     if (nextGid == Guid.Empty)
                     {
-                        //Now do the default transition
-                        var option = options.FirstOrDefault(f => !f.Condition.Any());
-                        if (option != null)
+                        if (firstDefault.HasValue && firstDefault.Value != Guid.Empty)
                         {
-                            nextGid = option.ToGraphDataID.Value;
+                            nextGid = firstDefault.Value;
                             isDefault = true;
-                            m.Status += " Transition Default.";
+                            m.Status += " Transition Default (C).";
+                        }
+                        else
+                        {
+                            //Now do the default transition
+                            var option = options.FirstOrDefault(f => !f.Condition.Any());
+                            if (option != null)
+                            {
+                                nextGid = option.ToGraphDataID.Value;
+                                isDefault = true;
+                                m.Status += " Transition Default.";
+                            }
                         }
 
                     }

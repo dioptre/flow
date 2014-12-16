@@ -3089,7 +3089,7 @@ namespace EXPEDIT.Flow.Services {
                                  id = c.ConditionID,
                                  JSON = c.JSON,
                                  OverrideProjectDataWithJsonCustomVars = c.OverrideProjectDataWithJsonCustomVars,
-                                 Condition = c.Condition
+                                 Precondition = c.Condition
                              }).SingleOrDefault();
                     return m;
                 }
@@ -3115,7 +3115,7 @@ namespace EXPEDIT.Flow.Services {
                     var c = new Precondition
                     {
                         ConditionID = m.id.Value,
-                        Condition = m.Condition,
+                        Condition = m.Precondition,
                         JSON = m.JSON,
                         OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
                         VersionUpdated = DateTime.UtcNow,
@@ -3148,8 +3148,8 @@ namespace EXPEDIT.Flow.Services {
                     var cc = (from o in d.Precondition where o.ConditionID == m.id && o.Version==0 && o.VersionDeletedBy == null select o).Single();
                     if (m.JSON != null && cc.JSON != m.JSON)
                         cc.JSON = m.JSON;
-                    if (m.Condition != null && cc.Condition != m.Condition)
-                        cc.Condition = m.Condition;
+                    if (m.Precondition != null && cc.Condition != m.Precondition)
+                        cc.Condition = m.Precondition;
                     if (m.OverrideProjectDataWithJsonCustomVars != null && cc.OverrideProjectDataWithJsonCustomVars != m.OverrideProjectDataWithJsonCustomVars)
                         cc.OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars;                 
                     if (cc.EntityState == EntityState.Modified)
@@ -3672,7 +3672,8 @@ namespace EXPEDIT.Flow.Services {
                                             join gt in d.TriggerGraphs.Where(f=>f.Version == 0 && f.VersionDeletedBy == null)
                                             on o.TriggerID equals gt.TriggerID
                                             join c in d.Precondition.Where(f=>f.Version == 0 && f.VersionDeletedBy == null)
-                                            on o.ConditionID equals c.ConditionID
+                                            on o.ConditionID equals c.ConditionID into cond
+                                            from condition in cond.DefaultIfEmpty() 
                                             where gt.GraphDataID == m.GraphDataID && gt.GraphDataGroupID == m.GraphDataGroupID
                                            
                              select new TriggerGraphViewModel
@@ -3704,9 +3705,9 @@ namespace EXPEDIT.Flow.Services {
                                  RepeatAfterDays = o.RepeatAfterDays,
                                  Repeats = o.Repeats,
                                  ConditionID = o.ConditionID,
-                                 Condition = c.Condition,
-                                 ConditionJSON = c.JSON,
-                                 OverrideProjectDataWithJsonCustomVars = c.OverrideProjectDataWithJsonCustomVars
+                                 Condition =  (condition != null) ? condition.Condition : null,
+                                 ConditionJSON = (condition != null) ? condition.JSON : null,
+                                 OverrideProjectDataWithJsonCustomVars = (condition != null) ? condition.OverrideProjectDataWithJsonCustomVars : null
                              }).ToArray();
                     return true;
                 }
@@ -3876,18 +3877,30 @@ namespace EXPEDIT.Flow.Services {
 
                     if (m.Condition != null)
                     {
+                        var condition = d.Precondition.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ConditionID == m.ConditionID).FirstOrDefault();
                         if (cc.ConditionID == null)
                         {
-                            var pc = new Precondition
+                            if (condition == null)
                             {
-                                ConditionID = m.ConditionID ?? Guid.NewGuid(),
-                                Condition = m.Condition,
-                                JSON = m.ConditionJSON,
-                                OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
-                                VersionUpdated = DateTime.UtcNow,
-                                VersionUpdatedBy = contact
-                            };
-                            d.Precondition.AddObject(pc);
+                                var pc = new Precondition
+                                {
+                                    ConditionID = m.ConditionID ?? Guid.NewGuid(),
+                                    Condition = m.Condition,
+                                    JSON = m.ConditionJSON,
+                                    OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars,
+                                    VersionUpdated = DateTime.UtcNow,
+                                    VersionUpdatedBy = contact
+                                };
+                                d.Precondition.AddObject(pc);
+                            }
+                            else
+                            {
+                                cc.ConditionID = condition.ConditionID;
+                                if (condition.Condition != null && condition.Condition != m.Condition) condition.Condition = m.Condition;
+                                if (condition.JSON != null && condition.JSON != m.ConditionJSON) condition.JSON = m.ConditionJSON;
+                                if (condition.OverrideProjectDataWithJsonCustomVars != null && condition.OverrideProjectDataWithJsonCustomVars != m.OverrideProjectDataWithJsonCustomVars) condition.OverrideProjectDataWithJsonCustomVars = m.OverrideProjectDataWithJsonCustomVars;
+                                
+                            }
                         }
                         else
                         {
@@ -3972,7 +3985,7 @@ namespace EXPEDIT.Flow.Services {
                     var mycompanies = (from r in
                                            (from c in d.Companies.Where(f => f.Version == 0 && f.VersionDeletedBy == null
                                                && companies.Contains(f.CompanyID))
-                                            join p in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null).Take(1)
+                                            join p in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
                                             on c.CompanyID equals p.CompanyID into pc
                                             from parent in pc.DefaultIfEmpty()
                                             join e in d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null
@@ -3985,7 +3998,7 @@ namespace EXPEDIT.Flow.Services {
                                             select new
                                             {
                                                 id = c.CompanyID,
-                                                ParentCompanyID = (parent != null) ? parent.CompanyID : default(Guid?),
+                                                ParentCompanyID = (parent != null) ? parent.ParentCompanyID : default(Guid?),
                                                 CompanyName = c.CompanyName,
                                                 CountryID = c.CountryID,
                                                 PrimaryContactID = c.PrimaryContactID,
@@ -4022,6 +4035,7 @@ namespace EXPEDIT.Flow.Services {
             var contact = _users.ContactID;
             var company = _users.DefaultContactCompanyID;
             var now = DateTime.UtcNow;
+            var old = new DateTime(1970, 1, 1);
             if (string.IsNullOrWhiteSpace(m.CompanyName) || !m.id.HasValue)
                 return false;
             try
@@ -4044,7 +4058,7 @@ namespace EXPEDIT.Flow.Services {
                         VersionOwnerCompanyID = company
                     };
                     d.Companies.AddObject(c);
-                    if (m.ParentCompanyID.HasValue)
+                    if (m.ParentCompanyID.HasValue && m.ParentCompanyID != m.id)
                     {
                         var cr = new CompanyRelation
                         {
@@ -4056,27 +4070,26 @@ namespace EXPEDIT.Flow.Services {
                         };
                         d.CompanyRelations.AddObject(cr);
                     }
-                    if (m.PeopleArray != null)
+                    if (m.PeopleArray == null)
+                        m.PeopleArray = new Guid?[] { };
+                    foreach (var added in m.PeopleArray.Union(new Guid?[] { contact }).ToArray())
                     {
-                        foreach (var added in m.PeopleArray.Union(new Guid?[]{contact}).ToArray())
+                        var username = d.Contacts.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ContactID == added).Select(f => f.Username).Single();
+                        var exp = new Experience
                         {
-                            var username = d.Contacts.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ContactID == added).Select(f => f.Username).Single();
-                            var exp = new Experience
-                            {
-                                ExperienceID = Guid.NewGuid(),
-                                ExperienceName = string.Format("{0} - {1}", m.CompanyName, username),
-                                ContactID = added,
-                                CompanyID = m.id,
-                                DateStart = now,
-                                VersionUpdated = now,
-                                VersionUpdatedBy = contact,
-                                VersionOwnerContactID = contact,
-                                VersionOwnerCompanyID = company
-                            };
-                            d.Experiences.AddObject(exp);
-                        }
+                            ExperienceID = Guid.NewGuid(),
+                            ExperienceName = string.Format("{0} - {1}", m.CompanyName, username),
+                            ContactID = added,
+                            CompanyID = m.id,
+                            DateStart = now,
+                            VersionUpdated = old,
+                            VersionUpdatedBy = contact,
+                            VersionOwnerContactID = contact,
+                            VersionOwnerCompanyID = company
+                        };
+                        d.Experiences.AddObject(exp);
                     }
-                    
+
                     d.SaveChanges();
                 }
                 return true;
@@ -4094,6 +4107,7 @@ namespace EXPEDIT.Flow.Services {
             {
                 if (!m.id.HasValue || m.id.Value == _users.ApplicationCompanyID)
                     return false;
+                var old = new DateTime(1970, 1, 1);
                 var contact = _users.ContactID;
                 var company = _users.DefaultContactCompanyID;
                 var now = DateTime.UtcNow;
@@ -4105,10 +4119,12 @@ namespace EXPEDIT.Flow.Services {
                     var c = d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null && f.CompanyID == m.id).Single();
                     
                     //Update hierarchy
-                    (from o in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
-                        where o.CompanyID == m.id
-                        select o).Delete();
-                    if (m.ParentCompanyID.HasValue)
+                    var oldRelations = (from o in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
+                                        where o.CompanyID == m.id
+                                        select o);
+                    if (oldRelations.Any())
+                        oldRelations.Delete();
+                    if (m.ParentCompanyID.HasValue && m.id != m.ParentCompanyID)
                     {
                         var cr = new CompanyRelation
                         {
@@ -4161,7 +4177,7 @@ namespace EXPEDIT.Flow.Services {
                                 ContactID = added,
                                 CompanyID = m.id,
                                 DateStart = now,
-                                VersionUpdated = now,
+                                VersionUpdated = old,
                                 VersionUpdatedBy = contact,
                                 VersionOwnerContactID = contact,
                                 VersionOwnerCompanyID = company
