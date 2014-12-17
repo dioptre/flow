@@ -1474,10 +1474,14 @@
 <!---- Step - Executing WF -->
 <!------------------------------>
 <script type="text/x-handlebars" id="step">
-    <h1>{{model.steps.firstObject.humanName}} Step</h1>
-    <hr>
+
     <div class="row">
         <div class="col-md-6">
+            <h1>{{model.steps.firstObject.humanName}} Step
+                    <sub>Execute your Workflow</sub>
+            </h1>
+            
+            <hr>
             <div class='pretty-content'>
                 {{!--view 'awesome'--}}
                 {{handlebars-live templatestring=templatestring}}
