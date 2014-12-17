@@ -1196,6 +1196,12 @@
 
             --}}
             {{#view App.HomeNavView}}
+                {{#link-to 'data'}}
+                    <i class="icl-list"></i>
+                    <span>{{model.t.fp_menu_link_data}}</span>
+                {{/link-to}}
+            {{/view}}
+            {{#view App.HomeNavView}}
                 {{#link-to 'report'}}
                     <i class="icl-graph"></i>
                     <span>{{model.t.fp_menu_link_report}}</span>
@@ -4142,6 +4148,38 @@
             {{/if}}
           {{/if}}
        </script>
+
+
+        <script type="text/x-handlebars" data-template-name="data">
+            <h2>Products</h2>
+
+            <div class="row">
+
+                <div class="col-md-6">
+                    Search
+                    {{eui-input value=keywords}}
+
+                    results:
+                    {{#each model}}
+                        {{#linkTo 'datum' id}}{{ id }}{{name}}{{/linkTo}}
+                    {{/each}}
+
+                </div>
+
+
+                <div class="col-md-6">
+                    {{ outlet }}
+                </div>
+            </div>
+        </script>
+
+        <script type="text/x-handlebars" data-template-name="datum">
+            <h2>Product: {{ model }}</h2>
+        </script>
+
+        <script type="text/x-handlebars" data-template-name="data/loading">
+           Loading...
+        </script>
 
         <div id="gout"></div>
 

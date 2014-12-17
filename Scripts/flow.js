@@ -149,6 +149,9 @@ App.Router.map(function () {
     this.route('step', { path: 'step/:id' }); // - executing
     this.route('report')
     this.route('organization')
+    this.resource('data', function () {
+        this.resource('datum', { 'path': '/:id' });
+    });
 
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });
@@ -207,6 +210,33 @@ App.setTitle = function(title) { // little utilitiy function, pretty useless atm
     title = title + " | FlowPro";
    document.title = title;
 };
+
+
+App.DataRoute = Ember.Route.extend({
+    queryParams: {
+        keywords: {
+            refreshModel: true
+        }
+    },
+    model: function (params) {
+
+        return [{ name: params.keywords, id: NewGUID() }, { name: params.keywords + '-2', id: NewGUID() }]
+          // return params.keywords
+    }
+
+})
+
+App.DataController = Ember.Controller.extend({
+    queryParams: ['keywords'],
+    keywords: ''
+})
+
+App.DatumRoute = Ember.Route.extend({
+    model: function (params) {
+        return new Ember.RSVP.Promise(function (resolve){ Ember.run.later(this, function () {resolve(true)}, 3000)});
+         return params.id + "xxx"
+    }
+})
 
 App.StyleguideRoute = Ember.Route.extend({
     model: function(){
