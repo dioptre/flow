@@ -4180,8 +4180,8 @@
 
         <script type="text/x-handlebars" data-template-name="responseDatum">
             <h2>Workflow:</h2>
-            {{#each model}}
-            <br />{{#link-to 'responseDatum' id}}{{humanName}}{{/link-to}}
+            {{#each mod in model}}
+            <br />{{#link-to 'responseDatum' id}}{{mod.ProjectPlanTaskResponseID}}{{humanName}}{{/link-to}}
             {{/each}}
         </script>
 
