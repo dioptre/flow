@@ -150,30 +150,47 @@ namespace EXPEDIT.Flow.ViewModels
 
         public Guid? ProxyContactID { get; set; }
 
-        [JsonIgnore]
-        public string Username
+        private string _email = null;	
+	[JsonIgnore(Write)]
+	public string Email
         {
             get
             {
-                string temp;
-                if (lookup.TryGetValue("username", out temp))
-                    return temp;
-                return null;
+                if (string.IsNullOrWhitespace(_email))
+			lookup.TryGetValue("email", out _email))
+                return _email;
 
             }
+		set { _email = value;}
         }
 
-        [JsonIgnore]
-        public string Password
+
+	private string _username = null;	
+	[JsonIgnore(Write)]
+	public string Username
         {
             get
             {
-                string temp;
-                if (lookup.TryGetValue("password", out temp))
-                    return temp;
-                return null;
+                if (string.IsNullOrWhitespace(_username))
+			lookup.TryGetValue("username", out _username))
+                return _username;
 
             }
+		set { _username = value;}
+        }
+
+        private string _password = null;
+	[JsonIgnore(Write)]
+	public string Password
+        {
+            get
+            {
+                if (string.IsNullOrWhitespace(_password))
+			lookup.TryGetValue("password", out temp))
+                return _password;
+
+            }
+		set {_password = value;}
         }
 
 
