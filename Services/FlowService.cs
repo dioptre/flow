@@ -1013,15 +1013,16 @@ namespace EXPEDIT.Flow.Services {
                 var id = CheckNodePrivileges(d, null, mid, companies, company, ActionPermission.Delete, out isNew);
                 if (!id.HasValue || isNew || id != mid)
                     return false;
-                var g = (from o in d.GraphData.Where(f => f.Version==0 && f.VersionDeletedBy==null) where o.GraphDataID == mid select o).Single();
-                d.GraphDataHistories.Where(f => f.Version==0 && f.VersionDeletedBy==null && f.GraphDataID == mid).Delete();
+                var g = (from o in d.GraphData.Where(f => f.Version==0 && f.VersionDeletedBy==null) where o.GraphDataID == mid select o).Single();                
                 d.GraphDataRelation.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.FromGraphDataID == mid || f.ToGraphDataID == mid).Delete();
-                d.TriggerGraphs.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();
-                d.ProjectPlanTaskResponses.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ActualGraphDataID == mid).Delete();
-                d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();
-                d.GraphDataFileDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();
-                d.GraphDataLocations.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();                            
-                d.GraphData.DeleteObject(g);
+                //Don't delete the node - just its identity in the wf
+                //d.GraphDataHistories.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();
+                //d.TriggerGraphs.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();
+                //d.ProjectPlanTaskResponses.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ActualGraphDataID == mid).Delete();
+                //d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();
+                //d.GraphDataFileDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();
+                //d.GraphDataLocations.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == mid).Delete();                            
+                //d.GraphData.DeleteObject(g);
                 d.SaveChanges();
                 return true;
             }
@@ -4251,6 +4252,64 @@ namespace EXPEDIT.Flow.Services {
                 return false;
             }
         }
+
+
+
+        public IEnumerable<Dictionary<string, object>> GetResponseData(Guid wfid)
+        {
+            if (!CheckPermission(wfid, ActionPermission.Read, typeof(GraphDataGroup)))
+                return new Dictionary<string,object>[] { };
+            var application = _users.ApplicationID;
+            var contact = _users.ContactID;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+               
+                using (var con = new SqlConnection(_users.ApplicationConnectionString))
+                using (var cmd = new SqlCommand("E_SP_GetResponseData", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+
+                    var qG = cmd.CreateParameter();
+                    qG.ParameterName = "@wfid";
+                    qG.DbType = DbType.Guid;
+                    qG.Value = wfid;
+                    cmd.Parameters.Add(qG);
+
+                    var qA = cmd.CreateParameter();
+                    qA.ParameterName = "@applicationid";
+                    qA.DbType = DbType.Guid;
+                    qA.Value = application;
+                    cmd.Parameters.Add(qA);
+
+                    var qC = cmd.CreateParameter();
+                    qC.ParameterName = "@contactid";
+                    qC.DbType = DbType.Guid;
+                    qC.Value = contact;
+                    cmd.Parameters.Add(qC);
+
+
+                    con.Open();
+                    try
+                    {
+                        using (var reader = new DataReaderEnumerable(cmd.ExecuteReader()))
+                        {
+                            return reader.Serialize();
+                        }
+                    }
+                    finally
+                    {
+                        con.Close();
+                    }
+
+                }
+
+            }
+
+        }
+
+
 
 
     }

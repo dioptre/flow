@@ -1196,7 +1196,7 @@
 
             --}}
             {{#view App.HomeNavView}}
-                {{#link-to 'data'}}
+                {{#link-to 'responseData'}}
                     <i class="icl-list"></i>
                     <span>{{model.t.fp_menu_link_data}}</span>
                 {{/link-to}}
@@ -4154,8 +4154,8 @@
        </script>
 
 
-        <script type="text/x-handlebars" data-template-name="data">
-            <h2>Products</h2>
+        <script type="text/x-handlebars" data-template-name="responseData">
+            <h2>Workflow Raw Data</h2>
 
             <div class="row">
 
@@ -4164,8 +4164,9 @@
                     {{eui-input value=keywords}}
                     <br /><br />
                     Results:
-                    {{#each model}}
-                        {{#link-to 'datum' id}}{{ id }}{{name}}{{/link-to}}
+                    <br />
+                    {{#each mod in model.r}}
+                        <br />{{#link-to 'responseDatum' mod.ReferenceID}}{{mod.humanName}}{{/link-to}}
                     {{/each}}
 
                 </div>
@@ -4177,11 +4178,14 @@
             </div>
         </script>
 
-        <script type="text/x-handlebars" data-template-name="datum">
-            <h2>Product: {{ model }}</h2>
+        <script type="text/x-handlebars" data-template-name="responseDatum">
+            <h2>Workflow:</h2>
+            {{#each model}}
+            <br />{{#link-to 'responseDatum' id}}{{humanName}}{{/link-to}}
+            {{/each}}
         </script>
 
-        <script type="text/x-handlebars" data-template-name="data/loading">
+        <script type="text/x-handlebars" data-template-name="responseData/loading">
            Loading...
         </script>
 

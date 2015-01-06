@@ -149,8 +149,8 @@ App.Router.map(function () {
     this.route('step', { path: 'step/:id' }); // - executing
     this.route('report')
     this.route('organization')
-    this.resource('data', function () {
-        this.resource('datum', { 'path': '/:id' });
+    this.resource('responseData', function () {
+        this.resource('responseDatum', { 'path': '/:id' });
     });
 
     // Localisation
@@ -212,29 +212,46 @@ App.setTitle = function(title) { // little utilitiy function, pretty useless atm
 };
 
 
-App.DataRoute = Ember.Route.extend({
+App.ResponseDataRoute = Ember.Route.extend({
     queryParams: {
         keywords: {
             refreshModel: true
         }
     },
     model: function (params) {
-
-        return [{ name: params.keywords, id: NewGUID() }, { name: params.keywords + '-2', id: NewGUID() }]
-          // return params.keywords
+        var query = {
+            page: 0,
+            keywords: params.keywords,
+            type: 'workflow',
+            pagesize: 25
+        }
+        if (!params.keywords)
+            return { r: [] };
+        return Ember.RSVP.hash({
+            r : this.store.find('search', query)
+        });
+    },
+    afterModel: function (m) {
+       // debugger;
     }
 
 })
 
-App.DataController = Ember.Controller.extend({
+App.ResponseDataController = Ember.ObjectController.extend({
     queryParams: ['keywords'],
     keywords: ''
 })
 
-App.DatumRoute = Ember.Route.extend({
+App.ResponseDatumRoute = Ember.Route.extend({
     model: function (params) {
-        return new Ember.RSVP.Promise(function (resolve){ Ember.run.later(this, function () {resolve(true)}, 3000)});
-         return params.id + "xxx"
+        return new Ember.RSVP.Promise(function (resolve) {
+            $.ajax('/flow/ResponseData/' + params.id)
+            .then(function (data) {
+                resolve(data.responseData);
+            }, function (jqXHR) {
+                jqXHR.then = null; // tame jQuery's ill mannered promises
+            });
+        });
     }
 })
 
