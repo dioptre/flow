@@ -4317,12 +4317,15 @@ namespace EXPEDIT.Flow.Services {
             if (startsWith == null || startsWith.Length == 1)
                 return new SelectListItem[] { };
             var application = _users.ApplicationID;
+            var companies = _users.GetCompanies().Select(f => (Guid?)f.Key).ToArray();
+            var defaultCompany = _users.ApplicationCompanyID;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null, false);
                 d.ContextOptions.LazyLoadingEnabled = false;
                 return (from o in d.GraphDataGroups
-                        where o.GraphDataGroupName.StartsWith(startsWith)
+                        where o.GraphDataGroupName.StartsWith(startsWith) && 
+                        (!o.VersionOwnerCompanyID.HasValue || companies.Contains(o.VersionOwnerCompanyID) || o.VersionOwnerCompanyID == defaultCompany)
                         orderby o.GraphDataGroupName ascending
                         select o).Take(20).AsEnumerable()
                         .Select(f =>
