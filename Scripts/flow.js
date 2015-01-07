@@ -3832,7 +3832,7 @@ App.ContactSelectorComponent = App.UserSelectorComponent.extend({
 App.WorkflowSelectorComponent = App.UserSelectorComponent.extend({
     internalID: NewGUID(),
     placeholder: "Enter worklow...",
-    url: "/share/getworkflows",
+    url: "/flow/getworkflows",
     httpMethod: 'POST'
 });
 
