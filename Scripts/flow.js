@@ -5114,6 +5114,8 @@ App.Company = DS.Model.extend({
     ParentCompanyID: DS.attr('string'),
     CompanyName: DS.attr('string'),
     CountryID: DS.attr('string'),
+    Dashboard: DS.attr('string'),
+    Features: DS.attr('string'),
     PrimaryContactID: DS.attr('string'),
     Comment: DS.attr('string'),
     Owner: DS.belongsTo('contact', { async: true }),
@@ -6208,10 +6210,43 @@ App.OrganizationController = Ember.ObjectController.extend({
       console.log('Setup again...')
 
       var wrap =  {data: org,  children: transform(results) };
-      return {data: wrap } // the data wrapper is what the hierachy component needs ;)
+      return { data: wrap } // the data wrapper is what the hierachy component needs ;)
 
     }.property('model.content', 'model', 'update'),
     selected: null,
+    selectedDashboardCheckbox: '',
+    selectedDashboardObserver: function(){
+      var a = this.get('selected.Dashboard');
+      if (a) {
+        this.set('selectedDashboardCheckbox', true);
+      } else {
+        this.set('selectedDashboardCheckbox', false);
+      }
+    }.observes('selected.Dashboard'),
+    selectedDashboardCheckboxObserver: function(){
+      
+      // Scenario they uncheck... must clear the 
+      var a = this.get('selectedDashboardCheckbox')
+      if (a) {
+
+      } else {
+        this.set('selectedDashboard')
+      }
+
+    }.observes('selectedDashboardCheckbox'),
+    // function(key, value){
+    //   if (arguments.length > 1) {
+    //     console.log(key, value);
+    //     this.set('selected.Dashboard', 'Define your own story')
+    //     return true;
+    //   }
+
+    //   // getter
+    //   var a = this.get('selected.Dashboard');
+
+    //   return a;
+
+    // }.property('selected.Dashboard'),
     isValidNameLoading: true,
     isValidName: true, 
     isValidNameObserver: function() {
@@ -6262,12 +6297,8 @@ App.OrganizationController = Ember.ObjectController.extend({
     }.property('selected'),
     organization: null,
     title: function () {
-
-
         return 'My Organization'
     }.property('organization'),
-      
-
     actions: {
         saveAll: function(){
 

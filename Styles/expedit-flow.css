@@ -1169,3 +1169,9 @@ color: red;
     display: none;
 }
 
+
+
+/* FOr org chart */
+text.nodeText {
+   cursor: pointer;
+}

@@ -554,6 +554,26 @@
                                 {{contact-selector value=selected.People multiple=true}}
 
                                 <br>
+                                <br>
+
+                                <h5>Customise dashboard for this group</h5>
+                                {{selected.Dashboard}}
+                                    
+                                {{eui-checkbox value=selectedDashboardCheckbox label='Custom dashboard (by default template from the group above is used)'}}
+
+                                {{#if selectedDashboardCheckbox}}
+                                    {{tinymce-editor data=selected.Dashboard}}
+                                {{/if}}
+
+
+                                <br>
+                                <br>
+
+                                <h5>Sidebar</h5>
+                                Turn on and off features for users. Coming soon.
+
+                                <br>
+                                <br>
 
                                 {{eui-button label='Delete this Department' action='deleteItem' selected=selected}}   
                                 {{eui-button label='Save Details' style='primary' action='saveItem' disabled=isValidName loading=isValidNameLoading selected=selected}}   
