@@ -1380,6 +1380,28 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
         }
 
+        [ValidateInput(false)]
+        [Authorize]
+        [Themed(false)]
+        public JsonResult GetWorkflows(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return Json(new SelectListItem[] { }, JsonRequestBehavior.AllowGet);
+            Guid tid;
+            if (id.Contains(',') || Guid.TryParse(id, out tid))
+            {
+                List<Guid> lid = new List<Guid>();
+                var ids = id.Split(',');
+                foreach (var gid in ids)
+                {
+                    if (Guid.TryParse(gid, out tid))
+                        lid.Add(tid);
+                    return Json(_Flow.GetWorkflows(lid.ToArray()), JsonRequestBehavior.AllowGet);
+                }
+            }
+            return Json(_Flow.GetWorkflows(id), JsonRequestBehavior.AllowGet);
+        }
+
 
     }
 }

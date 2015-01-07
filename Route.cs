@@ -649,6 +649,21 @@ namespace EXPEDIT.Flow
                                 {"area", "EXPEDIT.Flow"}
                             },
                             new MvcRouteHandler())
+                },
+                new RouteDescriptor {
+                        Priority = 5,
+                        Route = new Route(
+                            "Flow/GetWorkflows",
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"},
+                                {"controller", "User"},
+                                {"action", "GetWorkflows"}
+                            },
+                            null,
+                            new RouteValueDictionary {
+                                {"area", "EXPEDIT.Flow"}
+                            },
+                            new MvcRouteHandler())
                 }
                 
 

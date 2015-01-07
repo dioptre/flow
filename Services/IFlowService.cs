@@ -9,6 +9,7 @@ using EXPEDIT.Flow.ViewModels;
 using EXPEDIT.Share.ViewModels;
 using System.Data;
 using NKD.Models;
+using System.Web.Mvc;
 
 namespace EXPEDIT.Flow.Services
 {
@@ -227,5 +228,11 @@ namespace EXPEDIT.Flow.Services
 
         [OperationContract]
         IEnumerable<Dictionary<string, object>> GetResponseData(Guid wfid);
+
+        [OperationContract]
+        SelectListItem[] GetWorkflows(string startsWith);
+
+        [OperationContract]
+        SelectListItem[] GetWorkflows(Guid[] workflowIDs);
     }
 }
