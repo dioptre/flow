@@ -108,7 +108,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (Guid.TryParse(reference, out trid))
                 m.ReferenceID = trid;
             var method = id.ToUpperInvariant();
-            if (!User.Identity.IsAuthenticated)
+            if (!User.Identity.IsAuthenticated && method != "DOAS")
             {
                 if (string.IsNullOrWhiteSpace(m.Username) || string.IsNullOrWhiteSpace(m.Password))
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
@@ -118,6 +118,10 @@ namespace EXPEDIT.Flow.Controllers {
             switch (method) {
                 case "DONEXT":
                     result = _Auto.DoNext(m);
+                    toReturn = m.PreviousStepID;
+                    break;
+                case "DOAS":
+                    result = _Auto.DoAs(m);
                     toReturn = m.PreviousStepID;
                     break;
                 default:

@@ -1226,6 +1226,12 @@
 
             --}}
             {{#view App.HomeNavView}}
+                {{#link-to 'responseData'}}
+                    <i class="icl-list"></i>
+                    <span>{{model.t.fp_menu_link_data}}</span>
+                {{/link-to}}
+            {{/view}}
+            {{#view App.HomeNavView}}
                 {{#link-to 'report'}}
                     <i class="icl-graph"></i>
                     <span>{{model.t.fp_menu_link_report}}</span>
@@ -4176,6 +4182,41 @@
             {{/if}}
           {{/if}}
        </script>
+
+
+        <script type="text/x-handlebars" data-template-name="responseData">
+            <h2>Workflow Raw Data</h2>
+
+            <div class="row">
+
+                <div class="col-md-3">
+                    Search
+                    {{eui-input value=keywords}}
+                    <br /><br />
+                    Results:
+                    <br />
+                    {{#each mod in model.r}}
+                        <br />{{#link-to 'responseDatum' mod.ReferenceID}}{{mod.humanName}}{{/link-to}}
+                    {{/each}}
+
+                </div>
+
+
+                <div class="col-md-9">
+                    {{ outlet }}
+                </div>
+            </div>
+        </script>
+
+        <script type="text/x-handlebars" data-template-name="responseDatum">
+            {{#each mod in model}}
+            <br />{{#link-to 'responseDatum' id}}{{mod.ProjectPlanTaskResponseID}}{{humanName}}{{/link-to}}
+            {{/each}}
+        </script>
+
+        <script type="text/x-handlebars" data-template-name="responseData/loading">
+           Loading...
+        </script>
 
         <div id="gout"></div>
 

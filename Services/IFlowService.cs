@@ -225,6 +225,7 @@ namespace EXPEDIT.Flow.Services
         [OperationContract]
         bool DeleteCompany(CompanyViewModel m);
 
-
+        [OperationContract]
+        IEnumerable<Dictionary<string, object>> GetResponseData(Guid wfid);
     }
 }

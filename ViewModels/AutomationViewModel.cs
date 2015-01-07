@@ -150,30 +150,44 @@ namespace EXPEDIT.Flow.ViewModels
 
         public Guid? ProxyContactID { get; set; }
 
-        [JsonIgnore]
+        private string _email = null;
+        public string Email
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_email))
+                    lookup.TryGetValue("email", out _email);
+                return _email;
+
+            }
+            set { _email = value; }
+        }
+
+
+        private string _username = null;
         public string Username
         {
             get
             {
-                string temp;
-                if (lookup.TryGetValue("username", out temp))
-                    return temp;
-                return null;
+                if (string.IsNullOrWhiteSpace(_username))
+                    lookup.TryGetValue("username", out _username);
+                return _username;
 
             }
+            set { _username = value; }
         }
 
-        [JsonIgnore]
+        private string _password = null;
         public string Password
         {
             get
             {
-                string temp;
-                if (lookup.TryGetValue("password", out temp))
-                    return temp;
-                return null;
+                if (string.IsNullOrWhiteSpace(_password))
+                    lookup.TryGetValue("password", out _password);
+                return _password;
 
             }
+            set { _password = value; }
         }
 
 
@@ -247,7 +261,7 @@ namespace EXPEDIT.Flow.ViewModels
                 if (QueryParams == null)
                     QueryParams = new Dictionary<string, object>();
                 var l = lookup.Select(f => new Tuple<string, string>(f.Key, f.Value));
-                var merged = new List<Tuple<string,string>>(l);
+                var merged = new List<Tuple<string, string>>(l);
                 var q = (from o in QueryParams
                          select new Tuple<string, string>(
                              o.Key,
@@ -258,8 +272,8 @@ namespace EXPEDIT.Flow.ViewModels
                                 })
                          ));
                 merged.AddRange(q.Where(qv => l.All(lu => qv.Item1 != lu.Item1)));
-                             
-                
+
+
                 return merged
                     .Where(f => f.Item1.ToLowerInvariant() != "password")
                     .ToDictionary(f => f.Item1, f => f.Item2);
@@ -270,5 +284,5 @@ namespace EXPEDIT.Flow.ViewModels
         private Dictionary<string, string> _lookup = null;
     }
 
-    
+
 }

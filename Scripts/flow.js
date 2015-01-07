@@ -150,6 +150,9 @@ App.Router.map(function () {
     this.route('report');
     this.route('organization');
     this.route('dashboard');
+    this.resource('responseData', function () {
+        this.resource('responseDatum', { 'path': '/:id' });
+    });
 
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });
@@ -208,6 +211,50 @@ App.setTitle = function(title) { // little utilitiy function, pretty useless atm
     title = title + " | FlowPro";
    document.title = title;
 };
+
+
+App.ResponseDataRoute = Ember.Route.extend({
+    queryParams: {
+        keywords: {
+            refreshModel: true
+        }
+    },
+    model: function (params) {
+        var query = {
+            page: 0,
+            keywords: params.keywords,
+            type: 'workflow',
+            pagesize: 25
+        }
+        if (!params.keywords)
+            return { r: [] };
+        return Ember.RSVP.hash({
+            r : this.store.find('search', query)
+        });
+    },
+    afterModel: function (m) {
+       // debugger;
+    }
+
+})
+
+App.ResponseDataController = Ember.ObjectController.extend({
+    queryParams: ['keywords'],
+    keywords: ''
+})
+
+App.ResponseDatumRoute = Ember.Route.extend({
+    model: function (params) {
+        return new Ember.RSVP.Promise(function (resolve) {
+            $.ajax('/flow/ResponseData/' + params.id)
+            .then(function (data) {
+                resolve(data.responseData);
+            }, function (jqXHR) {
+                jqXHR.then = null; // tame jQuery's ill mannered promises
+            });
+        });
+    }
+})
 
 App.StyleguideRoute = Ember.Route.extend({
     model: function(){

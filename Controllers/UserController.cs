@@ -1019,7 +1019,7 @@ namespace EXPEDIT.Flow.Controllers {
             return new JsonHelper.JsonNetResult(new { contextNames = result }, JsonRequestBehavior.AllowGet);
         }
 
-
+        [Themed(false)]
         [ActionName("Conditions")]
         public ActionResult GetCondition(string id)
         {
@@ -1077,6 +1077,7 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
         [Authorize]
+        [Themed(false)]
         [ActionName("Tasks")]
         public ActionResult GetTask(string id)
         {
@@ -1160,6 +1161,7 @@ namespace EXPEDIT.Flow.Controllers {
 
 
         [Authorize]
+        [Themed(false)]
         [ActionName("Triggers")]
         public ActionResult GetTrigger(string id)
         {
@@ -1244,6 +1246,7 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
         [Authorize]
+        [Themed(false)]
         [ActionName("Companies")]
         public ActionResult GetCompany(CompanyViewModel m)
         {
@@ -1305,6 +1308,7 @@ namespace EXPEDIT.Flow.Controllers {
 
 
         [Authorize]
+        [Themed(false)]
         [ActionName("TriggerGraphs")]
         public ActionResult GetTriggerGraph(TriggerGraphViewModel m)
         {
@@ -1344,6 +1348,7 @@ namespace EXPEDIT.Flow.Controllers {
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed, m.Error);
         }
+        
         [Authorize]
         [Themed(false)]
         [HttpDelete]
@@ -1359,6 +1364,21 @@ namespace EXPEDIT.Flow.Controllers {
 
         }
 
+
+        [Authorize]
+        [Themed(false)]
+        [ActionName("ResponseData")]
+        public ActionResult GetResponseData(string id)
+        {
+            Guid gid;
+            if (string.IsNullOrWhiteSpace(id) || !Guid.TryParse(id, out gid))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+            var result = _Flow.GetResponseData(gid);
+            if (result != null)
+                return new JsonHelper.JsonNetResult(new { responseData = result.ToArray() }, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+        }
 
 
     }
