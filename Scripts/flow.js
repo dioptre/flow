@@ -3775,6 +3775,13 @@ App.ContactSelectorComponent = App.UserSelectorComponent.extend({
     httpMethod: 'POST'
 });
 
+App.WorkflowSelectorComponent = App.UserSelectorComponent.extend({
+    internalID: NewGUID(),
+    placeholder: "Enter worklow...",
+    url: "/share/getworkflows",
+    httpMethod: 'POST'
+});
+
 //TODO Refactor so that query only happens on click - 
 App.MyCompanySelectorComponent = App.UserSelectorComponent.extend({
     minimumInput: 0,
@@ -3878,25 +3885,53 @@ App.TriggerOption = Ember.Object.extend({
             _this.set(a, null)
         })
 
-        // Setup new template
-        var template = JSON.parse(JSON.stringify(this.get(type + 'Template')));
-        this.set(type, template)
+        if (this.get(type + 'Template.isSpecial')) {
+          var template = App.ThenWorkflowTrigger.create()
+          this.set(type, template);
+        } else {
+          // Setup new template
+          var template = JSON.parse(JSON.stringify(this.get(type + 'Template')));
+          console.log('TEMPLATE IS', template);
+          this.set(type, template)
+        }
     }.observes('type').on('init')
+})
+
+App.ThenWorkflowTrigger = App.TriggerOption.extend({
+  isSpecial: true,
+  type: 'level',
+  options: ['group', 'level'],
+  select: [{value: 'group', text: "for an organization"}, {value: 'level', text: "for every organization at depth"}],
+  forSelect: [{value: 'one', text: "just one"}, {value: 'every', text: "one for every member"}],
+  forSelected:'one',
+  eachSelect:  [{value:'one', text:"just Itself"},{value:"sibling", text:"Each Sibling"},{value:"parent", text:"Each Parent"},{value:"child", text:"Each Child"}],
+  eachSelected:'sibling',
+  workflowSelected: '',
+  groupTemplate: {
+    selected: ''
+  },
+  levelTemplate: {
+    selected: ''
+  }
 })
 
 App.ThenTrigger = App.TriggerOption.extend({
     type: 'email',
-    options: ['webhook', 'email'],
+    options: ['webhook', 'email', 'workflow'],
+    select: [{value: 'workflow', text: "Create Todo"}, {value: 'email', text: "Email"}, {value: 'webhook', text: "Webhook"}],
     emailTemplate: {
         sender: '',
         recipient: '', 
         message: '',
         subject: ''
     },
+    workflowTemplate: App.ThenWorkflowTrigger.create(),
     webhookTemplate: {
         url: 'http://x.com/xxx'
     }
 });
+
+
 
 App.WhenTrigger = App.TriggerOption.extend({
     type: 'now',
@@ -3912,7 +3947,6 @@ App.WhenTrigger = App.TriggerOption.extend({
 App.TriggerNodeComponent = Ember.Component.extend({
     defaultRow: {},
     tSmatchesRules: [{value: 'All'}, {value: 'Any'}],
-    tStTriggerTypes: [{value: 'email', text: "Email"}, {value: 'webhook', text: "Webhook"}],
     tSvariables: [], // {value: 'Test'}, {value:'Awesome'}], // - this should be loaded from the variables on the current page context
     tSmatches: [{value: 'contains'}, {value:'does not contain'}, {value:'is'}, {value:'is not'}, {value:'begins with'}, {value:'ends with'}],
     graphID: '', // this is the edge ID on the item we are editing
@@ -4047,14 +4081,11 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 id: NewGUID(),
                 type: 'email'
             })
-            //,
-            //App.ThenTrigger.create({
+            ,
+            App.ThenTrigger.create({
             
-            //    type: 'webhook',
-            //    webhook: {
-            //        url: "",
-            //    }
-            //})
+               type: 'workflow'
+            })
             
         ],
         when: [

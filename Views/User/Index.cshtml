@@ -1412,7 +1412,32 @@
 
             <h3>THEN</h3>
             {{#each trig in triggersJSON.trigger}}
-                {{eui-select value=trig.type options=tStTriggerTypes labelPath='text' placeholder="Choose trigger type"  size='medium'}}
+                {{eui-select value=trig.type options=trig.select labelPath='text' placeholder="Choose trigger type"  size='medium'}}
+                {{#if trig.workflow}}                    
+
+                    {{eui-select value=trig.workflow.forSelected options=trig.workflow.forSelect labelPath='text' size='medium'}}
+                    {{eui-select value=trig.workflow.type options=trig.workflow.select labelPath='text' size='medium'}}
+
+                    {{#if trig.workflow.level}}
+                        {{eui-input value=trig.workflow.level.selector}}
+                    {{/if}}
+                    {{#if trig.workflow.group}}
+                        <i><- please change. only selecting by level supported at this point.</i>
+                    {{/if}}
+
+                    <b>for every </b>
+                    {{eui-select value=trig.workflow.eachSelected options=trig.workflow.eachSelect labelPath='text' size='medium'}}
+
+
+                     <b>using Template</b>
+                    {{workflow-selector value=trig.workflow.workflowSelected multiple=false}}
+                     
+
+                {{/if}}
+
+
+
+
                 {{#if trig.email}}
                     <span>
                     <b>Send to</b>
