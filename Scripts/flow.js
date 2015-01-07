@@ -147,8 +147,9 @@ App.Router.map(function () {
     this.route('todo');
     this.route('styleguide', {path:"styleguide"}); // Internal only
     this.route('step', { path: 'step/:id' }); // - executing
-    this.route('report')
-    this.route('organization')
+    this.route('report');
+    this.route('organization');
+    this.route('dashboard');
 
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });

@@ -494,6 +494,10 @@
 
 </script>
 
+<script type="text/x-handlebars" id="dashboard">
+    Dashboard...
+</script>
+
 <script type="text/x-handlebars" id="organization">
     {{#if loading}}
         Loading...
@@ -1177,6 +1181,12 @@
     <!-- sidebar -->
     <div id="sidebar-nav">
         <ul id="dashboard-menu">
+            {{#view App.HomeNavView}}
+                {{#link-to 'dashboard'}}
+                    <i class="icl-compass"></i>
+                    <span>{{model.t.fp_menu_link_dashboard}}</span>
+                {{/link-to}}
+            {{/view}}
             {{#view App.HomeNavView}}
                 {{#link-to 'search'}}
                     <i class="icl-magnifier"></i>
