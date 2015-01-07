@@ -347,12 +347,14 @@ namespace EXPEDIT.Flow.Services {
         }
 
 	public bool DoAs(AutomationViewModel m) {
-		if (_users.VerifyUserUnicity(m.Username, m.Email)) 
-		{
-			_users.Create(m.Email, m.Username,  m.Password);
-		}
-		check that this does not already exist in usercontroller	
-		DoNext(m);
+        if (_users.VerifyUserUnicity(m.Username, m.Email))
+        {
+            if (_users.Create(m.Email, m.Username, m.Password) != null)
+                return DoNext(m);
+            else
+                return false;
+        }
+        else return false;
 	}
 
 
