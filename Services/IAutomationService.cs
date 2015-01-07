@@ -25,6 +25,9 @@ namespace EXPEDIT.Flow.Services
         bool DoNext(AutomationViewModel m);
 
         [OperationContract]
+        bool DoAs(AutomationViewModel m);
+
+        [OperationContract]
         bool Authenticate(AutomationViewModel m, string method);
 
         [OperationContract]
