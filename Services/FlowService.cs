@@ -41,6 +41,7 @@ using System.Net.Http;
 using System.Globalization;
 using Newtonsoft.Json.Linq;
 using Orchard.Environment.Configuration;
+using System.Web.Mvc;
 
 
 
@@ -4310,6 +4311,50 @@ namespace EXPEDIT.Flow.Services {
         }
 
 
+        public SelectListItem[] GetWorkflows(string startsWith)
+        {
+
+            if (startsWith == null || startsWith.Length == 1)
+                return new SelectListItem[] { };
+            var application = _users.ApplicationID;
+            var companies = _users.GetCompanies().Select(f => (Guid?)f.Key).ToArray();
+            var defaultCompany = _users.ApplicationCompanyID;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null, false);
+                d.ContextOptions.LazyLoadingEnabled = false;
+                return (from o in d.GraphDataGroups
+                        where o.GraphDataGroupName.StartsWith(startsWith) && 
+                        (!o.VersionOwnerCompanyID.HasValue || companies.Contains(o.VersionOwnerCompanyID) || o.VersionOwnerCompanyID == defaultCompany)
+                        orderby o.GraphDataGroupName ascending
+                        select o).Take(20).AsEnumerable()
+                        .Select(f =>
+                             new SelectListItem { Text = f.GraphDataGroupName, Value = string.Format("{0}", f.GraphDataGroupID) })
+                             .ToArray()
+                        ;
+            }
+        }
+
+        public SelectListItem[] GetWorkflows(Guid[] workflowIDs)
+        {
+
+            if (workflowIDs == null || workflowIDs.Length == 0)
+                return new SelectListItem[] { };
+            var application = _users.ApplicationID;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null, false);
+                d.ContextOptions.LazyLoadingEnabled = false;
+                return (from o in d.GraphDataGroups
+                        where workflowIDs.Contains(o.GraphDataGroupID)
+                        orderby o.GraphDataGroupName ascending
+                        select o).AsEnumerable()
+                        .Select(f =>
+                             new SelectListItem { Text = f.GraphDataGroupName, Value = string.Format("{0}", f.GraphDataGroupID) })
+                             .ToArray()
+                        ;
+            }
+        }
 
 
     }

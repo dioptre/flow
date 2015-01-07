@@ -17,6 +17,7 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? id { get; set; }
         public Guid? ParentCompanyID { get; set; }
         public string CompanyName {get; set;}
+        public string Dashboard { get; set; }
         public string CountryID {get; set;}
         public Guid? PrimaryContactID {get; set;}
         public string Comment {get; set;}
