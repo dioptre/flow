@@ -3244,7 +3244,7 @@ App.VizEditorComponent = Ember.Component.extend({
             //       deleteClusterError:"Clusters cannot be deleted."
             // },
             //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}},
-            smoothCurves: true,
+            smoothCurves: false,
             //hierarchicalLayout: {enabled:true},
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
             //physics: {barnesHut: {enabled: false}},
