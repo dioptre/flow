@@ -256,59 +256,66 @@ App.ResponseDatumRoute = Ember.Route.extend({
     }
 });
 
+App.ResponseDatumView = Ember.View.extend({
+    didInsertElement: function () {
+        this._super();
+        Ember.run.scheduleOnce('afterRender', this, function () {
+            // perform your jQuery logic here
+            var a = this.controller.get('model');
+
+
+            if (a.length == 0) {
+                $results.html("<h4>Unknown results.</h4>");
+                return;
+            }
+            var k = [];
+            Enumerable.From(a).ForEach(function (f) { Enumerable.From(f).ForEach(function (g) { k.push(g.Key) }); });
+            var cols = Enumerable.From(k).Distinct().ToArray();
+            //cols.push('Updated');
+            //cols.push('Updated By');
+            var txt = "f=> {";
+            $(cols).each(function (i, f) { if (i > 0) txt = txt + ",'" + f + "': f['" + f + "']"; else txt = txt + "'" + f + "': f['" + f + "']"; });
+            txt += "}";
+            var data = Enumerable.From(a).Select(txt).ToArray();
+
+
+            var yData = cols.map(function (aws) { return { data: aws, defaultContent: '<i>no result</i>' } })
+
+
+            var colsNice = cols.map(function (lol) {
+                return lol.replace(/[a-zA-Z0-9-]*-/ig, '')
+            })
+            var source = $("#form-table-setup").html();
+            var template = Handlebars.compile(source);
+            var tableSetup = template({ id: NewGUID(), array: colsNice });
+            $results = $('#dataTables-responseDatum');
+            // Create a new table
+            $results.empty().html(tableSetup);
+
+            this.controller.set('rdata', data);
+
+            // Get new results for table
+            $results.find('table').dataTable({
+                responsive: true,
+                "data": data,
+                "columns": yData
+                // defaultContent: ''
+
+            });
+
+        })
+    }
+});
+
 App.ResponseDatumController = Ember.Controller.extend({
-//   var a = $.ajax('/share/user/forms/' + id.substring(4))
+    actions: {
+        downloadCSV: function () {
+            DownloadCSV(this.get('rdata'))
+        }
+    }
+});
 
 
-//            a.success(function (a) {
-//                if (a.length == 0) {
-//                    if (isLoggedIn())
-//                        $results.html("<h4>No results.</h4>");
-//                    else
-//                        $results.html("<h4>Login to see results.</h4>");
-//                    return;
-//                }
-//                var k = [];                
-//                Enumerable.From(a).ForEach(function (f) { var y = JSON.parse(f.FormData); Enumerable.From(y).ForEach(function (g) { k.push(g.name) }); });
-//                var cols = Enumerable.From(k).Distinct().ToArray();
-//                cols.push('Updated');
-//                cols.push('Updated By');
-//                var txt = "f=> {";
-//                $(cols).each(function (i, f) { if (i > 0) txt = txt + ",'" + f + "': f['" + f + "']"; else txt = txt + "'" + f + "': f['" + f + "']"; });
-//                txt += "}";
-//                var y = Enumerable.From(a).Select(function (f) { var r = {}; var g = JSON.parse(f.FormData); $(g).each(function (i, z) { r[z.name] = z.value }); r['Updated'] = f.Updated; r['Updated By'] = f.UpdatedBy; return r; }).ToArray();
-//                var data = Enumerable.From(y).Select(txt).ToArray();
-                
-
-//                var yData = cols.map(function (aws) { return { data: aws, defaultContent: '<i>no result</i>' } })
-
-
-//                var colsNice = cols.map(function(lol){
-//                    return lol.replace(/[a-zA-Z0-9-]*-/ig,'')
-//                })
-//                var source = $("#form-table-setup").html();
-//                var template = Handlebars.compile(source);
-//                var tableSetup = template({ id: NewGUID(), array: colsNice });
-
-//                // Create a new table
-//                $results.empty().html(tableSetup);
-
-//                // Get new results for table
-//                $results.find('table').dataTable({
-//                    responsive: true,
-//                    "data": y,
-//                    "columns": yData
-//                    // defaultContent: ''
-              
-//                });
-
-//            });
-
-//a.fail(function (a) {
-//    $results.html("<h4>You need permission to view the results.</h4>");
-//    return;
-//});
-})
 
 App.StyleguideRoute = Ember.Route.extend({
     model: function(){

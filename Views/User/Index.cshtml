@@ -4242,9 +4242,16 @@
         </script>
 
         <script type="text/x-handlebars" data-template-name="responseDatum">
-            {{#each mod in model}}
+            <div id="dataTables-responseDatum"></div>
+            {{eui-button label='Download' action='downloadCSV'}}
+            
+            
+            
+            @*{{#each mod in model}}
             <br />{{#link-to 'responseDatum' id}}{{mod.ProjectPlanTaskResponseID}}{{humanName}}{{/link-to}}
-            {{/each}}
+            {{/each}}*@
+
+
         </script>
 
         <script type="text/x-handlebars" data-template-name="responseData/loading">
