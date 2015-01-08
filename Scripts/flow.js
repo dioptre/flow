@@ -216,7 +216,7 @@ App.setTitle = function(title) { // little utilitiy function, pretty useless atm
 App.ResponseDataRoute = Ember.Route.extend({
     queryParams: {
         keywords: {
-            refreshModel: true
+            refreshModel: false
         }
     },
     model: function (params) {
@@ -240,7 +240,22 @@ App.ResponseDataRoute = Ember.Route.extend({
 
 App.ResponseDataController = Ember.ObjectController.extend({
     queryParams: ['keywords'],
-    keywords: ''
+    keywords: '',
+    oldKeywords: '',
+    kw: function () {
+        var _this = this;
+        if (this.get('keywords') != this.get('oldKeywords')) {
+            var query = {
+                page: 0,
+                keywords: this.get('keywords'),
+                type: 'workflow',
+                pagesize: 25
+            }
+            this.store.find('search', query).then(function (m) {
+                _this.set('model.r', m);
+            })
+        }
+    }.observes('keywords')
 })
 
 App.ResponseDatumRoute = Ember.Route.extend({
@@ -248,12 +263,22 @@ App.ResponseDatumRoute = Ember.Route.extend({
         return new Ember.RSVP.Promise(function (resolve) {
             $.ajax('/flow/ResponseData/' + params.id)
             .then(function (data) {
-                resolve(data.responseData);
+                resolve( { data: data.responseData });
             }, function (jqXHR) {
                 jqXHR.then = null; // tame jQuery's ill mannered promises
             });
         });
+    },
+    afterModel: function (m, p) {
+        var title = Enumerable.From(this.store.all('search').content).Where("$.get('ReferenceID')=='" + p.params.responseDatum.id + "'").FirstOrDefault();
+        if (title) {
+            m.title = title.get('humanName');
+        }
+        else {
+            m.title = '';
+        }
     }
+
 });
 
 App.ResponseDatumView = Ember.View.extend({
@@ -261,7 +286,7 @@ App.ResponseDatumView = Ember.View.extend({
         this._super();
         Ember.run.scheduleOnce('afterRender', this, function () {
             // perform your jQuery logic here
-            var a = this.controller.get('model');
+            var a = this.controller.get('model.data');
 
 
             if (a.length == 0) {
@@ -292,7 +317,7 @@ App.ResponseDatumView = Ember.View.extend({
             // Create a new table
             $results.empty().html(tableSetup);
 
-            this.controller.set('rdata', data);
+            this.controller.set('model.rdata', data);
 
             // Get new results for table
             $results.find('table').dataTable({
@@ -310,7 +335,7 @@ App.ResponseDatumView = Ember.View.extend({
 App.ResponseDatumController = Ember.Controller.extend({
     actions: {
         downloadCSV: function () {
-            DownloadCSV(this.get('rdata'))
+            DownloadCSV(this.get('model.rdata'))
         }
     }
 });
