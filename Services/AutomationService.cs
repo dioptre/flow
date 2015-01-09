@@ -473,7 +473,7 @@ namespace EXPEDIT.Flow.Services {
                         {
                             ProjectID = m.PreviousStep.ProjectID.Value,
                             ProjectName = string.Join("", string.Format("{0} @ {1}", string.Join("", string.Format("{0}", m.PreviousStep.GraphDataGroup.GraphDataGroupName).Take(28)), now.ToString("yyyy-MM-dd HH:mm:ss")).Take(50)),
-                            ProjectCode = string.Format("{0}-{1}", now.HexUnixTimestamp(), m.PreviousStep.ProjectID.Value.ToString().Substring(0, 4).ToUpperInvariant()),
+                            ProjectCode = string.Format("{0}-{1}", now.HexUnixTimestamp(), m.PreviousStepID.Value.ToString().Substring(0, 4).ToUpperInvariant()),
                             ProjectTypeID = ConstantsHelper.PROJECT_TYPE_FLOWPRO,
                             VersionUpdatedBy = contact,
                             VersionUpdated = now,

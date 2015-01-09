@@ -3556,8 +3556,8 @@
                             {{#each steps}}
                             <tr>
                                 <td>
-                                    <input type="checkbox">
-                                    <i class="icl-check green"></i>&nbsp;
+                                    @*<input type="checkbox">*@
+                                    @*<i class="icl-check green"></i>&nbsp;*@
                                     {{#link-to 'step' this.id}}{{this.projectCode}}{{/link-to}}
                                 </td>
                                 <td class="description" {{bind-attr style=uniqueColor}}>
@@ -3568,6 +3568,7 @@
                                     {{VersionUpdated}} {{this.LastUpdatedBy}}
                                     <ul class="actions">
                                         <li>{{#link-to 'step' this.id}}Checkout{{/link-to}}</li>
+                                        <li><a {{bind-attr data-js=this.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png';">Barcode</a></li>
                                         @*<li class="last"><a href="#">Delete</a></li>*@
                                     </ul>
                                 </td>
@@ -3577,6 +3578,7 @@
                         </tbody>
                     </table>
                     </div>
+                    <canvas id="barcode" style="display:none;"></canvas>
                 {{else}}
                     You need to be logged in :)
                 {{/if}}
@@ -4390,6 +4392,8 @@
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/cldr-1.0.0.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/i18n.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/liquid-fire-0.15.0.js")"></script>
+
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/JsBarcode.all.min.js")"></script>
 
 
         <!-- js -->

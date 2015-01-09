@@ -4859,7 +4859,12 @@ App.TodoRoute = Ember.Route.extend({
 });
 
 App.TodoController = Ember.ObjectController.extend({
-    needs: ['application']
+    needs: ['application'],
+    actions: {
+        getBarcode: function (id) {
+            console.log(id);
+        }
+    }
 });
 
 
