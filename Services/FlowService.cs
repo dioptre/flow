@@ -4227,14 +4227,15 @@ namespace EXPEDIT.Flow.Services {
                     var dashID = string.Format(DASHBOARD_COMPANY, m.id);
                     //Dashboard
                     var dash = (from o in d.MetaDatas where o.Version == 0 && o.VersionDeletedBy == null && o.MetaDataType == dashID select o).FirstOrDefault();
+                    if (m.Dashboard != null)
+                        m.Dashboard = m.Dashboard.Trim();
                     if (string.Empty == m.Dashboard)
                     {
                         if (dash != null)
                             d.MetaDatas.DeleteObject(dash);
                     }
                     else if (!string.IsNullOrWhiteSpace(m.Dashboard))
-                    {
-                        m.Dashboard = m.Dashboard.Trim();
+                    {                        
                         if (dash == null)
                         {
                             dash = new MetaData
@@ -4425,7 +4426,7 @@ namespace EXPEDIT.Flow.Services {
                 var dashID = string.Format(DASHBOARD_COMPANY, id);
                 var dash = new CompanyViewModel { };
                 dash.Dashboard = (from m in d.MetaDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.MetaDataType == dashID) select m.ContentToIndex).FirstOrDefault();
-                if (string.IsNullOrWhiteSpace(dash.Dashboard) || dash.Dashboard == "<div>&nbsp;</div>")
+                if (string.IsNullOrWhiteSpace(dash.Dashboard) || dash.Dashboard == "<div>&nbsp;</div>" || dash.Dashboard == "<br data-mce-bogus=\"1\">")
                     return null;
                 var company = (from c in d.Companies.Where(f => f.CompanyID == id && f.Version == 0 && f.VersionDeletedBy == null) select c).FirstOrDefault();
                 if (company == null)

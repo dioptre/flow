@@ -1389,7 +1389,7 @@ App.ApplicationController = Ember.Controller.extend({
     localeSelectedOberver: function () {
         var selectedLocal = this.get('localeSelected');
         if (typeof selectedLocal === 'undefined' || selectedLocal === null || selectedLocal === 'null' || -1 === $.inArray(selectedLocal, this.get('localeActivated'))) {
-            debugger;
+            //debugger;
             this.set('localeSelected', defaultLocale);
             this.replaceRoute({ queryParams: {localeSelected: defaultLocale}})
         }
@@ -6390,15 +6390,22 @@ App.OrganizationController = Ember.ObjectController.extend({
 
     }.property('model.content', 'model', 'update'),
     selected: null,
+    selectedDashboardData: function () {
+        var _this = this;
+        this.store.find('dashboard', this.get('selected.id')).then(function (m) {
+            var db = m.get('Dashboard');
+            if (db) {
+                _this.set('selected.Dashboard', db);
+                _this.set('selectedDashboardCheckbox', true);
+            }
+            else {
+                _this.set('selectedDashboardCheckbox', false);
+            }
+        }, function () {
+            _this.set('selectedDashboardCheckbox', false);
+        })
+    }.observes('selected', 'model'),
     selectedDashboardCheckbox: '',
-    selectedDashboardObserver: function(){
-      var a = this.get('selected.Dashboard');
-      if (a) {
-        this.set('selectedDashboardCheckbox', true);
-      } else {
-        this.set('selectedDashboardCheckbox', false);
-      }
-    }.observes('selected.Dashboard'),
     selectedDashboardCheckboxObserver: function(){
       
       // Scenario they uncheck... must clear the 
@@ -6406,7 +6413,8 @@ App.OrganizationController = Ember.ObjectController.extend({
       if (a) {
 
       } else {
-        this.set('selectedDashboard')
+          this.set('selected.Dashboard', ' ');
+          this.set('selectedDashboardCheckbox', false);
       }
 
     }.observes('selectedDashboardCheckbox'),
