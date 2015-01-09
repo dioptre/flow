@@ -226,7 +226,7 @@ App.ResponseDataRoute = Ember.Route.extend({
             type: 'workflow',
             pagesize: 25
         }
-        if (!params.keywords)
+        if (!params.keywords || params.keywords.length < 1)
             return { r: [] };
         return Ember.RSVP.hash({
             r : this.store.find('search', query)
@@ -253,7 +253,8 @@ App.ResponseDataController = Ember.ObjectController.extend({
     oldKeywords: '',
     kw: function () {
         var _this = this;
-        if (this.get('keywords') != this.get('oldKeywords')) {
+        var words = this.get('keywords');
+        if (words != this.get('oldKeywords') && words && words.length > 1) {
             var query = {
                 page: 0,
                 keywords: this.get('keywords'),
