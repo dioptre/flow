@@ -5012,6 +5012,9 @@ DS.Model.reopen({
         Ember.run.scheduleOnce('sync', this, this.get, '_locale');
         return this.get('_localContent');
     }.property('_localContent', 'humanContent', 'content'),
+    uniqueColor: function() {
+        return 'color:' + ToColor(this.get('humanName'));
+    }.property('humanName'),
     Error: DS.attr('string', { defaultValue: null }),
     Status: DS.attr('string', { defaultValue: null })
 });
@@ -5114,12 +5117,12 @@ App.Step = App.Node.extend({
         return this.get('ProjectCode');
     }.property('ProjectCode'),
     humanName: function () {
-    var temp = this.get('GraphName');
-    if (temp)
-        return ToTitleCase(temp.replace(/_/g, ' '));
-    else
-        return '';
-}.property('GraphName'),
+        var temp = this.get('GraphName');
+        if (temp)
+            return ToTitleCase(temp.replace(/_/g, ' '));
+        else
+            return '';
+    }.property('GraphName'),
 });
 
 App.Project = DS.Model.extend({
