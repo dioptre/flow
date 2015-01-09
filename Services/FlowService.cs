@@ -54,6 +54,8 @@ namespace EXPEDIT.Flow.Services {
         public const string STAT_NAME_FLOW_ACCESS = "FlowAccess";
         public static Guid FLOW_MODEL_ID = new Guid("1DB0B648-D8A7-4FB9-8F3F-B2846822258C");
         public const string FS_FLOW_CONTACT_ID = "{0}:ValidFlowUser";
+        public const string DASHBOARD_COMPANY = "{0}:COMPANYDASH";
+
 
         private readonly IAutomationService _automation;
         private readonly IUsersService _users;
@@ -3570,7 +3572,7 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     //Update
                     var cc = (from o in d.Triggers where o.TriggerID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
-                    if (string.Format("{0}", m.CommonName).Trim().ToUpperInvariant() == "DONEXT" && cc.VersionOwnerContactID != contact)
+                    if (string.Format("{0}", m.CommonName).Trim().ToUpperInvariant() == AutomationViewModel.AUTOMATION_METHOD_DONEXT && cc.VersionOwnerContactID != contact)
                         return false;
                     //Commented unsafe updates AG
                     //if (m.CommonName != null && cc.CommonName != m.CommonName) cc.CommonName = m.CommonName;
@@ -3997,6 +3999,7 @@ namespace EXPEDIT.Flow.Services {
                                             )
                                             on c.CompanyID equals e.CompanyID into ex
                                             from experience in ex.DefaultIfEmpty()
+
                                             select new
                                             {
                                                 id = c.CompanyID,
@@ -4092,6 +4095,25 @@ namespace EXPEDIT.Flow.Services {
                         d.Experiences.AddObject(exp);
                     }
 
+                    //Dashboard
+                    if (!string.IsNullOrWhiteSpace(m.Dashboard))
+                    {
+                        var dashID = string.Format(DASHBOARD_COMPANY, m.id);
+                        m.Dashboard = m.Dashboard.Trim();
+
+                        var dash = new MetaData
+                        {
+                            MetaDataID = Guid.NewGuid(),
+                            MetaDataType = dashID,
+                            ContentToIndex = m.Dashboard,
+                            VersionOwnerCompanyID = company,
+                            VersionOwnerContactID = contact,
+                            VersionUpdated = now,
+                            VersionUpdatedBy = contact
+                        };
+                        d.MetaDatas.AddObject(dash);
+                    }
+
                     d.SaveChanges();
                 }
                 return true;
@@ -4140,7 +4162,6 @@ namespace EXPEDIT.Flow.Services {
                         };
                         d.CompanyRelations.AddObject(cr);
                     }
-                    
 
                     if (m.CountryID != null && c.CountryID != m.CountryID) c.CountryID = m.CountryID;
                     if (m.Comment != null && c.Comment != m.Comment) c.Comment = m.Comment;
@@ -4201,6 +4222,39 @@ namespace EXPEDIT.Flow.Services {
                         }
 
 
+                    }
+
+                    var dashID = string.Format(DASHBOARD_COMPANY, m.id);
+                    //Dashboard
+                    var dash = (from o in d.MetaDatas where o.Version == 0 && o.VersionDeletedBy == null && o.MetaDataType == dashID select o).FirstOrDefault();
+                    if (string.Empty == m.Dashboard)
+                    {
+                        if (dash != null)
+                            d.MetaDatas.DeleteObject(dash);
+                    }
+                    else if (!string.IsNullOrWhiteSpace(m.Dashboard))
+                    {
+                        m.Dashboard = m.Dashboard.Trim();
+                        if (dash == null)
+                        {
+                            dash = new MetaData
+                            {
+                                MetaDataID = Guid.NewGuid(),
+                                MetaDataType = dashID,
+                                ContentToIndex = m.Dashboard,
+                                VersionOwnerCompanyID = company,
+                                VersionOwnerContactID = contact,
+                                VersionUpdated = now,
+                                VersionUpdatedBy = contact
+                            };
+                            d.MetaDatas.AddObject(dash);
+                        }
+                        else if (dash.ContentToIndex != m.Dashboard)
+                        {
+                            dash.ContentToIndex = m.Dashboard;
+                            dash.VersionUpdated = now;
+                            dash.VersionUpdatedBy = contact;
+                        }
                     }
 
                     d.SaveChanges();
@@ -4354,6 +4408,34 @@ namespace EXPEDIT.Flow.Services {
                              .ToArray()
                         ;
             }
+        }
+
+        public CompanyViewModel GetDashboard(Guid id)
+        {
+            if (id == Guid.Empty)
+            {
+                id = _users.DefaultContactCompanyID;
+            }
+            if (!_users.GetCompanies().Any(f=>f.Key == id))  {
+                return null;
+            }
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var dashID = string.Format(DASHBOARD_COMPANY, id);
+                var dash = new CompanyViewModel { };
+                dash.Dashboard = (from m in d.MetaDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.MetaDataType == dashID) select m.ContentToIndex).FirstOrDefault();
+                if (string.IsNullOrWhiteSpace(dash.Dashboard) || dash.Dashboard == "<div>&nbsp;</div>")
+                    return null;
+                var company = (from c in d.Companies.Where(f => f.CompanyID == id && f.Version == 0 && f.VersionDeletedBy == null) select c).FirstOrDefault();
+                if (company == null)
+                    return null;
+                dash.id = company.CompanyID;
+                dash.CompanyName = company.CompanyName;
+                return dash;
+                
+            }
+                    
         }
 
 

@@ -1403,5 +1403,17 @@ namespace EXPEDIT.Flow.Controllers {
         }
 
 
+        [Authorize]
+        [Themed(false)]
+        [ActionName("Dashboards")]
+        public ActionResult GetDashboard(string id)
+        {
+            Guid gid;
+            Guid.TryParse(id, out gid);
+            var result = _Flow.GetDashboard(gid);
+
+                return new JsonHelper.JsonNetResult(new { dashboard = result ?? new object() }, JsonRequestBehavior.AllowGet);
+        }
+
     }
 }

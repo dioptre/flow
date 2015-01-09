@@ -234,5 +234,8 @@ namespace EXPEDIT.Flow.Services
 
         [OperationContract]
         SelectListItem[] GetWorkflows(Guid[] workflowIDs);
+
+        [OperationContract]
+        CompanyViewModel GetDashboard(Guid id);
     }
 }

@@ -497,13 +497,20 @@
 <script type="text/x-handlebars" id="dashboard">
     <h1>Welcome to FlowPro<small>Realize the potential of your business</small></h1>
     <br /><br />
-    <ul>
-        <li><a href="/flow#/process/b6261775-d5cb-40a8-8540-c0aaa6055ee5?localeSelected=en-US&workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">SEE an example workflow</a></li>
-        <li><a href="/flow#/step/undefined?workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">START an example workflow</a></li>
-        <li><a href="/flow#/workflow/undefined">CREATE an example workflow</a></li>
-        <li><a href="/flow#/report">REPORT your business status</a></li>
-        <li><a href="/flow#/responseData">DRILL down on your workflow data</a></li>
-    </ul>
+    
+    {{#if model.r.Dashboard}}
+        <h4>{{model.r.CompanyName}}</h4>
+        <br /><br />
+        {{safehtml model.r.Dashboard}}
+    {{else}}
+        <ul>
+            <li><a href="/flow#/process/b6261775-d5cb-40a8-8540-c0aaa6055ee5?localeSelected=en-US&workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">SEE an example workflow</a></li>
+            <li><a href="/flow#/step/undefined?workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">START an example workflow</a></li>
+            <li><a href="/flow#/workflow/undefined">CREATE an example workflow</a></li>
+            <li><a href="/flow#/report">REPORT your business status</a></li>
+            <li><a href="/flow#/responseData">DRILL down on your workflow data</a></li>
+        </ul>
+    {{/if}}
 </script>
 
 <script type="text/x-handlebars" id="organization">

@@ -238,6 +238,15 @@ App.ResponseDataRoute = Ember.Route.extend({
 
 })
 
+
+App.DashboardRoute = Ember.Route.extend({
+    model: function (params) {
+        return Ember.RSVP.hash({
+            r: this.store.find('dashboard', params.id)
+        });
+    },
+})
+
 App.ResponseDataController = Ember.ObjectController.extend({
     queryParams: ['keywords'],
     keywords: '',
@@ -5288,6 +5297,8 @@ App.Company = DS.Model.extend({
     Experiences: DS.hasMany('experience', { async: true })
 });
 
+App.Dashboard = App.Company.extend({});
+
 
 App.Experience = DS.Model.extend({
   ExperienceID: DS.attr('string'),
@@ -7546,12 +7557,12 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 }
                 domNode = this;
                 // debugger;
-                if (status.selectedNode && status.draggingNode) {
+                if (status.selectedNode && status.draggingNode && status.selectedNode.data.id !== status.draggingNode.data.id) {
                     // now remove the element from the parent, and insert it into the new elements children
 
                     // THE DRAGGIND NODE PARENT ID GET"S THE SELECTED NODE'S ID
                     if (status.selectedNode.data && status.selectedNode.data.id) {
-                      status.draggingNode.data.set('ParentCompanyID', status.selectedNode.data.id);
+                        status.draggingNode.data.set('ParentCompanyID', status.selectedNode.data.id);
                     }
 
                     var index = status.draggingNode.parent.children.indexOf(status.draggingNode);

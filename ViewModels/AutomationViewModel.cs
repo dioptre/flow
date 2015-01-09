@@ -15,6 +15,10 @@ namespace EXPEDIT.Flow.ViewModels
     [JsonObject]
     public class AutomationViewModel : FlowViewModel
     {
+
+        public const string AUTOMATION_METHOD_DOAS = "DOAS";
+        public const string AUTOMATION_METHOD_DONEXT = "DONEXT";
+
         public new Guid? id { get { return PreviousStep.ProjectPlanTaskResponseID; } }
         public string TaskName { get { return PreviousTask.TaskName; } }
         public Guid? WorkTypeID { get { return PreviousTask.WorkTypeID; } }
