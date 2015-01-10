@@ -1169,8 +1169,10 @@ namespace EXPEDIT.Flow.Controllers {
             if (string.IsNullOrWhiteSpace(id))
             {
                 string cn = Request.Params["CommonName"];
-                if (string.IsNullOrWhiteSpace(cn))
+                if (cn == null)
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+                else if (cn == string.Empty)
+                    cn = null;
                 result = _Flow.GetTrigger(cn);
                 if (result == null)
                     return null;
@@ -1402,6 +1404,18 @@ namespace EXPEDIT.Flow.Controllers {
             return Json(_Flow.GetWorkflows(id), JsonRequestBehavior.AllowGet);
         }
 
+
+        [Authorize]
+        [Themed(false)]
+        [ActionName("Dashboards")]
+        public ActionResult GetDashboard(string id)
+        {
+            Guid gid;
+            Guid.TryParse(id, out gid);
+            var result = _Flow.GetDashboard(gid);
+
+                return new JsonHelper.JsonNetResult(new { dashboard = result ?? new object() }, JsonRequestBehavior.AllowGet);
+        }
 
     }
 }

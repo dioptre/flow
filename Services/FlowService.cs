@@ -54,6 +54,8 @@ namespace EXPEDIT.Flow.Services {
         public const string STAT_NAME_FLOW_ACCESS = "FlowAccess";
         public static Guid FLOW_MODEL_ID = new Guid("1DB0B648-D8A7-4FB9-8F3F-B2846822258C");
         public const string FS_FLOW_CONTACT_ID = "{0}:ValidFlowUser";
+        public const string DASHBOARD_COMPANY = "{0}:COMPANYDASH";
+
 
         private readonly IAutomationService _automation;
         private readonly IUsersService _users;
@@ -3406,7 +3408,13 @@ namespace EXPEDIT.Flow.Services {
                     //We are only checking the owner contacts...so dont need perms here
                     //if (!CheckPermission(id, ActionPermission.Read, typeof(Trigger)))
                     //    return null;
-                    var m = (from o in d.Triggers.Where(h => h.Version == 0 && h.VersionDeletedBy == null && h.CommonName == commonName && h.VersionOwnerContactID == contact)
+                    var m = (from o in d.Triggers.Where(h => h.Version == 0 && h.VersionDeletedBy == null && h.VersionOwnerContactID == contact
+                                 && (
+                                    (h.CommonName == commonName && commonName != null) 
+                                    ||
+                                    (h.CommonName == null && commonName == null) 
+                                    )
+                                 )
                              select new TriggerViewModel
                              {
                                  id = o.TriggerID,
@@ -3570,7 +3578,8 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     //Update
                     var cc = (from o in d.Triggers where o.TriggerID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
-                    if (string.Format("{0}", m.CommonName).Trim().ToUpperInvariant() == "DONEXT" && cc.VersionOwnerContactID != contact)
+                    var method = string.Format("{0}", m.CommonName).Trim().ToUpperInvariant();
+                    if (cc.VersionOwnerContactID != contact && string.IsNullOrWhiteSpace(method))
                         return false;
                     //Commented unsafe updates AG
                     //if (m.CommonName != null && cc.CommonName != m.CommonName) cc.CommonName = m.CommonName;
@@ -3997,6 +4006,7 @@ namespace EXPEDIT.Flow.Services {
                                             )
                                             on c.CompanyID equals e.CompanyID into ex
                                             from experience in ex.DefaultIfEmpty()
+
                                             select new
                                             {
                                                 id = c.CompanyID,
@@ -4092,6 +4102,25 @@ namespace EXPEDIT.Flow.Services {
                         d.Experiences.AddObject(exp);
                     }
 
+                    //Dashboard
+                    if (!string.IsNullOrWhiteSpace(m.Dashboard))
+                    {
+                        var dashID = string.Format(DASHBOARD_COMPANY, m.id);
+                        m.Dashboard = m.Dashboard.Trim();
+
+                        var dash = new MetaData
+                        {
+                            MetaDataID = Guid.NewGuid(),
+                            MetaDataType = dashID,
+                            ContentToIndex = m.Dashboard,
+                            VersionOwnerCompanyID = company,
+                            VersionOwnerContactID = contact,
+                            VersionUpdated = now,
+                            VersionUpdatedBy = contact
+                        };
+                        d.MetaDatas.AddObject(dash);
+                    }
+
                     d.SaveChanges();
                 }
                 return true;
@@ -4140,7 +4169,6 @@ namespace EXPEDIT.Flow.Services {
                         };
                         d.CompanyRelations.AddObject(cr);
                     }
-                    
 
                     if (m.CountryID != null && c.CountryID != m.CountryID) c.CountryID = m.CountryID;
                     if (m.Comment != null && c.Comment != m.Comment) c.Comment = m.Comment;
@@ -4201,6 +4229,40 @@ namespace EXPEDIT.Flow.Services {
                         }
 
 
+                    }
+
+                    var dashID = string.Format(DASHBOARD_COMPANY, m.id);
+                    //Dashboard
+                    var dash = (from o in d.MetaDatas where o.Version == 0 && o.VersionDeletedBy == null && o.MetaDataType == dashID select o).FirstOrDefault();
+                    if (m.Dashboard != null)
+                        m.Dashboard = m.Dashboard.Trim();
+                    if (string.Empty == m.Dashboard)
+                    {
+                        if (dash != null)
+                            d.MetaDatas.DeleteObject(dash);
+                    }
+                    else if (!string.IsNullOrWhiteSpace(m.Dashboard))
+                    {                        
+                        if (dash == null)
+                        {
+                            dash = new MetaData
+                            {
+                                MetaDataID = Guid.NewGuid(),
+                                MetaDataType = dashID,
+                                ContentToIndex = m.Dashboard,
+                                VersionOwnerCompanyID = company,
+                                VersionOwnerContactID = contact,
+                                VersionUpdated = now,
+                                VersionUpdatedBy = contact
+                            };
+                            d.MetaDatas.AddObject(dash);
+                        }
+                        else if (dash.ContentToIndex != m.Dashboard)
+                        {
+                            dash.ContentToIndex = m.Dashboard;
+                            dash.VersionUpdated = now;
+                            dash.VersionUpdatedBy = contact;
+                        }
                     }
 
                     d.SaveChanges();
@@ -4354,6 +4416,34 @@ namespace EXPEDIT.Flow.Services {
                              .ToArray()
                         ;
             }
+        }
+
+        public CompanyViewModel GetDashboard(Guid id)
+        {
+            if (id == Guid.Empty)
+            {
+                id = _users.DefaultContactCompanyID;
+            }
+            if (!_users.GetCompanies().Any(f=>f.Key == id))  {
+                return null;
+            }
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var dashID = string.Format(DASHBOARD_COMPANY, id);
+                var dash = new CompanyViewModel { };
+                dash.Dashboard = (from m in d.MetaDatas.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.MetaDataType == dashID) select m.ContentToIndex).FirstOrDefault();
+                if (string.IsNullOrWhiteSpace(dash.Dashboard) || dash.Dashboard == "<div>&nbsp;</div>" || dash.Dashboard == "<br data-mce-bogus=\"1\">")
+                    return null;
+                var company = (from c in d.Companies.Where(f => f.CompanyID == id && f.Version == 0 && f.VersionDeletedBy == null) select c).FirstOrDefault();
+                if (company == null)
+                    return null;
+                dash.id = company.CompanyID;
+                dash.CompanyName = company.CompanyName;
+                return dash;
+                
+            }
+                    
         }
 
 

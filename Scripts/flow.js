@@ -48,6 +48,7 @@ function RedirectToLogin() {
 }
 
 $.ajaxSetup({
+    cache: false,
     beforeSend: function (xhr, settings) {
         if (settings.url.match(/\/\//igm) === null)
             settings.url = expHost + settings.url;
@@ -216,7 +217,7 @@ App.setTitle = function(title) { // little utilitiy function, pretty useless atm
 App.ResponseDataRoute = Ember.Route.extend({
     queryParams: {
         keywords: {
-            refreshModel: true
+            refreshModel: false
         }
     },
     model: function (params) {
@@ -226,7 +227,7 @@ App.ResponseDataRoute = Ember.Route.extend({
             type: 'workflow',
             pagesize: 25
         }
-        if (!params.keywords)
+        if (!params.keywords || params.keywords.length < 1)
             return { r: [] };
         return Ember.RSVP.hash({
             r : this.store.find('search', query)
@@ -238,9 +239,34 @@ App.ResponseDataRoute = Ember.Route.extend({
 
 })
 
+
+App.DashboardRoute = Ember.Route.extend({
+    model: function (params) {
+        return Ember.RSVP.hash({
+            r: this.store.find('dashboard', params.id)
+        });
+    },
+})
+
 App.ResponseDataController = Ember.ObjectController.extend({
     queryParams: ['keywords'],
-    keywords: ''
+    keywords: '',
+    oldKeywords: '',
+    kw: function () {
+        var _this = this;
+        var words = this.get('keywords');
+        if (words != this.get('oldKeywords') && words && words.length > 1) {
+            var query = {
+                page: 0,
+                keywords: this.get('keywords'),
+                type: 'workflow',
+                pagesize: 25
+            }
+            this.store.find('search', query).then(function (m) {
+                _this.set('model.r', m);
+            })
+        }
+    }.observes('keywords')
 })
 
 App.ResponseDatumRoute = Ember.Route.extend({
@@ -248,67 +274,84 @@ App.ResponseDatumRoute = Ember.Route.extend({
         return new Ember.RSVP.Promise(function (resolve) {
             $.ajax('/flow/ResponseData/' + params.id)
             .then(function (data) {
-                resolve(data.responseData);
+                resolve( { data: data.responseData });
             }, function (jqXHR) {
                 jqXHR.then = null; // tame jQuery's ill mannered promises
             });
         });
+    },
+    afterModel: function (m, p) {
+        var title = Enumerable.From(this.store.all('search').content).Where("$.get('ReferenceID')=='" + p.params.responseDatum.id + "'").FirstOrDefault();
+        if (title) {
+            m.title = title.get('humanName');
+        }
+        else {
+            m.title = '';
+        }
+    }
+
+});
+
+App.ResponseDatumView = Ember.View.extend({
+    didInsertElement: function () {
+        this._super();
+        Ember.run.scheduleOnce('afterRender', this, function () {
+            // perform your jQuery logic here
+            var a = this.controller.get('model.data');
+
+
+            if (a.length == 0) {
+                $results.html("<h4>Unknown results.</h4>");
+                return;
+            }
+            var k = [];
+            Enumerable.From(a).ForEach(function (f) { Enumerable.From(f).ForEach(function (g) { k.push(g.Key) }); });
+            var cols = Enumerable.From(k).Distinct().ToArray();
+            //cols.push('Updated');
+            //cols.push('Updated By');
+            var txt = "f=> {";
+            $(cols).each(function (i, f) { if (i > 0) txt = txt + ",'" + f + "': f['" + f + "']"; else txt = txt + "'" + f + "': f['" + f + "']"; });
+            txt += "}";
+            var data = Enumerable.From(a).Select(txt).ToArray();
+
+
+            var yData = cols.map(function (aws) { return { data: aws, defaultContent: '<i>no result</i>' } })
+
+
+            var colsNice = cols.map(function (lol) {
+                return lol.replace(/[a-zA-Z0-9-]*-/ig, '')
+            })
+            var source = $("#form-table-setup").html();
+            var template = Handlebars.compile(source);
+            var tableSetup = template({ id: NewGUID(), array: colsNice });
+            $results = $('#dataTables-responseDatum');
+            // Create a new table
+            $results.empty().html(tableSetup);
+
+            this.controller.set('model.rdata', data);
+
+            // Get new results for table
+            $results.find('table').dataTable({
+                responsive: true,
+                "data": data,
+                "columns": yData
+                // defaultContent: ''
+
+            });
+
+        })
     }
 });
 
 App.ResponseDatumController = Ember.Controller.extend({
-//   var a = $.ajax('/share/user/forms/' + id.substring(4))
+    actions: {
+        downloadCSV: function () {
+            DownloadCSV(this.get('model.rdata'))
+        }
+    }
+});
 
 
-//            a.success(function (a) {
-//                if (a.length == 0) {
-//                    if (isLoggedIn())
-//                        $results.html("<h4>No results.</h4>");
-//                    else
-//                        $results.html("<h4>Login to see results.</h4>");
-//                    return;
-//                }
-//                var k = [];                
-//                Enumerable.From(a).ForEach(function (f) { var y = JSON.parse(f.FormData); Enumerable.From(y).ForEach(function (g) { k.push(g.name) }); });
-//                var cols = Enumerable.From(k).Distinct().ToArray();
-//                cols.push('Updated');
-//                cols.push('Updated By');
-//                var txt = "f=> {";
-//                $(cols).each(function (i, f) { if (i > 0) txt = txt + ",'" + f + "': f['" + f + "']"; else txt = txt + "'" + f + "': f['" + f + "']"; });
-//                txt += "}";
-//                var y = Enumerable.From(a).Select(function (f) { var r = {}; var g = JSON.parse(f.FormData); $(g).each(function (i, z) { r[z.name] = z.value }); r['Updated'] = f.Updated; r['Updated By'] = f.UpdatedBy; return r; }).ToArray();
-//                var data = Enumerable.From(y).Select(txt).ToArray();
-                
-
-//                var yData = cols.map(function (aws) { return { data: aws, defaultContent: '<i>no result</i>' } })
-
-
-//                var colsNice = cols.map(function(lol){
-//                    return lol.replace(/[a-zA-Z0-9-]*-/ig,'')
-//                })
-//                var source = $("#form-table-setup").html();
-//                var template = Handlebars.compile(source);
-//                var tableSetup = template({ id: NewGUID(), array: colsNice });
-
-//                // Create a new table
-//                $results.empty().html(tableSetup);
-
-//                // Get new results for table
-//                $results.find('table').dataTable({
-//                    responsive: true,
-//                    "data": y,
-//                    "columns": yData
-//                    // defaultContent: ''
-              
-//                });
-
-//            });
-
-//a.fail(function (a) {
-//    $results.html("<h4>You need permission to view the results.</h4>");
-//    return;
-//});
-})
 
 App.StyleguideRoute = Ember.Route.extend({
     model: function(){
@@ -1348,7 +1391,7 @@ App.ApplicationController = Ember.Controller.extend({
     localeSelectedOberver: function () {
         var selectedLocal = this.get('localeSelected');
         if (typeof selectedLocal === 'undefined' || selectedLocal === null || selectedLocal === 'null' || -1 === $.inArray(selectedLocal, this.get('localeActivated'))) {
-            debugger;
+            //debugger;
             this.set('localeSelected', defaultLocale);
             this.replaceRoute({ queryParams: {localeSelected: defaultLocale}})
         }
@@ -1400,11 +1443,11 @@ App.ApplicationView = Ember.View.extend({
         var keepActive = function(){
             if(_this.active){
                 $.ajax({
-                  url: "/share/loggedin"
+                    url: "/share/loggedin",
+                    cache: false
                 }).then(function(result){
 
                     _this.active = false; // Set active to false until mouse is moved/keypress
-
                     if (result === true || result === false){
                         _this.set('controller.isLoggedIn', result)
                     }
@@ -2391,7 +2434,7 @@ App.GraphRoute = Ember.Route.extend({
         //        resolve();
         //    })
         //});
-        var apiCache = Enumerable.From(this.store.all('trigger').content).Where("f=>f.get('CommonName') === 'DONEXT'").FirstOrDefault();
+        var apiCache = Enumerable.From(this.store.all('trigger').content).Where("f=>f.get('CommonName') === null").FirstOrDefault();
 
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
@@ -2405,7 +2448,7 @@ App.GraphRoute = Ember.Route.extend({
                 else if (typeof groupID === 'undefined' || !groupID)
                     return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: _this.get('model.selectedID') })
             }),
-            api: (apiCache) ? apiCache : this.store.findQuery('trigger', { CommonName: "DONEXT" }).then(function (m) {
+            api: (apiCache) ? apiCache : this.store.findQuery('trigger', { CommonName: null }).then(function (m) {
                 return m.get('firstObject');
             }, function () { return null; }), //TODO put this in an sync component - shouldnt be blocking
             duplicateNode: $.get('/flow/NodeDuplicateID/' + id),
@@ -3212,7 +3255,7 @@ App.VizEditorComponent = Ember.Component.extend({
             //       deleteClusterError:"Clusters cannot be deleted."
             // },
             //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}},
-            smoothCurves: true,
+            smoothCurves: false,
             //hierarchicalLayout: {enabled:true},
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
             //physics: {barnesHut: {enabled: false}},
@@ -4817,7 +4860,20 @@ App.TodoRoute = Ember.Route.extend({
 });
 
 App.TodoController = Ember.ObjectController.extend({
-    needs: ['application']
+    needs: ['application'],
+    barcode: '',
+    barcodeChanges : function() {
+        var barcode = this.get('barcode');
+        if (IsGUID(barcode)) {
+            this.set('barcode', '');
+            this.transitionToRoute('step', barcode);
+        }
+    }.observes('barcode'),
+    actions: {
+        getBarcode: function (id) {
+            console.log(id);
+        }
+    }
 });
 
 
@@ -4971,6 +5027,9 @@ DS.Model.reopen({
         Ember.run.scheduleOnce('sync', this, this.get, '_locale');
         return this.get('_localContent');
     }.property('_localContent', 'humanContent', 'content'),
+    uniqueColor: function() {
+        return 'color:' + ToColor(this.get('humanName'));
+    }.property('humanName'),
     Error: DS.attr('string', { defaultValue: null }),
     Status: DS.attr('string', { defaultValue: null })
 });
@@ -5073,12 +5132,12 @@ App.Step = App.Node.extend({
         return this.get('ProjectCode');
     }.property('ProjectCode'),
     humanName: function () {
-    var temp = this.get('GraphName');
-    if (temp)
-        return ToTitleCase(temp.replace(/_/g, ' '));
-    else
-        return '';
-}.property('GraphName'),
+        var temp = this.get('GraphName');
+        if (temp)
+            return ToTitleCase(temp.replace(/_/g, ' '));
+        else
+            return '';
+    }.property('GraphName'),
 });
 
 App.Project = DS.Model.extend({
@@ -5255,6 +5314,8 @@ App.Company = DS.Model.extend({
     People: DS.attr('string'), //[]
     Experiences: DS.hasMany('experience', { async: true })
 });
+
+App.Dashboard = App.Company.extend({});
 
 
 App.Experience = DS.Model.extend({
@@ -6187,7 +6248,7 @@ App.MyprofilesRoute = Ember.Route.extend({
         var _this = this;
         return Ember.RSVP.hash({
             profiles: this.store.find('myProfile'),
-            api: this.store.findQuery('trigger', { CommonName: "DONEXT" }).catch(function () { return null; })
+            api: this.store.findQuery('trigger', { CommonName: null }).catch(function () { return null; })
         });
     },
     afterModel: function (m) {
@@ -6217,7 +6278,7 @@ App.MyprofilesController = Ember.ObjectController.extend({
                 this.set('model.trigger', null);
             }
             else {
-                t = this.store.createRecord('trigger', { CommonName: 'DONEXT' });
+                t = this.store.createRecord('trigger', { CommonName: null });
                 hasValue = true;
                 this.set('model.trigger', t);
             }
@@ -6345,15 +6406,22 @@ App.OrganizationController = Ember.ObjectController.extend({
 
     }.property('model.content', 'model', 'update'),
     selected: null,
+    selectedDashboardData: function () {
+        var _this = this;
+        this.store.find('dashboard', this.get('selected.id')).then(function (m) {
+            var db = m.get('Dashboard');
+            if (db) {
+                _this.set('selected.Dashboard', db);
+                _this.set('selectedDashboardCheckbox', true);
+            }
+            else {
+                _this.set('selectedDashboardCheckbox', false);
+            }
+        }, function () {
+            _this.set('selectedDashboardCheckbox', false);
+        })
+    }.observes('selected', 'model'),
     selectedDashboardCheckbox: '',
-    selectedDashboardObserver: function(){
-      var a = this.get('selected.Dashboard');
-      if (a) {
-        this.set('selectedDashboardCheckbox', true);
-      } else {
-        this.set('selectedDashboardCheckbox', false);
-      }
-    }.observes('selected.Dashboard'),
     isValidNameLoading: true,
     isValidName: true, 
     isValidNameObserver: function() {
@@ -7497,7 +7565,11 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 }
                 domNode = this;
                 // debugger;
+<<<<<<< .mine
                 if (status.selectedNode && status.draggingNode && (status.selectedNode.data.id != status.draggingNode.data.id)) {
+=======
+                if (status.selectedNode && status.draggingNode && status.selectedNode.data.id !== status.draggingNode.data.id) {
+>>>>>>> .theirs
                     // now remove the element from the parent, and insert it into the new elements children
 
                     // THE DRAGGIND NODE PARENT ID GET"S THE SELECTED NODE'S ID

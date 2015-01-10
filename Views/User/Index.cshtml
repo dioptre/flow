@@ -500,13 +500,20 @@
         <sub>Realize the potential of your business</sub>
     </h1>
     <br /><br />
-    <ul>
-        <li><a href="/flow#/process/b6261775-d5cb-40a8-8540-c0aaa6055ee5?localeSelected=en-US&workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">SEE an example workflow</a></li>
-        <li><a href="/flow#/step/undefined?workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">START an example workflow</a></li>
-        <li><a href="/flow#/workflow/undefined">CREATE an example workflow</a></li>
-        <li><a href="/flow#/report">REPORT your business status</a></li>
-        <li><a href="/flow#/responseData">DRILL down on your workflow data</a></li>
-    </ul>
+    
+    {{#if model.r.Dashboard}}
+        <h4>{{model.r.CompanyName}}</h4>
+        <br /><br />
+        {{safehtml model.r.Dashboard}}
+    {{else}}
+        <ul>
+            <li><a href="/flow#/process/b6261775-d5cb-40a8-8540-c0aaa6055ee5?localeSelected=en-US&workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">SEE an example workflow</a></li>
+            <li><a href="/flow#/step/undefined?workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">START an example workflow</a></li>
+            <li><a href="/flow#/workflow/undefined">CREATE an example workflow</a></li>
+            <li><a href="/flow#/report">REPORT your business status</a></li>
+            <li><a href="/flow#/responseData">DRILL down on your workflow data</a></li>
+        </ul>
+    {{/if}}
 </script>
 
 <script type="text/x-handlebars" id="organization">
@@ -587,7 +594,6 @@
                                 <br>
 
                                 <h5>Customise dashboard for this group</h5>
-                                {{selected.Dashboard}}
                                     
                                 {{eui-checkbox value=selectedDashboardCheckbox label='Custom dashboard'}}
 
@@ -595,6 +601,7 @@
                                     {{tinymce-editor data=selected.Dashboard}}
                                 {{/if}}
 
+<<<<<<< HEAD
 
                                 <br>
                                 <br>
@@ -604,6 +611,8 @@
                                     Turn on and off features for users. Coming soon.
                                 </div>
 
+=======
+>>>>>>> df4c2a334bf5b42cf49a85ce6f0ab31c1bbfdfc8
                                 <br>
                                 <br>
 
@@ -1856,7 +1865,7 @@
                 <br>
                 <br>
                 <br />
-                {{eui-button label="Close Modal" action="toggleWorkflowTriggersModal" style='primary' size='large'}}
+                {{eui-button label="Close" action="toggleWorkflowTriggersModal" style='primary' size='large'}}
             </div>
             {{/eui-modal}}
 
@@ -3538,7 +3547,7 @@
           You may also press <em>esc</em> to close this modal.
         </p>
 
-        {{eui-button label="Close Modal" size="small" action="toggleFirstModal"}}
+        {{eui-button label="Close" size="small" action="toggleFirstModal"}}
       </div>
     {{/eui-modal}}
 
@@ -3574,17 +3583,18 @@
                     <div class="col-md-12">
                         <h1>
                             Todos
-                            <sub>This is work you could complete</sub>
+                            <sub>The work to complete</sub>
                         </h1>
 
-                        <div class="filter-block">
-                            <div class="">
-                                {{!--{{eui-button label="Start a new case" action=""}}--}}
-                            </div>
-                        </div>
+                       
                     </div>
                 </div>
                 {{#if controllers.application.isLoggedIn}}
+                    <div class="filter-block">
+                        <div class="" style="float:right;">
+                            {{eui-input value=barcode placeholder='Scan Barcode Here' size='tiny' width='200px'}}{{!--{{eui-button label="Start a new case" action=""}}--}}
+                        </div>
+                    </div>
                     <h4>My Todos</h4>
 
                     <div class="">
@@ -3607,11 +3617,11 @@
                             {{#each steps}}
                             <tr>
                                 <td>
-                                    <input type="checkbox">
-                                    <i class="icl-check green"></i>&nbsp;
+                                    @*<input type="checkbox">*@
+                                    @*<i class="icl-check green"></i>&nbsp;*@
                                     {{#link-to 'step' this.id}}{{this.projectCode}}{{/link-to}}
                                 </td>
-                                <td class="description">
+                                <td class="description" {{bind-attr style=uniqueColor}}>
                                     &nbsp;{{this.humanName}}
                                 </td>
                                 <td>
@@ -3619,6 +3629,7 @@
                                     {{VersionUpdated}} {{this.LastUpdatedBy}}
                                     <ul class="actions">
                                         <li>{{#link-to 'step' this.id}}Checkout{{/link-to}}</li>
+                                        <li><a {{bind-attr data-js=this.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a></li>
                                         @*<li class="last"><a href="#">Delete</a></li>*@
                                     </ul>
                                 </td>
@@ -3628,14 +3639,17 @@
                         </tbody>
                     </table>
                     </div>
+                    <div class="barcode" style="display:none;">
+                        <canvas id="barcode"></canvas>
+                    </div>
                 {{else}}
-                    You need to be logged in :)
+                    You need to be logged in.
                 {{/if}}
             </div>
             <!-- end products table -->
 
-            <h4>Unassigned Todos</h4>
-            <p>No Unassigned todos at this point :)</p>
+            @*<h4>Unassigned Todos</h4>
+            <p>No Unassigned todos at this point :)</p>*@
 
 </script>
 
@@ -4279,7 +4293,7 @@
             <div class="row">
 
                 <div class="col-md-3">
-                    Search
+                    Search workflow name:
                     {{eui-input value=keywords}}
                     <br /><br />
                     Results:
@@ -4298,9 +4312,18 @@
         </script>
 
         <script type="text/x-handlebars" data-template-name="responseDatum">
-            {{#each mod in model}}
+            <h3>{{model.title}}</h3>
+            <br />
+            <div id="dataTables-responseDatum"></div>
+            {{eui-button label='Download' action='downloadCSV'}}
+            
+            
+            
+            @*{{#each mod in model}}
             <br />{{#link-to 'responseDatum' id}}{{mod.ProjectPlanTaskResponseID}}{{humanName}}{{/link-to}}
-            {{/each}}
+            {{/each}}*@
+
+
         </script>
 
         <script type="text/x-handlebars" data-template-name="responseData/loading">
@@ -4438,6 +4461,8 @@
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/cldr-1.0.0.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/i18n.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/liquid-fire-0.15.0.js")"></script>
+
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/JsBarcode.all.min.js")"></script>
 
 
         <!-- js -->

@@ -178,7 +178,7 @@ namespace EXPEDIT.Flow.Services {
 
                 var trigger = d.Triggers.FirstOrDefault(f => f.JsonProxyApplicationID == applicationID && f.JsonUsername == m.Username 
                     && ((f.JsonPassword == hashString && f.JsonPasswordType=="SHA256") || (f.JsonPassword == m.Password && f.JsonPasswordType == "TEXT"))
-                    && f.CommonName == method
+                    && f.CommonName == null //API method
                     && f.VersionDeletedBy == null && f.Version == 0);
                 if (trigger == null)
                     return false;
@@ -347,10 +347,22 @@ namespace EXPEDIT.Flow.Services {
         }
 
 	public bool DoAs(AutomationViewModel m) {
-        if (_users.VerifyUserUnicity(m.Username, m.Email))
+        if (string.IsNullOrWhiteSpace(m.NewUserEmail))
+            return false;
+        var newUser = string.Format("Guest{0}{1}", DateTime.UtcNow.HexUnixTimestamp(), Guid.NewGuid().ToString().Substring(0, 4).ToUpperInvariant());
+        if (_users.VerifyUserUnicity(newUser, m.NewUserEmail))
         {
-            if (_users.Create(m.Email, m.Username, m.Password) != null)
+            if (_users.Create(m.NewUserEmail, newUser, Guid.NewGuid().ToString()) != null)
+            {
+                //Now force reauthentication
+                //Recorded in parent company for now
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    ContactID = (from o in d.Contacts where o.Username == newUser && o.Version == 0 && o.VersionDeletedBy == null select o.ContactID).Single();
+                }
                 return DoNext(m);
+            }
             else
                 return false;
         }
@@ -473,7 +485,7 @@ namespace EXPEDIT.Flow.Services {
                         {
                             ProjectID = m.PreviousStep.ProjectID.Value,
                             ProjectName = string.Join("", string.Format("{0} @ {1}", string.Join("", string.Format("{0}", m.PreviousStep.GraphDataGroup.GraphDataGroupName).Take(28)), now.ToString("yyyy-MM-dd HH:mm:ss")).Take(50)),
-                            ProjectCode = string.Format("{0}-{1}", now.HexUnixTimestamp(), m.PreviousStep.ProjectID.Value.ToString().Substring(0, 4).ToUpperInvariant()),
+                            ProjectCode = string.Format("{0}-{1}", now.HexUnixTimestamp(), m.PreviousStepID.Value.ToString().Substring(0, 4).ToUpperInvariant()),
                             ProjectTypeID = ConstantsHelper.PROJECT_TYPE_FLOWPRO,
                             VersionUpdatedBy = contact,
                             VersionUpdated = now,
