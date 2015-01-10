@@ -332,7 +332,7 @@
 <script type="text/x-handlebars" data-template-name="components/lform-time">
     <div>
         <label>{{s.d.label}}</label><br>
-        {{eui-input value=s.record.Value disabled=s.d.readOnly}}
+        {{eui-textarea value=s.record.Value disabled=s.d.readOnly}}
         @*{{s.value}}*@
 
     </div>
@@ -495,7 +495,10 @@
 </script>
 
 <script type="text/x-handlebars" id="dashboard">
-    <h1>Welcome to FlowPro<small>Realize the potential of your business</small></h1>
+    <h1>
+        Welcome to FlowPro
+        <sub>Realize the potential of your business</sub>
+    </h1>
     <br /><br />
     <ul>
         <li><a href="/flow#/process/b6261775-d5cb-40a8-8540-c0aaa6055ee5?localeSelected=en-US&workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">SEE an example workflow</a></li>
@@ -1212,12 +1215,20 @@
                     <span>{{model.t.fp_menu_link_dashboard}}</span>
                 {{/link-to}}
             {{/view}}
+
+            {{#view App.HomeNavView}}
+                {{#link-to 'todo'}}
+                    <i class="icl-check"></i>
+                    <span>{{model.t.fp_menu_link_todos}}</span>
+                {{/link-to}}
+            {{/view}}
+            {{!--
             {{#view App.HomeNavView}}
                 {{#link-to 'search'}}
                     <i class="icl-magnifier"></i>
                     <span>{{model.t.fp_menu_link_search}}</span>
                 {{/link-to}}
-            {{/view}}
+            {{/view}}--}}
             {{#view App.HomeNavView}}
                 <a class="dropdown-toggle" href="#">
                     <i class="icl-directions"></i>
@@ -1226,20 +1237,10 @@
                 </a>
                 <ul class="submenu">
                     <li>{{#link-to 'workflow' 'undefined'}}{{model.t.fp_menu_link_newWorkflow}}{{/link-to}}</li>
+                    <li>{{#link-to 'search'}} {{model.t.fp_menu_link_search}} {{/link-to}}</li>
                     <li>{{#link-to 'myworkflows'}}{{model.t.fp_menu_link_myWorkflow}}{{/link-to}}</li>
+                    <li>{{#link-to 'file'}} {{model.t.fp_menu_link_myfiles}} {{/link-to}}</li>
                 </ul>
-            {{/view}}
-            {{#view App.HomeNavView}}
-                {{#link-to 'todo'}}
-                    <i class="icl-check"></i>
-                    <span>{{model.t.fp_menu_link_todos}}</span>
-                {{/link-to}}
-            {{/view}}
-            {{#view App.HomeNavView}}
-                {{#link-to 'file'}}
-                    <i class="icl-doc"></i>
-                    <span>{{model.t.fp_menu_link_myfiles}}</span>
-                {{/link-to}}
             {{/view}}
             {{!--
             {{#view App.HomeNavView}}
@@ -1250,6 +1251,7 @@
             {{/view}}
 
             --}}
+            {{!--
             {{#view App.HomeNavView}}
                 {{#link-to 'responseData'}}
                     <i class="icl-list"></i>
@@ -1261,7 +1263,20 @@
                     <i class="icl-graph"></i>
                     <span>{{model.t.fp_menu_link_report}}</span>
                 {{/link-to}}
+            {{/view}} --}}
+            {{#view App.HomeNavView}}
+                <a class="dropdown-toggle" href="#">
+                    <i class="icl-graph"></i>
+                    <span>{{model.t.fp_menu_link_report}}</span>
+                    <i class="icon-chevron-down"></i>
+                </a>
+                <ul class="submenu">
+                    <li>{{#link-to 'responseData'}} Export {{model.t.fp_menu_link_data}} {{/link-to}}</li>
+                    <li>{{#link-to 'report'}} Visual {{model.t.fp_menu_link_report}} {{/link-to}}</li>
+                </ul>
             {{/view}}
+
+            {{!--
             {{#view App.HomeNavView}}
                 {{#link-to 'permission'}}
                     <i class="icl-lock"></i>
@@ -1280,10 +1295,28 @@
                     <span>{{model.t.fp_menu_link_organization}}</span>
                 {{/link-to}}
             {{/view}}
+
+            --}}
+
+            {{#view App.HomeNavView}}
+                <a class="dropdown-toggle" href="#">
+                    <i class="icl-users"></i>
+                    <span>{{!--{{model.t.fp_menu_link_organization}}--}}Team</span>
+                    <i class="icon-chevron-down"></i>
+                </a>
+                <ul class="submenu">
+                    <li>{{#link-to 'permission'}}{{model.t.fp_menu_link_permission}}{{/link-to}}</li>
+                    <li>{{#link-to 'mylicenses'}} {{model.t.fp_menu_link_licenses}} {{/link-to}}</li>
+                    <li>{{#link-to 'organization'}}Hierachy editor{{/link-to}}</li>
+                </ul>
+            {{/view}}
+
            {{#view App.HomeNavView}}
                 {{#link-to 'myprofiles'}}
                     <i class="icl-user"></i>
-                    <span>{{#if isLoggedIn}}{{userProfile.UserName}}{{else}}{{model.t.fp_menu_link_myprofile}}{{/if}}</span>
+                    {{!--
+                    <span>{{#if isLoggedIn}}{{userProfile.UserName}}{{else}}{{model.t.fp_menu_link_myprofile}}{{/if}}</span>--}}
+                    <span>Account</span>
                 {{/link-to}}
             {{/view}}
             {{#view App.HomeNavView}}
@@ -4235,7 +4268,13 @@
 
 
         <script type="text/x-handlebars" data-template-name="responseData">
-            <h2>Workflow Raw Data</h2>
+            <h1>
+                Workflow Raw Data
+                <sub>Export the resuts for completed workflows</sub>
+            </h1>
+
+            <br>
+            <br>
 
             <div class="row">
 
