@@ -7565,11 +7565,8 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 }
                 domNode = this;
                 // debugger;
-<<<<<<< .mine
                 if (status.selectedNode && status.draggingNode && (status.selectedNode.data.id != status.draggingNode.data.id)) {
-=======
-                if (status.selectedNode && status.draggingNode && status.selectedNode.data.id !== status.draggingNode.data.id) {
->>>>>>> .theirs
+
                     // now remove the element from the parent, and insert it into the new elements children
 
                     // THE DRAGGIND NODE PARENT ID GET"S THE SELECTED NODE'S ID
