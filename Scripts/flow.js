@@ -6291,10 +6291,7 @@ App.MyprofilesController = Ember.ObjectController.extend({
 
 App.OrganizationRoute = Ember.Route.extend({
     model: function () {
-        
         return this.store.findQuery('company', {});
-
-    
     }
 });
 
@@ -6337,7 +6334,8 @@ App.OrganizationController = Ember.ObjectController.extend({
         id: this.get('DaddyID'),
         ParentCompanyID: null,
         CompanyName: 'My Organization',
-        People: ','
+        People: ',',
+        Dashboard: '' // Andy load dashboard here`
       })
       // debugger;
       console.log('Setup again...')
@@ -6356,35 +6354,11 @@ App.OrganizationController = Ember.ObjectController.extend({
         this.set('selectedDashboardCheckbox', false);
       }
     }.observes('selected.Dashboard'),
-    selectedDashboardCheckboxObserver: function(){
-      
-      // Scenario they uncheck... must clear the 
-      var a = this.get('selectedDashboardCheckbox')
-      if (a) {
-
-      } else {
-        this.set('selectedDashboard')
-      }
-
-    }.observes('selectedDashboardCheckbox'),
-    // function(key, value){
-    //   if (arguments.length > 1) {
-    //     console.log(key, value);
-    //     this.set('selected.Dashboard', 'Define your own story')
-    //     return true;
-    //   }
-
-    //   // getter
-    //   var a = this.get('selected.Dashboard');
-
-    //   return a;
-
-    // }.property('selected.Dashboard'),
     isValidNameLoading: true,
     isValidName: true, 
     isValidNameObserver: function() {
-        var selected = this.get('selected');
-        if (!selected)
+      var selected = this.get('selected');
+      if (!selected  || this.get('selecteddaddy'))
             return;
       var name = selected.get('CompanyName').toLowerCase()
       var oldName = name;
@@ -6421,12 +6395,7 @@ App.OrganizationController = Ember.ObjectController.extend({
     }.observes('selected', 'selected.CompanyName'),
     selecteddaddy: function(){
       var a = this.get('selected');
-      if (a) {
-        return (this.get('DaddyID') == a.get('id'))
-      } else {
-        return false;
-      }
-
+      return a && (this.get('DaddyID') == a.get('id'));
     }.property('selected'),
     organization: null,
     title: function () {
@@ -6463,6 +6432,11 @@ App.OrganizationController = Ember.ObjectController.extend({
           }
 
 
+        },
+        saveDashboard: function(context){
+          var Dashboard = context.selected.get('Dashboard');
+
+          // Andy save dashboard here`
         },
         saveItem: function(context){
           context.selected.save().then(function(){
@@ -7157,6 +7131,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
             .style("fill-opacity", 0)
             .on('click', function(d){
 
+
               _this.set('selected', d.data);
               // var result = prompt('Change the name of the node', d.name);
               // if(result) {
@@ -7514,18 +7489,26 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 }
                 domNode = this;
                 // debugger;
-                if (status.selectedNode && status.draggingNode) {
+                if (status.selectedNode && status.draggingNode && (status.selectedNode.data.id != status.draggingNode.data.id)) {
                     // now remove the element from the parent, and insert it into the new elements children
 
                     // THE DRAGGIND NODE PARENT ID GET"S THE SELECTED NODE'S ID
                     if (status.selectedNode.data && status.selectedNode.data.id) {
-                      status.draggingNode.data.set('ParentCompanyID', status.selectedNode.data.id);
+                      console.log('new parent id.. item must have been moved')
+                      status.draggingNode.data.set('ParentCompanyID', status.selectedNode.data.id).save().then(function(){
+                        Messenger().post({ type: 'success', message: 'Successfully updated position.' });
+
+                      }, function() {
+                        Messenger().post({ type: 'error', message: 'Error updating position.' });
+
+                      });
                     }
 
                     var index = status.draggingNode.parent.children.indexOf(status.draggingNode);
                     if (index > -1) {
                         status.draggingNode.parent.children.splice(index, 1);
                     }
+
                     if (typeof status.selectedNode.children !== 'undefined' || typeof status.selectedNode._children !== 'undefined') {
                         if (typeof status.selectedNode.children !== 'undefined') {
                             status.selectedNode.children.push(status.draggingNode);

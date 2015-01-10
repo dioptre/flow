@@ -1175,3 +1175,7 @@ color: red;
 text.nodeText {
    cursor: pointer;
 }
+
+.opacity-50 {
+  opacity: 0.5;
+}

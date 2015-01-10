@@ -525,8 +525,11 @@
 
             <br>
 
+            {{!--
             {{eui-button label='Save Layout Changes' action='saveAll'}} 
+             --}}
 
+             
             {{eui-button label='Add New Organisation' style='primary' action='addItem'}}        
 
             <br>
@@ -544,7 +547,19 @@
 
                             {{#if selecteddaddy}}
                                 
-                                <i>You cannot edit the head organisation.</i>
+                                <i>You cannot add people to the head organisation.</i>
+
+                                <br>
+                                <br>
+
+                                <h5>Edit the default dashboard</h5>
+                                {{tinymce-editor data=selected.Dashboard}}
+
+                                <br>
+                                <br>
+
+                                {{eui-button label='Save Dashboard' style='primary' action='saveDashboard' selected=selected}}   
+
 
                             {{else}}
                                 <h5>Department Name</h5>
@@ -581,8 +596,10 @@
                                 <br>
                                 <br>
 
-                                <h5>Sidebar</h5>
-                                Turn on and off features for users. Coming soon.
+                                <div class='opacity-50'>
+                                    <h5>Sidebar</h5>
+                                    Turn on and off features for users. Coming soon.
+                                </div>
 
                                 <br>
                                 <br>
