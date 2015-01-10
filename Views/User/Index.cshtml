@@ -3526,14 +3526,15 @@
                             <sub>The work to complete</sub>
                         </h1>
 
-                        <div class="filter-block">
-                            <div class="" style="float:right;">
-                                {{eui-input value=barcode placeholder='Scan Barcode Here' size='tiny' width='200px'}}{{!--{{eui-button label="Start a new case" action=""}}--}}
-                            </div>
-                        </div>
+                       
                     </div>
                 </div>
                 {{#if controllers.application.isLoggedIn}}
+                    <div class="filter-block">
+                        <div class="" style="float:right;">
+                            {{eui-input value=barcode placeholder='Scan Barcode Here' size='tiny' width='200px'}}{{!--{{eui-button label="Start a new case" action=""}}--}}
+                        </div>
+                    </div>
                     <h4>My Todos</h4>
 
                     <div class="">
@@ -3568,7 +3569,7 @@
                                     {{VersionUpdated}} {{this.LastUpdatedBy}}
                                     <ul class="actions">
                                         <li>{{#link-to 'step' this.id}}Checkout{{/link-to}}</li>
-                                        <li><a {{bind-attr data-js=this.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png';">Barcode</a></li>
+                                        <li><a {{bind-attr data-js=this.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a></li>
                                         @*<li class="last"><a href="#">Delete</a></li>*@
                                     </ul>
                                 </td>
@@ -3578,15 +3579,17 @@
                         </tbody>
                     </table>
                     </div>
-                    <canvas id="barcode" style="display:none;"></canvas>
+                    <div class="barcode" style="display:none;">
+                        <canvas id="barcode"></canvas>
+                    </div>
                 {{else}}
-                    You need to be logged in :)
+                    You need to be logged in.
                 {{/if}}
             </div>
             <!-- end products table -->
 
-            <h4>Unassigned Todos</h4>
-            <p>No Unassigned todos at this point :)</p>
+            @*<h4>Unassigned Todos</h4>
+            <p>No Unassigned todos at this point :)</p>*@
 
 </script>
 

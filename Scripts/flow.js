@@ -48,6 +48,7 @@ function RedirectToLogin() {
 }
 
 $.ajaxSetup({
+    cache: false,
     beforeSend: function (xhr, settings) {
         if (settings.url.match(/\/\//igm) === null)
             settings.url = expHost + settings.url;
@@ -1442,11 +1443,11 @@ App.ApplicationView = Ember.View.extend({
         var keepActive = function(){
             if(_this.active){
                 $.ajax({
-                  url: "/share/loggedin"
+                    url: "/share/loggedin",
+                    cache: false
                 }).then(function(result){
 
                     _this.active = false; // Set active to false until mouse is moved/keypress
-
                     if (result === true || result === false){
                         _this.set('controller.isLoggedIn', result)
                     }
