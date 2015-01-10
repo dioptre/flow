@@ -4860,6 +4860,14 @@ App.TodoRoute = Ember.Route.extend({
 
 App.TodoController = Ember.ObjectController.extend({
     needs: ['application'],
+    barcode: '',
+    barcodeChanges : function() {
+        var barcode = this.get('barcode');
+        if (IsGUID(barcode)) {
+            this.set('barcode', '');
+            this.transitionToRoute('step', barcode);
+        }
+    }.observes('barcode'),
     actions: {
         getBarcode: function (id) {
             console.log(id);
