@@ -6484,16 +6484,24 @@ App.OrganizationController = Ember.ObjectController.extend({
 
           var itm = this.store.createRecord('company', {
             ParentCompanyID: null,
-            CompanyName: 'New Organization',
-              People: ','
+            CompanyName: 'New Organization-' + NewGUID(),
+            People: ','
           })
 
-          var model = this.get('model');
+          var _this = this;
+          itm.save().then(function(){
+            var model = _this.get('model');
 
-          model.addObject(itm);
+            model.addObject(itm);
 
-          this.set('selected', itm);
-          this.set('update', NewGUID())
+            _this.set('selected', itm);
+            _this.set('update', NewGUID())
+          }, function(){
+              Messenger().post({ type: 'error', message: 'Problem adding new company.' });
+
+          })
+
+
 
         }
     }
