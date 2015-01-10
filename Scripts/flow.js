@@ -2433,7 +2433,7 @@ App.GraphRoute = Ember.Route.extend({
         //        resolve();
         //    })
         //});
-        var apiCache = Enumerable.From(this.store.all('trigger').content).Where("f=>f.get('CommonName') === 'DONEXT'").FirstOrDefault();
+        var apiCache = Enumerable.From(this.store.all('trigger').content).Where("f=>f.get('CommonName') === null").FirstOrDefault();
 
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
@@ -2447,7 +2447,7 @@ App.GraphRoute = Ember.Route.extend({
                 else if (typeof groupID === 'undefined' || !groupID)
                     return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: _this.get('model.selectedID') })
             }),
-            api: (apiCache) ? apiCache : this.store.findQuery('trigger', { CommonName: "DONEXT" }).then(function (m) {
+            api: (apiCache) ? apiCache : this.store.findQuery('trigger', { CommonName: null }).then(function (m) {
                 return m.get('firstObject');
             }, function () { return null; }), //TODO put this in an sync component - shouldnt be blocking
             duplicateNode: $.get('/flow/NodeDuplicateID/' + id),
@@ -6247,7 +6247,7 @@ App.MyprofilesRoute = Ember.Route.extend({
         var _this = this;
         return Ember.RSVP.hash({
             profiles: this.store.find('myProfile'),
-            api: this.store.findQuery('trigger', { CommonName: "DONEXT" }).catch(function () { return null; })
+            api: this.store.findQuery('trigger', { CommonName: null }).catch(function () { return null; })
         });
     },
     afterModel: function (m) {
@@ -6277,7 +6277,7 @@ App.MyprofilesController = Ember.ObjectController.extend({
                 this.set('model.trigger', null);
             }
             else {
-                t = this.store.createRecord('trigger', { CommonName: 'DONEXT' });
+                t = this.store.createRecord('trigger', { CommonName: null });
                 hasValue = true;
                 this.set('model.trigger', t);
             }

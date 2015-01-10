@@ -1169,8 +1169,10 @@ namespace EXPEDIT.Flow.Controllers {
             if (string.IsNullOrWhiteSpace(id))
             {
                 string cn = Request.Params["CommonName"];
-                if (string.IsNullOrWhiteSpace(cn))
+                if (cn == null)
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+                else if (cn == string.Empty)
+                    cn = null;
                 result = _Flow.GetTrigger(cn);
                 if (result == null)
                     return null;

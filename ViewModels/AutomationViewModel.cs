@@ -181,6 +181,19 @@ namespace EXPEDIT.Flow.ViewModels
             set { _username = value; }
         }
 
+        private string _newUserEmail = null;
+        public string NewUserEmail
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_newUserEmail))
+                    lookup.TryGetValue("newuseremail", out _newUserEmail);
+                return _newUserEmail;
+
+            }
+            set { _newUserEmail = value; }
+        }
+
         private string _password = null;
         public string Password
         {

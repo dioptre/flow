@@ -108,7 +108,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (Guid.TryParse(reference, out trid))
                 m.ReferenceID = trid;
             var method = id.ToUpperInvariant();
-            if (!User.Identity.IsAuthenticated && method != AutomationViewModel.AUTOMATION_METHOD_DOAS)
+            if (!User.Identity.IsAuthenticated)
             {
                 if (string.IsNullOrWhiteSpace(m.Username) || string.IsNullOrWhiteSpace(m.Password))
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);

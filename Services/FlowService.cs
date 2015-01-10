@@ -3408,7 +3408,13 @@ namespace EXPEDIT.Flow.Services {
                     //We are only checking the owner contacts...so dont need perms here
                     //if (!CheckPermission(id, ActionPermission.Read, typeof(Trigger)))
                     //    return null;
-                    var m = (from o in d.Triggers.Where(h => h.Version == 0 && h.VersionDeletedBy == null && h.CommonName == commonName && h.VersionOwnerContactID == contact)
+                    var m = (from o in d.Triggers.Where(h => h.Version == 0 && h.VersionDeletedBy == null && h.VersionOwnerContactID == contact
+                                 && (
+                                    (h.CommonName == commonName && commonName != null) 
+                                    ||
+                                    (h.CommonName == null && commonName == null) 
+                                    )
+                                 )
                              select new TriggerViewModel
                              {
                                  id = o.TriggerID,
@@ -3572,7 +3578,8 @@ namespace EXPEDIT.Flow.Services {
                         return false;
                     //Update
                     var cc = (from o in d.Triggers where o.TriggerID == m.id && o.Version == 0 && o.VersionDeletedBy == null select o).Single();
-                    if (string.Format("{0}", m.CommonName).Trim().ToUpperInvariant() == AutomationViewModel.AUTOMATION_METHOD_DONEXT && cc.VersionOwnerContactID != contact)
+                    var method = string.Format("{0}", m.CommonName).Trim().ToUpperInvariant();
+                    if (cc.VersionOwnerContactID != contact && string.IsNullOrWhiteSpace(method))
                         return false;
                     //Commented unsafe updates AG
                     //if (m.CommonName != null && cc.CommonName != m.CommonName) cc.CommonName = m.CommonName;
