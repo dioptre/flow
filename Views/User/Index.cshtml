@@ -1707,16 +1707,6 @@
                     {{viz-editor t=controllers.application.model.t workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=controllers.application.isLoggedIn toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems' selectedData=selectedData preview=preview}}
                 </div>
 
-                <br>
-
-                <div>
-                    {{!-- Showing the edge triggers --}}
-                    {{#if selectedDataisSingleEdge}}
-                        {{trigger-setup edgeID=selectedSingleEdgeID workflowID=workflowID}} 
-                    {{else}}
-                        {{selectedDataisSingleEdgeError}}
-                    {{/if}}
-                </div>
 
             </div>
             {{/unless}}
@@ -1725,6 +1715,13 @@
             <!-- PREVIEW STARTS HERE -->
             <div {{bind-attr class='columnLayout'}}>
                 {{#unless isPreview}}<h4><small>{{controllers.application.model.t.fp_general_step}}</small></h4>{{/unless}}
+                    {{#if selectedDataisSingleEdge}}
+                        {{!-- Showing the edge triggers --}}
+                        <h1>Selected Connection</h1>
+                        <br />
+                        {{trigger-setup edgeID=selectedSingleEdgeID workflowID=workflowID}} 
+                    {{else}}
+                        {{!-- Showing the node detail --}}
                <h1>
                     {{#if model.selected}}{{model.selected.localName}}{{/if}}
                     {{#if controllers.application.isLoggedIn}}
@@ -1841,6 +1838,9 @@
                         </div>
                     {{/if}}
                 </div>
+
+                {{/if}}
+
             </div>
 
             {{/unless}}

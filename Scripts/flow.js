@@ -2754,24 +2754,17 @@ App.GraphController = Ember.ObjectController.extend({
     }.property('validateWorkflowName', 'validateNewName', 'validateExistingName'),
 
     selectedData: {},
-    selectedDataisSingleEdgeError: '',
     selectedSingleEdgeID: 'none',
     selectedDataisSingleEdge: function(){
-        var a = this.get('selectedData.edges');
-        if (a && a.length == 1) {
-            this.set('selectedSingleEdgeID', a[0])
+        var a = this.get('selectedData');
+        if (a.edges && a.edges.length == 1 && (!a.nodes || a.nodes.length == 0)) {
+            this.set('selectedSingleEdgeID', a.edges[0])
             return true;
         } else {
-            this.set('selectedSingleEdgeID', 'none')  
+            this.set('selectedSingleEdgeID', 'none')
+            //Could clear variable cache here TODO AG
+            return false;
         }
-
-        if (a && a.length == 0) {
-            this.set('selectedDataisSingleEdgeError', 'No edge selected');
-        } else {
-            this.set('selectedDataisSingleEdgeError', 'More than one edge selected');
-        }
-
-        return false;
     }.property('selectedData','selectedData.edges', 'selectedData.nodes'),
     moneyModalStoreObject: {}, // this is for the money modal - all input fileds bind to this...
     actions: {
