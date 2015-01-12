@@ -6397,61 +6397,7 @@ App.OrganizationController = Ember.ObjectController.extend({
             return result;
         }
 
-          // function transform(itms){
-          //     var resultArray = [];
-          //     // var itemByID = {}; //this acts as a dictionary for storing the myObj parents for adding children after.
-          //     // var parentsByID = {};
-
-
-
-
-          //     for (var i = 0; i < itms.length; i++) {
-          //         var item = itms[i];
-          //         var itemParentID = item.get('ParentCompanyID');
-          //         var transformedItem = { data: item, children: []};
-
-          //         // itemByID[item.id] = transformedItem;
-          //         // parentsByID[itemParentID] = 
-
-
-
-
-          //         // case 1 
-          //         //parentId is null
-
-          //         if (itemParentID == null) {
-          //           resultArray.push(transformedItem);
-
-          //         } else {
-
-
-          //           Enumerable.From(itms).Where("f=>f.id==='" + itemParentID + "'").ToArray();
-          //           resultArray.push({})
-
-                
-
-
-          //         }
-
-
-          //         // case 2
-          //         // parentID is not null and element with parent doesn't exist yet
-
-          //         // case 3
-          //         // parentId is not null and element with parent does exist already
-
-
-
-          //         // at this point if the parent doesn't exist - difficult position
-          //         if (itemByID[itemParentID]) {
-          //           itemByID[itemParentID].children.push(transformedItem);   
-          //         } else {
-          //           parentsByID[itemParentID]
-          //         } 
-          //     }
-          //     return resultArray;
-          // }
-
+          
 
 
       Enumerable.From(this.get('model').content).Where("!$.get('People') || $.get('People') === null || $.get('People') === ''").ForEach(function (value) {
@@ -7645,7 +7591,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
                     // now remove the element from the parent, and insert it into the new elements children
 
                     // THE DRAGGIND NODE PARENT ID GET"S THE SELECTED NODE'S ID
-                    if (status.selectedNode.data && status.selectedNode.data.id) {
+                    if (status.selectedNode.data && (status.selectedNode.data.id || (status.selectedNode.data.id == null))) {
                       console.log('new parent id.. item must have been moved')
                       status.draggingNode.data.set('ParentCompanyID', status.selectedNode.data.id).save().then(function(){
                         Messenger().post({ type: 'success', message: 'Successfully updated position.' });
