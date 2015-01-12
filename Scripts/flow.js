@@ -4445,34 +4445,33 @@ App.TriggerSetupComponent = Ember.Component.extend({
 
         // Setup the config - load values from the server
 
-        this.set('loading', true);
         if (IsGUID(edgeID)){
-
+            this.set('loading', true);
             var edge = store.getById('edge', edgeID);
-           
-            this.set('edge', edge); 
-            var conditions = edge.get('EdgeConditions').then(function(a){
-                // here you need to set the this.config :) - 
-                _this.set('loading', false);
+            if (edge) {
+                this.set('edge', edge);
+                var conditions = edge.get('EdgeConditions').then(function (a) {
+                    // here you need to set the this.config :) - 
+                    _this.set('loading', false);
 
-                if (a.get('length') == 1) {
-                //debugger;  
+                    if (a.get('length') == 1) {
+                        //debugger;  
 
-                    _this.set('config', JSON.parse(a.get('firstObject.JSON')))
-                }
-                if (a.get('length') < 1) {
-                    _this.set('config', _this.get('defaultConfig'));
-                    _this.set('config.triggerConditions', false);
-                }
+                        _this.set('config', JSON.parse(a.get('firstObject.JSON')))
+                    }
+                    if (a.get('length') < 1) {
+                        _this.set('config', _this.get('defaultConfig'));
+                        _this.set('config.triggerConditions', false);
+                    }
 
-                 if (a.get('length') > 1) {
-                    Messenger().post({ type: 'error', message: 'There should only be one edge condition. Please contact support!' });
-                    
-                }
+                    if (a.get('length') > 1) {
+                        Messenger().post({ type: 'error', message: 'There should only be one edge condition. Please contact support!' });
 
-            })
-         
-                 
+                    }
+
+                })
+
+            }
         }
 
 
