@@ -3599,11 +3599,13 @@
                         <thead>
                             <tr>
                                 <th class="col-md-3">
-                                    <input type="checkbox">
                                     Case
                                 </th>
                                 <th class="col-md-3">
                                     <span class="line"></span>Step
+                                </th>
+                                <th class="col-md-3">
+                                    <span class="line"></span>Workflow
                                 </th>
                                 <th class="col-md-3">
                                     <span class="line"></span>Status
@@ -3611,15 +3613,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {{#each steps}}
+                            {{#each step in steps}}
                             <tr>
                                 <td>
                                     @*<input type="checkbox">*@
                                     @*<i class="icl-check green"></i>&nbsp;*@
-                                    {{#link-to 'step' this.id}}{{this.projectCode}}{{/link-to}}
+                                    {{#link-to 'step' this.id}}{{step.projectCode}}{{/link-to}}
                                 </td>
-                                <td class="description" {{bind-attr style=uniqueColor}}>
-                                    &nbsp;{{this.humanName}}
+                                <td class="description" {{bind-attr style=step.uniqueColor}}>
+                                    &nbsp;{{step.humanName}}
+                                </td>
+                                 <td class="description" {{bind-attr style=step.uniqueColor}}>
+                                    &nbsp;{{step.GraphDataGroupName}}
                                 </td>
                                 <td>
                                     <span class="label label-info">Important</span>
