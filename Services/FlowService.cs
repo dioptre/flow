@@ -228,6 +228,8 @@ namespace EXPEDIT.Flow.Services {
 
             var report1 = new List<Tuple<string, decimal?, decimal?>>();
             var report2 = new List<Tuple<string, int?, decimal?>>();
+            var report3 = new List<Tuple<string, decimal?, decimal?>>();
+            var report4 = new List<Tuple<string, decimal?>>();
             using (var con = new SqlConnection(_users.ApplicationConnectionString))
             using (var cmd = new SqlCommand("E_SP_GetWorkflowData", con))
             {
@@ -255,13 +257,26 @@ namespace EXPEDIT.Flow.Services {
                             while (reader.Read())
                                 report2.Add(new Tuple<string, int?, decimal?>(reader[0] as string, reader[1] as int?, reader[2] as decimal?));
                         }
+
+                        if (reader.NextResult())
+                        {
+                            while (reader.Read())
+                                report3.Add(new Tuple<string, decimal?, decimal?>(reader[0] as string, reader[1] as decimal?, reader[2] as decimal?));
+                        }
+
+                        if (reader.NextResult())
+                        {
+                            while (reader.Read())
+                                report4.Add(new Tuple<string, decimal?>(reader[0] as string, reader[1] as decimal?));
+                        }
+
                     }
                 }
                 con.Close();
 
             }
             
-            return new object[] { report1.ToArray(), report2.ToArray() };
+            return new object[] { report1.ToArray(), report2.ToArray(), report3.ToArray(), report4.ToArray() };
 
         }
 

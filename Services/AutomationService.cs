@@ -968,7 +968,6 @@ namespace EXPEDIT.Flow.Services {
                                             break;
                                         }
                                         settings.email.message.Value = clean(settings.email.message.Value);
-                                        settings.email.message.Value += string.Format("<br/><br/><p>See more detail at FlowPro:</p><a href=\"http://flowpro.io/flow#/step/{0}\">http://flowpro.io/flow#/step/{0}</a>", evt.ProjectPlanTaskResponseID);
                                         settings.email.subject.Value = clean(settings.email.subject.Value);
                                         success = SendEmail(settings);
                                         if (!success)
@@ -984,6 +983,12 @@ namespace EXPEDIT.Flow.Services {
                                         if (!success)
                                             evt.Reason = "HOOK RESP FAILED";
                                         break;
+                                    case "continuation":
+                                        //Foreach?
+                                        //Create Task
+                                        //X_ProjectPlanResponseData needs parent and new owner
+                                        //Send email to assignee/s
+                                        //settings.email.message.Value += string.Format("<br/><br/><p>See more detail at FlowPro:</p><a href=\"http://flowpro.io/flow#/step/{0}\">http://flowpro.io/flow#/step/{0}</a>", evt.ProjectPlanTaskResponseID);
                                     default:
                                         evt.Reason = "ILLEGAL METHOD"; //16 max
                                         evt.Failed = now;

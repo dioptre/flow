@@ -424,7 +424,14 @@
     <div class='container-fluid'>
         <div class="row">
             <div class="col-md-6">
-
+                <h4>Estimated Revenue<br/><sub>(how much we're making)</sub></h4>
+                <div class="chart-container">
+                    {{pie-chart
+                    data=model.revenue
+                    }}
+                </div>
+                <br />
+                <br />
                 <h4>Business Impact<br/><sub>(how we've gone)</sub></h4>
                 <div class="chart-container">
                   {{scatter-chart
@@ -467,6 +474,14 @@
                 <div id="lateTasksReport" class="chart-container">
                                     {{vertical-bar-chart
                    data=model.od
+                }}
+
+                <br />
+                <br/>
+                <h4>Effort<br/><sub>(how long things are taking)</sub></h4>
+                <div class="chart-container">
+                                    {{vertical-bar-chart
+                    data=model.effort
                 }}
                 </div>
 
@@ -1277,8 +1292,8 @@
                     <i class="icon-chevron-down"></i>
                 </a>
                 <ul class="submenu">
-                    <li>{{#link-to 'responseData'}} Export {{model.t.fp_menu_link_data}} {{/link-to}}</li>
-                    <li>{{#link-to 'report'}} Visual {{model.t.fp_menu_link_report}} {{/link-to}}</li>
+                    <li>{{#link-to 'report'}} {{model.t.fp_menu_link_charts}} {{/link-to}}</li>
+                    <li>{{#link-to 'responseData'}} {{model.t.fp_menu_link_data}} {{/link-to}}</li>
                 </ul>
             {{/view}}
 
@@ -1311,9 +1326,9 @@
                     <i class="icon-chevron-down"></i>
                 </a>
                 <ul class="submenu">
+                    <li>{{#link-to 'organization'}}{{model.t.fp_menu_link_organization}}{{/link-to}}</li>
                     <li>{{#link-to 'permission'}}{{model.t.fp_menu_link_permission}}{{/link-to}}</li>
                     <li>{{#link-to 'mylicenses'}} {{model.t.fp_menu_link_licenses}} {{/link-to}}</li>
-                    <li>{{#link-to 'organization'}}Hierachy editor{{/link-to}}</li>
                 </ul>
             {{/view}}
 

@@ -408,6 +408,13 @@ App.ReportRoute = Ember.Route.extend({
             return {label: 'Relative Lateness' , group: value.label, time: hackDate, value: overdueMax * (value.value / overdueFactorMax) };
         }).ToArray();
         m.od = m.overdue.concat(m.overdueFactor);
+
+        m.effort = Enumerable.From(m.data[2]).Select("{label: 'Hours Taken' , group:ToTitleCase($.Item1.replace(/_/g, ' ')), value: $.Item2 }").ToArray()
+            .concat(
+                Enumerable.From(m.data[2]).Select("{label: 'Hours Estimated' , group:ToTitleCase($.Item1.replace(/_/g, ' ')), value: $.Item3 }").ToArray()
+            );
+
+        m.revenue = Enumerable.From(m.data[3]).Select("{label:ToTitleCase($.Item1.replace(/_/g, ' ')), value: $.Item2, type: 'money' }").ToArray();
     }
 });
 
