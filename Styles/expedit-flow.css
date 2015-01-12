@@ -635,7 +635,9 @@ text-transform: capitalize;
   padding: 9px 20px !important;
 }
 
-
+.ie .downloadData {
+    display: none !important;
+}
 
 
 .ie .barcode {

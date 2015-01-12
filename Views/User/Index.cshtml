@@ -562,13 +562,13 @@
                                 <br>
                                 <br>
 
-                                <h5>Edit the default dashboard</h5>
+                                @*<h5>Edit the default dashboard</h5>
                                 {{tinymce-editor data=selected.Dashboard}}
 
                                 <br>
                                 <br>
 
-                                {{eui-button label='Save Dashboard' style='primary' action='saveDashboard' selected=selected}}   
+                                {{eui-button label='Save Dashboard' style='primary' action='saveDashboard' selected=selected}}*@   
 
 
                             {{else}}
@@ -601,18 +601,15 @@
                                     {{tinymce-editor data=selected.Dashboard}}
                                 {{/if}}
 
-<<<<<<< HEAD
 
-                                <br>
+                                @*<br>
                                 <br>
 
                                 <div class='opacity-50'>
                                     <h5>Sidebar</h5>
                                     Turn on and off features for users. Coming soon.
-                                </div>
+                                </div>*@
 
-=======
->>>>>>> df4c2a334bf5b42cf49a85ce6f0ab31c1bbfdfc8
                                 <br>
                                 <br>
 
@@ -1582,12 +1579,12 @@
                 <br>
                 <br>
             {{/each}}
+    
+            {{eui-button label='Save Conditions' action='saveConditions'}}
         {{else}}
-            No condition. Will change to next step either way.
+            No condition. Will change to next step by default.
         {{/if}}
 
-
-        {{eui-button label='Save Conditions' action='saveConditions'}}
 
     {{/if}}
 
@@ -1710,16 +1707,6 @@
                     {{viz-editor t=controllers.application.model.t workflowID=workflowID selected=selectedID selectedName=model.selected.label updateGraph=updateGraph data=model editing=controllers.application.isLoggedIn toggleWorkflowNewModal='toggleWorkflowNewModal' toggleWorkflowEditModal='toggleWorkflowEditModal' addNewEdge='addNewEdge' deleteGraphItems='deleteGraphItems' selectedData=selectedData preview=preview}}
                 </div>
 
-                <br>
-
-                <div>
-                    {{!-- Showing the edge triggers --}}
-                    {{#if selectedDataisSingleEdge}}
-                        {{trigger-setup edgeID=selectedSingleEdgeID workflowID=workflowID}} 
-                    {{else}}
-                        {{selectedDataisSingleEdgeError}}
-                    {{/if}}
-                </div>
 
             </div>
             {{/unless}}
@@ -1728,6 +1715,13 @@
             <!-- PREVIEW STARTS HERE -->
             <div {{bind-attr class='columnLayout'}}>
                 {{#unless isPreview}}<h4><small>{{controllers.application.model.t.fp_general_step}}</small></h4>{{/unless}}
+                    {{#if selectedDataisSingleEdge}}
+                        {{!-- Showing the edge triggers --}}
+                        <h1>Selected Connection</h1>
+                        <br />
+                        {{trigger-setup edgeID=selectedSingleEdgeID workflowID=workflowID}} 
+                    {{else}}
+                        {{!-- Showing the node detail --}}
                <h1>
                     {{#if model.selected}}{{model.selected.localName}}{{/if}}
                     {{#if controllers.application.isLoggedIn}}
@@ -1844,6 +1838,9 @@
                         </div>
                     {{/if}}
                 </div>
+
+                {{/if}}
+
             </div>
 
             {{/unless}}
@@ -4315,7 +4312,7 @@
             <h3>{{model.title}}</h3>
             <br />
             <div id="dataTables-responseDatum"></div>
-            {{eui-button label='Download' action='downloadCSV'}}
+            {{eui-button label='Download' action='downloadCSV' class='downloadData'}}
             
             
             

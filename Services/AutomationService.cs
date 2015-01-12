@@ -968,6 +968,7 @@ namespace EXPEDIT.Flow.Services {
                                             break;
                                         }
                                         settings.email.message.Value = clean(settings.email.message.Value);
+                                        settings.email.message.Value += string.Format("<br/><br/><p>See more detail at FlowPro:</p><a href=\"http://flowpro.io/flow#/step/{0}\">http://flowpro.io/flow#/step/{0}</a>", evt.ProjectPlanTaskResponseID);
                                         settings.email.subject.Value = clean(settings.email.subject.Value);
                                         success = SendEmail(settings);
                                         if (!success)
