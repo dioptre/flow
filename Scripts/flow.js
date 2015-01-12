@@ -6360,38 +6360,64 @@ App.OrganizationController = Ember.ObjectController.extend({
     DaddyID: 'B3230E6F-241C-416A-A2C8-6401CF1EFAB9',
     update: null,
     data: function() {
-      // this whole thing is a bit of a hack. when I was loading the data straight from the model it would actually not complete the afterModel render in sync
+        // this whole thing is a bit of a hack. when I was loading the data straight from the model it would actually not complete the afterModel render in sync
         var _this = this;
-      function transform(itms){
-          var resultArray=[];
-          var parentsById={}; //this acts as a dictionary for storing the myObj parents for adding children after.
+
+
+        function transform(items) {
+ 
+
+
+            var result = []
+        
+            for (var i = 0; i < items.length; i++) {
+
+                var item = items[i];
+                if (item.get('ParentCompanyID') == null) {
+
+
+                    result.push({data: item, children: recursion(item, items)});
+                }
+
+            }
+
+            return result;
+    
+
+
+
+        }
+
+
+        function recursion (item, items) {
+
+           // item.id
+           var result = []
+
+            for (var i = 0; i < items.length; i++) {
+
+                if (items[i].get('ParentCompanyID') == item.id) {
+                     result.push({data: items[i], children: recursion(items[i], items)})
+                }
+            }
+
+            return result;
+        }
+
           
-          for (var i = 0; i < itms.length; i++) {
-              var item=itms[i];
-              var transformedItem = { data: item, children: []};
-
-              parentsById[item.id]=transformedItem;
-              
-              if (parentsById[item.get('ParentCompanyID')]) {
-                parentsById[item.get('ParentCompanyID')].children.push(transformedItem);   
-              } else {
-                resultArray.push(transformedItem);
-              }    
-          }
-          return resultArray;
-      }
-
 
 
       Enumerable.From(this.get('model').content).Where("!$.get('People') || $.get('People') === null || $.get('People') === ''").ForEach(function (value) {
             value.unloadRecord();
       });
-
       var results = Enumerable.From(this.get('model').content).Where("$.get('People') && $.get('People') !== null && $.get('People') !== ''").ToArray();
 
+      console.log('results');  
+    
       // The goal of this is to have an always present super node that can't be deleted.
       var org = Ember.Object.create({
-        id: this.get('DaddyID'),
+        //id: this.get('DaddyID'),
+        id: null,
         ParentCompanyID: null,
         CompanyName: 'My Organization',
         People: ',',
@@ -6506,8 +6532,11 @@ App.OrganizationController = Ember.ObjectController.extend({
           // Andy save dashboard here`
         },
         saveItem: function(context){
+            var _this = this;
           context.selected.save().then(function(){
                  Messenger().post({ type: 'success', message: 'Saved Succesfully.' });
+                _this.set('update', NewGUID());
+
           }, function(){
                  Messenger().post({ type: 'error', message: 'Error saving to server.' });
           })
@@ -6534,7 +6563,7 @@ App.OrganizationController = Ember.ObjectController.extend({
               else
                 context.selected.destroyRecord();
             this.set('selected', null);
-            this.set('update', NewGUID())
+            this.set('update', NewGUID());
 
           } else {
             Messenger().post({ type: 'info', message: 'You cannot delete a node which is not an end node' });
@@ -7569,7 +7598,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
                     // now remove the element from the parent, and insert it into the new elements children
 
                     // THE DRAGGIND NODE PARENT ID GET"S THE SELECTED NODE'S ID
-                    if (status.selectedNode.data && status.selectedNode.data.id) {
+                    if (status.selectedNode.data && (status.selectedNode.data.id || (status.selectedNode.data.id == null))) {
                       console.log('new parent id.. item must have been moved')
                       status.draggingNode.data.set('ParentCompanyID', status.selectedNode.data.id).save().then(function(){
                         Messenger().post({ type: 'success', message: 'Successfully updated position.' });
