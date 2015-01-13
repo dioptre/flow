@@ -3789,7 +3789,7 @@ App.HandlebarsLiveComponent = Ember.Component.extend({
 App.UserSelectorComponent = Ember.Component.extend({
     classNames: ['user-selector'],
     layout: Ember.Handlebars.compile("<div {{bind-attr id=internalID}} style='width: 275px;' class='select2' type='hidden'></div>"),
-    url: "//share/getusernames",
+    url: "/share/getusernames",
     placeholder: "Enter Usernames...",
     internalID: function(){
         return NewGUID()
@@ -3890,6 +3890,7 @@ App.CompanySelectorComponent = App.UserSelectorComponent.extend({
 });
 
 App.MyCompanySelectorComponent = App.UserSelectorComponent.extend({
+    minimumInput: 0,
     classNames: ['mycompany-selector'],
     placeholder: "Enter Company...",
     url: "/share/getmycompanies",
@@ -4052,7 +4053,7 @@ App.ThenTrigger = App.TriggerOption.extend({
         {value: 'email', text: "Email"}, 
         {value: 'webhook', text: "Webhook"}
     ],
-    relatioshipSelect:  [{value:"Peer", text:"Each Sibling"},{value:"Parent", text:"Each Parent"},{value:"Child", text:"Each Child"}],
+    relatioshipSelect:  [{value:"Peer", text:"Each Sibling"},{value:"Parent", text:"Each Parent"},{value:"Child", text:"Each Child"}, {value:"Self", text:"Itself"}],
     emailTemplate: {
         sender: '',
         recipient: '', 
@@ -4069,7 +4070,7 @@ App.ThenTrigger = App.TriggerOption.extend({
         Relationship: 'Child' // dropdown
     },
     webhookTemplate: {
-        url: 'http://x.com/xxx'
+        url: 'http://webhook-url.com/'
     }
 });
 
@@ -6380,12 +6381,15 @@ App.MyprofilesController = Ember.ObjectController.extend({
             var surname = profile.get('Surname');
             var company = profile.get('AddressName');
             var email = profile.get('DefaultEmail');
+            var companyID = profile.get('DefaultCompanyID');
+
             //profile.rollback();
             var m = this.store.getById('myProfile', profile.id);
             m.set('Firstname', firstname);
             m.set('Surname', surname);
             m.set('AddressName', company);
             m.set('DefaultEmail', email);
+            m.set('DefaultCompanyID', companyID);
             m.save().then(function (pro) {
                 Messenger().post({ type: 'success', message: "Successfully updated profile.", id: 'user-security' })
                 _this.store.find('myProfile', { id: profile.id });
