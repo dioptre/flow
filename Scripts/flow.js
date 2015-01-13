@@ -48,7 +48,7 @@ function RedirectToLogin() {
 }
 
 $.ajaxSetup({
-    cache: false,
+    //cache: false,
     beforeSend: function (xhr, settings) {
         if (settings.url.match(/\/\//igm) === null)
             settings.url = expHost + settings.url;
