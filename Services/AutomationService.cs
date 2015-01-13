@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 using Orchard;
 using System.Security.Principal;
 using EXPEDIT.Flow.ViewModels;
-
+using EXPEDIT.Flow.Models;
 using Jint;
 using System.Text;
 using System.Security.Cryptography;
@@ -984,11 +984,25 @@ namespace EXPEDIT.Flow.Services {
                                             evt.Reason = "HOOK RESP FAILED";
                                         break;
                                     case "continuation":
-                                        //Foreach?
-                                        //Create Task
-                                        //X_ProjectPlanResponseData needs parent and new owner
-                                        //Send email to assignee/s
-                                        //settings.email.message.Value += string.Format("<br/><br/><p>See more detail at FlowPro:</p><a href=\"http://flowpro.io/flow#/step/{0}\">http://flowpro.io/flow#/step/{0}</a>", evt.ProjectPlanTaskResponseID);
+                                        if (((IDictionary<string, Object>)settings).ContainsKey("continuation.single"))
+                                        {
+                                            SendContinuation(settings);
+                                        }
+                                        else if (((IDictionary<string, Object>)settings).ContainsKey("continuation.many"))
+                                        {
+                                            foreach (dynamic c in settings.continuation.many.data)
+                                            {
+                                                SendContinuation(c);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            evt.Reason = "ILLEGAL CONTINUE"; //16 max
+                                            evt.Failed = now;
+                                            evt.RunsLeft = 0; //critical failure
+                                            evt.RunNext = null;
+                                        }
+                                        break;
                                     default:
                                         evt.Reason = "ILLEGAL METHOD"; //16 max
                                         evt.Failed = now;
@@ -1108,6 +1122,15 @@ namespace EXPEDIT.Flow.Services {
 
         private bool SendSMS(dynamic settings)
         {
+            return false;
+        }
+
+        private bool SendContinuation(Continuation settings)
+        {
+            //Create Task
+            //X_ProjectPlanResponseData needs parent and new owner
+            //Send email to assignee/s
+            //settings.email.message.Value += string.Format("<br/><br/><p>See more detail at FlowPro:</p><a href=\"http://flowpro.io/flow#/step/{0}\">http://flowpro.io/flow#/step/{0}</a>", evt.ProjectPlanTaskResponseID);
             return false;
         }
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace EXPEDIT.License.Models
+namespace EXPEDIT.Flow.Models
 {
     public class LinqModels
     {
