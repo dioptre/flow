@@ -251,13 +251,15 @@ App.DashboardRoute = Ember.Route.extend({
 });
 
 App.DashboardController = Ember.Controller.extend({
-    needs: ['application']
+    needs: ['application'],
+    title: 'Dashboard'
 })
 
 App.ResponseDataController = Ember.ObjectController.extend({
     needs: ['application'],
     queryParams: ['keywords'],
     keywords: '',
+    title: 'Export',
     oldKeywords: '',
     kw: function () {
         var _this = this;
@@ -308,7 +310,7 @@ App.ResponseDatumView = Ember.View.extend({
 
 
             if (a.length == 0) {
-                $results.html("<h4>Unknown results.</h4>");
+                // $results.html("<h4>Unknown results.</h4>");
                 return;
             }
             var k = [];
@@ -436,6 +438,7 @@ App.ReportRoute = Ember.Route.extend({
 
 App.ReportController = Ember.Controller.extend({
     needs: ['application'],
+    title: 'Reports',
     // Used for horizontal bar chart, vertical bar chart, and pie chart
     content: [
     {
@@ -4921,6 +4924,7 @@ App.TodoRoute = Ember.Route.extend({
 
 App.TodoController = Ember.ObjectController.extend({
     needs: ['application'],
+    title: 'My Todos',
     barcode: '',
     barcodeChanges : function() {
         var barcode = this.get('barcode');
@@ -6521,7 +6525,7 @@ App.OrganizationController = Ember.ObjectController.extend({
             return;
       var name = selected.get('CompanyName').toLowerCase()
       var oldName = name;
-      if (selected._data.CompanyName)
+      if (selected._data && selected._data.CompanyName)
           oldName = selected._data.CompanyName.toLowerCase()
 
 

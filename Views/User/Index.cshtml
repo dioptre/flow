@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html>
 <html>
     <head>
-        <title>Flow Pro</title>
+        <title>Loading FlowPro...</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
 
@@ -723,7 +723,9 @@
 </script>
 
 <script type="text/x-handlebars" id="myworkflows">
-    <h3> My Workflows & Steps</h3>
+    <h1> My Workflows
+        <sub>List of all the workflows & steps you have created</sub>
+    </h1>
     <br><br>
     {{#if loading}}
       Loading...
@@ -759,7 +761,7 @@
         <div class='container-fluid'>
             <div class="row">
                 <div class="col-md-6">
-                    {{model.workflows.length}} <b>Workflows</b>
+                    <h4>{{model.workflows.length}} <b>Workflows</b></h4>
 
                     {{#if model.workflows}}
                         <div class="table-responsive">
@@ -798,7 +800,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    {{model.processes.length}} <b>Steps</b>
+                    <h4>{{model.processes.length}} <b>Steps</b> </h4>
 
                     {{#if model.processes}}
                         <div class="table-responsive">
@@ -3986,14 +3988,25 @@
         {{else}}
             {{#if controllers.application.isLoggedIn}}
                      <div class="settings-wrapper">
-                    <div class="row">
-                        <div class="col-md-3 col-md-offset-1 avatar-box">
-                            <div class="personal-image">
-                                <img id="profileImageThumb" {{bind-attr src="profile.Thumb"}} class="avatar img-circle" alt="avatar" style="max-height:150px;max-width:150px;" />
-                                    <p>Upload a different photo... <br />(Recommended size 200px by 200px)</p>
-                                    <input type="file" onchange="javascript:uploadPhoto(this);" />
+                        
+                        <h1> My Account
+                            <sub>Update your personal info & API keys.</sub>
+                        </h1>                        
+
+                        <br>
+                        <br>
+                        <br>
+
+                        <div class="row">
+
+
+                            <div class="col-md-3 col-md-offset-1 avatar-box">
+                                <div class="personal-image">
+                                    <img id="profileImageThumb" {{bind-attr src="profile.Thumb"}} class="avatar img-circle" alt="avatar" style="max-height:150px;max-width:150px;" />
+                                        <p>Upload a different photo... <br /><small>(Recommended size 200px by 200px)</small></p>
+                                        <input type="file" onchange="javascript:uploadPhoto(this);" />
+                                </div>
                             </div>
-                        </div>
 
                         <div class="col-md-7 personal-info">
                             <h5 class="personal-title">Personal info</h5>
@@ -4279,7 +4292,7 @@
                 <div class='container-fluid'>
                     <div class="row">
                         <div class="col-md-12">
-                            {{model.licenses.length}} <b>Licenses</b>
+                            <h4>{{model.licenses.length}} <b>Licenses</b></h4>
 
                             {{#if model.licenses}}
                                 <div class="table-responsive">
@@ -4341,15 +4354,20 @@
             <div class="row">
 
                 <div class="col-md-3">
-                    Search workflow name:
-                    <br />
+                    <h4>Search workflow name:</h4>
+                    
                     {{eui-input value=keywords}}
                     <br /><br />
-                    Results:
-                    <br />
+                    
+                    <h4>Results:</h4>
                     {{#each mod in model.r}}
                         <br />{{#link-to 'responseDatum' mod.ReferenceID}}{{mod.humanName}}{{/link-to}}
                     {{/each}}
+                    {{#unless model.r}}
+                        No workflows could be found for <i>{{keywords}}</i>.
+                    {{/unless}}
+                      
+                    
 
                 </div>
 
@@ -4367,8 +4385,13 @@
             <h3>{{model.title}}</h3>
             <br />
             <div id="dataTables-responseDatum"></div>
-            {{eui-button label='Download' action='downloadCSV' class='downloadData'}}
-            
+            {{#unless model.data}}
+                No data could be found. Most likely this workflow has never been finished.
+            {{/unless}}
+
+            {{#if model.data}}
+                {{eui-button label='Download' action='downloadCSV' class='downloadData'}}
+            {{/if}}
             
             
             @*{{#each mod in model}}
