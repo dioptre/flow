@@ -233,6 +233,8 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? TriggerID { get; set; }
 
         [JsonIgnore]
+        private Dictionary<string, string> _lookup = null;
+        [JsonIgnore]
         private Dictionary<string, string> lookup
         {
             get
@@ -297,8 +299,6 @@ namespace EXPEDIT.Flow.ViewModels
             }
         }
 
-        [JsonIgnore]
-        private Dictionary<string, string> _lookup = null;
     }
 
 

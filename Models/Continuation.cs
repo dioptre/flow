@@ -11,13 +11,18 @@ namespace EXPEDIT.Flow.Models
         [Flags]
         public enum RelationshipType : uint 
         {
-            Parent = 0,
-            Peer = 1,
-            Child = 2
+            Child = 0, //nCr like students to tutor
+            Peer = 1, //nCr peer review
+            Parent = 2, //nCr like tutor to students
+            Itself = 3 //like a class test
         }
-
+        public Guid? OldWorkflowID { get; set; }
+        public Guid? OldWorkflowCompanyID { get; set; }
+        public Guid? OldWorkflowContactID { get; set; }
         public Guid? OldStepID { get; set; }
-        
+        public Guid? OldStepCompanyID { get; set; }
+        public Guid? OldStepContactID { get; set; }
+
         //Single
         public Guid? NewCompanyID {get;set;}
         public Guid? NewContactID {get;set;}
