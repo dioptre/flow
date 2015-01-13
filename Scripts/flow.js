@@ -48,7 +48,7 @@ function RedirectToLogin() {
 }
 
 $.ajaxSetup({
-    cache: false,
+    //cache: false,
     beforeSend: function (xhr, settings) {
         if (settings.url.match(/\/\//igm) === null)
             settings.url = expHost + settings.url;
@@ -242,13 +242,20 @@ App.ResponseDataRoute = Ember.Route.extend({
 
 App.DashboardRoute = Ember.Route.extend({
     model: function (params) {
+        if (!this.controllerFor('application').get('isLoggedIn'))
+            return { r: {} };
         return Ember.RSVP.hash({
             r: this.store.find('dashboard', params.id)
         });
     },
+});
+
+App.DashboardController = Ember.Controller.extend({
+    needs: ['application']
 })
 
 App.ResponseDataController = Ember.ObjectController.extend({
+    needs: ['application'],
     queryParams: ['keywords'],
     keywords: '',
     oldKeywords: '',
@@ -380,6 +387,8 @@ App.StyleguideController = Ember.Controller.extend({
 
 App.ReportRoute = Ember.Route.extend({
     model: function () {
+        if (!this.controllerFor('application').get('isLoggedIn'))
+            return { data: null };
         return Ember.RSVP.hash({
             data : new Ember.RSVP.Promise(function(resolve) {
                 $.ajax('/flow/reports').then(function (m) {
@@ -389,6 +398,8 @@ App.ReportRoute = Ember.Route.extend({
         });           
     },
     afterModel: function (m) {
+        if (!m.data)
+            return;
         m.impact = Enumerable.From(m.data[0]).Select("{group:ToTitleCase($.Item1.replace(/_/g, ' ')), xValue: $.Item2, yValue: $.Item3*100.0 }").ToArray();
         var overdueMax = 1;
         
@@ -423,7 +434,8 @@ App.ReportRoute = Ember.Route.extend({
     }
 });
 
-App.ReportController = Ember.Controller.extend({ 
+App.ReportController = Ember.Controller.extend({
+    needs: ['application'],
     // Used for horizontal bar chart, vertical bar chart, and pie chart
     content: [
     {
@@ -6399,6 +6411,8 @@ App.MyprofilesController = Ember.ObjectController.extend({
 
 App.OrganizationRoute = Ember.Route.extend({
     model: function () {
+        if (!this.controllerFor('application').get('isLoggedIn'))
+            return { };
         return this.store.findQuery('company', {});
     }
 });

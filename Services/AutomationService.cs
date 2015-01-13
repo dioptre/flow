@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 using Orchard;
 using System.Security.Principal;
 using EXPEDIT.Flow.ViewModels;
-
+using EXPEDIT.Flow.Models;
 using Jint;
 using System.Text;
 using System.Security.Cryptography;
@@ -983,12 +983,15 @@ namespace EXPEDIT.Flow.Services {
                                         if (!success)
                                             evt.Reason = "HOOK RESP FAILED";
                                         break;
-                                    case "continuation":
-                                        //Foreach?
-                                        //Create Task
-                                        //X_ProjectPlanResponseData needs parent and new owner
-                                        //Send email to assignee/s
-                                        //settings.email.message.Value += string.Format("<br/><br/><p>See more detail at FlowPro:</p><a href=\"http://flowpro.io/flow#/step/{0}\">http://flowpro.io/flow#/step/{0}</a>", evt.ProjectPlanTaskResponseID);
+                                    case "csingle": //Single continuation
+                                        //if (((IDictionary<string, Object>)settings).ContainsKey("continuation.single"))
+                                        //{
+                                            ContinuationSingle(settings);
+                                        //}                                    
+                                        break;
+                                    case "cmulti": //Multi continuation
+                                        ContinuationMulti(settings);
+                                        break;
                                     default:
                                         evt.Reason = "ILLEGAL METHOD"; //16 max
                                         evt.Failed = now;
@@ -1109,6 +1112,180 @@ namespace EXPEDIT.Flow.Services {
         private bool SendSMS(dynamic settings)
         {
             return false;
+        }
+
+        private bool ContinuationSingle(Continuation settings)
+        {
+            //Create Task
+            ContactID = settings.OldStepContactID;
+            CompanyID = settings.OldStepCompanyID;
+            if (!Authorize(null, ActionPermission.Create, typeof(ProjectPlanTaskResponse)))
+                return false;
+            var m = new AutomationViewModel { };
+            m.IncludeContent = false;
+            m.PreviousStep = new ProjectPlanTaskResponse { ProjectPlanTaskResponseID = Guid.NewGuid(), ActualGraphDataGroupID = settings.NewWorkflowID };
+            m.PreviousTask = new NKD.Module.BusinessObjects.Task { };
+            var wfi = DoNext(m);
+            if (wfi)
+            {
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var rd = new ProjectPlanTaskResponseData
+                    {
+                        ProjectPlanTaskResponseDataID = Guid.NewGuid(),
+                        ParentProjectPlanTaskResponseDataID = settings.OldStepID,
+                        VersionOwnerCompanyID = settings.OldStepCompanyID,
+                        VersionOwnerContactID = settings.OldStepContactID,
+                        VersionUpdated = DateTime.UtcNow
+                    };
+                    d.ProjectPlanTaskResponseDatas.AddObject(rd);
+                    d.SaveChanges();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private bool ContinuationMulti(Continuation settings)
+        {
+            try
+            {
+                ContactID = settings.OldStepContactID;
+                CompanyID = settings.OldStepCompanyID;
+                if (!Authorize(null, ActionPermission.Create, typeof(ProjectPlanTaskResponse)))
+                    return false;
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    Guid[] companies = new Guid[] { };
+                    if (!settings.NewCompanyID.HasValue)
+                    {
+                        //companylevel
+                        var wfCompanies = (from o in d.E_UDF_ContactCompanies(settings.OldWorkflowContactID.Value)
+                                           join c in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
+                                           on o.Value equals c.CompanyID
+                                           select new { c.CompanyID, c.ParentCompanyID }).ToArray();
+                        var nulls = (from o in wfCompanies where o.ParentCompanyID == null select o.CompanyID);
+                        var lvlCompanies = new List<Guid>();
+                        Action<Guid, int> recurse = null;
+                        recurse = new Action<Guid, int>((Guid c, int l) =>
+                        {
+                            if (l < settings.CompanyLevel && l < 50)
+                            {
+                                foreach (var wfc in wfCompanies)
+                                {
+                                    if (wfc.ParentCompanyID == c)
+                                        recurse(wfc.CompanyID, l++);
+                                }
+                            }
+                            else if (l == settings.CompanyLevel)
+                            {
+                                lvlCompanies.Add(c);
+                            }
+
+                        });
+                        foreach (var l1 in nulls)
+                        {
+                            recurse(l1, 1);
+                        }
+                        companies = lvlCompanies.ToArray();
+                        CompanyID = settings.OldWorkflowCompanyID; //Can't choose who owns the instance, so revert back to WF owner
+                    }
+                    else
+                    {
+                        companies = new Guid[] { settings.NewCompanyID.Value };
+                        CompanyID = settings.NewCompanyID.Value; //This is our NewWorkflowID for multi
+                    }
+                    var defaultCompanies = new Guid[] {
+                                                     _users.ApplicationCompanyID,
+                                                     Guid.Empty,
+                                                    UsersService.COMPANY_DEFAULT};
+                    companies = companies.Except(defaultCompanies).ToArray();
+                    foreach (var company in companies)
+                    {
+                        var recipients = (from o in d.Experiences.Where(f =>
+                                            (f.DateFinished == null || f.DateFinished > DateTime.UtcNow)
+                                     && (f.Expiry == null || f.Expiry > DateTime.UtcNow)
+                                     && f.CompanyID != null
+                                     && f.ContactID == ContactID
+                                     && (f.DateStart <= DateTime.UtcNow || f.DateStart == null)
+                                     && f.Version == 0 && f.VersionDeletedBy == null
+                                            )
+                                        where o.CompanyID != null && o.CompanyID == company //companies.Contains(o.CompanyID.Value)
+                                        select o.Contact);
+
+                        var senders = recipients; //peer & itself
+                        var senderCompanies = new Guid[] {};
+                        if (settings.Relationship == (uint)Continuation.RelationshipType.Parent)
+                        {
+                            senderCompanies = d.CompanyRelations.Where(f=>f.Version ==0 && f.VersionDeletedBy == null  && f.CompanyID == company).Select(f=>f.ParentCompanyID).ToArray();
+                        }
+                        if (settings.Relationship == (uint)Continuation.RelationshipType.Child)
+                        {
+                            senderCompanies = d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ParentCompanyID == company).Select(f => f.CompanyID).ToArray();
+                        }
+                        senderCompanies = senderCompanies.Except(defaultCompanies).ToArray();
+                        if (senderCompanies.Any())
+                        {
+                            senders = (from o in d.Experiences.Where(f =>
+                                            (f.DateFinished == null || f.DateFinished > DateTime.UtcNow)
+                                     && (f.Expiry == null || f.Expiry > DateTime.UtcNow)
+                                     && f.CompanyID != null
+                                     && f.ContactID == ContactID
+                                     && (f.DateStart <= DateTime.UtcNow || f.DateStart == null)
+                                     && f.Version == 0 && f.VersionDeletedBy == null
+                                            )
+                                where o.CompanyID != null && senderCompanies.Contains(o.CompanyID.Value)
+                                select o.Contact);
+                        }
+
+
+                        foreach (var recipient in recipients)
+                        {
+                            if (recipient == null)
+                                continue;
+                            ContactID = recipient.ContactID;
+                            foreach (var sender in senders)
+                            {
+                                if (sender == null)
+                                    continue;
+                                if (sender.ContactID == recipient.ContactID && settings.Relationship != (uint)Continuation.RelationshipType.Itself)
+                                    continue;
+                                if (sender.ContactID != recipient.ContactID && settings.Relationship == (uint)Continuation.RelationshipType.Itself)
+                                    continue;
+
+                                var m = new AutomationViewModel { };
+                                m.IncludeContent = false;
+                                m.PreviousStep = new ProjectPlanTaskResponse { ProjectPlanTaskResponseID = Guid.NewGuid(), ActualGraphDataGroupID = settings.NewWorkflowID };
+                                m.PreviousTask = new NKD.Module.BusinessObjects.Task { };
+                                m.QueryParams = new Dictionary<string, object>();
+                                m.QueryParams.Add("Regarding", string.Format("{0} {1} ({2})", sender.Firstname, sender.Surname, sender.Username));
+                                m.QueryParams.Add("RegardingContactID", sender.ContactID);
+                                var wfi = DoNext(m);
+                                var rd = new ProjectPlanTaskResponseData
+                                {
+                                    ProjectPlanTaskResponseDataID = Guid.NewGuid(),
+                                    ParentProjectPlanTaskResponseDataID = settings.OldStepID,
+                                    VersionOwnerCompanyID = settings.OldStepCompanyID,
+                                    VersionOwnerContactID = settings.OldStepContactID,
+                                    VersionUpdated = DateTime.UtcNow
+                                };
+                                d.ProjectPlanTaskResponseDatas.AddObject(rd);
+
+                                //Send email to assignee/s
+                                //settings.email.message.Value += string.Format("<br/><br/><p>See more detail at FlowPro:</p><a href=\"http://flowpro.io/flow#/step/{0}\">http://flowpro.io/flow#/step/{0}</a>", evt.ProjectPlanTaskResponseID);
+                            }
+                        }
+                    }
+                    d.SaveChanges();
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
 

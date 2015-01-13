@@ -21,6 +21,7 @@ using Orchard.Data;
 using NKD.Module.BusinessObjects;
 using NKD.Services;
 using EXPEDIT.Flow.ViewModels;
+using EXPEDIT.Flow.Models;
 
 using Orchard.DisplayManagement;
 using ImpromptuInterface;

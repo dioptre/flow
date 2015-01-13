@@ -1319,6 +1319,7 @@
     <Compile Include="Controllers\WebMethodController.cs" />
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Models\ICheckPayment.cs" />
+    <Compile Include="Models\Continuation.cs" />
     <Compile Include="Models\LinqModels.cs" />
     <Compile Include="ResourceManifest.cs" />
     <Compile Include="Route.cs" />

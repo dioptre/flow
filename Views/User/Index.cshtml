@@ -418,7 +418,8 @@
 
     <br>    
     <br>    
-    <br>    
+
+    {{#if controllers.application.isLoggedIn}}
 
 
     <div class='container-fluid'>
@@ -503,7 +504,9 @@
             </div>
         </div>
     </div>
-
+    {{else}}
+    <p>You must be logged in.</p>
+    {{/if}}
 
 
 
@@ -515,19 +518,22 @@
         <sub>Realize the potential of your business</sub>
     </h1>
     <br /><br />
-    
-    {{#if model.r.Dashboard}}
-        <h4>{{model.r.CompanyName}}</h4>
-        <br /><br />
-        {{safehtml model.r.Dashboard}}
+    {{#if controllers.application.isLoggedIn}}
+        {{#if model.r.Dashboard}}
+            <h4>{{model.r.CompanyName}}</h4>
+            <br /><br />
+            {{safehtml model.r.Dashboard}}
+        {{else}}
+            <ul>
+                <li><a href="/flow#/process/b6261775-d5cb-40a8-8540-c0aaa6055ee5?localeSelected=en-US&workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">SEE an example workflow</a></li>
+                <li><a href="/flow#/step/undefined?workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">START an example workflow</a></li>
+                <li><a href="/flow#/workflow/undefined">CREATE an example workflow</a></li>
+                <li><a href="/flow#/report">REPORT your business status</a></li>
+                <li><a href="/flow#/responseData">DRILL down on your workflow data</a></li>
+            </ul>
+        {{/if}}
     {{else}}
-        <ul>
-            <li><a href="/flow#/process/b6261775-d5cb-40a8-8540-c0aaa6055ee5?localeSelected=en-US&workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">SEE an example workflow</a></li>
-            <li><a href="/flow#/step/undefined?workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">START an example workflow</a></li>
-            <li><a href="/flow#/workflow/undefined">CREATE an example workflow</a></li>
-            <li><a href="/flow#/report">REPORT your business status</a></li>
-            <li><a href="/flow#/responseData">DRILL down on your workflow data</a></li>
-        </ul>
+        <p>You must be logged in.</p>
     {{/if}}
 </script>
 
@@ -3658,7 +3664,7 @@
                                 <td>
                                     @*<input type="checkbox">*@
                                     @*<i class="icl-check green"></i>&nbsp;*@
-                                    {{#link-to 'step' this.id}}{{step.projectCode}}{{/link-to}}
+                                    {{#link-to 'step' step.id}}{{step.projectCode}}{{/link-to}}
                                 </td>
                                 <td class="description" {{bind-attr style=step.uniqueColor}}>
                                     &nbsp;{{step.humanName}}
@@ -3668,10 +3674,10 @@
                                 </td>
                                 <td>
                                     <span class="label label-info">Important</span>
-                                    {{VersionUpdated}} {{this.LastUpdatedBy}}
+                                    @*{{step.VersionUpdated}} {{step.LastUpdatedBy}}*@
                                     <ul class="actions">
-                                        <li>{{#link-to 'step' this.id}}Checkout{{/link-to}}</li>
-                                        <li><a {{bind-attr data-js=this.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a></li>
+                                        <li>{{#link-to 'step' step.id}}Checkout{{/link-to}}</li>
+                                        <li><a {{bind-attr data-js=step.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a></li>
                                         @*<li class="last"><a href="#">Delete</a></li>*@
                                     </ul>
                                 </td>
@@ -4331,7 +4337,7 @@
 
             <br>
             <br>
-
+            {{#if controllers.application.isLoggedIn}}
             <div class="row">
 
                 <div class="col-md-3">
@@ -4351,6 +4357,9 @@
                     {{ outlet }}
                 </div>
             </div>
+            {{else}}
+                You are not logged in. Please {{link-to 'login' 'login'}} to see your data.
+            {{/if}}
         </script>
 
         <script type="text/x-handlebars" data-template-name="responseDatum">
