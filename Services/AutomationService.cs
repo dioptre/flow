@@ -955,6 +955,7 @@ namespace EXPEDIT.Flow.Services {
                                 return toClean;
                             };
                             bool success = true;
+                            Continuation continuation = null;
                             try
                             {
                                 switch (string.Format("{0}", trigger.Trigger.JsonMethod).ToLowerInvariant())
@@ -986,10 +987,80 @@ namespace EXPEDIT.Flow.Services {
                                     case "csingle": //Single continuation
                                         //if (((IDictionary<string, Object>)settings).ContainsKey("continuation.single"))
                                         //{
-                                            ContinuationSingle(settings);
-                                        //}                                    
+                                        //}      
+
+                                        continuation = new Continuation
+                                        {                
+                                            OldWorkflowID = trigger.GraphDataGroupID,
+                                            OldWorkflowCompanyID = trigger.GraphDataGroup.VersionOwnerCompanyID,
+                                            OldWorkflowContactID = trigger.GraphDataGroup.VersionOwnerContactID,
+
+                                            OldStepID = evt.ProjectPlanTaskResponseID,
+                                            OldStepCompanyID = evt.ProjectPlanTaskResponse.VersionOwnerCompanyID,
+                                            OldStepContactID = evt.ProjectPlanTaskResponse.VersionOwnerContactID,
+
+
+                                            NewCompanyID = settings.csingle.NewCompanyID.Value as Guid?,
+                                            NewContactID = settings.csingle.NewContactID.Value as Guid?,
+                                            NewWorkflowID = settings.csingle.NewWorkflowID.Value as Guid?,
+
+                                            CompanyLevel = settings.csingle.CompanyLevel.Value as int?
+                                        };
+                                        switch (string.Format("{0}", settings.cmulti.Relationship.Value as string).ToLowerInvariant()) {
+                                            case "parent":
+                                                continuation.Relationship = (uint?)Continuation.RelationshipType.Parent;
+                                                break;
+                                            case "child":
+                                                continuation.Relationship = (uint)Continuation.RelationshipType.Child;
+                                                break;
+                                            case "peer":
+                                                continuation.Relationship = (uint)Continuation.RelationshipType.Peer;
+                                                break;
+                                            case "self":
+                                                continuation.Relationship = (uint)Continuation.RelationshipType.Self;
+                                                break;
+                                            default:
+                                                continuation.Relationship = null;
+                                                break;
+                                        }
+
+                                        ContinuationSingle(continuation);
                                         break;
                                     case "cmulti": //Multi continuation
+                                        continuation = new Continuation
+                                        {                
+                                            OldWorkflowID = trigger.GraphDataGroupID,
+                                            OldWorkflowCompanyID = trigger.GraphDataGroup.VersionOwnerCompanyID,
+                                            OldWorkflowContactID = trigger.GraphDataGroup.VersionOwnerContactID,
+
+                                            OldStepID = evt.ProjectPlanTaskResponseID,
+                                            OldStepCompanyID = evt.ProjectPlanTaskResponse.VersionOwnerCompanyID,
+                                            OldStepContactID = evt.ProjectPlanTaskResponse.VersionOwnerContactID,
+
+
+                                            NewCompanyID = settings.csingle.NewCompanyID.Value as Guid?,
+                                            NewContactID = settings.csingle.NewContactID.Value as Guid?,
+                                            NewWorkflowID = settings.csingle.NewWorkflowID.Value as Guid?,
+
+                                            CompanyLevel = settings.csingle.CompanyLevel.Value as int?
+                                        };
+                                        switch (string.Format("{0}", settings.cmulti.Relationship.Value as string).ToLowerInvariant()) {
+                                            case "parent":
+                                                continuation.Relationship = (uint?)Continuation.RelationshipType.Parent;
+                                                break;
+                                            case "child":
+                                                continuation.Relationship = (uint)Continuation.RelationshipType.Child;
+                                                break;
+                                            case "peer":
+                                                continuation.Relationship = (uint)Continuation.RelationshipType.Peer;
+                                                break;
+                                            case "self":
+                                                continuation.Relationship = (uint)Continuation.RelationshipType.Self;
+                                                break;
+                                            default:
+                                                continuation.Relationship = null;
+                                                break;
+                                        }
                                         ContinuationMulti(settings);
                                         break;
                                     default:
@@ -1250,9 +1321,9 @@ namespace EXPEDIT.Flow.Services {
                             {
                                 if (sender == null)
                                     continue;
-                                if (sender.ContactID == recipient.ContactID && settings.Relationship != (uint)Continuation.RelationshipType.Itself)
+                                if (sender.ContactID == recipient.ContactID && settings.Relationship != (uint)Continuation.RelationshipType.Self)
                                     continue;
-                                if (sender.ContactID != recipient.ContactID && settings.Relationship == (uint)Continuation.RelationshipType.Itself)
+                                if (sender.ContactID != recipient.ContactID && settings.Relationship == (uint)Continuation.RelationshipType.Self)
                                     continue;
 
                                 var m = new AutomationViewModel { };
