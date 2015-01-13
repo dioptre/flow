@@ -242,10 +242,8 @@ App.ResponseDataRoute = Ember.Route.extend({
 
 App.DashboardRoute = Ember.Route.extend({
     model: function (params) {
-        if (!this.controllerFor('application').get('isLoggedIn'))
-            return { r: {} };
         return Ember.RSVP.hash({
-            r: this.store.find('dashboard', params.id)
+            r: this.store.find('dashboard', params.id).catch(function () { return null; })
         });
     },
 });
@@ -387,18 +385,20 @@ App.StyleguideController = Ember.Controller.extend({
 
 App.ReportRoute = Ember.Route.extend({
     model: function () {
-        if (!this.controllerFor('application').get('isLoggedIn'))
-            return { data: null };
         return Ember.RSVP.hash({
-            data : new Ember.RSVP.Promise(function(resolve) {
-                $.ajax('/flow/reports').then(function (m) {
+            data : new Ember.RSVP.Promise(function(resolve, reject) {
+                $.ajax({ 
+                    url: '/flow/reports'                   
+                }).then(function (m, textStatus, jqXHR) {
                     resolve(m);
+                }, function (m) {
+                    reject(m);
                 });
             })
         });           
     },
-    afterModel: function (m) {
-        if (!m.data)
+    afterModel: function (m) {        
+        if (!m.data || typeof m.data == 'string')
             return;
         m.impact = Enumerable.From(m.data[0]).Select("{group:ToTitleCase($.Item1.replace(/_/g, ' ')), xValue: $.Item2, yValue: $.Item3*100.0 }").ToArray();
         var overdueMax = 1;
@@ -6415,9 +6415,7 @@ App.MyprofilesController = Ember.ObjectController.extend({
 
 App.OrganizationRoute = Ember.Route.extend({
     model: function () {
-        if (!this.controllerFor('application').get('isLoggedIn'))
-            return { };
-        return this.store.findQuery('company', {});
+        return this.store.findQuery('company', {}).catch(function () { return null;});
     }
 });
 

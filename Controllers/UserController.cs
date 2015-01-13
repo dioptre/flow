@@ -1414,7 +1414,7 @@ namespace EXPEDIT.Flow.Controllers {
             Guid.TryParse(id, out gid);
             var result = _Flow.GetDashboard(gid);
 
-                return new JsonHelper.JsonNetResult(new { dashboard = result ?? new object() }, JsonRequestBehavior.AllowGet);
+            return new JsonHelper.JsonNetResult(new { dashboard = result ?? new object() }, JsonRequestBehavior.AllowGet);
         }
 
     }
