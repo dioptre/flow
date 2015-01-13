@@ -1183,3 +1183,17 @@ text.nodeText {
 .opacity-50 {
   opacity: 0.5;
 }
+
+.trigger-modal {
+
+}
+
+.trigger-modal .mycompany-selector, .trigger-modal .workflow-selector {
+  display: inline-block;
+}
+
+/* Overflow for pop up */
+.eui-modalobject-wrapper {
+max-height: 100vh;
+overflow: scroll;
+}

@@ -1480,36 +1480,53 @@
             <br>
 
             {{#each con in triggersJSON.fields}}
-                {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='medium'}}
-                {{eui-select value=con.type.matchSelect options=tSmatches size='medium' labelPath='value' required='true'}}
-                {{eui-input  value=con.type.matchInput size="medium" placeholder=''}}
-                {{eui-button icon='icon icon-minus' action='deleteRow' itemToDelete=con}}
-                {{eui-button icon='icon icon-plus' action='addRow' itemInsertAfter=con}}
+                {{eui-select value=con.type.varSelect placeholder="Select a variable" options=tSvariables size='small'}}
+                {{eui-select value=con.type.matchSelect options=tSmatches size='small' labelPath='value' required='true'}}
+                {{eui-input  value=con.type.matchInput size="medium" placeholder='' size='small'}}
+                {{eui-button icon='icon icon-minus' action='deleteRow' itemToDelete=con size='small'}}
+                {{eui-button icon='icon icon-plus' action='addRow' itemInsertAfter=con size='small'}}
                 <br>
                 <br>
             {{/each}}
 
             <h3>THEN</h3>
             {{#each trig in triggersJSON.trigger}}
-                {{eui-select value=trig.type options=trig.select labelPath='text' placeholder="Choose trigger type"  size='medium'}}
-                {{#if trig.workflow}}                    
+                {{eui-select value=trig.type options=trig.select labelPath='text' placeholder="Choose trigger type"  size='small'}}
 
-                    {{eui-select value=trig.workflow.forSelected options=trig.workflow.forSelect labelPath='text' size='medium'}}
-                    {{eui-select value=trig.workflow.type options=trig.workflow.select labelPath='text' size='medium'}}
-
-                    {{#if trig.workflow.level}}
-                        {{eui-input value=trig.workflow.level.selector}}
-                    {{/if}}
-                    {{#if trig.workflow.group}}
-                        <i><- please change. only selecting by level supported at this point.</i>
-                    {{/if}}
-
-                    <b>for every </b>
-                    {{eui-select value=trig.workflow.eachSelected options=trig.workflow.eachSelect labelPath='text' size='medium'}}
+                {{#if trig.csingle}}
+                    <b>using workflow</b>
+                    {{workflow-selector value=trig.csingle.NewWorkflowID multiple=false}}
 
 
-                     <b>using Template</b>
-                    {{workflow-selector value=trig.workflow.workflowSelected multiple=false}}
+                {{/if}}
+                {{#if trig.cmulti}}                    
+
+                    <br>
+                    {{#unless trig.cmulti.CompanyLevel}}
+                        <b>Between company</b>
+                        {{myCompany-selector value=trig.cmulti.NewCompanyID multiple=false}}
+                    {{/unless}}
+                    
+                    {{!-- Or --}}
+                    {{#unless trig.cmulti.NewCompanyID}}
+                        {{#unless trig.cmulti.CompanyLevel}}
+                            or
+                        {{/unless}}
+                    {{/unless}}
+
+
+                    {{#unless trig.cmulti.NewCompanyID}}
+                        <b>Choose by level (advanced)</b>
+                        {{eui-input value=trig.cmulti.CompanyLevel size='small'}}
+                    {{/unless}}
+
+                    <br>
+
+                    <b>and its</b>
+                    {{eui-select value=trig.cmulti.Relationship options=trig.relatioshipSelect labelPath='text' size='small'}}
+                    
+                     <b>using Workflow</b>
+                    {{workflow-selector value=trig.cmulti.NewWorkflowID multiple=false}}
                      
 
                 {{/if}}
@@ -1520,10 +1537,10 @@
                 {{#if trig.email}}
                     <span>
                     <b>Send to</b>
-                    {{eui-input value=trig.email.recipient placeholder='example@mail.com' size='medium' required='true'}}
+                    {{eui-input value=trig.email.recipient placeholder='example@mail.com' size='small' required='true'}}
                     <br>
                     <b>Subject</b>
-                    {{eui-input value=trig.email.subject placeholder='Subject' size='medium' required='true'}}                    
+                    {{eui-input value=trig.email.subject placeholder='Subject' size='small' required='true'}}                    
                     </span>
                     <b>Message</b>
                     {{eui-textarea value=trig.email.message size="medium" placeholder='Enter your message here...'}}
@@ -1533,8 +1550,8 @@
                     {{eui-input value=trig.webhook.url size="medium" placeholder="https://mywebhook.com/getit"}}
                 {{/if}}
 
-                {{eui-button icon='icon icon-minus' action='deleteTriggerRow' itemToDelete=trig}}
-                {{eui-button icon='icon icon-plus' action='addTriggerRow' itemInsertAfter=trig}}
+                {{eui-button icon='icon icon-minus' action='deleteTriggerRow' itemToDelete=trig size='small'}}
+                {{eui-button icon='icon icon-plus' action='addTriggerRow' itemInsertAfter=trig size='small'}}
                 
                 <br>
                 <br>
@@ -1542,7 +1559,7 @@
 
             <h3>WHEN</h3>
             {{#each when in triggersJSON.when}}
-                {{eui-select value=when.type options=when.select size='medium' labelPath='text'}}
+                {{eui-select value=when.type options=when.select size='small' labelPath='text'}}
                 {{#if when.delay}}
                     <b>Seconds</b>
                     {{eui-input value=when.delay.days placeholder='Enter for time delay in days'}}
@@ -1550,11 +1567,11 @@
                     {{eui-input value=when.delay.hours placeholder='Enter for time delay in hours'}}
                 {{/if}}
             {{/each}}
-
+            <br>
             {{eui-checkbox label='Run when task begins' value=triggersJSON.onEnter disabled=false}}
 
         {{else}}
-            No triggers.
+           <!--No triggers.-->
         {{/liquid-if}}
 
         <br>
@@ -1882,8 +1899,8 @@
             {{/eui-modal}}
 
             {{#eui-modal openBinding="triggerModal"}}
-            <div style="padding: 50px; text-align: center;">
-                <h4> Trigger Modal</h4>
+            <div class="trigger-modal" style="padding: 50px;">
+                <h4 style='text-align: center;'> Trigger Modal</h4>
                 <br>
                 <br>
 
@@ -2510,6 +2527,14 @@
 
     Company Selector: 
     {company-selector value=moneyModalStoreObject.WorkCompanyID multiple=false}
+
+    My company Selector
+    -{{mycompanyselector}}-
+     {{myCompany-selector value=mycompanyselector multiple=false}}
+
+     --
+     {{myCompany-selector value=mycompanyselector multiple=false}}
+
 
 
     <h2> Icons </h2>

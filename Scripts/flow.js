@@ -372,6 +372,11 @@ App.StyleguideRoute = Ember.Route.extend({
         }
     }
 });
+App.StyleguideController = Ember.Controller.extend({
+    needs: ['application'],
+    title: 'Styleguide',
+    mycompanyselector: ''
+})
 
 App.ReportRoute = Ember.Route.extend({
     model: function () {
@@ -3770,10 +3775,13 @@ App.HandlebarsLiveComponent = Ember.Component.extend({
 // doesn't load pulled data yet
 // Note: App.CompanySelectorComponent inherits from this :)
 App.UserSelectorComponent = Ember.Component.extend({
+    classNames: ['user-selector'],
     layout: Ember.Handlebars.compile("<div {{bind-attr id=internalID}} style='width: 275px;' class='select2' type='hidden'></div>"),
     url: "//share/getusernames",
     placeholder: "Enter Usernames...",
-    internalID: NewGUID(),
+    internalID: function(){
+        return NewGUID()
+    }.property(),
     value: '',
     httpMethod: 'GET',
     valueBeingUpdated: false,
@@ -3790,6 +3798,8 @@ App.UserSelectorComponent = Ember.Component.extend({
             data = JSON.stringify({id: orgVal});
         $(id).select2('data', '');
         // must have been updated externaly then
+
+        console.log('Looking for value...', orgVal)
         $.ajax(url , {
             dataType: "json",
             type: _this.get('httpMethod'),
@@ -3803,6 +3813,8 @@ App.UserSelectorComponent = Ember.Component.extend({
             else
                 $(id).select2('data', results[0]);
             
+        }, function(){
+            console.log('was looking for value', data, 'could not find it');
         });
       }
     }.observes('value'),
@@ -3859,118 +3871,126 @@ App.UserSelectorComponent = Ember.Component.extend({
 })
 
 App.CompanySelectorComponent = App.UserSelectorComponent.extend({
-    internalID: NewGUID(),
+    classNames: ['company-selector'],
     placeholder: "Enter Companies...",
     url: "/share/getcompanies",
     httpMethod: 'GET',
 });
 
+App.MyCompanySelectorComponent = App.UserSelectorComponent.extend({
+    classNames: ['mycompany-selector'],
+    placeholder: "Enter Company...",
+    url: "/share/getmycompanies",
+    httpMethod: 'GET',
+});
+
 App.ContactSelectorComponent = App.UserSelectorComponent.extend({
-    internalID: NewGUID(),
+    classNames: ['contact-selector'],
     placeholder: "Enter Contacts...",
     url: "/share/getcontacts",
     httpMethod: 'POST'
 });
 
 App.WorkflowSelectorComponent = App.UserSelectorComponent.extend({
-    internalID: NewGUID(),
+    classNames: ['workflow-selector'],
     placeholder: "Enter worklow...",
     url: "/flow/getworkflows",
-    httpMethod: 'POST'
+    httpMethod: 'GET'
 });
 
-//TODO Refactor so that query only happens on click - 
-App.MyCompanySelectorComponent = App.UserSelectorComponent.extend({
-    minimumInput: 0,
-    layout: Ember.Handlebars.compile("<div {{bind-attr id=internalID}} style='width: 275px;' class='select2' type='hidden'></div>"),
-    url: "/share/getmycompanies",
-    placeholder: "Select Company...",
-    internalID: NewGUID(),
-    name: '',
-    value: '',
-    valueBeingUpdated: false,
-    multiple: true,
-    valueBeingUpdated: false,
-    valueUpdated: function () {
-        var _this = this;
-        if (!this.get('valueBeingUpdated')) {
-            var orgVal = _this.get('value');
-            var id = '#' + _this.get('internalID');
+// //TODO Refactor so that query only happens on click - 
+// App.MyCompanySelectorComponent = App.UserSelectorComponent.extend({
+//     classNames: ['mycompany-selector'],
+//     minimumInput: 0,
+//     layout: Ember.Handlebars.compile("<div {{bind-attr id=internalID}} style='width: 275px;' class='select2' type='hidden'></div>"),
+//     url: "/share/getmycompanies",
+//     placeholder: "Select Company...",
+//     internalID: NewGUID(),
+//     name: '',
+//     value: '',
+//     valueBeingUpdated: false,
+//     multiple: true,
+//     valueBeingUpdated: false,
+//     valueUpdated: function () {
+//         var _this = this;
+//         if (!this.get('valueBeingUpdated')) {
+//             var orgVal = _this.get('value');
+//             var id = '#' + _this.get('internalID');
 
-            $(id).select2('data', '');
+//             $(id).select2('data', '');
 
-            // must have been updated externaly then
-            $.ajax(_this.get('url') + "/" + orgVal, {
-                dataType: "json"
-            }).done(function (data) {
-                if (!data || data.length == 0)
-                    return;
-                var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                if (_this.get('multiple'))
-                    $(id).select2('data', results);
-                else
-                    $(id).select2('data', results[0]);
+//             // must have been updated externaly then
+//             $.ajax(_this.get('url') + "/" + orgVal, {
+//                 dataType: "json"
+//             }).done(function (data) {
+//                 if (!data || data.length == 0)
+//                     return;
+//                 var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+//                 if (_this.get('multiple'))
+//                     $(id).select2('data', results);
+//                 else
+//                     $(id).select2('data', results[0]);
 
-            });
-        }
-    }.observes('value'),
-    setup: function () {
-        var _this = this;
-        Ember.run.scheduleOnce('afterRender', this, function () {
-            var id = '#' + _this.get('internalID');
+//             });
+//         }
+//     }.observes('value'),
+//     setup: function () {
+//         var _this = this;
+//         Ember.run.scheduleOnce('afterRender', this, function () {
+//             var id = '#' + _this.get('internalID');
 
-            var settings = {
-                cache: [],
-                placeholder: _this.get('placeholder'),
-                minimumInputLength: _this.get('minimumInput'),
-                query: function (query) {
-                    var self = this;
-                    var key = query.term;
-                    var cachedData = self.cache[key];
+//             var settings = {
+//                 cache: [],
+//                 placeholder: _this.get('placeholder'),
+//                 minimumInputLength: _this.get('minimumInput'),
+//                 query: function (query) {
+//                     var self = this;
+//                     var key = query.term;
+//                     var cachedData = self.cache[key];
 
-                    if (cachedData) {
-                        query.callback(cachedData);
-                        return;
-                    } else {
-                        $.ajax({
-                            url: _this.get('url'),
-                            data: {
-                                q: query.term
-                            },
-                            dataType: 'json',
-                            type: 'GET',
-                            success: function (data) {
-                                var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray(); // Use linq ;)
-                                self.cache[key] = { results: results, text: 'tag' };
-                                query.callback(self.cache[key]);
-                            }
-                        })
-                    }
-                },
-                formatResult: function (state) { return state.tag; },
-                formatSelection: function (state) { return state.tag; },
-                escapeMarkup: function (m) { return m; }
-            };
+//                     if (cachedData) {
+//                         query.callback(cachedData);
+//                         return;
+//                     } else {
+//                         $.ajax({
+//                             url: _this.get('url'),
+//                             data: {
+//                                 q: query.term
+//                             },
+//                             dataType: 'json',
+//                             type: 'GET',
+//                             success: function (data) {
+//                                 var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray(); // Use linq ;)
+//                                 self.cache[key] = { results: results, text: 'tag' };
+//                                 query.callback(self.cache[key]);
+//                             }
+//                         })
+//                     }
+//                 },
+//                 formatResult: function (state) { return state.tag; },
+//                 formatSelection: function (state) { return state.tag; },
+//                 escapeMarkup: function (m) { return m; }
+//             };
 
-            // Setup tags depeding if multiple is enabled :)
-            if (_this.get('multiple')) {
-                settings.tags = true;
-            }
+//             // Setup tags depeding if multiple is enabled :)
+//             if (_this.get('multiple')) {
+//                 settings.tags = true;
+//             }
 
-            // need to preload old value here...
-            //$(id).val(orgVal);
-            // Setup Select2
-            $(id).select2(settings).on("change", function (e) {
-                _this.set('valueBeingUpdated', true);
-                _this.set('value', e.val);
-                _this.set('valueBeingUpdated', false);
-            });
+//             // need to preload old value here...
+//             //$(id).val(orgVal);
+//             // Setup Select2
+//             $(id).select2(settings).on("change", function (e) {
+//                 _this.set('valueBeingUpdated', true);
+//                 _this.set('value', e.val);
+//                 _this.set('valueBeingUpdated', false);
+//             });
 
-            $(id).select2('data', { id: _this.get('value'), tag: _this.get('name') });
+//             $(id).select2('data', { id: _this.get('value'), tag: _this.get('name') });
 
-        });
-    }.on('didInsertElement')
-});
+//         });
+//     }.on('didInsertElement')
+// });
 
 App.TriggerOption = Ember.Object.extend({
     cleaner: function(){
@@ -3988,41 +4008,54 @@ App.TriggerOption = Ember.Object.extend({
         } else {
           // Setup new template
           var template = JSON.parse(JSON.stringify(this.get(type + 'Template')));
-          console.log('TEMPLATE IS', template);
           this.set(type, template)
         }
     }.observes('type').on('init')
 })
 
-App.ThenWorkflowTrigger = App.TriggerOption.extend({
-  isSpecial: true,
-  type: 'level',
-  options: ['group', 'level'],
-  select: [{value: 'group', text: "for an organization"}, {value: 'level', text: "for every organization at depth"}],
-  forSelect: [{value: 'one', text: "just one"}, {value: 'every', text: "one for every member"}],
-  forSelected:'one',
-  eachSelect:  [{value:'one', text:"just Itself"},{value:"sibling", text:"Each Sibling"},{value:"parent", text:"Each Parent"},{value:"child", text:"Each Child"}],
-  eachSelected:'sibling',
-  workflowSelected: '',
-  groupTemplate: {
-    selected: ''
-  },
-  levelTemplate: {
-    selected: ''
-  }
-})
+// App.ThenWorkflowTrigger = App.TriggerOption.extend({
+//   isSpecial: true,
+//   type: 'level',
+//   options: ['group', 'level'],
+//   select: [{value: 'group', text: "for an organization"}, {value: 'level', text: "for every organization at depth"}],
+//   forSelect: [{value: 'one', text: "just one"}, {value: 'every', text: "one for every member"}],
+//   forSelected:'one',
+//   eachSelect:  [{value:'one', text:"just Itself"},{value:"sibling", text:"Each Sibling"},{value:"parent", text:"Each Parent"},{value:"child", text:"Each Child"}],
+//   eachSelected:'sibling',
+//   workflowSelected: '',
+//   groupTemplate: {
+//     selected: ''
+//   },
+//   levelTemplate: {
+//     selected: ''
+//   }
+// })
 
 App.ThenTrigger = App.TriggerOption.extend({
     type: 'email',
-    options: ['webhook', 'email', 'workflow'],
-    select: [{value: 'workflow', text: "Create Todo"}, {value: 'email', text: "Email"}, {value: 'webhook', text: "Webhook"}],
+    options: ['webhook', 'email', 'csingle', 'cmulti'],
+    select: [
+        {value: 'csingle', text: "Create Todo"}, 
+        {value: 'cmulti', text: "Create multiple Todos"}, 
+        {value: 'email', text: "Email"}, 
+        {value: 'webhook', text: "Webhook"}
+    ],
+    relatioshipSelect:  [{value:"Peer", text:"Each Sibling"},{value:"Parent", text:"Each Parent"},{value:"Child", text:"Each Child"}],
     emailTemplate: {
         sender: '',
         recipient: '', 
         message: '',
         subject: ''
     },
-    workflowTemplate: App.ThenWorkflowTrigger.create(),
+    csingleTemplate: {
+        NewWorkflowID: '',
+    },
+    cmultiTemplate: {
+        NewWorkflowID: '', // workflow selector
+        NewCompanyID: '', //
+        CompanyLevel: '', // 
+        Relationship: 'Child' // dropdown
+    },
     webhookTemplate: {
         url: 'http://x.com/xxx'
     }
@@ -4131,6 +4164,16 @@ App.TriggerNodeComponent = Ember.Component.extend({
                     p.email.recipient = triggerValue.email.recipient;
                     p.email.subject = triggerValue.email.subject;
                     p.email.message = triggerValue.email.message;
+                } else if (triggerValue.csingle) {
+                    var p = construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'csingle' }));
+                    p.csingle.NewWorkflowID = triggerValue.csingle.NewWorkflowID;
+                
+                } else if (triggerValue.cmulti) {
+                    var p = construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'cmulti' }));
+                    p.cmulti.NewWorkflowID = triggerValue.cmulti.NewWorkflowID;
+                    p.cmulti.NewCompanyID = triggerValue.cmulti.NewCompanyID;
+                    p.cmulti.CompanyLevel = triggerValue.cmulti.CompanyLevel;
+                    p.cmulti.Relationship = triggerValue.cmulti.Relationship;
                 }
             
                 _this.get('triggers').addObject(value);
@@ -4149,10 +4192,11 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 construct.trigger.pushObject(
                     App.ThenTrigger.create({
                         id: NewGUID(),
-                        type: 'email'
+                        type: 'csingle'
                     })
                 );
             }
+            console.log(construct);
             _this.set('triggersJSON', construct)
             _this.set('loading', false);
         });
@@ -4178,12 +4222,6 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 id: NewGUID(),
                 type: 'email'
             })
-            ,
-            App.ThenTrigger.create({
-            
-               type: 'workflow'
-            })
-            
         ],
         when: [
             App.WhenTrigger.create({})
@@ -4343,6 +4381,16 @@ App.TriggerNodeComponent = Ember.Component.extend({
                     value.set('ExternalRequestMethod', 'POST');
                     value.set('ExternalFormType', 'JSON');
                 }
+                else if (temp.type == "csingle") {
+                    value.set('NewWorkflowID', temp.csingle.NewWorkflowID);
+                }
+                else if (temp.type == "cmulti") {
+                    value.set('NewWorkflowID', temp.cmulti.NewWorkflowID);
+                    value.set('NewCompanyID', temp.cmulti.NewCompanyID);
+                    value.set('CompanyLevel', temp.cmulti.CompanyLevel);
+                    value.set('Relationship', temp.cmulti.Relationship);
+                }
+
                 value.set('OverrideProjectDataWithJsonCustomVars', true);
                 value.set('PassThrough', true);
                 value.set('RepeatAfterDays', 0);
