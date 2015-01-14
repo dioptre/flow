@@ -16,6 +16,9 @@ namespace EXPEDIT.Flow.Models
             Parent = 2, //nCr like tutor to students
             Self = 3 //like a class test
         }
+        public Guid EventID { get; set; }
+
+
         public Guid? OldWorkflowID { get; set; }
         public Guid? OldWorkflowCompanyID { get; set; }
         public Guid? OldWorkflowContactID { get; set; }

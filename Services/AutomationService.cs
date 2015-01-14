@@ -937,12 +937,12 @@ namespace EXPEDIT.Flow.Services {
                            
                         }
                         if (conditionPassed)
-                        {                           
+                        {
                             //Execute here
                             //Parse variables
-                            dynamic settings =  Newtonsoft.Json.Linq.JObject.Parse(HttpUtility.HtmlDecode(trigger.Trigger.JSON));
-                            var jsLookup = data.Where(f=>!string.IsNullOrWhiteSpace(f.CommonName))
-                                .ToDictionary(f => 
+                            dynamic settings = Newtonsoft.Json.Linq.JObject.Parse(HttpUtility.HtmlDecode(trigger.Trigger.JSON));
+                            var jsLookup = data.Where(f => !string.IsNullOrWhiteSpace(f.CommonName))
+                                .ToDictionary(f =>
                                     string.Format("{0}", f.CommonName).Replace(" ", "_").Replace("\'", "_").Replace("\"", "_")
                                     , f => (f.Value ?? ""));
                             var txtLookup = data.ToDictionary(f => "{{" + f.CommonName + "}}", f => (f.Value ?? "").Replace("\'", "\\\'").Replace("\"", "\\\""));
@@ -951,11 +951,13 @@ namespace EXPEDIT.Flow.Services {
                                 if (string.IsNullOrWhiteSpace(toClean))
                                     return "";
                                 foreach (var l in txtLookup)
-                                toClean = toClean.Replace(l.Key, l.Value);
+                                    toClean = toClean.Replace(l.Key, l.Value);
                                 return toClean;
                             };
                             bool success = true;
                             Continuation continuation = null;
+                            IDictionary<string, JToken> lookup = null;
+                            string strNewCompanyID = null, strNewContactID = null, strNewWorkflowID = null, strCompanyLevel = null, strRelationship = null;
                             try
                             {
                                 switch (string.Format("{0}", trigger.Trigger.JsonMethod).ToLowerInvariant())
@@ -988,9 +990,18 @@ namespace EXPEDIT.Flow.Services {
                                         //if (((IDictionary<string, Object>)settings).ContainsKey("continuation.single"))
                                         //{
                                         //}      
+                                        lookup = ((IDictionary<string, JToken>)settings.csingle);
+
+                                        strNewCompanyID = lookup.ContainsKey("NewCompanyID") ? lookup["NewCompanyID"].Value<string>() : null;
+                                        strNewContactID = lookup.ContainsKey("NewContactID") ? lookup["NewContactID"].Value<string>() : null;
+                                        strNewWorkflowID = lookup.ContainsKey("NewWorkflowID") ? lookup["NewWorkflowID"].Value<string>() : null;
+                                        strCompanyLevel = lookup.ContainsKey("CompanyLevel") ? lookup["CompanyLevel"].Value<string>() : null;
+                                        strRelationship = lookup.ContainsKey("Relationship") ? lookup["Relationship"].Value<string>() : null;
 
                                         continuation = new Continuation
-                                        {                
+                                        {
+                                            EventID = evt.ProjectPlanTaskResponseEventID,
+
                                             OldWorkflowID = trigger.GraphDataGroupID,
                                             OldWorkflowCompanyID = trigger.GraphDataGroup.VersionOwnerCompanyID,
                                             OldWorkflowContactID = trigger.GraphDataGroup.VersionOwnerContactID,
@@ -1000,13 +1011,13 @@ namespace EXPEDIT.Flow.Services {
                                             OldStepContactID = evt.ProjectPlanTaskResponse.VersionOwnerContactID,
 
 
-                                            NewCompanyID = settings.csingle.NewCompanyID.Value as Guid?,
-                                            NewContactID = settings.csingle.NewContactID.Value as Guid?,
-                                            NewWorkflowID = settings.csingle.NewWorkflowID.Value as Guid?,
-
-                                            CompanyLevel = settings.csingle.CompanyLevel.Value as int?
+                                            NewCompanyID = string.IsNullOrWhiteSpace(strNewCompanyID) ? (Guid?)null : Guid.Parse(strNewCompanyID),
+                                            NewContactID = string.IsNullOrWhiteSpace(strNewContactID) ? (Guid?)null : Guid.Parse(strNewContactID),
+                                            NewWorkflowID = string.IsNullOrWhiteSpace(strNewWorkflowID) ? (Guid?)null : Guid.Parse(strNewWorkflowID),
+                                            CompanyLevel = string.IsNullOrWhiteSpace(strCompanyLevel) ? (int?)null : int.Parse(strCompanyLevel),
                                         };
-                                        switch (string.Format("{0}", settings.cmulti.Relationship.Value as string).ToLowerInvariant()) {
+                                        switch (string.Format("{0}", strRelationship).Trim().ToLowerInvariant())
+                                        {
                                             case "parent":
                                                 continuation.Relationship = (uint?)Continuation.RelationshipType.Parent;
                                                 break;
@@ -1024,11 +1035,20 @@ namespace EXPEDIT.Flow.Services {
                                                 break;
                                         }
 
-                                        ContinuationSingle(continuation);
+                                        SendContinuationSingle(continuation);
                                         break;
                                     case "cmulti": //Multi continuation
+                                        lookup = ((IDictionary<string, JToken>)settings.cmulti);
+                                        strNewCompanyID = lookup.ContainsKey("NewCompanyID") ? lookup["NewCompanyID"].Value<string>() : null;
+                                        strNewContactID = lookup.ContainsKey("NewContactID") ? lookup["NewContactID"].Value<string>() : null;
+                                        strNewWorkflowID = lookup.ContainsKey("NewWorkflowID") ? lookup["NewWorkflowID"].Value<string>() : null;
+                                        strCompanyLevel = lookup.ContainsKey("CompanyLevel") ? lookup["CompanyLevel"].Value<string>() : null;
+                                        strRelationship = lookup.ContainsKey("Relationship") ? lookup["Relationship"].Value<string>() : null;
                                         continuation = new Continuation
-                                        {                
+                                        {
+
+                                            EventID = evt.ProjectPlanTaskResponseEventID,
+
                                             OldWorkflowID = trigger.GraphDataGroupID,
                                             OldWorkflowCompanyID = trigger.GraphDataGroup.VersionOwnerCompanyID,
                                             OldWorkflowContactID = trigger.GraphDataGroup.VersionOwnerContactID,
@@ -1038,13 +1058,13 @@ namespace EXPEDIT.Flow.Services {
                                             OldStepContactID = evt.ProjectPlanTaskResponse.VersionOwnerContactID,
 
 
-                                            NewCompanyID = settings.csingle.NewCompanyID.Value as Guid?,
-                                            NewContactID = settings.csingle.NewContactID.Value as Guid?,
-                                            NewWorkflowID = settings.csingle.NewWorkflowID.Value as Guid?,
-
-                                            CompanyLevel = settings.csingle.CompanyLevel.Value as int?
+                                            NewCompanyID = string.IsNullOrWhiteSpace(strNewCompanyID) ? (Guid?)null : Guid.Parse(strNewCompanyID),
+                                            NewContactID = string.IsNullOrWhiteSpace(strNewContactID) ? (Guid?)null : Guid.Parse(strNewContactID),
+                                            NewWorkflowID = string.IsNullOrWhiteSpace(strNewWorkflowID) ? (Guid?)null : Guid.Parse(strNewWorkflowID),
+                                            CompanyLevel = string.IsNullOrWhiteSpace(strCompanyLevel) ? (int?)null : int.Parse(strCompanyLevel),
                                         };
-                                        switch (string.Format("{0}", settings.cmulti.Relationship.Value as string).ToLowerInvariant()) {
+                                        switch (string.Format("{0}", strRelationship).Trim().ToLowerInvariant())
+                                        {
                                             case "parent":
                                                 continuation.Relationship = (uint?)Continuation.RelationshipType.Parent;
                                                 break;
@@ -1061,7 +1081,7 @@ namespace EXPEDIT.Flow.Services {
                                                 continuation.Relationship = null;
                                                 break;
                                         }
-                                        ContinuationMulti(settings);
+                                        SendContinuationMulti(continuation);
                                         break;
                                     default:
                                         evt.Reason = "ILLEGAL METHOD"; //16 max
@@ -1082,7 +1102,7 @@ namespace EXPEDIT.Flow.Services {
                                     evt.Reason = "UNKNOWN RESPONSE";
                                 evt.Failed = now;
                             }
-                            
+
                         }
 
                          if (evt.RunsLeft > 0)
@@ -1185,7 +1205,7 @@ namespace EXPEDIT.Flow.Services {
             return false;
         }
 
-        private bool ContinuationSingle(Continuation settings)
+        private bool SendContinuationSingle(Continuation settings)
         {
             //Create Task
             ContactID = settings.OldStepContactID;
@@ -1205,7 +1225,9 @@ namespace EXPEDIT.Flow.Services {
                     var rd = new ProjectPlanTaskResponseData
                     {
                         ProjectPlanTaskResponseDataID = Guid.NewGuid(),
-                        ParentProjectPlanTaskResponseDataID = settings.OldStepID,
+                        ProjectPlanTaskResponseID = m.PreviousStepID.Value,
+                        TableType = d.GetTableName(typeof(ProjectPlanTaskResponseEvent)),
+                        ReferenceID = settings.EventID,
                         VersionOwnerCompanyID = settings.OldStepCompanyID,
                         VersionOwnerContactID = settings.OldStepContactID,
                         VersionUpdated = DateTime.UtcNow
@@ -1218,7 +1240,7 @@ namespace EXPEDIT.Flow.Services {
             return false;
         }
 
-        private bool ContinuationMulti(Continuation settings)
+        private bool SendContinuationMulti(Continuation settings)
         {
             try
             {
@@ -1261,12 +1283,10 @@ namespace EXPEDIT.Flow.Services {
                             recurse(l1, 1);
                         }
                         companies = lvlCompanies.ToArray();
-                        CompanyID = settings.OldWorkflowCompanyID; //Can't choose who owns the instance, so revert back to WF owner
                     }
                     else
                     {
                         companies = new Guid[] { settings.NewCompanyID.Value };
-                        CompanyID = settings.NewCompanyID.Value; //This is our NewWorkflowID for multi
                     }
                     var defaultCompanies = new Guid[] {
                                                      _users.ApplicationCompanyID,
@@ -1279,7 +1299,6 @@ namespace EXPEDIT.Flow.Services {
                                             (f.DateFinished == null || f.DateFinished > DateTime.UtcNow)
                                      && (f.Expiry == null || f.Expiry > DateTime.UtcNow)
                                      && f.CompanyID != null
-                                     && f.ContactID == ContactID
                                      && (f.DateStart <= DateTime.UtcNow || f.DateStart == null)
                                      && f.Version == 0 && f.VersionDeletedBy == null
                                             )
@@ -1303,7 +1322,6 @@ namespace EXPEDIT.Flow.Services {
                                             (f.DateFinished == null || f.DateFinished > DateTime.UtcNow)
                                      && (f.Expiry == null || f.Expiry > DateTime.UtcNow)
                                      && f.CompanyID != null
-                                     && f.ContactID == ContactID
                                      && (f.DateStart <= DateTime.UtcNow || f.DateStart == null)
                                      && f.Version == 0 && f.VersionDeletedBy == null
                                             )
@@ -1311,12 +1329,25 @@ namespace EXPEDIT.Flow.Services {
                                 select o.Contact);
                         }
 
+                        //Get ready for impersonation
+                        var newwf = d.GraphDataGroups.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == settings.NewWorkflowID).Single();
+                        settings.OldWorkflowCompanyID = newwf.VersionOwnerCompanyID;
+                        settings.OldWorkflowContactID = newwf.VersionOwnerContactID;
+
 
                         foreach (var recipient in recipients)
                         {
                             if (recipient == null)
                                 continue;
+                            //Authorize impersonation
                             ContactID = recipient.ContactID;
+                            CompanyID = company; //This is our NewWorkflowID for multi
+                            if (!Authorize(settings.NewWorkflowID, ActionPermission.Read, typeof(GraphDataGroup)))
+                                continue;
+                            //Now Impersonate
+                            CompanyID = settings.OldWorkflowCompanyID; //Can't choose who owns the instance, so revert back to WF owner
+                            ContactID = settings.OldWorkflowContactID;
+
                             foreach (var sender in senders)
                             {
                                 if (sender == null)
@@ -1334,16 +1365,23 @@ namespace EXPEDIT.Flow.Services {
                                 m.QueryParams.Add("Regarding", string.Format("{0} {1} ({2})", sender.Firstname, sender.Surname, sender.Username));
                                 m.QueryParams.Add("RegardingContactID", sender.ContactID);
                                 var wfi = DoNext(m);
-                                var rd = new ProjectPlanTaskResponseData
+                                if (wfi)
                                 {
-                                    ProjectPlanTaskResponseDataID = Guid.NewGuid(),
-                                    ParentProjectPlanTaskResponseDataID = settings.OldStepID,
-                                    VersionOwnerCompanyID = settings.OldStepCompanyID,
-                                    VersionOwnerContactID = settings.OldStepContactID,
-                                    VersionUpdated = DateTime.UtcNow
-                                };
-                                d.ProjectPlanTaskResponseDatas.AddObject(rd);
-
+                                    var step = d.ProjectPlanTaskResponses.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ProjectPlanTaskResponseID == m.PreviousStepID).Single();
+                                    step.VersionOwnerCompanyID = company;
+                                    step.VersionOwnerContactID = recipient.ContactID;
+                                    var rd = new ProjectPlanTaskResponseData
+                                    {
+                                        ProjectPlanTaskResponseDataID = Guid.NewGuid(),
+                                        ProjectPlanTaskResponseID = m.PreviousStepID.Value,
+                                        TableType = d.GetTableName(typeof(ProjectPlanTaskResponseEvent)),
+                                        ReferenceID = settings.EventID,
+                                        VersionOwnerCompanyID = settings.OldWorkflowCompanyID,
+                                        VersionOwnerContactID = settings.OldWorkflowContactID,
+                                        VersionUpdated = DateTime.UtcNow
+                                    };
+                                    d.ProjectPlanTaskResponseDatas.AddObject(rd);
+                                }
                                 //Send email to assignee/s
                                 //settings.email.message.Value += string.Format("<br/><br/><p>See more detail at FlowPro:</p><a href=\"http://flowpro.io/flow#/step/{0}\">http://flowpro.io/flow#/step/{0}</a>", evt.ProjectPlanTaskResponseID);
                             }
