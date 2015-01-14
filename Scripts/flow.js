@@ -4847,6 +4847,46 @@ App.StepController = Ember.ObjectController.extend({
         return moment.utc(this.get('model.steps.firstObject.VersionUpdated')).fromNow();
     }.property('model.steps.firstObject.VersionUpdated'),
     actions: {
+        pause: function() {
+            var _this = this;
+
+            var context = this.get('contextData');
+            //console.log(context);
+            var promises = [];
+            var saved = false;
+            Enumerable.From(context).ForEach(function (d) {
+
+                var formData = d.Value.d;
+                var formVal = d.Value.value;
+                if (d.Value.record.get('isDirty')) {
+                    promises.push(d.Value.record.save());
+                    saved = true;
+                }
+            });
+
+            Ember.RSVP.allSettled(promises).then(function (p) {
+                if (Enumerable.From(p).Any("f=>f.reason")) {
+                    Messenger().post({ type: 'error', message: 'Error Saving Data' });
+                    return;
+                }
+                else {
+                    if (saved)
+                        Messenger().post({ type: 'success', message: 'Saved Data' });
+                    $.ajax({
+                        url: "/flow/WebMethod/Checkin/" + _this.get('stepID'),
+                        type: "GET"
+                    }).then(function (response) {
+                        _this.transitionToRoute('todo');
+                    }, function (response) {
+                        Messenger().post({ type: 'error', message: 'Could not pause todo. Please complete the step.' });
+
+                    });
+                }
+
+
+
+            });
+        },
         nextStep: function(btn){
             btn.set('loading', true);
             var _this = this;
@@ -5091,7 +5131,9 @@ DS.Model.reopen({
         return 'color:' + ToColor(this.get('humanName'));
     }.property('humanName'),
     Error: DS.attr('string', { defaultValue: null }),
-    Status: DS.attr('string', { defaultValue: null })
+    Status: DS.attr('string', { defaultValue: null }),
+    VersionOwnerContactID: DS.attr('string', { defaultValue: null }),
+    VersionOwnerCompanyID: DS.attr('string', { defaultValue: null })
 });
 
 

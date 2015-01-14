@@ -237,5 +237,8 @@ namespace EXPEDIT.Flow.Services
 
         [OperationContract]
         CompanyViewModel GetDashboard(Guid id);
+
+        [OperationContract]
+        bool CopyWorkflow(FlowViewModel m);
     }
 }

@@ -1645,7 +1645,12 @@
             </div>
             {{#unless model.steps.firstObject.Completed}}
             <hr>
-            {{eui-button label="Next Step" action="nextStep" size="large" style='primary'}}
+            <div>
+                {{eui-button label="Next Step" action="nextStep" size="large" style='primary'}}
+                <br />
+                <a style="margin-left:38px;cursor:pointer;" {{action 'pause'}}>PAUSE</a>
+            </div>
+            <br/><br/>
             {{else}}
                 <h4>Workflow Completed</h4>
                 <br /><br />
@@ -3644,7 +3649,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th class="col-md-3">
+                                <th class="col-md-2">
                                     Case
                                 </th>
                                 <th class="col-md-3">
@@ -3652,6 +3657,9 @@
                                 </th>
                                 <th class="col-md-3">
                                     <span class="line"></span>Workflow
+                                </th>
+                                <th class="col-md-1">
+                                    <span class="line"></span>Barcode
                                 </th>
                                 <th class="col-md-3">
                                     <span class="line"></span>Status
@@ -3672,12 +3680,14 @@
                                  <td class="description" {{bind-attr style=step.uniqueColor}}>
                                     &nbsp;{{step.GraphDataGroupName}}
                                 </td>
+                                  <td>
+                                      <a {{bind-attr data-js=step.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a>
+                                </td>
                                 <td>
-                                    <span class="label label-info">Important</span>
+                                    <span class="label label-info">Important</span>                                    
                                     @*{{step.VersionUpdated}} {{step.LastUpdatedBy}}*@
                                     <ul class="actions">
                                         <li>{{#link-to 'step' step.id}}Checkout{{/link-to}}</li>
-                                        <li><a {{bind-attr data-js=step.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a></li>
                                         @*<li class="last"><a href="#">Delete</a></li>*@
                                     </ul>
                                 </td>

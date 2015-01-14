@@ -1417,5 +1417,18 @@ namespace EXPEDIT.Flow.Controllers {
             return new JsonHelper.JsonNetResult(new { dashboard = result ?? new object() }, JsonRequestBehavior.AllowGet);
         }
 
+        [Authorize]
+        [Themed(false)]
+        [HttpPost]
+        [ActionName("CopyWorkflow")]
+        public ActionResult CopyWorkflow(FlowViewModel m)
+        {
+            var result = _Flow.CopyWorkflow(m);
+            if (result)
+                return new JsonHelper.JsonNetResult(new { copyWorkflow = m }, JsonRequestBehavior.AllowGet);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
+        }
+
     }
 }

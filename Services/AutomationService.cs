@@ -283,7 +283,7 @@ namespace EXPEDIT.Flow.Services {
                     m.GraphName = g.GraphName;
                 }
                 m.LastEditedBy = (from o in d.Contacts.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
-
+                Checkout(m, d);
                 return m;
             }
             else return null;
@@ -370,6 +370,54 @@ namespace EXPEDIT.Flow.Services {
 	}
 
 
+    public bool Checkin(Guid stepID)
+    {
+        //Need to update hour calc in donext
+        if (stepID == Guid.Empty)
+            return false;
+        using (new TransactionScope(TransactionScopeOption.Suppress))
+        {
+            var d = new NKDC(_users.ApplicationConnectionString, null);
+            var step = d.ProjectPlanTaskResponses.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.ProjectPlanTaskResponseID == stepID).Single();
+            var wf = d.WorkflowInstances.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.WorkflowInstanceID == step.VersionWorkflowInstanceID).Single();
+            if (string.Format("{0}", wf.ExecutionStatus).ToUpperInvariant() != "RUNNING")
+                return false;
+            var now = DateTime.UtcNow;
+            step.Hours = (step.Hours ?? 0) + ((decimal)((now - wf.Idle.Value.AddSeconds(-ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS)).TotalHours));
+            step.VersionUpdatedBy = ContactID;
+            step.VersionUpdated = now;
+            wf.ExecutionStatus = "PAUSED";
+            wf.Idle = now;
+            wf.VersionUpdatedBy = ContactID;
+            wf.VersionUpdated = now;
+            d.SaveChanges();
+            return true;
+        }
+
+    }
+
+
+    public bool Checkout(AutomationViewModel m, NKDC d)
+    {
+        if (m == null || m.PreviousStepID == Guid.Empty || m.PreviousStepID == null || d == null || m.PreviousWorkflowInstance == null || !(m.PreviousWorkflowInstance.CanResume ?? true))
+            return false;
+        switch (string.Format("{0}",m.PreviousWorkflowInstance.ExecutionStatus).ToUpperInvariant())
+        {
+            case "PAUSED":
+                break;
+            case "RUNNING":
+            default:
+                return false;
+        }
+        var now = DateTime.UtcNow;
+        m.PreviousWorkflowInstance.Resumed = now;
+        m.PreviousWorkflowInstance.Idle = now.AddSeconds(ConstantsHelper.WORKFLOW_INSTANCE_TIMEOUT_IDLE_SECONDS);
+        m.PreviousWorkflowInstance.ExecutionStatus = "RUNNING";
+        m.PreviousWorkflowInstance.VersionUpdated = now;
+        m.PreviousWorkflowInstance.VersionUpdatedBy = ContactID;
+        d.SaveChanges();
+        return true;
+    }
 
         public bool DoNext(AutomationViewModel m)
         {
@@ -527,6 +575,7 @@ namespace EXPEDIT.Flow.Services {
                         if (!m.TaskID.HasValue)
                             m.PreviousTask = d.Tasks.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataGroupID == m.GraphDataGroupID && f.GraphDataID == m.GraphDataID).FirstOrDefault();
 
+                        m.PreviousStep.VersionWorkflowInstanceID = wfid;
                         m.PreviousStep.ResponsibleCompanyID = m.PreviousTask.WorkCompanyID ?? company;
                         m.PreviousStep.ResponsibleContactID = m.PreviousTask.WorkContactID ?? contact;
                         m.PreviousStep.VersionUpdatedBy = contact;

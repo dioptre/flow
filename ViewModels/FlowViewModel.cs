@@ -40,6 +40,9 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid?[] edges { get; set; }
         public Guid?[] workflows { get; set; }
 
+        public Guid? VersionOwnerContactID { get; set; }
+        public Guid? VersionOwnerCompanyID { get; set; }
+
         [JsonIgnore]
         public Guid? GraphDataID { get; set; }
         [JsonIgnore]

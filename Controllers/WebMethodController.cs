@@ -124,6 +124,10 @@ namespace EXPEDIT.Flow.Controllers {
                     result = _Auto.DoAs(m);
                     toReturn = m.PreviousStepID;
                     break;
+                case AutomationViewModel.AUTOMATION_METHOD_CHECKIN:
+                    result = _Auto.Checkin(trid);
+                    toReturn = m.PreviousStepID;
+                    break;
                 default:
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.NotFound);
             }
