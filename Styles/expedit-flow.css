@@ -1197,3 +1197,14 @@ text.nodeText {
 max-height: 100vh;
 overflow: scroll;
 }
+
+/*Making sidebar look cleaner*/
+#sidebar-nav #dashboard-menu > li > a.active, #sidebar-nav #dashboard-menu > li > a {
+  text-decoration: none;
+}
+#sidebar-nav #dashboard-menu > li > a.active {
+  font-weight: bold;
+}
+#sidebar-nav #dashboard-menu ul.submenu a:hover {
+text-decoration: none;
+}

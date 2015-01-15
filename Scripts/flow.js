@@ -6525,7 +6525,7 @@ App.OrganizationController = Ember.ObjectController.extend({
             return;
       var name = selected.get('CompanyName').toLowerCase()
       var oldName = name;
-      if (selected._data && selected._data.CompanyName)
+      if (selected._data && Rselected._data.CompanyName)
           oldName = selected._data.CompanyName.toLowerCase()
 
 
@@ -7768,4 +7768,41 @@ App.HierachyTreeComponent = Ember.Component.extend({
         }
         // })
    }.observes('wrap')
+})
+
+App.RadioButtonComponent = Ember.Component.extend({
+  tagName: 'input',
+  type: 'radio',
+  attributeBindings: [ 'checked', 'name', 'type', 'value' ],
+ 
+  checked: function () {
+    if (JSON.parse(JSON.stringify(this.get('value'))) === JSON.parse(JSON.stringify(this.get('groupValue')))) {
+      Ember.run.once(this, 'takeAction');
+      console.log('should be active')
+      return true;
+    } else { return false; }
+  },
+ 
+  takeAction: function() {
+    this.sendAction('selectedAction', this.get('value'));
+  },
+
+  groupValueObserver: function(){
+     Ember.run.once(this, 'checked'); //manual observer
+    //console.log(this.get('value'), this.get('groupValue'))
+
+
+  }.observes('groupValue'),
+ 
+  change: function () {
+    this.set('groupValue', this.get('value'));
+    Ember.run.once(this, 'checked'); //manual observer
+  }
+});
+
+
+App.LformRadioComponent = Ember.Component.extend({
+  uniqueRadioID: function(){
+    return NewGUID()
+  }.property()
 })

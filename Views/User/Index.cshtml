@@ -350,7 +350,7 @@
 <script type="text/x-handlebars" data-template-name="components/lform-paragraph">
     <div>
         <label>{{s.d.label}}</label><br>
-        {{eui-input value=s.record.Value disabled=s.d.readOnly}}
+        {{eui-textarea value=s.record.Value disabled=s.d.readOnly}}
         @*{{s.value}}*@
 
     </div>
@@ -359,8 +359,9 @@
 <script type="text/x-handlebars" data-template-name="components/lform-checkboxes">
     <div>
         <label>{{s.d.label}}</label><br>
-        {{eui-input value=s.record.Value disabled=s.d.readOnly}}
-        @*{{s.value}}*@
+        {{#each option in s.d.field_options.options}}
+            {{eui-checkbox value=option.checked label=option.label}}
+        {{/each}}
 
     </div>
 </script>
@@ -368,7 +369,15 @@
 <script type="text/x-handlebars" data-template-name="components/lform-radio">
     <div>
         <label>{{s.d.label}}</label><br>
-        {{eui-input value=s.record.Value disabled=s.d.readOnly}}
+
+        {{#each option in s.d.field_options.options}}
+            {{radio-button name=uniqueRadioID value=option.label groupValue=s.record.Value}} {{option.label}}
+        {{/each}}
+        <br>
+        
+        {{!--s.record.Value--}}
+  
+
         @*{{s.value}}*@
 
     </div>
@@ -761,7 +770,7 @@
         <div class='container-fluid'>
             <div class="row">
                 <div class="col-md-6">
-                    <h4>{{model.workflows.length}} <b>Workflows</b></h4>
+                    <h3>{{model.workflows.length}} <b>Workflows</b></h3>
 
                     {{#if model.workflows}}
                         <div class="table-responsive">
@@ -800,7 +809,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    <h4>{{model.processes.length}} <b>Steps</b> </h4>
+                    <h3>{{model.processes.length}} <b>Steps</b> </h3>
 
                     {{#if model.processes}}
                         <div class="table-responsive">
