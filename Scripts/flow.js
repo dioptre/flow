@@ -6122,7 +6122,7 @@ App.HomeNavView = Ember.View.extend({
                 // Get the targeted element
                 var isActive  = false;
                 var a = _this.$('a');   
-                       
+                if (typeof a !== 'undefined' && a)
                 a.each(function (i, j, y) {
                     j = $(j);
 
