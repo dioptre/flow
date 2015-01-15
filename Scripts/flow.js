@@ -6122,21 +6122,22 @@ App.HomeNavView = Ember.View.extend({
                 // Get the targeted element
                 var isActive  = false;
                 var a = _this.$('a');   
-                if (typeof a !== 'undefined' && a) //HAD TO ADD THIS PK PLEASE FIX!!!! ONLY OCCURS AFTER CLICKING FROM FLOWPRO.IO INTO APP
-                a.each(function (i, j, y) {
-                    j = $(j);
+                if (typeof a !== 'undefined' && a) { //HAD TO ADD THIS PK PLEASE FIX!!!! ONLY OCCURS AFTER CLICKING FROM FLOWPRO.IO INTO APP
+                    a.each(function (i, j, y) {
+                        j = $(j);
 
-                    // This is to highlight the workflow button when looking at a step ;)
-                    var specialRule = (j.attr('href').replace(/^#\//, '') == 'workflow/undefined') && (window.location.hash.substring(2).indexOf('process') == 0)
-                    
-                    // Either matches active in the elements below
-                    // OR url href matches window.location
-                    // OR any special rules
-                    if (specialRule || j.attr('class').indexOf('active') != -1 || j.attr('href').replace(/^#\//, '') === window.location.hash.substring(2))       
-                        isActive = true;   
-                }); 
-                
-                _this.set('activeTagzz', isActive);
+                        // This is to highlight the workflow button when looking at a step ;)
+                        var specialRule = (j.attr('href').replace(/^#\//, '') == 'workflow/undefined') && (window.location.hash.substring(2).indexOf('process') == 0)
+
+                        // Either matches active in the elements below
+                        // OR url href matches window.location
+                        // OR any special rules
+                        if (specialRule || j.attr('class').indexOf('active') != -1 || j.attr('href').replace(/^#\//, '') === window.location.hash.substring(2))
+                            isActive = true;
+                    });
+
+                    _this.set('activeTagzz', isActive);
+                }
 
             })
         }).trigger('pathChanged')
