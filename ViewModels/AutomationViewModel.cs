@@ -18,6 +18,7 @@ namespace EXPEDIT.Flow.ViewModels
 
         public const string AUTOMATION_METHOD_DOAS = "DOAS";
         public const string AUTOMATION_METHOD_DONEXT = "DONEXT";
+        public const string AUTOMATION_METHOD_CHECKIN = "CHECKIN";
 
         public new Guid? id { get { return PreviousStep.ProjectPlanTaskResponseID; } }
         public string TaskName { get { return PreviousTask.TaskName; } }

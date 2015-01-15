@@ -43,6 +43,7 @@ using System.Globalization;
 using Newtonsoft.Json.Linq;
 using Orchard.Environment.Configuration;
 using System.Web.Mvc;
+using System.Data.Objects;
 
 
 
@@ -4462,6 +4463,26 @@ namespace EXPEDIT.Flow.Services {
                     
         }
 
+        public bool CopyWorkflow(FlowViewModel m)
+        {
+            var application = _users.ApplicationID;
+            var contact = _users.ContactID;
+            var company = _users.ApplicationCompanyID;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                ObjectParameter wfid = new ObjectParameter("newworkflowid", typeof(Guid?));
+                d.E_SP_DuplicateWorkflow(contact, application, m.id, m.VersionOwnerContactID, m.VersionOwnerCompanyID, wfid);
+                if (wfid.Value as Guid? == null)
+                    return false;
+                else
+                {
+                    m.id = (Guid)wfid.Value;
+                    return true;
+                }
 
+            }
+
+        }
     }
 }

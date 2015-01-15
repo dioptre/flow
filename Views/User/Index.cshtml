@@ -534,11 +534,11 @@
             {{safehtml model.r.Dashboard}}
         {{else}}
             <ul>
-                <li><a href="/flow#/process/b6261775-d5cb-40a8-8540-c0aaa6055ee5?localeSelected=en-US&workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">SEE an example workflow</a></li>
-                <li><a href="/flow#/step/undefined?workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">START an example workflow</a></li>
-                <li><a href="/flow#/workflow/undefined">CREATE an example workflow</a></li>
-                <li><a href="/flow#/report">REPORT your business status</a></li>
-                <li><a href="/flow#/responseData">DRILL down on your workflow data</a></li>
+                <li><a href="/flow/#/process/b6261775-d5cb-40a8-8540-c0aaa6055ee5?localeSelected=en-US&workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">SEE an example workflow</a></li>
+                <li><a href="/flow/#/step/undefined?workflowID=e63d3697-3b5a-4f38-9099-c401da49a719">START an example workflow</a></li>
+                <li><a href="/flow/#/workflow/undefined">CREATE an example workflow</a></li>
+                <li><a href="/flow/#/report">REPORT your business status</a></li>
+                <li><a href="/flow/#/responseData">DRILL down on your workflow data</a></li>
             </ul>
         {{/if}}
     {{else}}
@@ -1274,9 +1274,9 @@
                     <i class="icon-chevron-down"></i>
                 </a>
                 <ul class="submenu">
+                    <li>{{#link-to 'myworkflows'}}{{model.t.fp_menu_link_myWorkflow}}{{/link-to}}</li>
                     <li>{{#link-to 'workflow' 'undefined'}}{{model.t.fp_menu_link_newWorkflow}}{{/link-to}}</li>
                     <li>{{#link-to 'search'}} {{model.t.fp_menu_link_search}} {{/link-to}}</li>
-                    <li>{{#link-to 'myworkflows'}}{{model.t.fp_menu_link_myWorkflow}}{{/link-to}}</li>
                     <li>{{#link-to 'file'}} {{model.t.fp_menu_link_myfiles}} {{/link-to}}</li>
                 </ul>
             {{/view}}
@@ -1656,7 +1656,12 @@
             </div>
             {{#unless model.steps.firstObject.Completed}}
             <hr>
-            {{eui-button label="Next Step" action="nextStep" size="large" style='primary'}}
+            <div>
+                {{eui-button label="Next Step" action="nextStep" size="large" style='primary'}}
+                <br />
+                <a style="margin-left:38px;cursor:pointer;" {{action 'pause'}}>PAUSE</a>
+            </div>
+            <br/><br/>
             {{else}}
                 <h4>Workflow Completed</h4>
                 <br /><br />
@@ -1746,6 +1751,9 @@
                         <span {{action 'toggleWorkflowTriggersModal'}} class='btn-flat gray' title="Show triggers">
                             <i class="icon-bolt"></i>
                         </span>
+                        <span {{action 'toggleWorkflowCopyModal'}} class='btn-flat gray' title="Clone workflow">
+                            <i class="icon-gift"></i>
+                        </span>
                         <span {{action 'toggleWorkflowView' }} class='btn-flat gray' title="Preview workflow fullscreen">
                             <i class="icon-fullscreen"></i>
                         </span>
@@ -1780,7 +1788,7 @@
                             <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit step name & content">
                                 <i class="icon-pencil"></i>
                             </span>
-                            <span {{action 'toggleMoenyModal'}} class='btn-flat gray' title="Edit business properties">
+                            <span {{action 'toggleMoneyModal'}} class='btn-flat gray' title="Edit business properties">
                                 <i class="icon-cogs"></i>
                             </span>
                             <span {{action 'toggleTriggersModal'}} class='btn-flat gray' title="Edit triggers">
@@ -2052,6 +2060,42 @@
                 {{input type="checkbox" checked=generatePreviewLink}} Show Content Only
                 <br /><br />
                 {{eui-button label="OK" action="cancelWorkflowShare" size='large'}}
+            </div>
+            {{/eui-modal}}
+
+
+            {{#eui-modal openBinding="copyWorkflowModal"}}
+            <div style="padding: 50px; text-align: center;">
+
+                {{#if loadingCopy}}
+                Loading details...
+
+                {{else}}
+                <h4>Copy workflow</h4>
+                <br />
+                <br />
+                <p>
+                    Give someone a copy of your workflow. <br>
+                </p>
+                <br />
+
+                <b>Add user recipient (required)</b><br>
+                {{contact-selector value=copyWorkflowStoreObject.WorkContactID multiple=false}}
+
+                <br>
+                <br>
+
+
+                <b>Add company recipient (required)</b><br>
+                {{company-selector value=copyWorkflowStoreObject.WorkCompanyID multiple=false}}
+
+                <br>
+                <br>
+                <br>                
+
+                {{eui-button label="Cancel" action="toggleWorkflowCopyModal" size='large'}}
+                {{eui-button label="Submit" action="submitWorkflowCopyModal" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                {{/if}}
             </div>
             {{/eui-modal}}
 
@@ -3655,7 +3699,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th class="col-md-3">
+                                <th class="col-md-2">
                                     Case
                                 </th>
                                 <th class="col-md-3">
@@ -3663,6 +3707,9 @@
                                 </th>
                                 <th class="col-md-3">
                                     <span class="line"></span>Workflow
+                                </th>
+                                <th class="col-md-1">
+                                    <span class="line"></span>Barcode
                                 </th>
                                 <th class="col-md-3">
                                     <span class="line"></span>Status
@@ -3683,12 +3730,14 @@
                                  <td class="description" {{bind-attr style=step.uniqueColor}}>
                                     &nbsp;{{step.GraphDataGroupName}}
                                 </td>
+                                  <td>
+                                      <a {{bind-attr data-js=step.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a>
+                                </td>
                                 <td>
-                                    <span class="label label-info">Important</span>
+                                    <span class="label label-info">Important</span>                                    
                                     @*{{step.VersionUpdated}} {{step.LastUpdatedBy}}*@
                                     <ul class="actions">
                                         <li>{{#link-to 'step' step.id}}Checkout{{/link-to}}</li>
-                                        <li><a {{bind-attr data-js=step.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a></li>
                                         @*<li class="last"><a href="#">Delete</a></li>*@
                                     </ul>
                                 </td>

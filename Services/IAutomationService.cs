@@ -28,6 +28,9 @@ namespace EXPEDIT.Flow.Services
         bool DoAs(AutomationViewModel m);
 
         [OperationContract]
+        bool Checkin(Guid stepID);
+
+        [OperationContract]
         bool Authenticate(AutomationViewModel m, string method);
 
         [OperationContract]

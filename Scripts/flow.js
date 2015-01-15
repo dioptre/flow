@@ -242,10 +242,8 @@ App.ResponseDataRoute = Ember.Route.extend({
 
 App.DashboardRoute = Ember.Route.extend({
     model: function (params) {
-        if (!this.controllerFor('application').get('isLoggedIn'))
-            return { r: {} };
         return Ember.RSVP.hash({
-            r: this.store.find('dashboard', params.id)
+            r: this.store.find('dashboard', params.id).catch(function () { return null; })
         });
     },
 });
@@ -389,18 +387,20 @@ App.StyleguideController = Ember.Controller.extend({
 
 App.ReportRoute = Ember.Route.extend({
     model: function () {
-        if (!this.controllerFor('application').get('isLoggedIn'))
-            return { data: null };
         return Ember.RSVP.hash({
-            data : new Ember.RSVP.Promise(function(resolve) {
-                $.ajax('/flow/reports').then(function (m) {
+            data : new Ember.RSVP.Promise(function(resolve, reject) {
+                $.ajax({ 
+                    url: '/flow/reports'                   
+                }).then(function (m, textStatus, jqXHR) {
                     resolve(m);
+                }, function (m) {
+                    reject(m);
                 });
             })
         });           
     },
-    afterModel: function (m) {
-        if (!m.data)
+    afterModel: function (m) {        
+        if (!m.data || typeof m.data == 'string')
             return;
         m.impact = Enumerable.From(m.data[0]).Select("{group:ToTitleCase($.Item1.replace(/_/g, ' ')), xValue: $.Item2, yValue: $.Item3*100.0 }").ToArray();
         var overdueMax = 1;
@@ -2608,6 +2608,7 @@ App.GraphController = Ember.ObjectController.extend({
     newContent: null,
     workflowEditNameModal: false,
     workflowShareModal: false,
+    workflowCopyModal: false,
     workflowNewModal: false, // up to here is for new ones
     moneyModal: false,
     loadingMoney: true,
@@ -2794,6 +2795,7 @@ App.GraphController = Ember.ObjectController.extend({
         }
     }.property('selectedData','selectedData.edges', 'selectedData.nodes'),
     moneyModalStoreObject: {}, // this is for the money modal - all input fileds bind to this...
+    copyWorkflowStoreObject: {},
     actions: {
         createWorkflowInstance: function() {
             this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
@@ -2819,7 +2821,7 @@ App.GraphController = Ember.ObjectController.extend({
         toggleWorkflowEditModal: function (data, callback) {
             this.toggleProperty('workflowEditModal');
         },
-        toggleMoenyModal: function (data, callback) {
+        toggleMoneyModal: function (data, callback) {
             // more like opening (not toggle) money modal
             var _this = this;
 
@@ -2865,6 +2867,21 @@ App.GraphController = Ember.ObjectController.extend({
         redirectFromTriggersModal: function (data, callback) {
             this.toggleProperty('triggerWorkflowModal');
             this.transitionToRoute('myprofiles');
+        },
+        toggleWorkflowCopyModal: function (data, callback) {
+            this.toggleProperty('copyWorkflowModal');
+        },
+        submitWorkflowCopyModal: function (data, callback) {
+            var a = this.get('copyWorkflowStoreObject');
+            var _this = this;
+            $.post('/flow/copyworkflow',
+                { id: this.get('workflowID'), VersionOwnerContactID: a.WorkContactID, VersionOwnerCompanyID: a.WorkCompanyID }
+                ).then(function () {
+                    _this.set('copyWorkflowModal', false);
+                    Messenger().post({ type: 'success', message: 'Successfully copied workflow.' });
+                }, function () {
+                    Messenger().post({ type: 'error', message: 'Error copying. They may already have a copy.' });
+                });
         },
         toggleWorkflowTriggersModal: function (data, callback) {
             this.toggleProperty('triggerWorkflowModal');
@@ -4850,6 +4867,46 @@ App.StepController = Ember.ObjectController.extend({
         return moment.utc(this.get('model.steps.firstObject.VersionUpdated')).fromNow();
     }.property('model.steps.firstObject.VersionUpdated'),
     actions: {
+        pause: function() {
+            var _this = this;
+
+            var context = this.get('contextData');
+            //console.log(context);
+            var promises = [];
+            var saved = false;
+            Enumerable.From(context).ForEach(function (d) {
+
+                var formData = d.Value.d;
+                var formVal = d.Value.value;
+                if (d.Value.record.get('isDirty')) {
+                    promises.push(d.Value.record.save());
+                    saved = true;
+                }
+            });
+
+            Ember.RSVP.allSettled(promises).then(function (p) {
+                if (Enumerable.From(p).Any("f=>f.reason")) {
+                    Messenger().post({ type: 'error', message: 'Error Saving Data' });
+                    return;
+                }
+                else {
+                    if (saved)
+                        Messenger().post({ type: 'success', message: 'Saved Data' });
+                    $.ajax({
+                        url: "/flow/WebMethod/Checkin/" + _this.get('stepID'),
+                        type: "GET"
+                    }).then(function (response) {
+                        _this.transitionToRoute('todo');
+                    }, function (response) {
+                        Messenger().post({ type: 'error', message: 'Could not pause todo. Please complete the step.' });
+
+                    });
+                }
+
+
+
+            });
+        },
         nextStep: function(btn){
             btn.set('loading', true);
             var _this = this;
@@ -5095,7 +5152,9 @@ DS.Model.reopen({
         return 'color:' + ToColor(this.get('humanName'));
     }.property('humanName'),
     Error: DS.attr('string', { defaultValue: null }),
-    Status: DS.attr('string', { defaultValue: null })
+    Status: DS.attr('string', { defaultValue: null }),
+    VersionOwnerContactID: DS.attr('string', { defaultValue: null }),
+    VersionOwnerCompanyID: DS.attr('string', { defaultValue: null })
 });
 
 
@@ -6067,21 +6126,22 @@ App.HomeNavView = Ember.View.extend({
                 // Get the targeted element
                 var isActive  = false;
                 var a = _this.$('a');   
-                       
-                a.each(function (i, j, y) {
-                    j = $(j);
+                if (typeof a !== 'undefined' && a) { //HAD TO ADD THIS PK PLEASE FIX!!!! ONLY OCCURS AFTER CLICKING FROM FLOWPRO.IO INTO APP
+                    a.each(function (i, j, y) {
+                        j = $(j);
 
-                    // This is to highlight the workflow button when looking at a step ;)
-                    var specialRule = (j.attr('href').replace(/^#\//, '') == 'workflow/undefined') && (window.location.hash.substring(2).indexOf('process') == 0)
-                    
-                    // Either matches active in the elements below
-                    // OR url href matches window.location
-                    // OR any special rules
-                    if (specialRule || j.attr('class').indexOf('active') != -1 || j.attr('href').replace(/^#\//, '') === window.location.hash.substring(2))       
-                        isActive = true;   
-                }); 
-                
-                _this.set('activeTagzz', isActive);
+                        // This is to highlight the workflow button when looking at a step ;)
+                        var specialRule = (j.attr('href').replace(/^#\//, '') == 'workflow/undefined') && (window.location.hash.substring(2).indexOf('process') == 0)
+
+                        // Either matches active in the elements below
+                        // OR url href matches window.location
+                        // OR any special rules
+                        if (specialRule || j.attr('class').indexOf('active') != -1 || j.attr('href').replace(/^#\//, '') === window.location.hash.substring(2))
+                            isActive = true;
+                    });
+
+                    _this.set('activeTagzz', isActive);
+                }
 
             })
         }).trigger('pathChanged')
@@ -6419,9 +6479,7 @@ App.MyprofilesController = Ember.ObjectController.extend({
 
 App.OrganizationRoute = Ember.Route.extend({
     model: function () {
-        if (!this.controllerFor('application').get('isLoggedIn'))
-            return { };
-        return this.store.findQuery('company', {});
+        return this.store.findQuery('company', {}).catch(function () { return null;});
     }
 });
 
