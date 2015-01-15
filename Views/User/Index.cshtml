@@ -1740,6 +1740,9 @@
                         <span {{action 'toggleWorkflowTriggersModal'}} class='btn-flat gray' title="Show triggers">
                             <i class="icon-bolt"></i>
                         </span>
+                        <span {{action 'toggleWorkflowCopyModal'}} class='btn-flat gray' title="Clone workflow">
+                            <i class="icon-gift"></i>
+                        </span>
                         <span {{action 'toggleWorkflowView' }} class='btn-flat gray' title="Preview workflow fullscreen">
                             <i class="icon-fullscreen"></i>
                         </span>
@@ -1774,7 +1777,7 @@
                             <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit step name & content">
                                 <i class="icon-pencil"></i>
                             </span>
-                            <span {{action 'toggleMoenyModal'}} class='btn-flat gray' title="Edit business properties">
+                            <span {{action 'toggleMoneyModal'}} class='btn-flat gray' title="Edit business properties">
                                 <i class="icon-cogs"></i>
                             </span>
                             <span {{action 'toggleTriggersModal'}} class='btn-flat gray' title="Edit triggers">
@@ -2046,6 +2049,42 @@
                 {{input type="checkbox" checked=generatePreviewLink}} Show Content Only
                 <br /><br />
                 {{eui-button label="OK" action="cancelWorkflowShare" size='large'}}
+            </div>
+            {{/eui-modal}}
+
+
+            {{#eui-modal openBinding="copyWorkflowModal"}}
+            <div style="padding: 50px; text-align: center;">
+
+                {{#if loadingCopy}}
+                Loading details...
+
+                {{else}}
+                <h4>Copy workflow</h4>
+                <br />
+                <br />
+                <p>
+                    Give someone a copy of your workflow. <br>
+                </p>
+                <br />
+
+                <b>Add user recipient (required)</b><br>
+                {{contact-selector value=copyWorkflowStoreObject.WorkContactID multiple=false}}
+
+                <br>
+                <br>
+
+
+                <b>Add company recipient (required)</b><br>
+                {{company-selector value=copyWorkflowStoreObject.WorkCompanyID multiple=false}}
+
+                <br>
+                <br>
+                <br>                
+
+                {{eui-button label="Cancel" action="toggleWorkflowCopyModal" size='large'}}
+                {{eui-button label="Submit" action="submitWorkflowCopyModal" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                {{/if}}
             </div>
             {{/eui-modal}}
 

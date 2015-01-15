@@ -2605,6 +2605,7 @@ App.GraphController = Ember.ObjectController.extend({
     newContent: null,
     workflowEditNameModal: false,
     workflowShareModal: false,
+    workflowCopyModal: false,
     workflowNewModal: false, // up to here is for new ones
     moneyModal: false,
     loadingMoney: true,
@@ -2791,6 +2792,7 @@ App.GraphController = Ember.ObjectController.extend({
         }
     }.property('selectedData','selectedData.edges', 'selectedData.nodes'),
     moneyModalStoreObject: {}, // this is for the money modal - all input fileds bind to this...
+    copyWorkflowStoreObject: {},
     actions: {
         createWorkflowInstance: function() {
             this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
@@ -2816,7 +2818,7 @@ App.GraphController = Ember.ObjectController.extend({
         toggleWorkflowEditModal: function (data, callback) {
             this.toggleProperty('workflowEditModal');
         },
-        toggleMoenyModal: function (data, callback) {
+        toggleMoneyModal: function (data, callback) {
             // more like opening (not toggle) money modal
             var _this = this;
 
@@ -2862,6 +2864,21 @@ App.GraphController = Ember.ObjectController.extend({
         redirectFromTriggersModal: function (data, callback) {
             this.toggleProperty('triggerWorkflowModal');
             this.transitionToRoute('myprofiles');
+        },
+        toggleWorkflowCopyModal: function (data, callback) {
+            this.toggleProperty('copyWorkflowModal');
+        },
+        submitWorkflowCopyModal: function (data, callback) {
+            var a = this.get('copyWorkflowStoreObject');
+            var _this = this;
+            $.post('/flow/copyworkflow',
+                { id: this.get('workflowID'), VersionOwnerContactID: a.WorkContactID, VersionOwnerCompanyID: a.WorkCompanyID }
+                ).then(function () {
+                    _this.set('copyWorkflowModal', false);
+                    Messenger().post({ type: 'success', message: 'Successfully copied workflow.' });
+                }, function () {
+                    Messenger().post({ type: 'error', message: 'Error copying. They may already have a copy.' });
+                });
         },
         toggleWorkflowTriggersModal: function (data, callback) {
             this.toggleProperty('triggerWorkflowModal');
