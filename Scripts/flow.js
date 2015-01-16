@@ -209,7 +209,7 @@ Ember.Route = Ember.Route.extend({
 });
 App.setTitle = function(title) { // little utilitiy function, pretty useless atm
     // to do any extra stuff with title, do it here
-    title = title + " | FlowPro";
+    title = title + "  ·  FlowPro";
    document.title = title;
 };
 
