@@ -167,6 +167,7 @@ App.Router.map(function () {
     this.route('resetpassword');
     this.route('myprofiles');
     this.route('help');
+    this.route('usermanager');
 
     // Currently unused.
     // this.route('userlist');
@@ -7827,6 +7828,24 @@ App.HierachyTreeComponent = Ember.Component.extend({
         // })
    }.observes('wrap')
 })
+
+App.UsermanagerRoute = Ember.Route.extend({})
+App.UsermanagerController = Ember.Controller.extend({
+    title: "User Manager",
+    user: {},
+    actions: {
+        addUser: function(){
+
+            console.log('adduser', this.get('user'))
+        },
+        deleteUser: function(context){
+            console.log('deleteuser', context)
+
+        }
+    }
+})
+
+
 
 App.RadioButtonComponent = Ember.Component.extend({
   tagName: 'input',

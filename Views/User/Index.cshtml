@@ -546,6 +546,88 @@
     {{/if}}
 </script>
 
+<script type="text/x-handlebars" id="usermanager">
+    <h1>User Manager
+        <sub>Manage users in your company.</sub>
+
+    </h1>
+
+    <br>
+    <br>
+
+    <div class='container-fluid'>
+        <div class="row">
+            <div class="col-md-12">
+
+                <h4>Add User</h4>
+                <p> 
+                    Each user costs an additional $7/month. To add a user simply fill the form out below. A new license will be automatically asssigned to the user each month.
+                </p>
+                {{eui-input value=user.name placeholder='Name' size='small'}}<br><br>
+                {{eui-input value=user.email placeholder='Email' size="small"}}<br><br>
+                {{company-selector value=user.WorkCompanyID multiple=true}} <br>
+                {{eui-button label="Add User" style='default' action="addUser"}}
+
+
+                <br>
+                <hr>
+                <br>
+
+
+                <h4> Existing Users</h4>
+                <p>Total users: 64. <br>Monthly cost (for FlowPro): 64 * $7/month = $448/month</p>
+                {{!-- {{#if model}} --}}
+                    <div class="table-responsive table-wrapper users-table sectio">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Member of Organizations</th>
+                                <th class="align-right">Modify</th>
+
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {{!-- {{#each item in model}} --}}
+                                <tr>
+                                    <td>                              
+                                        <img src="/share/photo/ee2245ed-fdfc-40d2-a3f2-cc8227a93c5d" alt="avatar" class="img-circle avatar hidden-phone">
+                                        <a href="user-profile.html" class="name">Alejandra Galvan Castillo</a>
+                                        <span class="subtext">Graphic Design</span>
+                                    </td>
+                                    <td>paulknittel@live.com</td>
+                                    <td>
+                                         <span class="label label-info">Webdevelopers</span>
+                                         <span class="label label-info">Managers</span>
+                                    </td>
+
+                                    <td class='align-right'>
+                                        <a {{action 'deleteUser' item}} class="hlink">Delete</a>
+                                    </td>
+                                   
+                                </tr>
+                            {{!-- {{/each}} --}}
+                            </tbody>
+                        </table>
+                    </div>
+                {{!-- {{else}} --}}
+                    {{!-- <br /> --}}
+                    {{!-- None. --}}
+                {{!-- {{/if}} --}}
+            </div>
+        </div>
+
+
+
+
+
+</script>
+
+
+
+
 <script type="text/x-handlebars" id="organization">
     {{#if loading}}
         Loading...
