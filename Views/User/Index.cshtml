@@ -1824,6 +1824,9 @@
                     {{/if}}
 
                     {{#if controllers.application.isLoggedIn}}
+
+                        <br>
+
                         <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray' title="Edit Workflow">
                             <i class="icon-pencil"></i> {{!--Edit Workflow name--}}
                         </span>
@@ -1867,6 +1870,9 @@
 
                         {{!-- Add content here actually --}}
                         {{#unless isPreview}}
+
+                            <br>
+
                             <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit step name & content">
                                 <i class="icon-pencil"></i>
                             </span>
