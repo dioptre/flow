@@ -2591,11 +2591,16 @@ App.GraphRoute = Ember.Route.extend({
 App.GraphController = Ember.ObjectController.extend({
     needs: ['application'],
     queryParams: ['workflowID', 'preview', 'localeSelected'],
+    // title: function(){
+    //     var name = this.get('selected.humanName') + ' Step';
+    //     App.setTitle(name);
+    //     return name;
+    // }.property('selected.humanName'),
     title: function(){
-        var name = this.get('selected.humanName') + ' Step';
+        var name = this.get('workflowName') + ' Workflow';
         App.setTitle(name);
         return name;
-    }.property('selected.humanName'),
+    }.property('workflowName'),
     nextSteps: function(){
         return ((this.get('model.links.prev') && this.get('model.links.prev').length > 0) || (this.get('model.links.next') && this.get('model.links.next').length > 0));
     }.property('model.links.prev','model.links.next'),
@@ -3293,7 +3298,10 @@ App.VizEditorComponent = Ember.Component.extend({
             //       deleteClusterError:"Clusters cannot be deleted."
             // },
             //physics: {barnesHut: {enabled: false}, repulsion: {nodeDistance: 150, centralGravity: 0.15, springLength: 20, springConstant: 0, damping: 0.3}},
-            smoothCurves: false,
+            // smoothCurves: false,
+            smoothCurves: true,
+
+
             //hierarchicalLayout: {enabled:true},
             //physics: {barnesHut: {enabled: false, gravitationalConstant: -13950, centralGravity: 1.25, springLength: 150, springConstant: 0.335, damping: 0.3}},
             //physics: {barnesHut: {enabled: false}},
@@ -4791,9 +4799,28 @@ App.StepController = Ember.ObjectController.extend({
     queryParams: ['projectID', 'workflowID', 'nodeID', 'taskID'],
     needs: ['application'],
     context: {},
+    title: 'Completing todo',
     html: Ember.computed.alias('model.steps.firstObject.content'), // Just in case we later change where the value is pulled from
     contextData: {},
     formtemplatestring: '',
+    timeremaining: 5,
+    completed: Ember.computed.alias("model.steps.firstObject.Completed"),
+    completedOb: function(){
+      var _this = this;
+      debugger;
+      if (this.get('timeremaining') == 0 && this.get('completed') !== null) {
+        this.transitionToRoute('todo');
+      } else if (this.get('completed') !== null) {
+          Ember.run.later(function () {
+            
+            _this.decrementProperty('timeremaining');
+            //this.set('timeremaining', this.get('timeremaining') - 1);
+          }, 1000);
+      } else if (this.get('completed') == null){
+        this.set('timeremaining', 5);      
+      }
+
+    }.observes('completed', 'timeremaining').on('init'),
     templatestring: function(){
         var _this = this;
         var temp = {};

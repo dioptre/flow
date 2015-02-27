@@ -1736,7 +1736,7 @@
                 {{!--view 'awesome'--}}
                 {{handlebars-live templatestring=templatestring}}
             </div>
-            {{#unless model.steps.firstObject.Completed}}
+            {{#unless completed}}
             <hr>
             <div>
                 {{eui-button label="Next Step" action="nextStep" size="large" style='primary'}}
@@ -1748,6 +1748,8 @@
                 <h4>Workflow Completed</h4>
                 <br /><br />
                 <h4 style="margin-left:20px;">{{#link-to 'todo'}}... continue with my Todos{{/link-to}}</h4>
+                <i>automatically transitioning in {{timeremaining}} Seconds</i>
+
             {{/unless}}
         </div>
 
@@ -1756,8 +1758,10 @@
                 {{#unless model.steps.firstObject.Completed}}
                 <h2>Contextual Info</h2>
                 <p>
-                    Workflow Instance <a>#{{model.steps.firstObject.Project.ProjectCode}}</a>{{link-to '.' 'graph' model.steps.firstObject.GraphDataID (query-params workflowID=model.steps.firstObject.GraphDataGroupID localeSelected=localeSelected) }}<br>
-                    Last edited by {{model.steps.firstObject.LastEditedBy}}&nbsp;<i>{{lastEdited}}.</i><br>
+                    <u>Workflow Instance:</u> <a>#{{model.steps.firstObject.Project.ProjectCode}}</a>{{link-to '.' 'graph' model.steps.firstObject.GraphDataID (query-params workflowID=model.steps.firstObject.GraphDataGroupID localeSelected=localeSelected) }}<br>
+                    <u>Workflow Template:</u> {{#link-to 'graph' model.steps.firstObject.ActualGraphDataID (query-params workflowID=model.steps.firstObject.ActualGraphDataGroupID)}}#{{model.steps.firstObject.ActualGraphDataGroupID}}{{/link-to}}<br>
+                    <u>Last edited:</u> {{lastEdited}} by {{model.steps.firstObject.LastEditedBy}}<br>
+                    <u>Suggested time to complete task:</u> <i>(coming soon)</i>
                     
 
 
