@@ -4549,8 +4549,16 @@ App.TriggerSetupComponent = Ember.Component.extend({
                         _this.set('config', JSON.parse(a.get('firstObject.JSON')))
                     }
                     if (a.get('length') < 1) {
+
+                        _this.set('triggerConditionsWatcher', false); // DISBALE WATCHER
+
+
                         _this.set('config', _this.get('defaultConfig'));
                         _this.set('config.triggerConditions', false);
+                        
+
+                        _this.set('triggerConditionsWatcher', true); // TURN WATCHER BACK ON
+
                     }
 
                     if (a.get('length') > 1) {
@@ -4568,6 +4576,52 @@ App.TriggerSetupComponent = Ember.Component.extend({
 
     }.observes('edgeID').on('didInsertElement'),
     config: {},
+    triggerConditionsWatcher: true,
+    triggerConditionsOb: function(){
+
+        var condition = this.get('config.triggerConditions');
+
+
+        // Element must be deselected... Thus have to save no trigger.
+        if (!condition && this.get('triggerConditionsWatcher')) {
+
+            //debugger;
+            //this.get('config.fields')
+
+            // console.log(this.get('edge.EdgeConditions.length'));
+
+            // var edgeCon = this.get('edge.EdgeConditions');
+            var items = this.get('edge.EdgeConditions').toArray();
+            var _this = this;
+
+
+            this.get('edge.EdgeConditions').forEach(function(a){
+                a.destroyRecord();
+            })
+
+
+            items.forEach(function (item) {
+                _this.get('edge.EdgeConditions').removeObject(item);
+            });
+            // removeObject(this.get('edge.EdgeConditions'));
+
+            // console.log(this.get('edge.EdgeConditions'));
+
+            // console.log(this.get('edge.EdgeConditions.length'));
+
+
+
+            this.get('edge').save().then(function(){
+                Messenger().post({ type: 'success', message: 'Successfully removed edge conditions' });
+
+            }, function(){
+                Messenger().post({ type: 'success', message: 'Error' });
+
+            })
+            // then maybe save the edge - that should work...
+        }
+
+    }.observes('config.triggerConditions'),
     defaultConfig: {
         matchSelect: 'All',
         triggerConditions: false,
@@ -4819,6 +4873,9 @@ App.StepController = Ember.ObjectController.extend({
                 templateString += "{{lform-" + ctx.d.field_type + " s=contextData." + mid + " testvar=testVar}} <br>"
         });
 
+
+        console.log('SETUP STEP TEMPLATE');
+
         Enumerable.From(contextData).ForEach(function (m) {
             var cn = m.Value.d.label;
             if (!cn)
@@ -4827,6 +4884,9 @@ App.StepController = Ember.ObjectController.extend({
             var co = _this.get('context.' + cn);
             if (co || cn.length < 1)
                 return;
+
+            console.log("Looping through contextData variables", m)
+
             _this.set('context.' + cn, m.Value.record)
         });
 
