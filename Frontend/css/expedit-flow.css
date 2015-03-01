@@ -1,0 +1,1237 @@
+﻿body {
+    margin-top:0px !important;
+}
+
+body, h1, h2, h3, h4, h5, h6 {
+  font-family: "Avenir Next", 'Avenir Next W01', 'Avenir', "Open Sans";
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: bold;
+
+}
+h1 {
+  font-size: 30px;
+}
+h2 {
+  font-size: 24px;
+}
+h3 {
+  font-size: 19px;
+}
+h4, #pad-wrapper h4 {
+  font-size: 15px;
+  font-variant: normal;
+}
+h5 {
+  font-size: 12px;
+}
+/* remove 300ms delay on click */
+html {
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+}
+
+/*inside tiny nice covers*/
+.tiny-map img {
+    max-width: none !important;
+}
+.tiny-location {
+  margin-bottom: 15px;
+}
+.tiny-map {
+    height: 250px;
+    background-color: lightgrey;
+
+}
+#tinymce .tiny-location {
+  margin-bottom: 35px;
+}
+#tinymce .tiny-map {
+  margin-bottom: -30px;
+}
+#tinymce .tiny-location a {
+  padding-left: 14px;
+  text-decoration: none !important;
+  color: black !important;
+}
+
+.tiny-workflow-cover {
+    display: none; /*make sure only show if in tiny-mce frame*/
+}
+#tinymce .tiny-workflow-cover:before , #tinymce .tiny-map:before {
+  content: "\f0e8";
+  font-family: 'FontAwesome';
+  display: block;
+  font-size: 100px;
+  color: white;
+  width: 100%;
+  text-align: center;
+  padding-top: 50px;
+}
+#tinymce .tiny-map:before {
+  content: "\f041";
+}
+#tinymce .tiny-workflow {
+  margin-bottom: 35px;
+}
+#tinymce .tiny-workflow-cover {
+    height: 250px;
+    background-color: lightgrey;
+    display: block;
+    margin-bottom: -57px;
+}
+#tinymce .tiny-workflow h4 {
+  padding-left: 15px;
+}
+
+
+
+#username {display: block !important;}
+#username-email {display: block !important;}
+#email {display: block !important;}
+#password {display: block !important;}
+#confirmPassword {display: block !important;}
+#field { margin-left: .5em; }
+#field, label { font-family: Arial, Helvetica, sans-serif; font-size: small; }
+br { clear: both; }
+/*input { border: 1px solid black; margin-bottom: .5em;  }*/
+input.error { border: 1px solid red; }
+label.error {
+	background: url('images/unchecked.gif') no-repeat;
+	padding-left: 16px;
+	margin-left: .3em;
+}
+label.valid {
+	background: none;
+}
+
+.filteredData img {
+    max-width: 100%;
+}
+
+.filteredData div.thumb {
+    margin-bottom: 20px;
+}
+
+
+.mce-container.mce-panel.mce-floatpanel.mce-window.mce-in {
+     z-index:1000000000001 !important;
+}
+ul.pager {
+  margin: 0;
+}
+ul.pager > li { /* This is the pager on the search page */
+  margin-top: 5px;
+}
+
+.ui-autocomplete {
+  position: absolute;
+  cursor: default;
+  z-index: 10000000000 !important;
+  /*position: block;*/
+  top: 100%;
+  left: 0;
+  float: left;
+  display: none;
+  min-width: 160px;
+  _width: 160px;
+  padding: 4px 0;
+  margin: 2px 0 0 0;
+  list-style: none;
+  background-color: #ffffff;
+  border-color: #ccc;
+  border-color: rgba(0, 0, 0, 0.2);
+  border-style: solid;
+  border-width: 1px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -webkit-background-clip: padding-box;
+  -moz-background-clip: padding;
+  background-clip: padding-box;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+}
+
+.ui-autocomplete .ui-menu-item > a.ui-corner-all {
+  display: block;
+  padding: 3px 15px;
+  clear: both;
+  font-weight: normal;
+  line-height: 18px;
+  color: #555555;
+  white-space: nowrap;
+}
+.ui-autocomplete .ui-menu-item > a.ui-corner-all.ui-state-hover, .ui-autocomplete .ui-menu-item > a.ui-corner-all.ui-state-active {
+  color: #ffffff;
+  text-decoration: none;
+  background-color: #0088cc;
+  border-radius: 0px;
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  background-image: none;
+}
+
+.ui-helper-hidden-accessible {
+    display:block;
+    /*display:none;*/
+}
+
+*, *:before, *:after {
+  -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+ }
+
+
+.main-searchbox span.tag {
+    cursor: pointer;
+    display: block;
+    float: left;
+    color: #fff;
+    background: #428bca;
+    padding: 7px;
+    padding-right: 32px;
+    margin: 4px;
+}
+
+
+.main-searchbox span.tag:after {
+    position: absolute;
+    content: "x";
+    border: 1px solid;
+    padding: 0 4px;
+    margin: 1px 0 0px 6px;
+    font-size: 10px;
+}
+
+.main-searchbox span.tag:hover{
+  opacity:0.7;
+}
+.main-searchbox input[type=text]{
+  background:#eee;
+  border:0;
+  margin:4px;
+  padding:7px;
+}
+
+
+div.table_content {
+    width:80px;
+    text-align:center;
+}
+div.table_description {
+    width:100px;
+}
+#operation {
+    font-size:28px;
+}
+
+
+
+.hlink {
+    cursor:pointer;
+}
+
+
+
+.header-main {
+    display: none;
+}
+#masContent {
+    width: 100% !important;
+}
+/*canvas { border: 1px solid red; }*/
+.row-fluid [class*="span"] {
+    margin-left: 1px !important;
+}
+.map-result img {
+    max-width: none;
+}
+.eui-modal.eui-full .eui-overlay {
+    background: rgba(207,213,223,0.90) !important;
+}
+
+.eui-modal.eui-full .eui-modalobject {
+  max-width: 100%;
+  min-height: 100%;
+  height: 100%;
+  display: block;
+}
+
+.eui-modal.eui-full .eui-modalobject-wrapper > div {
+    padding: 50px;
+    text-align: center;
+    height: 100vh;
+    overflow-y: scroll;
+    /*width: 100vw;*/
+}
+
+
+/*....... VIS Component*/
+
+.vis-component {
+  /*height: 80vh;*/
+  display: inline;
+}
+
+.vis-component > div {
+    height: 100%;
+    width: 100%;
+    display: block;
+    padding-bottom: 35px;
+    max-height: 720px;
+    min-height: 200px;
+    height: 75vh;
+}
+  /*margin-top: -21px;*/
+  /*margin-top: -21px;*/
+.networkColumn {
+  margin-top: -21px;
+  /*border: 2px solid red;*/
+ 
+
+}
+
+/* Userful helpers for vertical viewport height with fallback */
+.vh-75 {
+  min-height: 380px;
+  height: 75vh;
+}
+
+/*Probably should work on this once I got the slider implemented*/
+/*@media all and (max-height: 400px) {
+.vh-75.networkColumn {
+  max-height: 480px;
+  height: 20vh;
+}
+}*/
+
+
+
+.vh-65 {
+  min-height: 320px;
+  height: 65vh;
+}
+
+
+
+.network-frame {
+    background: rgba(250,250,250,1) !important;
+    border: 1px rgb(231, 231, 231) solid;
+}
+
+/*Puts dropdowns above modals*/
+.mce-container.mce-panel.mce-floatpanel.mce-menu.mce-menu-align {
+    z-index: 100000000000 !important;
+}
+
+.eui-modal.eui-full .mce-tinymce.mce-container.mce-panel {
+    max-width: 737px;
+    margin: 25px auto;
+    margin: -35px auto 25px auto;
+}
+
+.eui-modal-open {
+  position: fixed; /*fixes modals for safariii*/
+  width: 100%;
+  /*overflow: hidden; turned this off as wasnt working in big screens*/
+  overflow: visible;
+}
+
+/*.eui-modal-open .content, .eui-modal-open #pad-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+}*/
+
+
+
+
+.eui-error-message {
+    position: relative;
+}
+
+.srh {
+	font-weight:bold;
+	background-color:yellow;
+}
+
+.searchbox {
+    margin:10px;
+}
+
+.form-control {
+  width: 100%; /* bootstrap template overrides this default bootstrap class*/
+  max-width: 480px;
+}
+
+table.dataTable td {
+padding: 11px 9px;
+border: 1px solid #edf2f7; /*TODO*/
+}
+
+.mce-widget.mce-tooltip {
+    display: none !important;
+}
+
+
+.network-navigation.up, .network-navigation.right, .network-navigation.down, .network-navigation.left  {
+  display: none !important;
+}
+
+/* cleans up vis.js toolbar */
+div#network-manipulationDiv {
+background: rgb(235, 235, 235);
+padding: 5px;
+height: auto;
+border: 1px solid rgb(218, 218, 218);
+/* width: 100%; */
+padding-right: 0px;
+}
+
+/*div.graph-manipulation-closeDiv {
+    left: -10px;
+    margin-left: 100% !important;
+}*/
+div.network-seperatorLine {
+display: inline-block;
+width: 0px;
+height: 27px;
+background-color: #bdbdbd;
+margin: 0px 0px -14px 16px;
+}
+
+span.network-manipulationUI {
+font-family: verdana;
+font-size: 12px;
+-moz-border-radius: 15px;
+border-radius: 15px;
+display: inline-block;
+background-position: 0px 0px;
+background-repeat: no-repeat;
+height: 25px;
+margin: 6px 0px 5px 15px;
+vertical-align: middle;
+cursor: pointer;
+padding: 0px 8px 0px 8px;
+}
+
+.thumbnail {
+  display: inline-block;
+  background-color: #ECECEC;
+    border: 4px solid #dff0fd;
+  border-radius: 3px;
+  padding: 0px;
+
+}
+
+span.network-manipulationUI:hover {
+  box-shadow: 0px 0px 1px rgba(255, 255, 255, 1);
+  background-color: rgb(214, 214, 214);
+}
+
+/*processes page*/
+div.row.processes {
+  margin-top: -15px;
+}
+.process-header {
+  /* margin-top: -30px; */
+  padding-top: 13px;
+  margin-bottom: 90px;
+}
+.process-header small {
+  margin-left: 0px;
+}
+.process-header h1 {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.chart-container, .chart-container > div,  .chart-container svg {
+  height: 500px;
+  width: 500px;
+  display: block;
+}
+
+h1 > sub {
+  font-size: 0.5em;
+  font-style: italic;
+  display: block;
+  font-weight: 400;
+  margin-top: 5px;
+  margin-bottom: 14px;
+  line-height: 1em;
+}
+
+span.item-box {
+display: inline-block;
+width: 143px;
+}
+
+
+
+.main-searchbox button.btn {
+  margin-top: -3px;
+}
+.main-searchbox span.tag, .main-searchbox input[type=text] {
+  border: 1px solid #D0D0D0;
+  border-radius: 4px;
+  margin-left: 1px;
+  margin-bottom: 13px;
+  margin-right: 6px;
+  margin-right: 10px;
+}
+
+
+/* Change up bootstrap default tab color */
+.tiny-form .tab-content {
+    background:  rgb(244,244,244);
+    padding: 15px;
+    border-left: 1px solid #dddddd;
+    border-bottom: 1px solid #dddddd;
+    border-right: 1px solid #dddddd;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+.tiny-form ul.nav-tabs li.active a, .tiny-form ul.nav-tabs li.active a:hover  {
+    background: #ffffff; /* Old browsers */
+    background: -moz-linear-gradient(top, #ffffff 0%, #f4f4f4 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#f4f4f4)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top, #ffffff 0%,#f4f4f4 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, #ffffff 0%,#f4f4f4 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, #ffffff 0%,#f4f4f4 100%); /* IE10+ */
+    background: linear-gradient(to bottom, #ffffff 0%,#f4f4f4 100%);
+    border-bottom-color:  rgb(244,244,244);
+}
+.tiny-form table thead, .tiny-form table tfoot {
+    background: #ccc;
+    font-weight: bold;
+}
+.tiny-form table {
+    border: 1px solid rgb(103, 103, 162);
+    width: 100% !important;
+}
+
+.tiny-form .form-results .form-control {
+    width: inherit;
+}
+.tiny-form .pagination {
+    margin: 0;
+}
+.tiny-form .nav-tabs {
+text-transform: capitalize;
+}
+
+
+
+
+
+
+/* A few fixes for login page */
+.login-wrapper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.login-wrapper .logo {
+  height: 32px;
+  margin-top: 75px;
+}
+@media all and (max-width: 769px) {
+  .login-wrapper .logo {
+    height: 0px;
+    margin-top: 50px;
+  }
+}
+
+/* The float is turned off for mobile devices, thus the account info drops down on a second line. Readding float fixes that. */
+.navbar { border-right: none; }
+.navbar-header {
+  float: left;
+}
+
+
+
+
+.messenger-expedit {
+     z-index:1000000000000 !important;
+}
+
+.select2-drop {
+    z-index: 1000000000 !important;
+}
+
+
+
+
+/* Make the main frame a bit more resonable on desktop */
+.content {
+  margin-bottom: 25px;
+  padding-bottom: 25px;
+}
+
+
+/* Navbar stuff from here !!! */
+
+
+@media all and (max-width: 769px) {
+  .navbar-brand {
+    margin-top: 7px;
+  }
+  .navbar-inverse .nav > li > a {
+    padding-top: 14px !important;
+    border-left: 0px;
+  }
+  .navbar-inverse .nav > li > a:hover {
+    background: transparent;
+  }
+  /* Hack fix if only one item in menubar */
+  .nav.navbar-nav.pull-right {
+    margin: 0px;
+    padding-right: 20px;
+    padding-top: 4px;
+  }
+
+}
+/*For nav lock icon */
+.warning { color:rgb(167, 20, 20) !important; }
+.info-lock { color: rgb(255, 182, 0) !important; }
+.success-lock { color: rgb(53, 158, 61) !important; }
+
+
+/*add a 2px line to the top of the page, matches the loading of peace nicely*/
+.navbar.navbar-inverse {
+  border-top: 2px solid rgb(86, 110, 164);
+  border-top: 2px solid rgb(0, 0, 0);
+}
+/*.loading-stuff .navbar.navbar-inverse {
+  border-top: 2px solid white;
+}*/
+
+
+/*Puts the toggle putton in the right position*/
+.navbar-inverse .navbar-toggle {
+  margin-top: 14px;
+}
+
+
+.navbar-brand img {
+    max-height: 27px; /* Ensures reasonable logo size */
+}
+
+.settings.settings-no-border > a {
+  border-left: none;
+}
+
+.settings.profile img {
+  height: 30px;
+  border-radius: 15px;
+  width: 30px;
+  margin-top: -5px;
+}
+.navbar-brand {
+  padding: 9px 20px !important;
+}
+
+.ie .downloadData {
+    display: none !important;
+}
+
+
+.ie .barcode {
+    display:inherit !important;
+}
+
+
+.ie .exportWF {
+    display: none !important;
+}
+
+.graphButtons {
+  display: block;
+  text-align: left;
+  background: #F2F2F2;
+  /* background: transparent; */
+  /*margin-top: -21px;*/
+  padding: 9px 13px;
+  padding-bottom: 6px;
+  margin-bottom: -1px;
+  border: 1px solid rgb(231, 231, 231);
+  border-bottom: none;
+}
+
+.graphButton:hover {
+  color: rgb(103, 103, 103);
+  color: rgba(36, 52, 79, 0.85);
+}
+.graphButton {
+    color: white;
+    color: rgba(36, 52, 79, 0.66);
+    padding-right:5px;
+    text-decoration: none !important;
+    cursor: pointer;
+    font-size: small;
+}
+.graphButton-group {
+  margin-right: 7px;
+  margin-bottom: 7px;
+  display: inline-block;
+}
+.network-manipulationDiv {
+    display: none !important;
+}
+/*remove akward spaces between shadow and icon*/
+div.network-navigation {
+  width: 30px;
+  height: 30px;
+  background-position: 0 0;
+}
+
+/*#network-navigation_zoomIn, #network-navigation_zoomOut, */
+#network-navigation_up, #network-navigation_down, #network-navigation_left, #network-navigation_right {
+    display: none !important;
+}
+/*custom icons bro*/
+div.network-navigation.zoomOut {
+  background-image: url("img/updated_graph/minus.png");
+  background-size: 30px;
+}
+
+div.network-navigation.zoomIn {
+  background-image: url("img/updated_graph/plus.png");
+  background-size: 30px;
+}
+div.network-navigation.zoomExtends {
+  background-image: url("img/updated_graph/zoomExtends.png");
+  background-size: 30px;
+}
+/*make the hovers blue*/
+div.network-navigation.active {
+box-shadow: 0px 0px 1px 3px rgba(21, 142, 207, 0.95);
+}
+div.network-navigation:hover {
+box-shadow: 0px 0px 3px 3px rgba(21, 90, 207, 0.3);
+}
+
+
+.network-manipulation-closeDiv {
+    display: none !important;
+}
+
+.network-manipulation-editMode {
+    display: none !important;
+}
+
+.graphResultRow {
+    cursor: pointer;
+}
+
+@media (max-width: 372px){
+  .settings > a {
+    font-size: 0px;
+  }
+}
+
+
+/* Clean up line on sidebar menu */
+#dashboard-menu li:last-child>a {
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+
+html, body.menu {
+    height: 100%;
+    overflow-x:hidden;
+}
+
+
+@media (max-width: 768px) {
+  body {
+    background: white;
+  }
+  #sidebar-nav {
+    left: -165px !important;
+    top: 0px !important;
+    box-shadow: none !important;
+    transition: none;
+    border-radius: 0px;
+    height: inherit !important;
+    min-height: 100vh;
+    transition: none;
+  }
+  body.menu .content {
+    pointer-events: none;
+    opacity: 0.4;
+    position: relative;
+    /*min-height: 100%;*/
+  }
+  body.menu .navbar {
+    opacity: 0.8;
+  }
+  .content {
+    margin-bottom: 0px;
+    border-bottom: none;
+    border-left: none;
+    box-shadow: none;
+    min-height: 0px;
+    border-radius: 0;
+  }
+  /* This keeps the content box always 100% minimum */
+  .content {
+    min-height: 100vh;
+    margin-top: -58px;
+    padding-top: 58px;
+    /*background: red;*/
+  }
+
+  .login-helper {
+    min-height: 400px;
+  }
+  .login-helper-signup {
+    min-height: 500px;
+  }
+}
+
+.login-helper-signup {
+  min-height: 600px;
+}
+
+
+body.menu .content {
+  margin-left: 0px;
+  position: inherit;
+  width: 100%;
+}
+
+
+
+/*https://code.google.com/p/chromium/issues/detail?id=20574*/
+#emberapphere {
+  -webkit-transform: none;
+  -moz-transform: translate(0,0);
+  -ms-transform: translate(0,0);
+  transform: translate(0,0);
+  -webkit-transition: 0.20s all ease-out;
+  transition: 0.20s all ease-out;
+}
+body.menu #emberapphere{
+  -webkit-transform: translate(165px,0);
+  -ms-transform: translate(165px,0);
+  -moz-transform: translate(165px,0);
+  transform: translate(165px,0);
+  -webkit-transition: 0.25s all ease-out;
+  transition: 0.25s all ease-out;
+}
+
+
+/*inside tiny-mce editor*/
+#tinymce {
+  padding: 15px !important;
+}
+
+
+/*search page & tables*/
+.search-page h3 {
+  font-weight: bold;
+}
+.row.search-page > div {
+margin-top: 65px;
+}
+
+
+
+/*fixing tables*/
+table th {
+  padding-left: 0;
+  padding-right: 0;
+}
+.table thead th {
+  padding-top: 9px !important;
+    padding-bottom: 9px !important;
+}
+table thead {
+  border-top: none !important;
+  border-bottom: 2px solid #AFAEAE;
+  border-bottom: 2px solid #E2E2E2;
+  background: #DADADA;
+  background: #eee;
+}
+
+
+/*nice typography for content*/
+
+.pretty-content, #tinymce {
+    font-size: 14px;
+    line-height: 25px;
+    /*font-family: 'Georgia', serif;*/
+    font-weight: 400;
+    line-height: 1.45;
+    color: #333;
+    /*font-size: 1em;*/
+}
+
+.pretty-content p, #tinymce p {margin-bottom: 1.3em;}
+
+.pretty-content h1, .pretty-content h2, .pretty-content h3, .pretty-content h4, .pretty-content h5, .pretty-content h6, #tinymce h1, #tinymce h2, #tinymce h3, #tinymce h4, #tinymce h5, #tinymce h6 {
+  /*font-family: 'Georgia', serif;*/
+  margin: 1.414em 0 0.5em;
+  font-weight: inherit;
+  line-height: 1.2;
+  color: #3E4751;
+}
+
+.pretty-content h1, #tinymce h1 {
+  margin-top: 0;
+  font-size: 1.6em;
+}
+
+.pretty-content h2, #tinymce h2 {font-size: 1.4em;}
+
+.pretty-content h3, #tinymce h3 {font-size: 1.3em;}
+
+.pretty-content h4, #tinymce h4 {
+  font-size: 1.1em;
+  font-variant: normal;
+}
+
+.pretty-content blockquote p, #tinymce blockquote p {
+  font-size: 1.3em;
+  font-weight: 300;
+  line-height: 1.25;
+  font-style: italic;
+}
+
+small, .font_small {font-size: 0.707em;}
+
+
+.tiny-form, .tiny-form  h4 {
+  font-family: 'Open Sans'
+}
+.cursor-progress {
+  cursor: progress !important;
+}
+
+
+/* Signup page - captcha loading feature */
+.captcha .captcha-img {
+  border-radius: 4px;
+}
+.captcha .refresh {
+    -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  vertical-align: middle;
+  height: 40px;
+  width: 40px;
+  line-height: 40px;
+  font-size: 15px;
+  display: inline-block;
+  -webkit-transition: 0.2s all;
+  transition: 0.2s all;
+}
+.captcha .refresh:active {
+  -webkit-transform: rotate(35deg);
+  font-size: 20px;
+}
+
+/* Code for the toggle animation -> http://codepen.io/xypaul/pen/ukple*/
+/* Sass Meister: http://sassmeister.com/*/
+.navbar-toggle {
+  padding: 0;
+}
+.navbar-toggle svg {
+  margin-top: -7px;
+  margin-right: -16px;
+  margin-bottom: 5px;
+}
+.svg-menu-toggle {
+  fill: #fff;
+  pointer-events: all;
+  cursor: pointer;
+}
+.svg-menu-toggle .bar {
+  -webkit-transform: rotate(0) translateY(0) translateX(0);
+  transform: rotate(0) translateY(0) translateX(0);
+  opacity: 1;
+  -webkit-transform-origin: 20px 10px;
+  transform-origin: 20px 10px;
+  -webkit-transition: -webkit-transform 0.4s ease-in-out, opacity 0.2s ease-in-out;
+  transition: transform 0.4s ease-in-out, opacity 0.2s ease-in-out;
+}
+.svg-menu-toggle .bar:nth-of-type(1) {
+  -webkit-transform-origin: 20px 10px;
+  transform-origin: 20px 10px;
+}
+.svg-menu-toggle .bar:nth-of-type(3) {
+  -webkit-transform-origin: 20px 20px;
+  transform-origin: 20px 20px;
+}
+
+body.menu .svg-menu-toggle .bar:nth-of-type(1) {
+  -webkit-transform: rotate(-45deg) translateY(0) translateX(0);
+  transform: rotate(-45deg) translateY(0) translateX(0);
+}
+body.menu .svg-menu-toggle .bar:nth-of-type(2) {
+  opacity: 0;
+}
+body.menu .svg-menu-toggle .bar:nth-of-type(3) {
+  -webkit-transform: rotate(45deg) translateY(0em) translateX(0em);
+  transform: rotate(45deg) translateY(0em) translateX(0em);
+}
+
+.form-group.required > label:after {
+content: "*";
+color: red;
+}
+
+
+/*.next-steps {
+  border-top: 1px solid #ECECEC;
+}*/
+.next-steps .green {
+    color:green;
+}
+.next-steps .red {
+    color:red;
+}
+.next-steps a {
+  color: inherit;
+}
+.semi-transparent {
+    opacity:0.5;
+}
+.next-steps h3 {
+  text-align: center;
+  font-size: 16px;
+  color: #b3b3b3;
+  padding-top: 32px;
+  padding-bottom: 8px;
+}
+.next-steps p {
+  text-align: center;
+  font-style: italic;
+}
+.next-steps-prev > div, .next-steps-fwd > div {
+  margin-bottom: 5px;
+}
+.next-steps-prev a, .next-steps-fwd a {
+  font-size: 14px;
+}
+.next-steps-prev {
+  text-align: right;
+}
+.next-steps-fwd {
+  text-align: left;
+}
+@media (max-width: 768px) {
+  .next-steps-prev {
+    text-align: left;
+  }
+  .next-steps-fwd {
+    text-align: right;
+  }
+}
+
+.select2-localisation {
+  /*margin-top: 10px;*/
+}
+
+/* For the translate page*/
+.translate {
+
+}
+.translate .email-container {
+
+}
+.translate .email-item {
+  border: 1px solid black;
+  padding: 9px;
+  margin-bottom: -1px;
+  /*background: red !important;*/
+}
+.translate .email-item.active {
+  /*border: 1px solid green;*/
+  /*background: #ccc;*/
+  background: #2F5693;
+  color: white;
+}
+/*.translate .email-item.active:after {
+  position: relative;
+  right: 0;
+  content: '';
+  width: 10px;
+  height: 100%;
+  border: 1px solid purple;
+  background: #ccc;
+}
+*/
+.select2-localisation > select {
+  width: 100px;
+}
+.select2-localisation eui-select {
+  font-size: 12px;
+  margin-top: -7px;
+  margin-left: 4px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.select2-localisation:hover {
+  background: transparent !important;
+}
+
+.select2-localisation .eui-button-form{
+  background: rgba(181, 0, 255, 0) !important;
+  background: blue !important;
+  background: black !important;
+}
+.select2-localisation .eui-wrapper {
+  padding-left: 8px !important;
+  background: #0f1217 !important;
+  background: red !important;
+  background: black !important;
+  box-shadow: none !important;
+/*  border-color: transparent !important;*/
+}
+
+.translate h1 {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.translate-insert-header {
+  border: 1px solid rgb(231, 231, 231);
+  background: #F2F2F2;
+  margin-left: -16px;
+  margin-right: -16px;
+  padding: 15px;
+}
+.translate-insert {
+/*  background: #F4F4F4;
+  border: 1px solid #ccc;*/
+  background: rgba(250,250,250,1);
+  border: 1px solid rgb(231, 231, 231);
+  /*padding: 8px;*/
+  margin-bottom: 10px;
+}
+
+/*Liquid Fire Fixes*/
+#pad-wrapper > .liquid-container {
+  position: inherit !important; 
+  overflow: hidden !important;
+  -webkit-transform: none !important; 
+  -moz-transform: none !important;
+  transform: none !important; 
+}
+
+.red {
+    color: red;
+}
+
+.green {
+    color: green;
+}
+
+
+
+/* D3 awesome */
+.full-sitemap {
+  background: #f7f7f7;
+}
+
+.full-sitemap * {
+  outline: 0;
+  margin: 0;
+  padding: 0;
+}
+.node {
+  cursor: pointer;
+}
+
+.templink {
+  fill: none;
+  stroke: red;
+  stroke-width: 3px;
+}
+
+.ghostCircle.show{
+    display:block;
+}
+
+.ghostCircle {
+  display: none;
+} 
+
+.activeDrag .ghostCircle.show{
+     display: none !important;
+}
+#lateTasksReport .x.axis > .tick {
+    display: none;
+}
+
+
+
+/* FOr org chart */
+text.nodeText {
+   cursor: pointer;
+}
+
+.opacity-50 {
+  opacity: 0.5;
+}
+
+.trigger-modal {
+
+}
+
+.trigger-modal .mycompany-selector, .trigger-modal .workflow-selector {
+  display: inline-block;
+}
+
+/* Overflow for pop up */
+.eui-modalobject-wrapper {
+max-height: 100vh;
+overflow: scroll;
+}
+
+/*Making sidebar look cleaner*/
+#sidebar-nav #dashboard-menu > li > a.active, #sidebar-nav #dashboard-menu > li > a {
+  text-decoration: none;
+}
+#sidebar-nav #dashboard-menu > li > a.active {
+  font-weight: bold;
+}
+#sidebar-nav #dashboard-menu ul.submenu a:hover {
+text-decoration: none;
+}
+
+/* users table specific styles */
+.table-wrapper.users-table .table td {
+  vertical-align: middle;
+  font-size: 13px;
+}
+.table-wrapper.users-table .table img.avatar {
+  float: left;
+  margin-right: 14px;
+  max-width: 45px;
+  position: relative;
+  top: 8px;
+}
+.table-wrapper.users-table .table a.name {
+  color: #3389d1;
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  margin: 15px 0 0 0;
+}
+.table-wrapper.users-table .table .subtext {
+  font-size: 12px;
+  margin-left: 0;
+  color: #778391;
+  font-style: italic;
+  margin-top: 0;
+}
