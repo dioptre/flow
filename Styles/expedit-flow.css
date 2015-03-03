@@ -323,6 +323,10 @@ div.table_description {
     border: 1px rgb(231, 231, 231) solid;
 }
 
+
+.mce-content-body {
+  height: 100%; /* fixes clicking bug */
+}
 /*Puts dropdowns above modals*/
 .mce-container.mce-panel.mce-floatpanel.mce-menu.mce-menu-align {
     z-index: 100000000000 !important;
@@ -670,12 +674,13 @@ text-transform: capitalize;
     color: white;
     color: rgba(36, 52, 79, 0.66);
     padding-right:5px;
+    padding-right: 10px;
     text-decoration: none !important;
     cursor: pointer;
     font-size: small;
 }
 .graphButton-group {
-  margin-right: 7px;
+  /*margin-right: 7px;*/
   margin-bottom: 7px;
   display: inline-block;
 }
@@ -1235,3 +1240,21 @@ text-decoration: none;
   font-style: italic;
   margin-top: 0;
 }
+
+
+/*disbale ipad bounchiness//
+  http://stackoverflow.com/questions/8150191/disable-elastic-scrolling-in-safari
+*/
+
+/*html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#scrollable-body {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}*/

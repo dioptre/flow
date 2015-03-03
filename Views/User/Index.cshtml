@@ -97,9 +97,13 @@
 </div>
 
 
-<!-- The ember app gets injected here -->
-<div id="emberapphere" name="application"></div>
+<div id="scrollable-body">
 
+    <!-- The ember app gets injected here -->
+    <div id="emberapphere" name="application"></div>
+
+
+</div>
 
 <script id="form-table-setup" type="text/x-handlebars-template">
     <table id="{{id}}">
@@ -813,6 +817,15 @@
     {{/if}}
 </script>
 
+
+<script type="text/x-handlebars" id="myworkflows2">
+    <h1> My Workflows 2
+        <sub>List of all the workflows & steps you have created</sub>
+    </h1>
+    <br><br>
+
+</script>
+
 <script type="text/x-handlebars" id="myworkflows">
     <h1> My Workflows
         <sub>List of all the workflows & steps you have created</sub>
@@ -1357,7 +1370,7 @@
                 </a>
                 <ul class="submenu">
                     <li>{{#link-to 'myworkflows'}}{{model.t.fp_menu_link_myWorkflow}}{{/link-to}}</li>
-                    <li>{{#link-to 'workflow' 'undefined'}}{{model.t.fp_menu_link_newWorkflow}}{{/link-to}}</li>
+                    <li>{{#link-to 'newworkflow'}}{{model.t.fp_menu_link_newWorkflow}}{{/link-to}}</li>
                     <li>{{#link-to 'search'}} {{model.t.fp_menu_link_search}} {{/link-to}}</li>
                     <li>{{#link-to 'file'}} {{model.t.fp_menu_link_myfiles}} {{/link-to}}</li>
                 </ul>
@@ -1519,7 +1532,7 @@
                     </div>
                 {{/eui-modal}}
                 {{#if editing}}
-      <prettygirl class="graphButtons">{{#if isWorkflow}}<div class='graphButton-group'><a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign"></i>&nbsp;Add New Step&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down"></i>&nbsp;Add Existing Step&nbsp;</a></div><div class='graphButton-group' title="Drag and drop to draw a connection"><a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a><a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Add Connection&nbsp;</a></div>{{#if isSelected}}<div class='graphButton-group'><a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash"></i>&nbsp;Delete Selected&nbsp;</a></div>{{/if}}{{!--{{#if isSelectedEdge}}<div class='graphButton-group'><a {{action 'selectionEdge'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Edit Edge Condition&nbsp;</a></div>{{/if}}--}}{{/if}}<div class='graphButton-group'><a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share"></i>&nbsp;Export&nbsp;Workflow</a></div></prettygirl>{{/if}}</script>
+      <prettygirl class="graphButtons">{{#if isWorkflow}}<div class='graphButton-group'><a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign"></i>&nbsp;Add New Step&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down"></i>&nbsp;Add Existing Step&nbsp;</a></div><div class='graphButton-group' title="Drag and drop to draw a connection">{{!--<a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a>--}}<a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Add Connection&nbsp;</a></div>{{#if isSelected}}<div class='graphButton-group'><a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash"></i>&nbsp;Delete Selected&nbsp;</a></div>{{/if}}{{!--{{#if isSelectedEdge}}<div class='graphButton-group'><a {{action 'selectionEdge'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Edit Edge Condition&nbsp;</a></div>{{/if}}--}}{{/if}}<div class='graphButton-group'><a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share"></i>&nbsp;Export&nbsp;Workflow</a></div></prettygirl>{{/if}}</script>
 
 
   <script type="text/x-handlebars" id="wikipedia">
@@ -4373,6 +4386,52 @@
 
         <script type="text/x-handlebars" id="workflow">&nbsp;</script>
 
+        <script type="text/x-handlebars" id="newworkflow">
+
+            <div class="row head">
+                <div class="col-md-12">
+                    <h1>
+                        New Workflow
+                        <sub>Create a new workflow (i.e. Template for a Todo)</sub>
+                    </h1>
+                </div>
+            </div>
+
+            <br>
+            <br>
+
+            <h4>Workflow Name</h4>
+            {{eui-input value=wfName placeholder="My Workflow Name"}} 
+            {{#if validateWfName}}{{validateWfName}}{{/if}} <br> 
+            Needs to be unique, make it something memorable like “Clean dishes”.
+
+            <br>
+            <br>
+
+
+            <h4>Name for 1st Step</h4>
+            {{eui-input value=stepName placeholder="My First Step Name"}} 
+            {{#if validateStepName}}{{validateStepName}} {{/if}} <br>
+            Name your fist step in your workflow. Don’t worry this can be changed later. 
+
+            <br>
+            <br>
+
+            <h4>Name for 2nd Step</h4>
+            {{eui-input value=stepName2 placeholder="My Second Step Name"}} 
+            {{#if validateStepName2}}{{validateStepName2}} {{/if}} <br>
+            Additonal steps can be added later.
+
+            <br>
+            <br>
+
+           
+
+            {{eui-button label="Create Workflow" disabled=validateNames action="createWorkflow" style='primary' size='medium'}}
+
+
+        </script>
+
         <script type="text/x-handlebars" id="components/hierachy-tree">
              <!--
             <buttons>
@@ -4679,7 +4738,7 @@
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myfilepicker/client.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/tinymce/plugins/myworkflow/client.min.js")"></script>
 
-        <script src="~/Modules/EXPEDIT.Share/Scripts/vis.js"></script>
+        <script src="~/Modules/EXPEDIT.Share/Scripts/vis-new.js"></script>
 
 
         <!-- https://github.com/jamesarosen/ember-i18n/tree/master/lib -->

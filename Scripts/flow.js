@@ -145,6 +145,8 @@ App.Router.map(function () {
 
 
     // FlowPro v2
+    this.route('newworkflow');
+    this.route('myworkflows2');
     this.route('todo');
     this.route('styleguide', {path:"styleguide"}); // Internal only
     this.route('step', { path: 'step/:id' }); // - executing
@@ -773,6 +775,171 @@ App.TranslateController = Ember.ObjectController.extend({
     }
 })
 
+App.NewworkflowRoute = Ember.Route.extend({
+  setupController: function(controller, model) {
+    this._super(controller, model);
+    controller.set('wfName', '');
+    controller.set('stepName', '');
+    controller.set('stepName2', '');
+  }
+});
+
+App.NewworkflowController = Ember.Controller.extend({
+  needs: ['application'],
+  title: "New Workflow",
+  wfName: "",
+  validateWfName: "",
+  loadingWorkflowName: false,
+  stepName: "",
+  validateStepName: "",
+  loadingStepName: false,
+  stepName2: "",
+  validateStepName2: "",
+  loadingStepName2: false,
+  checkWorkflowName: function () {
+      var _this = this;
+      if (!_this.get('wfName') || typeof _this.get('wfName') !== 'string' || _this.get('wfName').trim().length < 1) {
+          _this.set('validateWfName', 'Name required.');
+          return;
+      }
+      _this.set('loadingWorkflowName', true);
+      return new Ember.RSVP.Promise(function (resolve, reject) {
+          jQuery.getJSON('/Flow/WorkflowDuplicate?id=' + encodeURIComponent(_this.get('wfName').trim()) + '&guid=' + _this.get('workflowID')
+            ).then(function (data) {
+                _this.set('loadingWorkflowName', false);
+               Ember.run(null, resolve, data);
+            }, function (jqXHR) {
+                jqXHR.then = null; // tame jQuery's ill mannered promises
+                Ember.run(null, reject, jqXHR);
+            });
+      }).then(function (value) {
+          _this.set('validateWfName', value ? 'Name already in use.' : false);
+      });
+
+  }.observes('wfName'),
+  checkStepName: function () {
+      var _this = this;
+      if (!_this.get('stepName') || typeof _this.get('stepName') !== 'string' || _this.get('stepName').trim().length < 1) {
+          _this.set('validateStepName', 'Name required.');
+          return;
+      }
+      _this.set('loadingStepName', true);
+      return new Ember.RSVP.Promise(function (resolve, reject) {
+          jQuery.getJSON('/Flow/NodeDuplicate?id=' + encodeURIComponent(_this.get('stepName').trim()) + '&guid=' + _this.get('selectedID')
+            ).then(function (data) {
+                _this.set('loadingStepName', false);
+                Ember.run(null, resolve, data);
+            }, function (jqXHR) {
+                jqXHR.then = null; // tame jQuery's ill mannered promises
+                Ember.run(null, reject, jqXHR);
+            });
+      }).then(function (value) {
+          _this.set('validateStepName', value ? 'Name already in use.' : false);
+      });
+
+  }.observes('stepName'),
+  checkStepName2: function () {
+      var _this = this;
+      if (!_this.get('stepName2') || typeof _this.get('stepName2') !== 'string' || _this.get('stepName2').trim().length < 1) {
+          _this.set('validateStepName2', 'Name required.');
+          return;
+      }
+      _this.set('loadingStepName2', true);
+      return new Ember.RSVP.Promise(function (resolve, reject) {
+          jQuery.getJSON('/Flow/NodeDuplicate?id=' + encodeURIComponent(_this.get('stepName2').trim()) + '&guid=' + _this.get('selectedID')
+            ).then(function (data) {
+                _this.set('loadingStepName2', false);
+                Ember.run(null, resolve, data);
+            }, function (jqXHR) {
+                jqXHR.then = null; // tame jQuery's ill mannered promises
+                Ember.run(null, reject, jqXHR);
+            });
+      }).then(function (value) {
+          _this.set('validateStepName2', value ? 'Name already in use.' : false);
+      });
+
+  }.observes('stepName2'),
+  validateNames: function () {
+    var notEmptyName = (this.get('wfName.length') > 0 && this.get('stepName.length') > 0 && this.get('stepName2.length') > 0)
+      // if (this.get('model.selected.name') != null)
+      //     return (typeof this.get('validateNewName') === 'string') || (typeof this.get('validateWorkflowName') === 'string');
+      // else
+    var noError = (this.get('validateWfName') == false) || (this.get('validateStepName2') == false) || (this.get('validateStepName') == false);
+  
+    console.log(notEmptyName, noError, this.get('validateStepName') == false)
+
+    return !(noError && notEmptyName);
+  }.property('validateWfName', 'validateStepName2', 'validateStepName2', 'stepName2', 'stepName', 'wfName'),
+  actions: {
+    createWorkflow: function(){
+        var _this = this;
+        var wfid = NewGUID();
+        var stepid = NewGUID();
+        var stepid2 = NewGUID();
+
+        var workflow = this.store.createRecord('workflow', { 
+                id: wfid, 
+                name: this.get('wfName'), 
+                StartGraphDataID: stepid 
+            });
+
+        var node = this.store.createRecord('node', {
+                id: stepid,
+                label: this.get('stepName'),
+                content: '',
+                VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss'))
+            });
+
+        var node2 = this.store.createRecord('node', {
+                id: stepid2,
+                label: this.get('stepName2'),
+                content: '',
+                VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss'))
+            });
+
+        node.get('workflows').then(function (w) {
+            w.content.pushObject(workflow);
+        });
+
+        node2.get('workflows').then(function (w) {
+            w.content.pushObject(workflow);
+        });
+
+        Ember.RSVP.hash({
+          step1: node.save(),
+          step2: node2.save()
+        }).then(function(){
+             return workflow.save().then(function(){
+         
+
+
+              var newEdge = App.Node.store.createRecord('edge', {
+                  id: NewGUID(),
+                  GroupID: wfid,
+                  from: stepid,
+                  to: stepid2
+              });
+              return newEdge.save()
+  
+
+            })
+        }).then(function (o) {
+
+            Messenger().post({ type: 'info', message: 'We are now redirecting you to your workflow... this might take 1 second.' });        
+            Messenger().post({ type: 'success', message: 'Successfully added new Workflow!' });
+
+            Ember.run.later(function(){
+              _this.transitionToRoute('graph', stepid, {queryParams: {workflowID: wfid}})
+            }, 1000)
+
+        }, function (o) {
+            Messenger().post({type:'error', message:'Error with adding new Workflow.'});
+        });
+        
+    }
+  }
+});
+
 App.WorkflowRoute = Ember.Route.extend({
     actions: {
         error: function () {
@@ -1246,12 +1413,16 @@ App.SignupController = Ember.Controller.extend({
 
 
             if (!validateEmail(_this.get('email'))) {
+                _this.set('captchaKey', NewGUID());
                 Messenger().post({type:'error', message:'Invalid email.', id:'authenticate'});
+                _this.set('controllers.application.isLoading', false);
                 return;
             }
 
             if (_this.get('captchaSolution').length !== 4) {
+                _this.set('captchaKey', NewGUID());
                 Messenger().post({type:'error', message:'Invalid human code.', id:'authenticate'});
+                _this.set('controllers.application.isLoading', false);
                 return;
             }
 
@@ -1260,7 +1431,6 @@ App.SignupController = Ember.Controller.extend({
                 UserName: _this.get('username'),
                 Email: _this.get('email')
             }).then(function(data){
-                _this.set('controllers.application.isLoading', false);
                 if (data) {
                  $.post('/share/signup', {
                     UserName: _this.get('username'),
@@ -1269,7 +1439,11 @@ App.SignupController = Ember.Controller.extend({
                     CaptchaKey: _this.get('captchaSolution'),
                     CaptchaCookie: _this.get('captchaKey')
                  }).then(function(data){
+                    _this.set('controllers.application.isLoading', false);
+                    _this.set('captchaKey', NewGUID());
+
                     if (data.Response === 1) {
+                        Messenger().post({ type: 'info', message: 'You will now be automatically logged in. This might take a few seconds. Thanks for your patience.'});
                         Messenger().post({ type: 'success', message: 'Successful signup!', id: 'authenticate' });
                         _this.set('captchaKey', NewGUID());
                         _this.set('email', '');
@@ -1279,7 +1453,6 @@ App.SignupController = Ember.Controller.extend({
                     }
                     else if (data.Response === 4) {
                          Messenger().post({type:'error', message:'Invalid human code. Please try again.', id:'authenticate'});
-                        //_this.set('captchaKey', NewGUID());
                     } else {
                          Messenger().post({type:'error', message:'Unknown error. Plese try again later.', id:'authenticate'});
 
@@ -2462,18 +2635,23 @@ App.GraphRoute = Ember.Route.extend({
         //        resolve();
         //    })
         //});
+
+
         var apiCache = Enumerable.From(this.store.all('trigger').content).Where("f=>f.get('CommonName') === null").FirstOrDefault();
 
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
             workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
                 var groupID = Enumerable.From(_this.store.all('edge').content).Where("f=>f.get('from') ==='" + id + "' && f.get('to') === null").Select("f=>f.get('GroupID')").FirstOrDefault();
-                if (typeof groupID !== 'undefined' && document.URL.indexOf(groupID) < 1) {
+                console.log(groupID, 'this is the group id')
+                // if (typeof groupID !== 'undefined' && document.URL.indexOf(groupID) < 1) {
+                if (IsGUID(groupID) || document.URL.indexOf(groupID) < 1){
                     return _this.store.find('workflow', groupID).then(function (wfid) {
                         _this.replaceWith('graph', id, { queryParams: { workflowID: groupID } });
                     });
                 }
-                else if (typeof groupID === 'undefined' || !groupID)
+                // else if (typeof groupID === 'undefined' || !groupID)
+                else if (typeof groupID === ' undefined' || !IsGUID(groupID))
                     return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: _this.get('model.selectedID') })
             }),
             api: (apiCache) ? apiCache : this.store.findQuery('trigger', { CommonName: null }).then(function (m) {
@@ -2932,6 +3110,11 @@ App.GraphController = Ember.ObjectController.extend({
                 this.set('preview', false);
             else
                 this.set('preview', 'wf');
+            
+            Ember.run.later(function(){
+                this.set('updateGraph', NewGUID()); // make graph rerender
+            }, 300);
+
         },
         cancelWorkflowShare: function (data, callback) {
             this.set('workflowShareModal', false);
@@ -3049,6 +3232,10 @@ App.GraphController = Ember.ObjectController.extend({
                 _this.set('newContent', null);
                 _this.toggleProperty('workflowNewModal');
                 _this.set('updateGraph', NewGUID());
+                debugger;
+                if (_this.get('model.selected')) {
+                  _this.send('addNewEdge', {from: _this.get('model.selected.id'), to: id});
+                }
             }, function (o) {
                 Messenger().post({ type: 'error', message: 'Error Adding New Step. No Permission.' });
                 _this.store.unloadRecord(newNode);
@@ -3376,6 +3563,24 @@ App.VizEditorComponent = Ember.Component.extend({
         //console.log(container, data, options);
         this.graph = new vis.Network(container, data, options);
         // This sets the new selected item on click
+        
+        this.graph.on('doubleClick', function (data) {
+
+            if (data.nodes.length > 0) {
+                var wfid = _this.get('workflowID'); // has to be synched with data
+                // either wikipedia OR node is part of workflow confirmed by store OR first node
+                if (IsGUID(data.nodes[0])) {// wikipedia???
+                  _this.sendAction('toggleWorkflowEditModal')
+
+                }
+
+            }
+
+
+
+        });
+
+
         this.graph.on('click', function (data) {
             
             // Set the value on the component - used by a few computed properties including edit edge conditions...
@@ -5038,9 +5243,9 @@ App.StepController = Ember.ObjectController.extend({
                         });
                     }, function (response) {
                         btn.set('loading', false);
-                        btn.set('isDisabled', true);
+                        // btn.set('isDisabled', true); - not sure why this was enabled... broke the page
+                        Messenger().post({ type: 'info', message: 'Most likely your variables aren\'t matching any conditions to move to the next step. Please try to fill out all form fields. If the problem continues please contact support.' });
                         Messenger().post({ type: 'error', message: 'Error:' + response.statusText });
-
                     });
                 }
                
