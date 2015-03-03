@@ -877,6 +877,9 @@ App.NewworkflowController = Ember.Controller.extend({
         var stepid = NewGUID();
         var stepid2 = NewGUID();
 
+        _this.set('controllers.application.isLoading', true)
+
+
         var workflow = this.store.createRecord('workflow', { 
                 id: wfid, 
                 name: this.get('wfName'), 
@@ -929,11 +932,14 @@ App.NewworkflowController = Ember.Controller.extend({
             Messenger().post({ type: 'success', message: 'Successfully added new Workflow!' });
 
             Ember.run.later(function(){
+              _this.set('controllers.application.isLoading', false)
               _this.transitionToRoute('graph', stepid, {queryParams: {workflowID: wfid}})
             }, 1000)
 
         }, function (o) {
-            Messenger().post({type:'error', message:'Error with adding new Workflow.'});
+              _this.set('controllers.application.isLoading', false)
+
+            Messenger().post({type:'error', message:'Error with adding new Workflow. ' + error});
         });
         
     }
@@ -2643,16 +2649,25 @@ App.GraphRoute = Ember.Route.extend({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
             workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
                 var groupID = Enumerable.From(_this.store.all('edge').content).Where("f=>f.get('from') ==='" + id + "' && f.get('to') === null").Select("f=>f.get('GroupID')").FirstOrDefault();
+                var pontentialGraphID = Enumerable.From(_this.store.all('edge').content).Where("f=>f.get('from') ==='" + id + "' || f.get('from') ==='" + id + "'").Select("f=>f.get('GroupID')").FirstOrDefault();
+                
                 console.log(groupID, 'this is the group id')
-                // if (typeof groupID !== 'undefined' && document.URL.indexOf(groupID) < 1) {
-                if (IsGUID(groupID) || document.URL.indexOf(groupID) < 1){
+                console.log(_this.store.all('edge').content);
+                if (typeof groupID !== 'undefined' && document.URL.indexOf(groupID) < 1) {
+                //if (IsGUID(groupID) || document.URL.indexOf(groupID) < 1){
                     return _this.store.find('workflow', groupID).then(function (wfid) {
                         _this.replaceWith('graph', id, { queryParams: { workflowID: groupID } });
                     });
                 }
-                // else if (typeof groupID === 'undefined' || !groupID)
-                else if (typeof groupID === ' undefined' || !IsGUID(groupID))
+
+                else if (pontentialGraphID) {
+                   console.log('pontentialGraphID', pontentialGraphID, "USING THE NEW FIX")
+                    _this.replaceWith('graph', id, { queryParams: { workflowID: pontentialGraphID } });
+                }
+                 else if (typeof groupID === 'undefined' || !groupID) {
                     return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: _this.get('model.selectedID') })
+                }
+
             }),
             api: (apiCache) ? apiCache : this.store.findQuery('trigger', { CommonName: null }).then(function (m) {
                 return m.get('firstObject');
