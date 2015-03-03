@@ -119,6 +119,20 @@ LiquidFire.map(function(){
     );
 
     this.transition(
+        this.fromRoute('myworkflows'),
+        this.toRoute('search'),
+        this.use('toLeft'),
+        this.reverse('toRight')
+    );
+
+    this.transition(
+        this.fromRoute('myworkflows'),
+        this.toRoute('newworkflow'),
+        this.use('toLeft'),
+        this.reverse('toRight')
+    );
+
+    this.transition(
       this.withinRoute('permission'),
       this.use('toLeft')
     );
@@ -146,7 +160,6 @@ App.Router.map(function () {
 
     // FlowPro v2
     this.route('newworkflow');
-    this.route('myworkflows2');
     this.route('todo');
     this.route('styleguide', {path:"styleguide"}); // Internal only
     this.route('step', { path: 'step/:id' }); // - executing
@@ -871,6 +884,9 @@ App.NewworkflowController = Ember.Controller.extend({
     return !(noError && notEmptyName);
   }.property('validateWfName', 'validateStepName2', 'validateStepName2', 'stepName2', 'stepName', 'wfName'),
   actions: {
+    cancel: function(){
+      this.transitionToRoute('myworkflows');
+    },
     createWorkflow: function(){
         var _this = this;
         var wfid = NewGUID();
@@ -1022,146 +1038,160 @@ App.PermissionController = Ember.ObjectController.extend({
         }
     }
 
-})
+});
 
 
-App.MyworkflowsRoute = Ember.Route.extend({
-    model: function(){
-        return Ember.RSVP.hash({
-            workflows: this.store.find('myWorkflow'),
-            processes: this.store.find('myNode')
-        });
-    },
-    afterModel: function (m) {
-        if (m.workflows)
-            m.workflows = m.workflows.sortBy('humanName');
-        if (m.processes)
-            m.processes = m.processes.sortBy('humanName');
-    }
-})
+  App.MyworkflowsRoute = Ember.Route.extend({
+      model: function(){
+          return Ember.RSVP.hash({
+              workflows: this.store.find('myWorkflow'),
+              processes: this.store.find('myNode')
+          });
+      },
+      afterModel: function (m) {
+          if (m.workflows)
+              m.workflows = m.workflows.sortBy('humanName');
+          if (m.processes)
+              m.processes = m.processes.sortBy('humanName');
+      },
+      // setupController: function(){
+      //   this._super();
+      //   this.set('searchQuery', ''); // needs to be empty when entering
+      // }
+  })
 
-App.MyworkflowsController = Ember.ObjectController.extend({
-    needs: ['application'],
-    title: 'My Workflows',
-    permissionModal: false,
-    activeItem: null,
-    actions: {
-        editPermission: function(item){
+  App.MyworkflowsController = Ember.ObjectController.extend({
+      needs: ['application'],
+      title: 'My Workflows',
+      permissionModal: false,
+      activeItem: null,
+      searchQuery: "",
+      actions: {
+          createWorkflow: function(){
+            this.transitionToRoute('newworkflow');
+          },
+          search: function(){
+            this.transitionTo('search', {queryParams: {keywords: this.get('searchQuery')}})
+            // console.log(this.get('searchQuery'), 123)
+          },
+          editPermission: function(item){
 
-            // So in the submit we know what file we should be diting
-            this.set('activeItem', item);
+              // So in the submit we know what file we should be diting
+              this.set('activeItem', item);
 
-            this.set('permissionModal', true); // Show the modal before anything else
+              this.set('permissionModal', true); // Show the modal before anything else
 
-            // Make selectbox work after it's been inserted to the view - jquery hackss
-            Ember.run.scheduleOnce('afterRender', this, function(){
-                $('#add-comp-perm').select2({
-                    placeholder: "Enter Companies...",
-                    minimumInputLength: 2,
-                    tags: true,
-                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
-                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "/share/getcompanies",
-                        dataType: 'json',
-                        multiple: true,
-                        data: function (term, page) {
-                            return {id: term };
-                        },
-                        results: function (data, page) { // parse the results into the format expected by Select2.
-                            if (data.length === 0) {
-                                return { results: [] };
-                            }
-                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                            return { results: results, text: 'tag' };
-                        }
-                    },
-                    formatResult: function(state) {return state.tag; },
-                    formatSelection: function (state) {return state.tag; },
-                    escapeMarkup: function (m) { return m; }
-                });
+              // Make selectbox work after it's been inserted to the view - jquery hackss
+              Ember.run.scheduleOnce('afterRender', this, function(){
+                  $('#add-comp-perm').select2({
+                      placeholder: "Enter Companies...",
+                      minimumInputLength: 2,
+                      tags: true,
+                      //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                      ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                          url: "/share/getcompanies",
+                          dataType: 'json',
+                          multiple: true,
+                          data: function (term, page) {
+                              return {id: term };
+                          },
+                          results: function (data, page) { // parse the results into the format expected by Select2.
+                              if (data.length === 0) {
+                                  return { results: [] };
+                              }
+                              var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                              return { results: results, text: 'tag' };
+                          }
+                      },
+                      formatResult: function(state) {return state.tag; },
+                      formatSelection: function (state) {return state.tag; },
+                      escapeMarkup: function (m) { return m; }
+                  });
 
-                $('#add-users-perm').select2({
-                    placeholder: "Enter Username...",
-                    minimumInputLength: 2,
-                    tags: true,
-                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
-                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "/share/getusernames",
-                        dataType: 'json',
-                        multiple: true,
-                        data: function (term, page) {
-                            return {id: term };
-                        },
-                        results: function (data, page) { // parse the results into the format expected by Select2.
-                            if (data.length === 0) {
-                                return { results: [] };
-                            }
-                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                            return { results: results, text: 'tag' };
-                        }
-                    },
-                    formatResult: function(state) {return state.tag; },
-                    formatSelection: function (state) {return state.tag; },
-                    escapeMarkup: function (m) { return m; }
-                })
-            });
-        },
-        submitPermission: function(){
-            var _this = this;
-            var newusers = $('#add-users-perm').val()
-            var newcomp = $('#add-comp-perm').val()
-            var fileid = this.get('activeItem').id;
-            var TableType = this.get('activeItem.TableType');
-            // console.log(this.get('activeItem'));
-            if (newusers !== '') {
-                Enumerable.From(newusers.split(',')).ForEach(function (f) {
-                    var a = _this.store.createRecord('mySecurityList', {
-                        ReferenceID: fileid,
-                        SecurityTypeID: 2,
-                        OwnerTableType: TableType,
-                        AccessorUserID: f,
-                        CanCreate: true,
-                        CanRead: true,
-                        CanUpdate: true,
-                        CanDelete: true
-                    })
-                    a.save().then(function () {
-                        Messenger().post({ type: 'success', message: "Successfully added user permissions", id: 'user-security' })
-                    }, function () {
-                        Messenger().post({ type: 'error', message: "Could not add user permissions", id: 'user-security' })
+                  $('#add-users-perm').select2({
+                      placeholder: "Enter Username...",
+                      minimumInputLength: 2,
+                      tags: true,
+                      //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                      ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                          url: "/share/getusernames",
+                          dataType: 'json',
+                          multiple: true,
+                          data: function (term, page) {
+                              return {id: term };
+                          },
+                          results: function (data, page) { // parse the results into the format expected by Select2.
+                              if (data.length === 0) {
+                                  return { results: [] };
+                              }
+                              var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                              return { results: results, text: 'tag' };
+                          }
+                      },
+                      formatResult: function(state) {return state.tag; },
+                      formatSelection: function (state) {return state.tag; },
+                      escapeMarkup: function (m) { return m; }
+                  })
+              });
+          },
+          submitPermission: function(){
+              var _this = this;
+              var newusers = $('#add-users-perm').val()
+              var newcomp = $('#add-comp-perm').val()
+              var fileid = this.get('activeItem').id;
+              var TableType = this.get('activeItem.TableType');
+              // console.log(this.get('activeItem'));
+              if (newusers !== '') {
+                  Enumerable.From(newusers.split(',')).ForEach(function (f) {
+                      var a = _this.store.createRecord('mySecurityList', {
+                          ReferenceID: fileid,
+                          SecurityTypeID: 2,
+                          OwnerTableType: TableType,
+                          AccessorUserID: f,
+                          CanCreate: true,
+                          CanRead: true,
+                          CanUpdate: true,
+                          CanDelete: true
+                      })
+                      a.save().then(function () {
+                          Messenger().post({ type: 'success', message: "Successfully added user permissions", id: 'user-security' })
+                      }, function () {
+                          Messenger().post({ type: 'error', message: "Could not add user permissions", id: 'user-security' })
 
-                    });
-                });
-            }
+                      });
+                  });
+              }
 
-            if (newcomp !== '') {
-                Enumerable.From(newcomp.split(',')).ForEach(function (f) {
-                    var a = _this.store.createRecord('mySecurityList', {
-                        ReferenceID: fileid,
-                        SecurityTypeID: 2,
-                        OwnerTableType: TableType,
-                        AccessorCompanyID: f,
-                        CanCreate: true,
-                        CanRead: true,
-                        CanUpdate: true,
-                        CanDelete: true
-                    })
-                    a.save().then(function () {
-                        Messenger().post({ type: 'success', message: "Successfully added company permissions", id: 'company-security' })
-                    }, function () {
-                        Messenger().post({ type: 'error', message: "Could not add company permissions", id: 'company-permission' })
+              if (newcomp !== '') {
+                  Enumerable.From(newcomp.split(',')).ForEach(function (f) {
+                      var a = _this.store.createRecord('mySecurityList', {
+                          ReferenceID: fileid,
+                          SecurityTypeID: 2,
+                          OwnerTableType: TableType,
+                          AccessorCompanyID: f,
+                          CanCreate: true,
+                          CanRead: true,
+                          CanUpdate: true,
+                          CanDelete: true
+                      })
+                      a.save().then(function () {
+                          Messenger().post({ type: 'success', message: "Successfully added company permissions", id: 'company-security' })
+                      }, function () {
+                          Messenger().post({ type: 'error', message: "Could not add company permissions", id: 'company-permission' })
 
-                    });
-                });
-            }
+                      });
+                  });
+              }
 
-            this.set('permissionModal', false);
-        },
-        cancelPermission: function(){
-            this.set('permissionModal', false);
-        }
-    }
-})
+              this.set('permissionModal', false);
+          },
+          cancelPermission: function(){
+              this.set('permissionModal', false);
+          }
+      }
+  })
+
+
 
 
 App.FileRoute = Ember.Route.extend({

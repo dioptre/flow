@@ -818,19 +818,23 @@
 </script>
 
 
-<script type="text/x-handlebars" id="myworkflows2">
-    <h1> My Workflows 2
-        <sub>List of all the workflows & steps you have created</sub>
-    </h1>
-    <br><br>
-
-</script>
-
 <script type="text/x-handlebars" id="myworkflows">
     <h1> My Workflows
         <sub>List of all the workflows & steps you have created</sub>
     </h1>
     <br><br>
+
+
+    {{eui-button label="Create New Workflow" action="createWorkflow" style="primary"}}
+
+
+    <div class="pull-right">
+        {{eui-input value=searchQuery placeholder="Search for Workflows, Steps, Files..."}}
+        {{eui-button label="Search" action="search"}}
+    </div>
+
+    <hr>
+
     {{#if loading}}
       Loading...
     {{else}}
@@ -864,7 +868,7 @@
 
         <div class='container-fluid'>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <h3>{{model.workflows.length}} <b>Workflows</b></h3>
 
                     {{#if model.workflows}}
@@ -903,7 +907,7 @@
                     {{/if}}
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <h3>{{model.processes.length}} <b>Steps</b> </h3>
 
                     {{#if model.processes}}
@@ -948,7 +952,9 @@
            You are not logged in. Please {{#link-to 'login' (query-params fromRoute='myworkflows')}}login{{/link-to}} to see your workflows and steps.
       {{/if}}
     {{/if}}
+
 </script>
+
 
 
 <script type="text/x-handlebars" id="file">
@@ -1238,11 +1244,14 @@
 
 
         <ul class="nav navbar-nav pull-right"> <!--hidden-xs-->
+           
+            {{!--
             <li class="hidden-xs ">
 
                 {{input action="transitionSearch" onEvent="insertNewline" class="search searchTransitionMenu" tabIndex="-1"}}
        
             </li>
+            --}}
             <li class="hidden-xs">
                 <a class='select2-localisation'>
                     <span class="settings">
@@ -1256,6 +1265,8 @@
                     {{!--view Ember.Select content=localAvailable value=localSelected optionValuePath="content.language" optionLabelPath="content.niceName"--}}
                 </a>
             </li>
+
+            {{!-- 
             <li class="settings hidden-xs" title="Help">
                 {{#link-to 'help'}}
                     <i class="icon-question-sign"></i>
@@ -1266,7 +1277,7 @@
                     <i class="icon-home"></i>
                 </a>
             </li>
-
+            --}}
 
             {{#if isLoggedIn}}
 
@@ -1315,6 +1326,8 @@
                 <li class="settings profile hidden-xs" {{bind-attr title='userProfile.UserName'}}>
                      {{#link-to 'myprofiles'}}
                         <img {{bind-attr src="userProfile.Thumb"}}>
+                        &nbsp
+                        {{userProfile.UserName}}
                      {{/link-to}}
                 </li>
                 <li class="settings hidden-xs">
@@ -1362,6 +1375,9 @@
                     <span>{{model.t.fp_menu_link_search}}</span>
                 {{/link-to}}
             {{/view}}--}}
+
+
+           {{!--  <!-- old workflow -->
             {{#view App.HomeNavView}}
                 <a class="dropdown-toggle" href="#">
                     <i class="icl-directions"></i>
@@ -1375,6 +1391,28 @@
                     <li>{{#link-to 'file'}} {{model.t.fp_menu_link_myfiles}} {{/link-to}}</li>
                 </ul>
             {{/view}}
+            --}}
+
+              {{#view App.HomeNavView}}
+
+               {{#link-to 'myworkflows'}}
+                    <i class="icl-directions"></i>
+                    <span>              
+                        {{model.t.fp_menu_link_workflow}}
+                    </span>
+
+                    
+                    <ul style="display:none">
+                        <li>{{#link-to 'newworkflow'}}{{model.t.fp_menu_link_newWorkflow}}{{/link-to}}</li>
+                        <li>{{#link-to 'search'}} {{model.t.fp_menu_link_search}} {{/link-to}}</li>
+                        <li>{{#link-to 'file'}} {{model.t.fp_menu_link_myfiles}} {{/link-to}}</li>
+                    </ul>
+                    
+               {{/link-to}}
+    
+            {{/view}}
+
+
             {{!--
             {{#view App.HomeNavView}}
                 {{#link-to 'wikipedia' 'Special:Random'}}
@@ -4426,8 +4464,9 @@
             <br>
 
            
+            {{eui-button label="Cancel" action="cancel"}}
 
-            {{eui-button label="Create Workflow" disabled=validateNames action="createWorkflow" style='primary' size='medium'}}
+            {{eui-button label="Create Workflow" disabled=validateNames action="createWorkflow" style='primary'}}
 
 
         </script>
