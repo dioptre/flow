@@ -9,6 +9,6 @@ Category: Business
 Features:
     EXPEDIT.Flow: 
         Description: Flow spatial information management web module by EXPEDIT.
-		Dependencies: Orchard.Email,NKD,Orchard.Media,XmlRpc,Orchard.Search,EXPEDIT.Share
+		Dependencies: NKD,EXPEDIT.Share
 		Category: Business
 		Priority: 10

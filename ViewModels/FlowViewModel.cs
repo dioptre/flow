@@ -14,6 +14,8 @@ namespace EXPEDIT.Flow.ViewModels
         Model,
         File,
         Flow,
+        Flows,
+        FlowGroup,
         FlowLocation
     }
 
@@ -22,6 +24,8 @@ namespace EXPEDIT.Flow.ViewModels
         Guid? GraphDataID { get; set; }
         string GraphName { get; set; }
         string GraphData { get; set; }
+        Guid?[] edges { get; set; }
+        Guid?[] workflows { get; set; }
       
     }
 
@@ -32,6 +36,12 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? id { get { return GraphDataID; } set { GraphDataID = value; } }
         public string label { get { return GraphName; } set { GraphName = value; } }
         public string content { get { return GraphData; } set { GraphData = value; } }
+        public DateTime? VersionUpdated { get; set; }
+        public Guid?[] edges { get; set; }
+        public Guid?[] workflows { get; set; }
+
+        public Guid? VersionOwnerContactID { get; set; }
+        public Guid? VersionOwnerCompanyID { get; set; }
 
         [JsonIgnore]
         public Guid? GraphDataID { get; set; }
@@ -44,7 +54,7 @@ namespace EXPEDIT.Flow.ViewModels
     [JsonObject]
     public class FlowViewModelDetailed : FlowViewModel
     {
-        public Guid?[] edges { get { return (Relations != null ? (from o in Relations where o.FromID==GraphDataID select o.GraphDataRelationID).ToArray() : new Guid?[] {}); } set { edges = value; } }
+        public new Guid?[] edges { get { return (Relations != null ? (from o in Relations where o.FromID==GraphDataID select o.GraphDataRelationID).ToArray() : base.edges); } set { base.edges = value; } }
         [JsonIgnore]
         public IEnumerable<FlowEdgeViewModel> Relations { get; set; }
     }
@@ -68,6 +78,22 @@ namespace EXPEDIT.Flow.ViewModels
         public DateTime? Related { get; set; }
         public int? Sequence { get; set; }
         [JsonIgnore]
+        public string EdgeConditionsText { get; set; }
+        public Guid[] EdgeConditions
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(EdgeConditionsText))
+                {
+                    return EdgeConditionsText.Split(',').Select(f => Guid.Parse(f)).ToArray();
+                }
+                else
+                {
+                    return new Guid[] { };
+                }
+            }
+        }
+        [JsonIgnore]
         public IEnumerable<FlowEdgeWorkflowViewModel> Workflows { get; set; }
 
     }
@@ -79,6 +105,8 @@ namespace EXPEDIT.Flow.ViewModels
         public FlowEdgeWorkflowViewModel workflow { get; set; }
         public Guid? id { get { return GraphDataGroupID; } set { GraphDataGroupID = value; } }
         public string name { get { return GraphDataGroupName; } set { GraphDataGroupName = value; } }
+        public Guid? firstNode { get; set; }
+        public Guid? StartGraphDataID { get; set; }
         [JsonIgnore]
         public string GraphDataGroupName { get; set; }
         [JsonIgnore]
