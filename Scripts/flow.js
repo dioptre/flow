@@ -6921,7 +6921,7 @@ App.OrganizationController = Ember.ObjectController.extend({
             return;
       var name = selected.get('CompanyName').toLowerCase()
       var oldName = name;
-      if (selected._data && Rselected._data.CompanyName)
+      if (selected._data && selected._data.CompanyName)
           oldName = selected._data.CompanyName.toLowerCase()
 
 
