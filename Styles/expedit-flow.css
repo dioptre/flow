@@ -1242,6 +1242,17 @@ text-decoration: none;
 }
 
 
+/*Navbar improvements*/
+.navbar-inverse .nav > li > a {
+  border-left: 1px solid rgba(16, 20, 23, 0.31);
+}
+.navbar-inverse .notification-dropdown .count {
+  top: 5px;
+  left: 54%;
+  background: #6D8DB1;
+}
+
+
 /*disbale ipad bounchiness//
   http://stackoverflow.com/questions/8150191/disable-elastic-scrolling-in-safari
 */

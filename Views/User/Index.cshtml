@@ -71,7 +71,7 @@
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/offline-theme-chrome.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/offline-language-english.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/colorbox.css">
-        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/expedit-flow.css?id=1">
+        <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Flow/Styles/expedit-flow.css?id=20">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/messenger.css">
         
 
@@ -530,7 +530,7 @@
         Welcome to FlowPro
         <sub>Realize the potential of your business</sub>
     </h1>
-    <br /><br />
+    <br /><hr><br />
     {{#if controllers.application.isLoggedIn}}
         {{#if model.r.Dashboard}}
             <h4>{{model.r.CompanyName}}</h4>
@@ -1051,10 +1051,10 @@
             <div class="content-wrap">
 
                 <h6>Sign up</h6>
-                <p>
-                    Welcome to FlowPro. To sign up as a free user (no credit card required), just fill out the form below. Upgrading to a premium user, can be done anytime after that.
-                </p>
                 {{#unless controllers.application.isLoggedIn}}
+                    <p>
+                        Welcome to FlowPro. To sign up as a free user (no credit card required), just fill out the form below. Upgrading to a premium user, can be done anytime after that.
+                    </p>
                     {{input type="text" valueBinding='username' classNameBindings=":form-control" placeholder="Username"}}
                     {{input type="text" valueBinding='email' classNameBindings=":form-control" placeholder="E-mail address"}}
                     {{input valueBinding='password' type="password" classNameBindings=":form-control" placeholder="Choose a Password"}}
@@ -1252,6 +1252,28 @@
        
             </li>
             --}}
+
+
+            {{!-- 
+
+            <li class="hidden-xs">
+                <a class='select2-localisation'>
+                    <span class="settings">
+                        <i class="icon-group"></i>
+                    </span>
+
+                    <!--
+                    {{myCompany-selector value=profile.DefaultCompanyID multiple=false}}
+                    -->
+                    
+                    {{eui-select options=localeAvailable value=localeSelected size=large required="true" width='120px' style="primary"}}
+                
+                </a>
+            </li>
+            --}}
+
+
+
             <li class="hidden-xs">
                 <a class='select2-localisation'>
                     <span class="settings">
@@ -1282,11 +1304,13 @@
             {{#if isLoggedIn}}
 
                 {{#if userProfile.Licensed}}
+                    <!--
                     <li class="settings" title="All data is saved to private section. To create public content logout.">
                         <a {{action 'togglelogoutModal'}}>
                             <i class="icon-lock success-lock"></i>
                         </a>
                      </li>
+                     -->
                 {{else}}
                     <li class="notification-dropdown">
                         <a href="#" class="trigger">
@@ -1302,8 +1326,8 @@
                                 <a href="#" class="close-icon"><i class="icon-remove-sign"></i></a>
                                 <div class="notifications">
                                     <h3>You have 1 new notifications</h3>
-                                    <a href="#" class="item">
-                                        <i class="icon-unlock"></i> No licenses assigned.
+                                    <a href="/store/" class="item">
+                                        <i class="icon-unlock"></i> No license assigned to your account. To buy a license use the link below. Without a license you can still use FlowPro, however all your content will be available <u>publicly</u>.
                                     </a>
                                     <!--
                                         <a href="#" class="item">
@@ -1311,34 +1335,43 @@
                                             <span class="time"><i class="icon-time"></i> 1 day.</span>
                                         </a>
                                     -->
-
-                                        <div class="footer">
-                                            <a href="/store/" class="logout">Buy License</a>
-                                        </div>
-
-
+                                    <div class="footer">
+                                        <a href="/store/" class="logout">Buy License</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </li>
                 {{/if}}
 
-                <li class="settings profile hidden-xs" {{bind-attr title='userProfile.UserName'}}>
-                     {{#link-to 'myprofiles'}}
+                
+                <li class="settings profile dropdown" {{bind-attr title='userProfile.UserName'}}>
+                    <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
+                         
                         <img {{bind-attr src="userProfile.Thumb"}}>
                         &nbsp
                         {{userProfile.UserName}}
-                     {{/link-to}}
-                </li>
-                <li class="settings hidden-xs">
-                     <a {{action 'togglelogoutModal'}}>
-                         {{model.t.fp_general_actions_logout}}
-                     </a>
+                         
+                        <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            {{#link-to 'myprofiles'}}
+                                My Profile
+                            {{/link-to}}
+                        </li>
+                        <li>
+                            {{#link-to 'mylicenses'}}
+                                My Licenses
+                            {{/link-to}}
+                        </li>
+                        <li><a {{action 'togglelogoutModal'}}>{{model.t.fp_general_actions_logout}}</a></li>
+                    </ul>
                 </li>
             {{else}}
-                <li class="settings" title='All uploaded/created data is available public! To create private data please login.'>
-                    {{#link-to 'login'}}
-                        <i class="icon-unlock warning"></i>
+                <li class="settings hidden-xs" title="Click to signup.">
+                    {{#link-to 'signup'}}
+                        Signup
                     {{/link-to}}
                 </li>
                 <li class="settings hidden-xs" title="Click to login.">
@@ -2722,6 +2755,8 @@
 
 
     <p>Theme preview: <a href='http://detail.herokuapp.com/icons.html'>here</a>.</p>
+    <p>Emberui libary: <a href='http://emberui.com/'>here</a>.</p>
+    
     <p>Translating the app can be done at {{#link-to 'translateme'}}/translateme{{/link-to}}</p>
 
     <h2> Components </h2>
@@ -3819,76 +3854,94 @@
 
 
 
-      <div class="table-wrapper products-table">
-                <div class="row head">
-                    <div class="col-md-12">
-                        <h1>
-                            Todos
-                            <sub>The work to complete</sub>
-                        </h1>
 
-                       
-                    </div>
-                </div>
+
+        <h1>
+            Todos
+            <sub>The work to complete</sub>
+        </h1>
+
+       <br><BR>
+
+
+        {{eui-button label="Create New Todo" action="createTodo" style="primary"}}
+        
+        <div class="pull-right">
+            {{eui-input value=barcode placeholder='Scan Barcode Here' width='200px'}}
+        </div>
+
+        <hr>
+
+
+
+        <div class="table-wrapper products-table">
                 {{#if controllers.application.isLoggedIn}}
-                    <div class="filter-block">
-                        <div class="" style="float:right;">
-                            {{eui-input value=barcode placeholder='Scan Barcode Here' size='tiny' width='200px'}}{{!--{{eui-button label="Start a new case" action=""}}--}}
-                        </div>
-                    </div>
-                    <h4>My Todos</h4>
+                   {{!--  <div class="filter-block"> --}}
+                       
+                    {{!-- </div> --}}
+
+
+                    <br>
+
+                    <!--
+                    
+                    <div class="pull-right">
+                            {{!-- {{eui-input value=barcode placeholder='Scan Barcode Here' size='tiny' width='200px'}} --}}
+                            {{eui-input value=barcode placeholder='Scan Barcode Here' width='200px'}}
+                    </div>-->
+                    <h3>My Todos</h3>
 
                     <div class="">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th class="col-md-2">
-                                    Case
-                                </th>
-                                <th class="col-md-3">
-                                    <span class="line"></span>Step
-                                </th>
-                                <th class="col-md-3">
-                                    <span class="line"></span>Workflow
-                                </th>
-                                <th class="col-md-1">
-                                    <span class="line"></span>Barcode
-                                </th>
-                                <th class="col-md-3">
-                                    <span class="line"></span>Status
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{#each step in steps}}
-                            <tr>
-                                <td>
-                                    @*<input type="checkbox">*@
-                                    @*<i class="icl-check green"></i>&nbsp;*@
-                                    {{#link-to 'step' step.id}}{{step.projectCode}}{{/link-to}}
-                                </td>
-                                <td class="description" {{bind-attr style=step.uniqueColor}}>
-                                    &nbsp;{{step.humanName}}
-                                </td>
-                                 <td class="description" {{bind-attr style=step.uniqueColor}}>
-                                    &nbsp;{{step.GraphDataGroupName}}
-                                </td>
-                                  <td>
-                                      <a {{bind-attr data-js=step.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a>
-                                </td>
-                                <td>
-                                    <span class="label label-info">Important</span>                                    
-                                    @*{{step.VersionUpdated}} {{step.LastUpdatedBy}}*@
-                                    <ul class="actions">
-                                        <li>{{#link-to 'step' step.id}}Checkout{{/link-to}}</li>
-                                        @*<li class="last"><a href="#">Delete</a></li>*@
-                                    </ul>
-                                </td>
-                            </tr>
-                            {{/each}}
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="col-md-2">
+                                        Case
+                                    </th>
+                                    <th class="col-md-3">
+                                        <span class="line"></span>Step
+                                    </th>
+                                    <th class="col-md-3">
+                                        <span class="line"></span>Workflow
+                                    </th>
+                                    <th class="col-md-1">
+                                        <span class="line"></span>Barcode
+                                    </th>
+                                    <th class="col-md-3">
+                                        <span class="line"></span>Status
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#each step in steps}}
+                                <tr>
+                                    <td>
+                                        @*<input type="checkbox">*@
+                                        @*<i class="icl-check green"></i>&nbsp;*@
+                                        {{#link-to 'step' step.id}}{{step.projectCode}}{{/link-to}}
+                                    </td>
+                                    <td class="description" {{bind-attr style=step.uniqueColor}}>
+                                        &nbsp;{{step.humanName}}
+                                    </td>
+                                     <td class="description" {{bind-attr style=step.uniqueColor}}>
+                                        &nbsp;{{step.GraphDataGroupName}}
+                                    </td>
+                                      <td>
+                                          <a {{bind-attr data-js=step.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a>
+                                    </td>
+                                    <td>
+                                        <span class="label label-info">Important</span>                                    
+                                        @*{{step.VersionUpdated}} {{step.LastUpdatedBy}}*@
+                                        <ul class="actions">
+                                            <li>{{#link-to 'step' step.id}}Checkout{{/link-to}}</li>
+                                            @*<li class="last"><a href="#">Delete</a></li>*@
+                                        </ul>
+                                    </td>
+                                </tr>
+                                {{/each}}
 
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
                     </div>
                     <div class="barcode" style="display:none;">
                         <canvas id="barcode"></canvas>
@@ -3896,7 +3949,7 @@
                 {{else}}
                     You need to be logged in.
                 {{/if}}
-            </div>
+        </div>
             <!-- end products table -->
 
             @*<h4>Unassigned Todos</h4>
@@ -4205,7 +4258,8 @@
                                 <div class="personal-image">
                                     <img id="profileImageThumb" {{bind-attr src="profile.Thumb"}} class="avatar img-circle" alt="avatar" style="max-height:150px;max-width:150px;" />
                                         <p>Upload a different photo... <br /><small>(Recommended size 200px by 200px)</small></p>
-                                        <input type="file" onchange="javascript:uploadPhoto(this);" />
+                                        <!--<input type="file" onchange="javascript:uploadPhoto(this);" />-->
+                                        {{view App.UploadFileView name="other" files=files}}
                                 </div>
                             </div>
 
@@ -4471,6 +4525,42 @@
 
         </script>
 
+
+        <script type="text/x-handlebars" id="newtodo">
+
+            <div class="row head">
+                <div class="col-md-12">
+                    <h1>
+                        New Todo
+                        <sub>Create a new todo (i.e. Instance of a workflow)</sub>
+                    </h1>
+                </div>
+            </div>
+
+            <br>
+            <br>
+
+            <h4>Workflow Name</h4>
+            {{workflow-selector value=workflowID multiple=false}}
+            Choose the workflow template.
+
+            <br>
+            <br>
+
+            <h4>Get started now</h4>
+            {{eui-checkbox value=getStarted label='Get started now'}}
+
+
+            <br>
+            <br>
+
+           
+            {{eui-button label="Cancel" action="cancel"}}
+            {{eui-button label="Create Todo" disabled=validateNames action="createTodo" style='primary'}}
+
+
+        </script>
+
         <script type="text/x-handlebars" id="components/hierachy-tree">
              <!--
             <buttons>
@@ -4593,7 +4683,7 @@
         <script type="text/x-handlebars" data-template-name="responseData">
             <h1>
                 Workflow Raw Data
-                <sub>Export the resuts for completed workflows</sub>
+                <sub>View the resuts for completed workflows and export them as CSV.</sub>
             </h1>
 
             <br>
@@ -4657,9 +4747,20 @@
 
 
 
+    
 
         <!-- Analytics -->
+
+
+        <script type="text/javascript">
+        
+          
+        </script>
+        
         <script>
+
+            // heap analytics
+            window.heap=window.heap||[],heap.load=function(t,e){window.heap.appid=t,window.heap.config=e;var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=("https:"===document.location.protocol?"https:":"http:")+"//cdn.heapanalytics.com/js/heap-"+t+".js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(a,n);for(var o=function(t){return function(){heap.push([t].concat(Array.prototype.slice.call(arguments,0)))}},p=["clearEventProperties","identify","setEventProperties","track","unsetEventProperty"],c=0;c<p.length;c++)heap[p[c]]=o(p[c])};
 
             // mixpanel
             (function (f, b) {
@@ -4702,6 +4803,9 @@
                     }
                 })();
 
+
+                heap.load("596553303");
+
             } else { // DEV
 
                 mixpanel.init("0672707ed6141205517c7514f9b2337b");
@@ -4710,6 +4814,7 @@
                 ga('require', 'linkid', 'linkid.js');
                 ga('send', 'pageview');
 
+                heap.load("3261176379");
             }
 		</script>
 
@@ -4820,7 +4925,7 @@
 
 
 
-        <script src="~/Modules/EXPEDIT.Flow/Scripts/flow.js?id=13"></script>
+        <script src="~/Modules/EXPEDIT.Flow/Scripts/flow.js?id=20"></script>
 
         @*<script src="https://togetherjs.com/togetherjs-min.js"></script>*@
 

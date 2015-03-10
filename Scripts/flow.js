@@ -1,5 +1,5 @@
 if ((_ref = Ember.libraries) != null) {
-  _ref.register('FlowPro', '2.0.0 Alpha');
+  _ref.register('FlowPro', '2.1.1');
 }
 
 //Leave this!
@@ -133,6 +133,13 @@ LiquidFire.map(function(){
     );
 
     this.transition(
+        this.fromRoute('todo'),
+        this.toRoute('newtodo'),
+        this.use('toLeft'),
+        this.reverse('toRight')
+    );
+
+    this.transition(
       this.withinRoute('permission'),
       this.use('toLeft')
     );
@@ -161,6 +168,7 @@ App.Router.map(function () {
     // FlowPro v2
     this.route('newworkflow');
     this.route('todo');
+    this.route('newtodo');
     this.route('styleguide', {path:"styleguide"}); // Internal only
     this.route('step', { path: 'step/:id' }); // - executing
     this.route('report');
@@ -1330,6 +1338,7 @@ App.LoginController = Ember.Controller.extend({
     queryParams: ['fromRoute'],
     fromRoute: '',
     needs: ['application'],
+    title: "Login",
     email: "",
     rememberme: false,
     password: "",
@@ -1383,6 +1392,7 @@ App.LoginController = Ember.Controller.extend({
 
 App.ResetpasswordController = Ember.Controller.extend({
     needs: ['application'],
+    title: "Reset password",
     email: "",
     emailsent: false,
     actions: {
@@ -1416,6 +1426,7 @@ App.ResetpasswordController = Ember.Controller.extend({
 
 App.SignupController = Ember.Controller.extend({
     needs: ['application'],
+    title: 'Signup',
     captchaKey: NewGUID(),
     captchaImg: function(){
         var _this = this;
@@ -1485,7 +1496,7 @@ App.SignupController = Ember.Controller.extend({
                         _this.set('email', '');
                         _this.set('username', '');
                         _this.set('password', '');
-                        _this.transitionToRoute('search');
+                        _this.transitionToRoute('index');
                     }
                     else if (data.Response === 4) {
                          Messenger().post({type:'error', message:'Invalid human code. Please try again.', id:'authenticate'});
@@ -1693,9 +1704,23 @@ App.ApplicationView = Ember.View.extend({
                     if (result === true) {
                        //_this.get('controller.getUserProfile')();
                         $.ajax({url: "/flow/myuserinfo"}).then(function(data){
+
+
+                            // I am over writing the object... should check first if it's empty if not then only overwrite it...
+                            console.log(data);
+
+                            // Clean up the data
                             data.UserName = ToTitleCase(data.UserName);
                             data.Licensed = data.Licenses && (data.Licenses.length > 0)
                             data.Thumb = "/share/photo/" + data.UserID;
+
+                            // Use identify analytics
+                            mixpanel.identify(data.id);
+                            mixpanel.people.set({
+                                $first_name: data.UserName
+                            });
+
+                            // Set it to controller so accessible everywhere
                             _this.set('controller.userProfile', data);
                         }, function (jqXHR) {
                           jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -5329,10 +5354,55 @@ App.TodoController = Ember.ObjectController.extend({
         }
     }.observes('barcode'),
     actions: {
+        createTodo: function() {
+          this.transitionTo('newtodo');
+        },
         getBarcode: function (id) {
             console.log(id);
         }
     }
+});
+
+
+
+App.NewtodoRoute = Ember.Route.extend({
+  setupController: function(controller, model) {
+    this._super(controller, model);
+    controller.set('wfName', '');
+    controller.set('stepName', '');
+    controller.set('stepName2', '');
+  }
+});
+
+App.NewtodoController = Ember.Controller.extend({
+  needs: ['application'],
+  title: "New Todo",
+  workflowID: null,
+  getStarted: true,
+  actions: {
+    cancel: function(){
+      this.transitionToRoute('todo');
+    },
+    createTodo: function(){
+      var workflowID = this.get('workflowID');
+
+      if (!IsGUID(workflowID)) {
+        Messenger().post({type:'error', message:'A workflow template needs to be selected.' });
+
+        return null;
+      }
+
+      this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
+
+
+      if (this.get('getStarted')) {
+        this.transitionToRoute('step');
+
+      } else {
+        this.transitionToRoute('todo');
+      }
+    }
+  }
 });
 
 
@@ -6727,6 +6797,12 @@ App.MyprofilesController = Ember.ObjectController.extend({
         return 'My Profile'
     }.property('profile'),
     trigger: null,
+    files: null,
+    filesObserver: function(){
+      var files = this.get('files');
+      console.log(files);
+      this.send('uploadPhoto', files);
+    }.observes('files'),
     hasAPI: function (key, value, previousValue) {
         var t = this.get('model.trigger');
         var hasValue = (typeof t !== 'undefined' && t !== null);
@@ -6774,6 +6850,64 @@ App.MyprofilesController = Ember.ObjectController.extend({
         }
     }.property('profile.DefaultEmail'),
     actions: {
+        uploadPhoto: function(files){
+            var _this = this;
+            var iSize = files[0].size / 1024;
+            if (iSize > 2000) {
+                Messenger().post({ type: 'error', message: "File is too large to upload.", id: 'file-security' });
+                return;
+            }
+
+            Messenger().post({ type: 'info', message: "Uploading image...", id: 'file-security' });
+
+
+            // START A LOADING SPINNER HERE
+
+            // Create a formdata object and add the files
+            var data = new FormData();
+            $.each(files, function (key, value) {
+                data.append(key, value);
+            });
+
+            $.ajax({
+                url: '/share/uploadphoto',
+                type: 'POST',
+                data: data,
+                cache: false,
+                dataType: 'json',
+                processData: false, // Don't process the files
+                contentType: false, // Set content type to false as jQuery will tell the server its a query string request
+                success: function (data, textStatus, jqXHR) {
+                    if (typeof data.error === 'undefined') {
+                        // Success so call function to process the form
+                        //submitForm(event, data);
+                        Messenger().post({ type: 'success', message: "Updating image successful!", id: 'file-security' });
+                        // d = new Date();
+                        // var old = $("#profileImageThumb").attr("src").replace(/(\?.*)/ig, '');
+                        // $("#profileImageThumb").attr("src",  old + "?" + d.getTime());
+
+                        var userProfile = _this.get('controllers.application.userProfile');
+                        userProfile.Thumb = userProfile.Thumb.replace(/(\?.*)/ig, '') 
+                        userProfile.Thumb = userProfile.Thumb + "?" + NewGUID();
+                        userProfile.Thumb = NewGUID();
+                        console.log(userProfile,  NewGUID());
+                        _this.set('controllers.application.userProfile', userProfile);
+                    }
+                    else {
+                        // Handle errors here
+                        Messenger().post({ type: 'error', message: "Error uploading image. Please try again later.", id: 'file-security' });
+                        console.log('ERRORS: ' + data.error);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    // Handle errors here
+                    console.log('ERRORS: ' + textStatus);
+                    Messenger().post({ type: 'error', message: "Error uploading image. Please try again later.", id: 'file-security' });
+
+                    // STOP LOADING SPINNER
+                }
+            });
+        },
         updateProfile: function (profile) {
             if (this.get('emailValid'))
                 return;
@@ -7216,6 +7350,9 @@ function uploadPhoto(event) {
         return;
     }
 
+    Messenger().post({ type: 'info', message: "Uploading image...", id: 'file-security' });
+
+
     // START A LOADING SPINNER HERE
 
     // Create a formdata object and add the files
@@ -7236,18 +7373,22 @@ function uploadPhoto(event) {
             if (typeof data.error === 'undefined') {
                 // Success so call function to process the form
                 //submitForm(event, data);
+                Messenger().post({ type: 'success', message: "Updating image successful!", id: 'file-security' });
                 d = new Date();
                 var old = $("#profileImageThumb").attr("src").replace(/(\?.*)/ig, '');
                 $("#profileImageThumb").attr("src",  old + "?" + d.getTime());
             }
             else {
                 // Handle errors here
+                Messenger().post({ type: 'error', message: "Error uploading image. Please try again later.", id: 'file-security' });
                 console.log('ERRORS: ' + data.error);
             }
         },
         error: function (jqXHR, textStatus, errorThrown) {
             // Handle errors here
             console.log('ERRORS: ' + textStatus);
+            Messenger().post({ type: 'error', message: "Error uploading image. Please try again later.", id: 'file-security' });
+
             // STOP LOADING SPINNER
         }
     });
@@ -8183,6 +8324,19 @@ App.UsermanagerController = Ember.Controller.extend({
 })
 
 
+// File uploader
+App.UploadFileView = Ember.TextField.extend({
+    type: 'file',
+    attributeBindings: ['name'],
+    files: '',
+    change: function(evt) {
+      var self = this;
+      var input = evt.target;
+      if (input.files && input.files[0]) {
+        this.set('files', input.files);
+      }
+    }
+});
 
 App.RadioButtonComponent = Ember.Component.extend({
   tagName: 'input',
