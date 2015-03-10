@@ -5384,6 +5384,8 @@ App.NewtodoController = Ember.Controller.extend({
       this.transitionToRoute('todo');
     },
     createTodo: function(){
+      var _this = this;
+      
       var workflowID = this.get('workflowID');
 
       if (!IsGUID(workflowID)) {
@@ -5392,15 +5394,28 @@ App.NewtodoController = Ember.Controller.extend({
         return null;
       }
 
-      this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
+      // this.store.findQuery('step', { id: NewGUID(), workflowID: workflowID, includeContent: true })
+      $.get('/flow/WebMethod/DoNext?workflow=' + workflowID).then(function(a){
 
 
-      if (this.get('getStarted')) {
-        this.transitionToRoute('step');
+        if (_this.get('getStarted')) {
+            Messenger().post({type:'info', message:'Transitioning...' });
+            Messenger().post({type:'success', message:'New Todo successfully created.' });
+            _this.transitionToRoute('step', a);
 
-      } else {
-        this.transitionToRoute('todo');
-      }
+        } else {
+            Messenger().post({type:'success', message:'New Todo successfully created.' });
+            _this.transitionToRoute('todo');
+        }
+
+      }, function(){
+        Messenger().post({type:'error', message:'New Todo cannot be created. Most likely you don\'t have permission to acces the workflow.'  });
+
+      })
+      //this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
+
+
+    
     }
   }
 });

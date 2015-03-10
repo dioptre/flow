@@ -1203,8 +1203,11 @@
                 <h4>{{model.t.fp_general_actions_logoutConfirmation}}</h4>
 
                 <br>
-                {{eui-button label=model.t.fp_general_actions_cancel action="togglelogoutModal" size='large'}}
-                {{eui-button label=model.t.fp_general_actions_logout action="logoutUser" style='primary' size='large' disabled=validateNewName loading=loadingEditName}}
+                {{!-- {{eui-button label=model.t.fp_general_actions_cancel action="togglelogoutModal" size='large'}}
+                {{eui-button label=model.t.fp_general_actions_logout action="logoutUser" style='primary' size='large' disabled=validateNewName loading=loadingEditName}} --}}
+
+                {{eui-button label=model.t.fp_general_actions_cancel action="togglelogoutModal"}}
+                {{eui-button label=model.t.fp_general_actions_logout action="logoutUser" style='primary' disabled=validateNewName loading=loadingEditName}}
              </div>
         {{/eui-modal}}
 
