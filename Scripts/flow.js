@@ -1376,7 +1376,7 @@ App.LoginController = Ember.Controller.extend({
                     if (_this.get('fromRoute') != '') {
                          _this.transitionToRoute(_this.get('fromRoute'));
                     } else {
-                        _this.transitionToRoute('search');
+                        _this.transitionToRoute('dashboard');
                     }
 
                 } else {
@@ -1690,47 +1690,49 @@ App.ApplicationView = Ember.View.extend({
 
         var keepActive = function(){
             if(_this.active){
-                $.ajax({
-                    url: "/share/loggedin",
-                    cache: false
-                }).then(function(result){
+                Pace.ignore(function(){
+                    $.ajax({
+                        url: "/share/loggedin",
+                        cache: false
+                    }).then(function(result){
 
-                    _this.active = false; // Set active to false until mouse is moved/keypress
-                    if (result === true || result === false){
-                        _this.set('controller.isLoggedIn', result)
-                    }
+                        _this.active = false; // Set active to false until mouse is moved/keypress
+                        if (result === true || result === false){
+                            _this.set('controller.isLoggedIn', result)
+                        }
 
-                    // Pull in user information if it hasn't been set yet
-                    if (result === true) {
-                       //_this.get('controller.getUserProfile')();
-                        $.ajax({url: "/flow/myuserinfo"}).then(function(data){
+                        // Pull in user information if it hasn't been set yet
+                        if (result === true) {
+                           //_this.get('controller.getUserProfile')();
+                            $.ajax({url: "/flow/myuserinfo"}).then(function(data){
 
 
-                            // I am over writing the object... should check first if it's empty if not then only overwrite it...
-                            console.log(data);
+                                // I am over writing the object... should check first if it's empty if not then only overwrite it...
+                                console.log(data);
 
-                            // Clean up the data
-                            data.UserName = ToTitleCase(data.UserName);
-                            data.Licensed = data.Licenses && (data.Licenses.length > 0)
-                            data.Thumb = "/share/photo/" + data.UserID;
+                                // Clean up the data
+                                data.UserName = ToTitleCase(data.UserName);
+                                data.Licensed = data.Licenses && (data.Licenses.length > 0)
+                                data.Thumb = "/share/photo/" + data.UserID;
 
-                            // Use identify analytics
-                            mixpanel.identify(data.id);
-                            mixpanel.people.set({
-                                $first_name: data.UserName
+                                // Use identify analytics
+                                mixpanel.identify(data.id);
+                                mixpanel.people.set({
+                                    $first_name: data.UserName
+                                });
+
+                                // Set it to controller so accessible everywhere
+                                _this.set('controller.userProfile', data);
+                            }, function (jqXHR) {
+                              jqXHR.then = null; // tame jQuery's ill mannered promises
                             });
+                        }
 
-                            // Set it to controller so accessible everywhere
-                            _this.set('controller.userProfile', data);
-                        }, function (jqXHR) {
-                          jqXHR.then = null; // tame jQuery's ill mannered promises
-                        });
-                    }
+                        Ember.run.later(_this, keepActive, timeoutDelay);
 
-                    Ember.run.later(_this, keepActive, timeoutDelay);
-
-                }, function (jqXHR) {
-                  jqXHR.then = null; // tame jQuery's ill mannered promises
+                    }, function (jqXHR) {
+                      jqXHR.then = null; // tame jQuery's ill mannered promises
+                    });
                 });
             } else {
                 Ember.run.later(_this, keepActive, timeoutDelay); // make sure this infinite loop never stops
@@ -3128,6 +3130,15 @@ App.GraphController = Ember.ObjectController.extend({
         submitWorkflowCopyModal: function (data, callback) {
             var a = this.get('copyWorkflowStoreObject');
             var _this = this;
+            if (!IsGUID(a.WorkContactID)){
+              Messenger().post({ type: 'error', message: 'A user needs to be selected.' });
+              return false;
+            }
+            debugger;
+            if (!IsGUID(a.WorkCompanyID)){
+              Messenger().post({ type: 'error', message: 'A company needs to be selected.' });
+              return false;
+            }
             $.post('/flow/copyworkflow',
                 { id: this.get('workflowID'), VersionOwnerContactID: a.WorkContactID, VersionOwnerCompanyID: a.WorkCompanyID }
                 ).then(function () {
@@ -5368,9 +5379,8 @@ App.TodoController = Ember.ObjectController.extend({
 App.NewtodoRoute = Ember.Route.extend({
   setupController: function(controller, model) {
     this._super(controller, model);
-    controller.set('wfName', '');
-    controller.set('stepName', '');
-    controller.set('stepName2', '');
+    controller.set('workflowID', null);
+    controller.set('getStarted',true);
   }
 });
 
@@ -8326,8 +8336,18 @@ App.UsermanagerRoute = Ember.Route.extend({})
 App.UsermanagerController = Ember.Controller.extend({
     title: "User Manager",
     user: {},
+    userModal: false,
+    modifyModal: false,
     actions: {
+        modifyUser: function(){
+          this.set('modifyModal', true)
+          console.log('Modify user...')
+        },
+        toggleUserModal: function(){
+          this.toggleProperty('userModal')
+        },
         addUser: function(){
+          this.set('userModal', false)
 
             console.log('adduser', this.get('user'))
         },

@@ -572,29 +572,66 @@
 
     </h1>
 
-    <br>
-    <br>
+    <br> <br>
+
+    {{eui-button label="Add New User" action="toggleUserModal" style="primary"}}
+
+    <hr>
 
     <div class='container-fluid'>
         <div class="row">
             <div class="col-md-12">
 
-                <h4>Add User</h4>
-                <p> 
-                    Each user costs an additional $7/month. To add a user simply fill the form out below. A new license will be automatically asssigned to the user each month.
-                </p>
-                {{eui-input value=user.name placeholder='Name' size='small'}}<br><br>
-                {{eui-input value=user.email placeholder='Email' size="small"}}<br><br>
-                {{company-selector value=user.WorkCompanyID multiple=true}} <br>
-                {{eui-button label="Add User" style='default' action="addUser"}}
+                {{#eui-modal openBinding="userModal"}}
+                     <div style="padding: 50px; text-align: center;">
+                        <h4>Add User</h4>
+                        <br>
+                        <p> 
+                            Each user costs an additional $7/month. <br>To add a user simply fill the form out below. <br>A new license will be automatically asssigned to the user each month.
+                        </p>
+                        <br>
+                        <b>Name</b><br>
+                        {{eui-input value=user.name placeholder='Name' size='small'}}<br><br>
+                        <b>Email</b><br>
+                        {{eui-input value=user.email placeholder='Email' size="small"}}<br><br>
+
+                        <b>Choose companies to add the user to:</b><br>
+                        {{company-selector value=user.WorkCompanyID multiple=true}} <br>
+
+                        {{eui-button label="Cancel" style='default' action="toggleUserModal"}}
+                        {{eui-button label="Add User" style='primary' action="addUser"}}
+                    </div>
+                {{/eui-modal}}
 
 
+                {{#eui-modal openBinding="modifyModal"}}
+                     <div style="padding: 50px; text-align: center;">
+                        <h4>Modify User</h4>
+                        <br>
+                        <p> 
+                            Modify user. 
+                        </p>
+                        <br>
+                        <b>Name</b><br>
+                        {{eui-input value=user.name placeholder='Name' size='small'}}<br><br>
+                        <b>Email</b><br>
+                        {{eui-input value=user.email placeholder='Email' size="small"}}<br><br>
+
+                        <b>Choose companies to add the user to:</b><br>
+                        {{company-selector value=user.WorkCompanyID multiple=true}} <br>
+
+                        {{eui-button label="Cancel" style='default' action="toggleUserModal"}}
+                        {{eui-button label="Add User" style='primary' action="addUser"}}
+                    </div>
+                {{/eui-modal}}
+
+
+
+              
                 <br>
-                <hr>
-                <br>
 
 
-                <h4> Existing Users</h4>
+                <h4>Existing Users</h4>
                 <p>Total users: 64. <br>Monthly cost (for FlowPro): 64 * $7/month = $448/month</p>
                 {{!-- {{#if model}} --}}
                     <div class="table-responsive table-wrapper users-table sectio">
@@ -605,6 +642,7 @@
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Member of Organizations</th>
+                                <th>Super User</th>
                                 <th class="align-right">Modify</th>
 
                             </tr>
@@ -621,6 +659,32 @@
                                     <td>
                                          <span class="label label-info">Webdevelopers</span>
                                          <span class="label label-info">Managers</span>
+                                    </td>
+                                    <td>
+                                         <span class="label label-success">Super User</span>
+                                    </td>
+
+                                    <td class='align-right'>
+                                        <a {{action 'modifyUser' item}} class="hlink">Modify</a>
+                                        <a {{action 'deleteUser' item}} class="hlink">Delete</a>
+                                    </td>
+                                   
+                                </tr>
+
+
+                                <tr>
+                                    <td>                              
+                                        <img src="/share/photo/ee2245ed-fdfc-40d2-a3f2-cc8227a93c5d" alt="avatar" class="img-circle avatar hidden-phone">
+                                        <a href="user-profile.html" class="name">Tom Galvan Castillo</a>
+                                        <span class="subtext">Graphic Design</span>
+                                    </td>
+                                    <td>paulknittel@live.com</td>
+                                    <td>
+                                         <span class="label label-info">Webdevelopers</span>
+                                         <span class="label label-info">Managers</span>
+                                    </td>
+                                    <td>
+                                         <span class="label label-success">Super User</span>
                                     </td>
 
                                     <td class='align-right'>
@@ -665,7 +729,7 @@
                 </sub>
             </h1>
 
-            <br>
+            <br><br>
 
             {{!--
             {{eui-button label='Save Layout Changes' action='saveAll'}} 
@@ -850,6 +914,8 @@
     </div>
 
     <hr>
+
+    <br>
 
     {{#if loading}}
       Loading...
@@ -1622,7 +1688,7 @@
                     </div>
                 {{/eui-modal}}
                 {{#if editing}}
-      <prettygirl class="graphButtons">{{#if isWorkflow}}<div class='graphButton-group'><a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign"></i>&nbsp;Add New Step&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down"></i>&nbsp;Add Existing Step&nbsp;</a></div><div class='graphButton-group' title="Drag and drop to draw a connection">{{!--<a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a>--}}<a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Add Connection&nbsp;</a></div>{{#if isSelected}}<div class='graphButton-group'><a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash"></i>&nbsp;Delete Selected&nbsp;</a></div>{{/if}}{{!--{{#if isSelectedEdge}}<div class='graphButton-group'><a {{action 'selectionEdge'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Edit Edge Condition&nbsp;</a></div>{{/if}}--}}{{/if}}<div class='graphButton-group'><a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-share"></i>&nbsp;Export&nbsp;Workflow</a></div></prettygirl>{{/if}}</script>
+      <prettygirl class="graphButtons">{{#if isWorkflow}}<div class='graphButton-group'><a {{action 'processCreate'}} class="graphButton"><i class="icon-plus-sign"></i>&nbsp;Add New Step&nbsp;</a><a {{action 'showExistingNodeModal'}} class="graphButton"><i class="icon-circle-arrow-down"></i>&nbsp;Add Existing Step&nbsp;</a></div><div class='graphButton-group' title="Drag and drop to draw a connection">{{!--<a {{action 'edgeCreateY'}} class="graphButton"><i class="icon-resize-small" style="color:green;"></i></a><a {{action 'edgeCreateN'}} class="graphButton"><i class="icon-resize-small" style="color:red;"></i></a>--}}<a {{action 'edgeCreate'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Add Connection&nbsp;</a></div>{{#if isSelected}}<div class='graphButton-group'><a {{action 'selectionDelete'}} class="graphButton"><i class="icon-trash"></i>&nbsp;Delete Selected&nbsp;</a></div>{{/if}}{{!--{{#if isSelectedEdge}}<div class='graphButton-group'><a {{action 'selectionEdge'}} class="graphButton"><i class="icon-resize-small"></i>&nbsp;Edit Edge Condition&nbsp;</a></div>{{/if}}--}}{{/if}}<div class='graphButton-group'><a id="exportWorkflow" class="exportWF graphButton" onclick="javascript:this.href = $('.networkColumn .network-frame').find('canvas')[0].toDataURL(); this.download = 'download.png';"><i class="icon-print"></i>&nbsp;Print&nbsp;Workflow</a></div></prettygirl>{{/if}}</script>
 
 
   <script type="text/x-handlebars" id="wikipedia">
@@ -1944,7 +2010,7 @@
                             <i class="icon-bolt"></i>
                         </span>
                         <span {{action 'toggleWorkflowCopyModal'}} class='btn-flat gray' title="Clone workflow">
-                            <i class="icon-gift"></i>
+                            <i class="icon-retweet"></i>
                         </span>
                         <span {{action 'toggleWorkflowView' }} class='btn-flat gray' title="Preview workflow fullscreen">
                             <i class="icon-fullscreen"></i>
