@@ -1,5 +1,5 @@
 if ((_ref = Ember.libraries) != null) {
-  _ref.register('FlowPro', '2.1.1');
+  _ref.register('FlowPro', '2.2.0');
 }
 
 //Leave this!
@@ -5093,7 +5093,7 @@ App.StepController = Ember.ObjectController.extend({
     completed: Ember.computed.alias("model.steps.firstObject.Completed"),
     completedOb: function(){
       var _this = this;
-      debugger;
+      // debugger;
       if (this.get('timeremaining') == 0 && this.get('completed') !== null) {
         this.transitionToRoute('todo');
       } else if (this.get('completed') !== null) {
@@ -8373,7 +8373,169 @@ App.UploadFileView = Ember.TextField.extend({
     }
 });
 
+
+// Uploader Viewer
+App.FileUploadviewComponent = Ember.Component.extend({
+  value: '',
+  items: function(){
+    if (this.get('value') == null) {
+      return [];
+    }
+    return ("" !=  this.get('value')) ? this.get('value').split(',') : [];
+  }.property('value'),
+  actions: {
+    download: function(item) {
+      // https://github.com/johnculviner/jquery.fileDownload
+      
+      $.fileDownload( window.location.origin + '/' + item, {
+          successCallback: function (url) {
+       
+              alert('You just got a file download dialog or ribbon for this URL :' + url);
+          },
+          failCallback: function (html, url) {
+       
+              alert('Your file download just failed for this URL:' + url + '\r\n' +
+                      'Here was the resulting error HTML: \r\n' + html
+                      );
+          }
+      });
+    }
+  }
+})
+
+// Uses uploader libary
+// https://github.com/benefitcloud/ember-uploader
+App.FileUploadComponent = EmberUploader.FileField.extend({
+  url: '/share/uploadfile',
+  multiple: true,
+  uploading: false,
+  progress: false,
+  uploaded: "",
+  length: function(){
+    return ("" !=  this.get('uploaded')) ? this.get('uploaded').split(',').length : 0;
+  }.property('uploaded'),
+  filesDidChange: (function() {
+    var _this  = this;
+    var uploadUrl = this.get('url');
+    var files = this.get('files');
+
+    var uploader = EmberUploader.Uploader.create({
+      url: uploadUrl
+    });
+
+    uploader.on('progress', function(e) {
+      // Handle progress changes
+      // Use `e.percent` to get percentage
+      _this.set('progress', Math.ceil(e.percent));
+    });
+
+    if (!Ember.isEmpty(files)) {
+      this.set('progress', 0)
+      this.set('uploading', true)
+      var promise = uploader.upload(files);
+      promise.then(function(a){
+        var uploadedList = ("" !=  _this.get('uploaded')) ? _this.get('uploaded').split(',') : [];
+        console.log(a)
+        $.each(a.files, function(i,a){
+
+          uploadedList.push(a.url)
+        
+
+        })
+        _this.set('uploaded', uploadedList.join(','));
+
+
+          Messenger().post({ type: 'success', message: "Succesfully uploaded file", id: 'upload-files' })
+
+          _this.set('uploading', false)
+      }, function(){
+
+          Messenger().post({ type: 'error', message: "Error uploading file", id: 'upload-files' })
+
+          _this.set('uploading', false)
+
+      })
+    }
+  }).observes('files')
+});
+
+
+
+App.SignaturePadComponent = Ember.Component.extend({
+  signaturePad: null,
+  value: "",
+  disabled: false,
+  initSetup: function(){
+    var _this = this;
+    Ember.run.scheduleOnce('afterRender', this, function(){
+
+      // Get dom elements
+      var signaturePad;
+      var $container =  this.$('.signature-pad canvas');
+      var canvas = this.$('.signature-pad canvas')[0];
+
+      if (this.get('disabled')) {
+        // $container.on('click dblclick mouseenter mouseleave mousemove mousedown hover mouseup touchstart touchmove touchend' ,function(event){
+        $container.on('click mousedown' ,function(event){
+           event.stopPropagation();
+            Messenger().post({ type: 'info', message: "Signature field changes won't be saved! The Signature Field is currently disabled.", id: 'signaturePad' })
+
+        })
+      }
+
+      // If value updates make sure to update signature pad
+      this.addObserver('value', function(){
+        if (!_this.get('disabled')) {
+          setField()
+        }
+      })
+
+      function setField () {
+        var v = _this.get('value');
+        if (v != signaturePad.toDataURL() && v != "") {
+          signaturePad.fromDataURL(v);
+        } else if (v == "") {
+          signaturePad.clear();
+        }
+      }
+
+      // Make sure resizing of canvas works
+      function resizeCanvas() {
+          var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+          canvas.width = canvas.offsetWidth * ratio;
+          canvas.height = canvas.offsetHeight * ratio;
+          canvas.getContext("2d").scale(ratio, ratio);
+      }
+      window.onresize = resizeCanvas;
+      resizeCanvas();
+
+      
+      // Setup Signature Pad
+      signaturePad = new SignaturePad(canvas);
+      this.set('signaturePad', signaturePad);
+
+      // On change update values
+      signaturePad.onEnd = function(){
+        if (!_this.get('disabled')) {
+          _this.set('value', signaturePad.toDataURL());
+        } else {
+          setField();
+        }
+      }
+
+
+    })
+  }.on('init'),
+  actions: {
+    clear: function(){
+      this.get('signaturePad').clear();
+      this.set('value', "")
+    }
+  }
+});
+
 App.RadioButtonComponent = Ember.Component.extend({
+  // Pretty sure incomplete #TODO
   tagName: 'input',
   type: 'radio',
   attributeBindings: [ 'checked', 'name', 'type', 'value' ],

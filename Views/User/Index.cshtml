@@ -287,6 +287,87 @@
   </div>
 </script>
 
+<script id="temp-signature" type="text/x-handlebars-template">
+  <div class="form-group {{#if field_options.required}}required{{/if}}">
+    <label for="{{cid}}-{{label}}">{{label}}</label>
+    <input type="text" class="form-control {{form-size}}" name="{{cid}}-{{label}}" id="{{cid}}-{{label}}" {{#if required}}data-bv-notempty="true"{{/if}}> <span><small><i>Custom Signature Block (Only shown when running a workflow instance)</i></small></span>
+    <span class="help-block">{{field_options.description}}</span>
+  </div>
+</script>
+
+<script id="temp-file" type="text/x-handlebars-template">
+  <div class="form-group {{#if field_options.required}}required{{/if}}">
+    <label for="{{cid}}-{{label}}">{{label}}</label><br>
+    <input type="file" class="form-control {{form-size}}" name="{{cid}}-{{label}}" id="{{cid}}-{{label}}" {{#if required}}data-bv-notempty="true"{{/if}}>
+    <span class="help-block">{{field_options.description}}</span>
+  </div>
+</script>
+
+
+<script type="text/x-handlebars" data-template-name="components/lform-file">
+    <div>
+        <label>{{s.d.label}}</label><br>
+
+        {{file-uploadview value=s.record.Value}}
+
+
+        {{#unless s.d.readOnly}}
+            {{!-- Only show the file input editor if it's not read only --}}
+            {{#if uploading}}
+                {{progress}}% complete <br>
+            {{/if}}
+            {{file-upload progress=progress uploading=uploading uploaded=s.record.Value}}
+        {{/unless}}
+    </div>
+</script>
+
+<script type="text/x-handlebars" data-template-name="components/file-uploadview">
+    {{#if items}}
+        {{items.length}} Files (<i>click item to download</i>):
+        <ul class="">
+            {{#each item in items}}
+                <li style="">
+
+                    <img {{action 'download' item}} {{bind-attr src=item}} style='width:100px;'>
+                </li>
+            {{/each}}
+        </ul>
+    {{else}}
+
+        <i>No file uploaded. 
+        {{!-- yet. Use file uploader below to attach file or photo. --}}
+        </i>
+
+    {{/if}}
+
+</script>
+
+
+<script type="text/x-handlebars" data-template-name="components/lform-signature">
+    <div>
+        <label>{{s.d.label}}</label><br>
+        {{signature-pad value=s.record.Value disabled=s.d.readOnly}}
+    </div>
+</script>
+
+<script type="text/x-handlebars" data-template-name="components/signature-pad">
+    
+    <div class="signature-pad m-signature-pad">
+        <div class="m-signature-pad--body">
+          <canvas></canvas>
+        </div>
+        <div class="m-signature-pad--footer">
+            {{#unless disabled}}
+                <div class="description">Sign above</div>
+                <button {{action 'clear'}} class="button clear" data-action="clear">Clear</button>
+            {{else}}
+                <div class="description">Signed. Signature above.</div>
+            {{/unless}}
+            </div>
+      </div>
+    
+</script>
+
 <script type="text/x-handlebars" data-template-name="components/lform-price">
     <div>
         <label>{{s.d.label}}</label><br>
@@ -4985,7 +5066,11 @@
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/liquid-fire-0.15.0.js")"></script>
 
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/JsBarcode.all.min.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/signature_pad.min.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/ember-uploader.min.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/jquery.fileDownload.js")"></script>
 
+    
 
         <!-- js -->
         <script src="~/Modules/EXPEDIT.Share/Scripts/pace.min.js"></script>
