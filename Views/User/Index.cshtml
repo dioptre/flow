@@ -624,6 +624,22 @@
                 <li><a href="/flow/#/workflow/undefined">CREATE an example workflow</a></li>
                 <li><a href="/flow/#/report">REPORT your business status</a></li>
                 <li><a href="/flow/#/responseData">DRILL down on your workflow data</a></li>
+                <li>Examples:
+                    -Payments Receivable
+                    -Procurement
+                    -Booking
+                    -Sales Call
+                    -Triage
+                    -Security
+                    -govt compliancve
+                    -supply
+                    -gaming
+                    -wine
+                    -construction
+                    -finance
+                    -architecture
+                    -oh&amp;s
+                </li>
             </ul>
         {{/if}}
     {{else}}
@@ -974,7 +990,7 @@
 
 
     <div class="pull-right">
-        {{eui-input value=searchQuery placeholder="Search for Workflows, Steps, Files..."}}
+        {{eui-input action="search" value=searchQuery placeholder="Search for Workflows, Steps, Files..."}}
         {{eui-button label="Search" action="search"}}
     </div>
 
@@ -4449,10 +4465,17 @@
                                         {{eui-input value=profile.DefaultEmail size='medium' width='100%' error=emailValid forceErrorCheck=true}}
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <label class="col-lg-2 control-label">Password:</label>
+                                    <div class="col-lg-8">
+                                        <input type="button" value="Change Password" class="btn-glow" onclick="javascript:document.location.href = '/Users/Account/ChangePassword'">
+                                    </div>
+                                </div>
                                 <div class="actions">
                                     <input type="button" class="btn-glow primary" value="Save Changes" {{action "updateProfile" profile}}>
                                    @* <span>OR</span>
                                     <input type="reset" value="Cancel" class="reset">*@
+                                    
                                 </div>
                             </form>
 
@@ -5015,6 +5038,8 @@
         <script type="text/javascript">
             //ic.ajax.request.OVERRIDE_REST_ADAPTER = false;
         </script>*@
+        <script src="~/Modules/EXPEDIT.Share/Scripts/velocity/velocity.js"></script>
+        <script src="~/Modules/EXPEDIT.Share/Scripts/velocity/velocity.ui.js"></script>
         <script src="~/Modules/EXPEDIT.Share/Scripts/emberui.js"></script>
         @*<script src="~/Modules/EXPEDIT.Share/Scripts/emberui-4.js"></script>*@
         @*<script src="https://s3.amazonaws.com/emberui/dist/main.js"></script>*@
