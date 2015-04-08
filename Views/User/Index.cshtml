@@ -323,11 +323,12 @@
 
 <script type="text/x-handlebars" data-template-name="components/file-uploadview">
     {{#if items}}
-        {{items.length}} Files (click to view):
+        {{items.length}} Files (<i>click item to download</i>):
         <ul class="">
             {{#each item in items}}
                 <li style="">
-                    <img {{bind-attr src=item}} style='width:100px;'>
+
+                    <img {{action 'download' item}} {{bind-attr src=item}} style='width:100px;'>
                 </li>
             {{/each}}
         </ul>
@@ -5042,6 +5043,7 @@
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/JsBarcode.all.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/signature_pad.min.js")"></script>
         <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/ember-uploader.min.js")"></script>
+        <script src="@Href("~/Modules/EXPEDIT.Share/Scripts/jquery.fileDownload.js")"></script>
 
     
 

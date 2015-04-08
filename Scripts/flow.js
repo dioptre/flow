@@ -8378,8 +8378,29 @@ App.UploadFileView = Ember.TextField.extend({
 App.FileUploadviewComponent = Ember.Component.extend({
   value: '',
   items: function(){
+    if (this.get('value') == null) {
+      return [];
+    }
     return ("" !=  this.get('value')) ? this.get('value').split(',') : [];
-  }.property('value')
+  }.property('value'),
+  actions: {
+    download: function(item) {
+      // https://github.com/johnculviner/jquery.fileDownload
+      
+      $.fileDownload( window.location.origin + '/' + item, {
+          successCallback: function (url) {
+       
+              alert('You just got a file download dialog or ribbon for this URL :' + url);
+          },
+          failCallback: function (html, url) {
+       
+              alert('Your file download just failed for this URL:' + url + '\r\n' +
+                      'Here was the resulting error HTML: \r\n' + html
+                      );
+          }
+      });
+    }
+  }
 })
 
 // Uses uploader libary
