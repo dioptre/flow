@@ -347,8 +347,17 @@
     <div>
         <label>{{s.d.label}}</label><br>
         {{!-- {{signature-pad disabled=s.d.readOnly}} --}}
-        {{signature-pad value=s.record.Value disabled=s.d.readOnly}}
+
+        {{#unless s.d.readOnly}}
+            {{signature-pad value=s.record.Value disabled=s.d.readOnly}}
+        {{else}}
+            {{signature-padviewer value=s.recordValue}} 
+        {{/unless}}
     </div>
+</script>
+
+<script type="text/x-handlebars" data-template-name="components/signature-padviewer">
+    <img {{bind-attr src=url}}>
 </script>
 
 <script type="text/x-handlebars" data-template-name="components/signature-pad">

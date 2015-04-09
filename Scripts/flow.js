@@ -8462,7 +8462,13 @@ App.FileUploadComponent = EmberUploader.FileField.extend({
   }).observes('files')
 });
 
+App.SignaturePadviewerComponent = Ember.Component.extend({
+  value: null,
+  url: function(){
+    return window.location.origin + '/share/file' + this.get('value')
+  }.property('value')
 
+});
 
 App.SignaturePadComponent = Ember.Component.extend({
   signaturePad: null,
@@ -8494,12 +8500,12 @@ App.SignaturePadComponent = Ember.Component.extend({
       })
 
       function setField () {
-        var v = _this.get('value');
-        if (v != signaturePad.toDataURL() && v != "") {
-          signaturePad.fromDataURL(v);
-        } else if (v == "") {
-          signaturePad.clear();
-        }
+        // var v = _this.get('value');
+        // if (v != signaturePad.toDataURL() && v != "") {
+        //   signaturePad.fromDataURL(v);
+        // } else if (v == "") {
+        //   signaturePad.clear();
+        // }
       }
 
       // Make sure resizing of canvas works
@@ -8522,12 +8528,14 @@ App.SignaturePadComponent = Ember.Component.extend({
         if (!_this.get('disabled')) {
           _this.set('value', signaturePad.toDataURL());
 
+          var sigGUID = NewGUID();
             $.post('/share/UploadBase64PNG', {
-            id: NewGUID(),
-            name: NewGUID(), 
+            id: sigGUID,
+            name: sigGUID, 
             data: signaturePad.toDataURL().substr(signaturePad.toDataURL().indexOf(",") + 1)
           }).then(function(a){
             console.log(a);
+             _this.set('value', sigGUID);
           })
         } else {
           setField();
