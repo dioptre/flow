@@ -911,6 +911,10 @@ table thead {
   font-style: italic;
 }
 
+.pretty-content img {
+  max-width: 100%;
+}
+
 small, .font_small {font-size: 0.707em;}
 
 
