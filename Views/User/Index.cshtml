@@ -996,7 +996,18 @@
 
 
     <div class="pull-right">
-        {{input on="enter" action="search" value=searchQuery placeholder="Search..." class="eui-medium eui-default eui-input ember-view ember-text-field eui-overrides"}}
+        <eui-input  class="ember-view eui-medium eui-default eui-input" style="width: 200px;">
+            <div class="eui-wrapper">
+                <label>Search...</label>
+
+                {{input on="enter" action="search" value=searchQuery class="ember-view ember-text-field"}}
+
+            </div>
+
+
+        </eui-input>
+
+        {{!-- {{input on="enter" action="search" value=searchQuery placeholder="Search..." class="eui-medium eui-default eui-input ember-view ember-text-field eui-overrides"}} --}}
         {{eui-button label="Search" action="search"}}
     </div>
 
