@@ -67,6 +67,8 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? ReferenceID { get; set; }
         public bool? IncludeContent { get; set; }
 
+        public string Locale { get; set; }
+
         public Guid? Project { get { return ProjectID; } }
 
         public long? Row { get; set; }
