@@ -178,6 +178,9 @@ App.Router.map(function () {
         this.resource('responseDatum', { 'path': '/:id' });
     });
 
+    // FlowPro vs2.5
+    this.route('sidebar');
+
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });
     this.route('translateme', { path: 'translateme' }); // Internal only
