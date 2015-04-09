@@ -1983,7 +1983,7 @@
             <div style="text-align:center">
                 {{eui-button label=controllers.application.model.t.fp_general_next action="nextStep" size="large" style='primary'}}
                 <br />
-                <a style="cursor:pointer;" {{action 'pause'}}>{{safehtml controllers.application.model.t.fp_general_pause}}</a>
+                <a style="cursor:pointer;" {{action 'pause'}}>{{{controllers.application.model.t.fp_general_pause}}}</a>
             </div>
             <br/><br/>
             {{else}}
