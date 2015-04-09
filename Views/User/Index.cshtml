@@ -2069,16 +2069,16 @@
                         <br>
 
                         <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray' title="Edit Workflow">
-                            <i class="icon-pencil"></i> {{!--Edit Workflow name--}}
+                            <i class="icon-pencil"></i> <!--Name--> {{!--Edit Workflow name--}}
                         </span>
                         <span {{action 'createWorkflowInstance' workflowID }} class='btn-flat gray' title="Run a new workflow instance">
-                            <i class="icon-play"></i> {{!--Edit Workflow name--}}
+                            <i class="icon-play"></i> Run {{!--Edit Workflow name--}}
                         </span>
                         <span {{action 'toggleWorkflowTriggersModal'}} class='btn-flat gray' title="Show triggers">
-                            <i class="icon-bolt"></i>
+                            <i class="icon-bolt"></i> Triggers
                         </span>
                         <span {{action 'toggleWorkflowCopyModal'}} class='btn-flat gray' title="Clone workflow">
-                            <i class="icon-retweet"></i>
+                            <i class="icon-retweet"></i> Clone
                         </span>
                         <span {{action 'toggleWorkflowView' }} class='btn-flat gray' title="Preview workflow fullscreen">
                             <i class="icon-fullscreen"></i>
@@ -2116,19 +2116,21 @@
                             <br>
 
                             <span {{action 'toggleWorkflowEditModal'}} class='btn-flat gray' title="Edit step name & content">
-                                <i class="icon-pencil"></i>
+                                <i class="icon-pencil"></i> <!--Edit Name & Content-->
                             </span>
                             <span {{action 'toggleMoneyModal'}} class='btn-flat gray' title="Edit business properties">
-                                <i class="icon-cogs"></i>
+                                <i class="icon-cogs"></i> Properties
                             </span>
                             <span {{action 'toggleTriggersModal'}} class='btn-flat gray' title="Edit triggers">
-                                <i class="icon-bolt"></i>
+                                <i class="icon-bolt"></i> Automation
                             </span>
-                            <span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;" title="Share or embed current step in your website">
-                               <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-left:1px; margin-top:2px; min-width:12px; min-height:12px;"></div>
+                            <span {{action 'toggleShareModal'}} class='btn-flat gray' title="Share or embed current step in your website">
+                            {{!-- <span {{action 'toggleShareModal'}} class='btn-flat gray' style="width:43px; height:31px;" title="Share or embed current step in your website"> --}}
+                               <div style="background-image: url(/modules/expedit.flow/images/share-icon.png); background-size: 12px 12px; background-repeat: no-repeat; margin-right: 2px; min-width: 12px; min-height: 12px; display: inherit;"></div> Share
+                                    {{!-- <i class="icon-share"></i> Share --}}
                             </span>
                                <span {{action 'translateWorkflow' workflowID selectedID}} class='btn-flat gray' title="Translate Workflow">
-                                   <i class="icon-globe"></i> {{!--Edit Workflow name--}}
+                                   <i class="icon-globe"></i> Translate {{!--Edit Workflow name--}}
                                </span>
                            <span {{action 'toggleProcessPreview' }} class='btn-flat gray' title="Preview step for sharing">
                                <i class="icon-fullscreen"></i>
