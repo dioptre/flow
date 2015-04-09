@@ -8522,10 +8522,10 @@ App.SignaturePadComponent = Ember.Component.extend({
         if (!_this.get('disabled')) {
           _this.set('value', signaturePad.toDataURL());
 
-          $.post('/share/upload', { 
+            $.post('/share/UploadBase64PNG', {
             id: NewGUID(),
             name: NewGUID(), 
-            data64: signaturePad.toDataURL().substr(signaturePad.toDataURL().indexOf(",") + 1)
+            data: signaturePad.toDataURL().substr(signaturePad.toDataURL().indexOf(",") + 1)
           }).then(function(a){
             console.log(a);
           })
