@@ -5318,7 +5318,7 @@ App.StepController = Ember.ObjectController.extend({
                         url: "/flow/WebMethod/DoNext/" + _this.get('stepID'),
                         type: "GET"
                     }).then(function (response) {
-                        _this.store.findQuery('step', { id: _this.get('stepID') }).then(function (m) {
+                        _this.store.findQuery('step', { id: _this.get('stepID'), workflowID: _this.get('workflowID'), includeContent: true, localeSelected: App.get('localeSelected') }).then(function (m) {
                             //_this.transitionToRoute('step', { id: _this.get('stepID') });
                             //Messenger().post({ type: 'success', message: 'Transitioned' });
                             Messenger().post({ type: 'success', message: 'Transitioning...' });
@@ -8437,7 +8437,7 @@ App.FileUploadComponent = EmberUploader.FileField.extend({
       this.set('uploading', true)
       var promise = uploader.upload(files);
       promise.then(function(a){
-        var uploadedList = ("" !=  _this.get('uploaded')) ? _this.get('uploaded').split(',') : [];
+        var uploadedList = (_this.get('uploaded') && _this.get('uploaded').length > 0) ? _this.get('uploaded').split(',') : [];
         console.log(a)
         $.each(a.files, function(i,a){
 
