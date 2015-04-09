@@ -36,7 +36,7 @@ namespace EXPEDIT.Flow.Services
         [OperationContract]
         bool Authorize(AutomationViewModel m, Guid? gid, ActionPermission permission, Type typeToCheck);
 
-        AutomationViewModel GetStep(NKDC d, Guid sid, Guid? tid = null, bool includeContent = false);
+        AutomationViewModel GetStep(NKDC d, Guid sid, Guid? tid = null, bool includeContent = false, string locale = "en-US");
 
         bool QuenchStep(NKDC d, AutomationViewModel m);
 

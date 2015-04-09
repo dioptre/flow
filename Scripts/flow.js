@@ -5062,7 +5062,7 @@ App.StepRoute = Ember.Route.extend({
     },
     model: function (params, data) {
         var _this = this;
-        return this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true }).then(function(a){
+        return this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true, localeSelected: App.get('localeSelected') }).then(function (a) {
                 _this.set('steps', a);                
                 return a.content[0].get('Project')
             }).then(function (b) {
