@@ -351,13 +351,17 @@
         {{#unless s.d.readOnly}}
             {{signature-pad value=s.record.Value disabled=s.d.readOnly}}
         {{else}}
-            {{signature-padviewer value=s.recordValue}} 
+            {{#if s.record.Value}}
+                Signature recorded:
+                {{signature-padviewer value=s.record.Value}} 
+            {{/if}}
+
         {{/unless}}
     </div>
 </script>
 
 <script type="text/x-handlebars" data-template-name="components/signature-padviewer">
-    <img {{bind-attr src=url}}>
+    <img style="max-width:150px; border: 1px solid #ccc;" {{bind-attr src=url}}>
 </script>
 
 <script type="text/x-handlebars" data-template-name="components/signature-pad">

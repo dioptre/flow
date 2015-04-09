@@ -8465,7 +8465,7 @@ App.FileUploadComponent = EmberUploader.FileField.extend({
 App.SignaturePadviewerComponent = Ember.Component.extend({
   value: null,
   url: function(){
-    return window.location.origin + '/share/file' + this.get('value')
+    return window.location.origin + '/share/file/' + this.get('value')
   }.property('value')
 
 });
