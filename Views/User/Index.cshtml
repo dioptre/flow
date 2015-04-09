@@ -458,13 +458,6 @@
         {{#each option in s.d.field_options.options}}
             {{radio-button name=uniqueRadioID value=option.label groupValue=s.record.Value}} {{option.label}}
         {{/each}}
-        <br>
-        
-        {{!--s.record.Value--}}
-  
-
-        @*{{s.value}}*@
-
     </div>
 </script>
 
@@ -472,8 +465,6 @@
     <div>
         <label>{{s.d.label}}</label><br>
         {{eui-input value=s.record.Value disabled=s.d.readOnly}}
-        @*{{s.value}}*@
-
     </div>
 </script>
 

@@ -8359,7 +8359,7 @@ App.UsermanagerController = Ember.Controller.extend({
 })
 
 
-// File uploader
+// File uploader - I wonder if this Component is even  is used at all???
 App.UploadFileView = Ember.TextField.extend({
     type: 'file',
     attributeBindings: ['name'],
@@ -8534,31 +8534,16 @@ App.SignaturePadComponent = Ember.Component.extend({
   }
 });
 
+
+// Radio buttons component.
 App.RadioButtonComponent = Ember.Component.extend({
-  // Pretty sure incomplete #TODO
   tagName: 'input',
   type: 'radio',
+  value: null,
   attributeBindings: [ 'checked', 'name', 'type', 'value' ],
- 
   checked: function () {
-    if (JSON.parse(JSON.stringify(this.get('value'))) === JSON.parse(JSON.stringify(this.get('groupValue')))) {
-      Ember.run.once(this, 'takeAction');
-      console.log('should be active')
-      return true;
-    } else { return false; }
-  },
- 
-  takeAction: function() {
-    this.sendAction('selectedAction', this.get('value'));
-  },
-
-  groupValueObserver: function(){
-     Ember.run.once(this, 'checked'); //manual observer
-    //console.log(this.get('value'), this.get('groupValue'))
-
-
-  }.observes('groupValue'),
- 
+      return JSON.parse(JSON.stringify(this.get('value'))) == JSON.parse(JSON.stringify(this.get('groupValue')));
+  }.property('value', 'groupValue').readOnly(),
   change: function () {
     this.set('groupValue', this.get('value'));
     Ember.run.once(this, 'checked'); //manual observer
