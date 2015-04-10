@@ -1385,8 +1385,6 @@
                 <h4>{{model.t.fp_general_actions_logoutConfirmation}}</h4>
 
                 <br>
-                {{!-- {{eui-button label=model.t.fp_general_actions_cancel action="togglelogoutModal" size='large'}}
-                {{eui-button label=model.t.fp_general_actions_logout action="logoutUser" style='primary' size='large' disabled=validateNewName loading=loadingEditName}} --}}
 
                 {{eui-button label=model.t.fp_general_actions_cancel action="togglelogoutModal"}}
                 {{eui-button label=model.t.fp_general_actions_logout action="logoutUser" style='primary' disabled=validateNewName loading=loadingEditName}}
@@ -1400,11 +1398,7 @@
         <div class="navbar-header">
             <div class="navbar-toggle" type="button" data-toggle="collapse" id="menu-toggler">
                 <span class="sr-only">Toggle navigation</span>
-                <!--
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                -->
+
                 <svg class="inline-svg" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="44px" height="32px" viewBox="0 0 32 22.5" enable-background="new 0 0 32 22.5" xml:space="preserve">
                     <g class="svg-menu-toggle">
                         <path class="bar" d="M20.945,8.75c0,0.69-0.5,1.25-1.117,1.25H3.141c-0.617,0-1.118-0.56-1.118-1.25l0,0
@@ -1415,14 +1409,13 @@
                         <path class="bar" d="M20.969,21.25c0,0.689-0.5,1.25-1.117,1.25H3.164c-0.617,0-1.118-0.561-1.118-1.25l0,0
                             c0-0.689,0.5-1.25,1.118-1.25h16.688C20.469,20,20.969,20.561,20.969,21.25L20.969,21.25z">
                         </path>
-                        <!-- needs to be here as a 'hit area' -->
-                        <rect width="44px" height="32px" fill="none">
+                        <rect width="44px" height="32px" fill="none"> <!-- needs to be here as a 'hit area' -->
                         </rect>
                     </g>
                 </svg>
             </div>
 
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand hidden-xs" href="#">
                 <img src="/Modules/EXPEDIT.Flow/Images/logo.png" alt="FlowPro" />
             </a>
         </div>
@@ -1531,9 +1524,9 @@
 
                 
                 <li class="settings profile dropdown" {{bind-attr title='userProfile.UserName'}}>
-                    <a href="#" class="dropdown-toggle hidden-xs hidden-sm" data-toggle="dropdown">
+                    <a href="#" class="dropdown-toggle " data-toggle="dropdown">
                          
-                        <img {{bind-attr src="userProfile.Thumb"}}>
+                        <img {{bind-attr src="userProfile.Thumb" }}>
                         &nbsp
                         {{userProfile.UserName}}
                          
@@ -2044,9 +2037,11 @@
 
 <script type="text/x-handlebars" id="sidebar">
 
-    Sidebar
-    <div class="row">
-        <div class="col-md-8">
+    
+    <div class="row sidebar-container">
+        <div class="col-md-8 sidebar-background">
+
+            <h1>Sidebar</h1>
             .col-md-8
 
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse auctor quis leo eget pretium. Vivamus nunc justo, convallis nec viverra sit amet, fermentum nec erat. Suspendisse tempus interdum ex id maximus. Cras dignissim vitae tellus et efficitur. Nullam sed aliquet odio. Donec efficitur sit amet ligula et facilisis. Donec sed accumsan lectus. Praesent eget velit vitae enim eleifend porta sed aliquam massa. Nulla venenatis, velit in malesuada consequat, lorem nulla faucibus urna, eu faucibus ligula augue nec lorem. Aliquam placerat gravida augue, in posuere neque fringilla at. Mauris finibus eget felis at tempor. Interdum et malesuada fames ac ante ipsum primis in faucibus.
@@ -2059,14 +2054,10 @@
 
             Praesent eget posuere ligula. Fusce viverra massa nec elementum ultricies. Sed auctor, risus at auctor mattis, dui erat accumsan neque, sit amet commodo velit justo vel tellus. Sed sit amet varius urna, vel tristique sapien. Maecenas dictum dignissim sollicitudin. Nunc nec ante vehicula, rutrum felis vel, consectetur metus. Suspendisse dictum metus ante, id vehicula elit malesuada sed. Vestibulum quam turpis, mollis ac nulla id, facilisis rhoncus magna. Integer vel tempor neque. Donec nec vulputate lectus, et dictum nisl. Pellentesque mattis tristique nulla, sed tincidunt erat. Sed nisl felis, ullamcorper sed mi at, tempor imperdiet urna. Phasellus dapibus justo in fermentum pretium. Nunc ut convallis massa.
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 sidebar-element">
             .col-md-4
 
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse auctor quis leo eget pretium. Vivamus nunc justo, convallis nec viverra sit amet, fermentum nec erat. Suspendisse tempus interdum ex id maximus. Cras dignissim vitae tellus et efficitur. Nullam sed aliquet odio. Donec efficitur sit amet ligula et facilisis. Donec sed accumsan lectus. Praesent eget velit vitae enim eleifend porta sed aliquam massa. Nulla venenatis, velit in malesuada consequat, lorem nulla faucibus urna, eu faucibus ligula augue nec lorem. Aliquam placerat gravida augue, in posuere neque fringilla at. Mauris finibus eget felis at tempor. Interdum et malesuada fames ac ante ipsum primis in faucibus.
 
-            Quisque vel metus metus. Proin tincidunt nulla odio, vitae volutpat eros fringilla a. Pellentesque augue nisl, fermentum ut mollis sed, lacinia non ante. Praesent sed malesuada tortor. Suspendisse faucibus mi ac turpis pretium, in placerat magna eleifend. Duis laoreet nibh eros, vel egestas arcu mollis a. Curabitur hendrerit neque sit amet augue viverra, vel vulputate arcu posuere. Phasellus sodales nulla non posuere mattis. In sit amet vulputate sapien, non accumsan diam. Curabitur iaculis ipsum maximus erat tempor, sit amet accumsan massa aliquet. Aenean eget ipsum commodo ligula lacinia tempor. Nam elementum sit amet metus vel mollis. Nunc cursus fringilla sem, a tincidunt mauris tristique in. Nam consequat neque lacus, vel ornare leo eleifend in.
-
-            Nam ornare elit sapien, et tempus nibh facilisis eu. Quisque commodo, sapien ut faucibus tempus, lacus metus condimentum sapien, sit amet porta sapien est non sapien. Suspendisse vulputate pretium neque ac vehicula. Nunc suscipit erat nec posuere sagittis. Phasellus accumsan nisi enim, at viverra nisi vestibulum et. Sed varius et elit nec mattis. Morbi at dui elementum est mattis feugiat. Ut efficitur bibendum mi id consectetur. Duis efficitur dolor et nisi convallis blandit non quis odio. Donec venenatis ante felis, at rhoncus nunc posuere nec. Aenean maximus accumsan nunc vitae cursus. Nulla in bibendum dui, id venenatis justo. Nullam finibus arcu vitae neque sollicitudin, quis vulputate ipsum eleifend.
 
             Vestibulum dui tortor, sagittis ac aliquet sed, euismod vitae felis. Pellentesque placerat pretium cursus. Nullam varius placerat magna, id hendrerit odio dictum et. Praesent at bibendum velit, at placerat leo. In eget nunc cursus, fringilla urna at, ullamcorper nulla. Vestibulum et ante non orci gravida fermentum. Donec purus tellus, volutpat sit amet elit vel, ullamcorper tristique velit. Phasellus a elit nibh. Aenean euismod scelerisque eros, vulputate faucibus metus dignissim at. In congue auctor tellus, quis facilisis ligula ullamcorper a. Suspendisse sed porta arcu. Maecenas tempus libero sapien, scelerisque gravida velit imperdiet eget. Aenean scelerisque eu metus nec vulputate. Maecenas porttitor maximus nisi et rhoncus.
 
@@ -2094,7 +2085,14 @@
 
                 .content {
                     margin-left: 0px;
+                    min-height: 200px;
+                    border: none;
+                    box-shadow: none;
                 }
+                html, #emberapphere {
+                    background: white;
+                }
+ 
             </style>
             {{else}}
             <style>
@@ -2202,16 +2200,14 @@
                         {{/unless}}
                     {{/if}}
                     {{#if isPreview}}
-                       <small>{{workflowName}}</small>
+                       <sub><u>Workflow</u>: {{workflowName}}</sub>
+                       {{!-- <br> --}}
                        <span {{action 'hidePreview' }} class='btn-flat gray' title="Edit Content @@ FlowPro.io">
-                           <i class="icon-fullscreen"></i>
+                           <i class="icon-pencil"> Edit in FlowPro</i> 
                        </span>
                     {{/if}}
                 </h1>
                 <hr>
-                {{#if isPreview}}
-                    <div class="semi-transparent"><a href="http://flowpro.io" target="_blank" style="float:right;">Content provided by FlowPro.io</a></div>
-                {{/if}}
 
 
                 <div class='pretty-content'>
@@ -2521,9 +2517,13 @@
             </div>
             {{/eui-modal}}
 
-             <hr>
+             
             {{#if isPreview}}
-                    <div><a href="http://flowpro.io" target="_blank" style="float:right;">Content provided by FlowPro.io</a></div>
+                <div class='col-md-12' style='text-align: center; background: #f7f7f7; padding: 13px; margin-top: 36px; margin-bottom: -23px; border-radius: 5px;'> 
+                    <a href="http://flowpro.io" target="_blank" style="">
+                        Content proudly powered by FlowPro.io
+                    </a>
+                </div>
             {{/if}}
 
             </div>
