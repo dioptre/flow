@@ -14,14 +14,14 @@ if ((_ref = Ember.libraries) != null) {
 //        var data = originalOptions.data;
 //        if (originalOptions.dataType && originalOptions.dataType.match(/json/ig) !== null) {
 //            if (data && Object.prototype.toString.call(originalOptions.data) === '[object String]') {
-//                var temp = JSON.parse(originalOptions.data);                
+//                var temp = JSON.parse(originalOptions.data);
 //            } else
 //            {
 //                data = {};
 //            }
 //            options.data = JSON.stringify($.extend(temp, { __RequestVerificationToken: verificationToken }));
 //        }
-//        else {            
+//        else {
 //            if (data !== undefined) {
 //                if (Object.prototype.toString.call(originalOptions.data) === '[object String]') {
 //                    data = $.deparam(originalOptions.data); // see http://benalman.com/code/projects/jquery-bbq/examples/deparam/
@@ -416,26 +416,26 @@ App.ReportRoute = Ember.Route.extend({
     model: function () {
         return Ember.RSVP.hash({
             data : new Ember.RSVP.Promise(function(resolve, reject) {
-                $.ajax({ 
-                    url: '/flow/reports'                   
+                $.ajax({
+                    url: '/flow/reports'
                 }).then(function (m, textStatus, jqXHR) {
                     resolve(m);
                 }, function (m) {
                     reject(m);
                 });
             })
-        });           
+        });
     },
-    afterModel: function (m) {        
+    afterModel: function (m) {
         if (!m.data || typeof m.data == 'string')
             return;
         m.impact = Enumerable.From(m.data[0]).Select("{group:ToTitleCase($.Item1.replace(/_/g, ' ')), xValue: $.Item2, yValue: $.Item3*100.0 }").ToArray();
         var overdueMax = 1;
-        
+
         m.overdue = Enumerable.From(m.data[1]).Select(function (value, index) {
             if (value.Item2 > overdueMax)
                 overdueMax = value.Item2;
-            var hackDate = new Date(1970, 01, 01); 
+            var hackDate = new Date(1970, 01, 01);
             hackDate.setMonth(1 + index);
             var lbl = ToTitleCase(value.Item1.replace(/_/g, ' '));
             return { label: 'Outstanding Instances', group: lbl, time: hackDate, value: value.Item2 }
@@ -889,7 +889,7 @@ App.NewworkflowController = Ember.Controller.extend({
       //     return (typeof this.get('validateNewName') === 'string') || (typeof this.get('validateWorkflowName') === 'string');
       // else
     var noError = (this.get('validateWfName') == false) || (this.get('validateStepName2') == false) || (this.get('validateStepName') == false);
-  
+
     console.log(notEmptyName, noError, this.get('validateStepName') == false)
 
     return !(noError && notEmptyName);
@@ -907,10 +907,10 @@ App.NewworkflowController = Ember.Controller.extend({
         _this.set('controllers.application.isLoading', true)
 
 
-        var workflow = this.store.createRecord('workflow', { 
-                id: wfid, 
-                name: this.get('wfName'), 
-                StartGraphDataID: stepid 
+        var workflow = this.store.createRecord('workflow', {
+                id: wfid,
+                name: this.get('wfName'),
+                StartGraphDataID: stepid
             });
 
         var node = this.store.createRecord('node', {
@@ -940,7 +940,7 @@ App.NewworkflowController = Ember.Controller.extend({
           step2: node2.save()
         }).then(function(){
              return workflow.save().then(function(){
-         
+
 
 
               var newEdge = App.Node.store.createRecord('edge', {
@@ -950,12 +950,12 @@ App.NewworkflowController = Ember.Controller.extend({
                   to: stepid2
               });
               return newEdge.save()
-  
+
 
             })
         }).then(function (o) {
 
-            Messenger().post({ type: 'info', message: 'We are now redirecting you to your workflow... this might take 1 second.' });        
+            Messenger().post({ type: 'info', message: 'We are now redirecting you to your workflow... this might take 1 second.' });
             Messenger().post({ type: 'success', message: 'Successfully added new Workflow!' });
 
             Ember.run.later(function(){
@@ -968,7 +968,7 @@ App.NewworkflowController = Ember.Controller.extend({
 
             Messenger().post({type:'error', message:'Error with adding new Workflow. ' + error});
         });
-        
+
     }
   }
 });
@@ -2710,7 +2710,7 @@ App.GraphRoute = Ember.Route.extend({
             workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
                 var groupID = Enumerable.From(_this.store.all('edge').content).Where("f=>f.get('from') ==='" + id + "' && f.get('to') === null").Select("f=>f.get('GroupID')").FirstOrDefault();
                 var pontentialGraphID = Enumerable.From(_this.store.all('edge').content).Where("f=>f.get('from') ==='" + id + "' || f.get('from') ==='" + id + "'").Select("f=>f.get('GroupID')").FirstOrDefault();
-                
+
                 console.log(groupID, 'this is the group id')
                 console.log(_this.store.all('edge').content);
                 if (typeof groupID !== 'undefined' && document.URL.indexOf(groupID) < 1) {
@@ -3093,8 +3093,8 @@ App.GraphController = Ember.ObjectController.extend({
             }, function(){
                // return new Promise(function(resolve, reject) {
                             var aPromise = _this.store.createRecord('task',{
-                                id: NewGUID(), 
-                                GraphDataGroupID: _this.get('workflowID'), 
+                                id: NewGUID(),
+                                GraphDataGroupID: _this.get('workflowID'),
                                 GraphDataID: _this.get('graphID')
                             }) //.save()
 
@@ -3108,7 +3108,7 @@ App.GraphController = Ember.ObjectController.extend({
         },
         submitMoneyModal: function (data, callback) {
             var a = this.get('moneyModalStoreObject');
-            
+
 
             var _this = this;
             // Save Money Variables
@@ -3162,7 +3162,7 @@ App.GraphController = Ember.ObjectController.extend({
         },
         submitTriggerModal: function (data, callback) {
             var a = this.get('moneyModalStoreObject');
-            
+
             this.set('triggerModal', false);
 
 
@@ -3194,7 +3194,7 @@ App.GraphController = Ember.ObjectController.extend({
                 this.set('preview', false);
             else
                 this.set('preview', 'wf');
-            
+
             Ember.run.later(function(){
                 this.set('updateGraph', NewGUID()); // make graph rerender
             }, 300);
@@ -3507,7 +3507,7 @@ App.VizEditorComponent = Ember.Component.extend({
         var redraw = function () {
             this.zoomExtent(); //Not working?!
             this.redraw(); // This makes the graph responsive!!!
-        };       
+        };
         Ember.run.debounce(g, redraw, 150, false);
     }.observes('preview'),
     data: null,
@@ -3647,7 +3647,7 @@ App.VizEditorComponent = Ember.Component.extend({
         //console.log(container, data, options);
         this.graph = new vis.Network(container, data, options);
         // This sets the new selected item on click
-        
+
         this.graph.on('doubleClick', function (data) {
 
             if (data.nodes.length > 0) {
@@ -3666,10 +3666,10 @@ App.VizEditorComponent = Ember.Component.extend({
 
 
         this.graph.on('click', function (data) {
-            
+
             // Set the value on the component - used by a few computed properties including edit edge conditions...
             _this.set('selectedData', data);
-            
+
             if (data.nodes.length > 0) {
                 var wfid = _this.get('workflowID'); // has to be synched with data
                 // either wikipedia OR node is part of workflow confirmed by store OR first node
@@ -4118,7 +4118,7 @@ App.UserSelectorComponent = Ember.Component.extend({
     valueUpdated: function(){
       var _this = this;
       if (!this.get('valueBeingUpdated')) {
-        var orgVal = _this.get('value'); 
+        var orgVal = _this.get('value');
         var id = '#' + _this.get('internalID');
         var url =  _this.get('url') + "/";
         var data = '';
@@ -4142,7 +4142,7 @@ App.UserSelectorComponent = Ember.Component.extend({
                 $(id).select2('data', results);
             else
                 $(id).select2('data', results[0]);
-            
+
         }, function(){
             console.log('was looking for value', data, 'could not find it');
         });
@@ -4173,7 +4173,7 @@ App.UserSelectorComponent = Ember.Component.extend({
                         var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray(); // Use linq ;)
                         return { results: results, text: 'tag' };
                     }
-                },           
+                },
                 formatResult: function(state) {return state.tag; },
                 formatSelection: function (state) {return state.tag; },
                 escapeMarkup: function (m) { return m; }
@@ -4187,15 +4187,15 @@ App.UserSelectorComponent = Ember.Component.extend({
             // need to preload old value here...
             //$(id).val(orgVal);
             // Setup Select2
-            $(id).select2(settings).on("change", function(e) { 
-                _this.set('valueBeingUpdated', true); 
-                _this.set('value', e.val); 
-                _this.set('valueBeingUpdated', false); 
+            $(id).select2(settings).on("change", function(e) {
+                _this.set('valueBeingUpdated', true);
+                _this.set('value', e.val);
+                _this.set('valueBeingUpdated', false);
             });
 
             _this.get('valueUpdated').apply(this);
 
-            
+
         });
     }.on('didInsertElement')
 })
@@ -4229,7 +4229,7 @@ App.WorkflowSelectorComponent = App.UserSelectorComponent.extend({
     httpMethod: 'GET'
 });
 
-// //TODO Refactor so that query only happens on click - 
+// //TODO Refactor so that query only happens on click -
 // App.MyCompanySelectorComponent = App.UserSelectorComponent.extend({
 //     classNames: ['mycompany-selector'],
 //     minimumInput: 0,
@@ -4366,15 +4366,15 @@ App.ThenTrigger = App.TriggerOption.extend({
     type: 'email',
     options: ['webhook', 'email', 'csingle', 'cmulti'],
     select: [
-        {value: 'csingle', text: "Create Todo"}, 
-        {value: 'cmulti', text: "Create multiple Todos"}, 
-        {value: 'email', text: "Email"}, 
+        {value: 'csingle', text: "Create Todo"},
+        {value: 'cmulti', text: "Create multiple Todos"},
+        {value: 'email', text: "Email"},
         {value: 'webhook', text: "Webhook"}
     ],
     relatioshipSelect:  [{value:"Peer", text:"Each Sibling"},{value:"Parent", text:"Each Parent"},{value:"Child", text:"Each Child"}, {value:"Self", text:"Itself"}],
     emailTemplate: {
         sender: '',
-        recipient: '', 
+        recipient: '',
         message: '',
         subject: ''
     },
@@ -4384,7 +4384,7 @@ App.ThenTrigger = App.TriggerOption.extend({
     cmultiTemplate: {
         NewWorkflowID: '', // workflow selector
         NewCompanyID: '', //
-        CompanyLevel: '', // 
+        CompanyLevel: '', //
         Relationship: 'Child' // dropdown
     },
     webhookTemplate: {
@@ -4417,7 +4417,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
     triggers: [],
     triggersJSON: {},
     setup: function(){
-        
+
         // Get graph & Workflow ID
         var graphID = this.get('graphID');
         var workflowID = this.get('workflowID');
@@ -4425,7 +4425,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
         var _this = this;
 
         this.set('loading', true);
-  
+
         var store = this.get('targetObject.store');
 
         var config = { GraphDataID: graphID, GraphDataGroupID: workflowID };
@@ -4498,7 +4498,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
                 } else if (triggerValue.csingle) {
                     var p = construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'csingle' }));
                     p.csingle.NewWorkflowID = triggerValue.csingle.NewWorkflowID;
-                
+
                 } else if (triggerValue.cmulti) {
                     var p = construct.trigger.pushObject(App.ThenTrigger.create({ id: value.id, type: 'cmulti' }));
                     p.cmulti.NewWorkflowID = triggerValue.cmulti.NewWorkflowID;
@@ -4506,7 +4506,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
                     p.cmulti.CompanyLevel = triggerValue.cmulti.CompanyLevel;
                     p.cmulti.Relationship = triggerValue.cmulti.Relationship;
                 }
-            
+
                 _this.get('triggers').addObject(value);
             });
             if (!found) {
@@ -4538,7 +4538,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
         triggerConditions: false,
         onEnter: true,
         fields: [
-            {        
+            {
                 type: {
                     varLabel: '',
                     varSelect: '',
@@ -4548,7 +4548,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
             }
         ],
         trigger: [
-            
+
             App.ThenTrigger.create({
                 id: NewGUID(),
                 type: 'email'
@@ -4569,11 +4569,11 @@ App.TriggerNodeComponent = Ember.Component.extend({
         // Loop through each line in the condition array
         if (c.fields.length > 0) {
           $.each(c.fields, function(i, a){
-    
+
           if (a.type != null && a.type.varSelect) {
               b = a.type
 
-              // Create the comparions part 
+              // Create the comparions part
               var l = '';
               if (b.matchSelect == 'contains') {
                   l = '.match(/' + b.matchInput + '/ig) != null';
@@ -4601,18 +4601,18 @@ App.TriggerNodeComponent = Ember.Component.extend({
               }
 
               // Put it all together
-              s += '( ' + '{{' + b.varSelect + '}}' + l  + ')' + comparison; 
+              s += '( ' + '{{' + b.varSelect + '}}' + l  + ')' + comparison;
 
             }
           });
         }
 
         return s
-        
+
 
 
     },
-    defaultConfigItem: {        
+    defaultConfigItem: {
         type: {
             varLabel: '',
             varSelect: '',
@@ -4664,7 +4664,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
             if (!conditionID) {
                 conditionID = NewGUID();
                 triggersJSON.ConditionID = conditionID;
-            }                
+            }
             var condition = triggersJSON.fields;
             //delete triggersJSON.fields;
             var triggers = triggersJSON.trigger;
@@ -4785,7 +4785,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
             } else {
                 this.get('triggersJSON.fields').removeObject(context.itemToDelete);
             }
-            
+
         },
         'addTriggerRow': function (context) {
             var positionCurrent = this.get('triggersJSON.trigger').indexOf(context.itemInsertAfter) + 1;
@@ -4801,7 +4801,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
             } else {
                 this.get('triggersJSON.trigger').removeObject(context.itemToDelete);
             }
-        }                                                
+        }
     }
 });
 
@@ -4837,11 +4837,11 @@ App.TriggerSetupComponent = Ember.Component.extend({
             if (edge) {
                 this.set('edge', edge);
                 var conditions = edge.get('EdgeConditions').then(function (a) {
-                    // here you need to set the this.config :) - 
+                    // here you need to set the this.config :) -
                     _this.set('loading', false);
 
                     if (a.get('length') == 1) {
-                        //debugger;  
+                        //debugger;
 
                         _this.set('config', JSON.parse(a.get('firstObject.JSON')))
                     }
@@ -4852,7 +4852,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
 
                         _this.set('config', _this.get('defaultConfig'));
                         _this.set('config.triggerConditions', false);
-                        
+
 
                         _this.set('triggerConditionsWatcher', true); // TURN WATCHER BACK ON
 
@@ -4923,7 +4923,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
         matchSelect: 'All',
         triggerConditions: false,
         fields: [
-            {        
+            {
                 type: {
                     varLabel: '',
                     varSelect: '',
@@ -4944,10 +4944,10 @@ App.TriggerSetupComponent = Ember.Component.extend({
         // Loop through each line in the condition array
         if (c.fields.length > 0) {
           $.each(c.fields, function(i, a){
-    
+
             if (a.type != null && a.type.varSelect) {
               b = a.type
-              // Create the comparions part 
+              // Create the comparions part
               var l = '';
               if (b.matchSelect == 'contains') {
                   l = '.match(/' + b.matchInput + '/ig) != null';
@@ -4975,18 +4975,18 @@ App.TriggerSetupComponent = Ember.Component.extend({
               }
 
               // Put it all together
-              s += '( ' + '{{' + b.varSelect + '}}' + l  + ')' + comparison; 
+              s += '( ' + '{{' + b.varSelect + '}}' + l  + ')' + comparison;
 
             }
           });
         }
 
         return s
-        
+
 
 
     },
-    defaultConfigItem: {        
+    defaultConfigItem: {
         type: {
             varLabel: '',
             varSelect: '',
@@ -4998,7 +4998,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
         'saveConditions': function(context){
             var _this = this;
             this.get('edge').get('EdgeConditions').then(function(a){
-                
+
                  if (a.get('length') != 0) {
                     // edit a
                     z = a.get('firstObject');
@@ -5047,7 +5047,7 @@ App.TriggerSetupComponent = Ember.Component.extend({
         },
         'deleteRow': function(context) {
             this.get('config.fields').removeObject(context.itemToDelete);
-        }                                             
+        }
     }
 });
 
@@ -5066,7 +5066,7 @@ App.StepRoute = Ember.Route.extend({
     model: function (params, data) {
         var _this = this;
         return this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true, localeSelected: App.get('localeSelected') }).then(function (a) {
-                _this.set('steps', a);                
+                _this.set('steps', a);
                 return a.content[0].get('Project')
             }).then(function (b) {
                 // debugger;
@@ -5080,9 +5080,9 @@ App.StepRoute = Ember.Route.extend({
                     data: c
                 }
             });
-    
+
     }
-   
+
 });
 App.StepController = Ember.ObjectController.extend({
     queryParams: ['projectID', 'workflowID', 'nodeID', 'taskID'],
@@ -5101,12 +5101,12 @@ App.StepController = Ember.ObjectController.extend({
         this.transitionToRoute('todo');
       } else if (this.get('completed') !== null) {
           Ember.run.later(function () {
-            
+
             _this.decrementProperty('timeremaining');
             //this.set('timeremaining', this.get('timeremaining') - 1);
           }, 1000);
       } else if (this.get('completed') == null){
-        this.set('timeremaining', 5);      
+        this.set('timeremaining', 5);
       }
 
     }.observes('completed', 'timeremaining').on('init'),
@@ -5165,9 +5165,9 @@ App.StepController = Ember.ObjectController.extend({
                     // ember data here
                     contextData[oldValue.id] = { d: d, record: oldValue}
 
-                
+
                 })
-                
+
                 // text += ' {{/lform-wrapper}}';
 
                 // text += "This should be a varialbel : {{testVar}} {{id}}!!!!!"
@@ -5293,11 +5293,11 @@ App.StepController = Ember.ObjectController.extend({
             var promises = [];
             var saved = false;
             Enumerable.From(context).ForEach(function(d){
-                
+
                 var formData = d.Value.d;
                 var formVal = d.Value.value;
 
-                
+
                 if (d.Value.record.get('isDirty')) {
                     promises.push(d.Value.record.save());
                     saved = true;
@@ -5332,7 +5332,7 @@ App.StepController = Ember.ObjectController.extend({
                         Messenger().post({ type: 'error', message: 'Error:' + response.statusText });
                     });
                 }
-               
+
 
 
             });
@@ -5398,7 +5398,7 @@ App.NewtodoController = Ember.Controller.extend({
     },
     createTodo: function(){
       var _this = this;
-      
+
       var workflowID = this.get('workflowID');
 
       if (!IsGUID(workflowID)) {
@@ -5428,7 +5428,7 @@ App.NewtodoController = Ember.Controller.extend({
       //this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
 
 
-    
+
     }
   }
 });
@@ -5623,16 +5623,16 @@ App.Node = DS.Model.extend({
 App.Task = DS.Model.extend({
     TaskID : DS.attr('string'),
     TaskName : DS.attr('string'),
-    WorkTypeID : DS.attr('string'), 
+    WorkTypeID : DS.attr('string'),
     WorkCompanyID : DS.attr('string'),
     WorkContactID : DS.attr('string'),
-    GraphDataGroupID : DS.attr('string'), 
-    GraphDataID : DS.attr('string'), 
-    DefaultPriority : DS.attr('string'), 
-    EstimatedDuration : DS.attr('string'), 
-    EstimatedLabourCosts : DS.attr('string'), 
+    GraphDataGroupID : DS.attr('string'),
+    GraphDataID : DS.attr('string'),
+    DefaultPriority : DS.attr('string'),
+    EstimatedDuration : DS.attr('string'),
+    EstimatedLabourCosts : DS.attr('string'),
     EstimatedCapitalCosts : DS.attr('string'),
-    EstimatedValue : DS.attr('string'), 
+    EstimatedValue : DS.attr('string'),
     EstimatedIntangibleValue: DS.attr('string'),
     EstimatedRevenue: DS.attr('string'),
     PerformanceMetricParameterID : DS.attr('string'),
@@ -5800,7 +5800,7 @@ App.Trigger = App.Condition.extend({
     JsonProxyApplicationID: DS.attr('string'),
     JsonProxyContactID: DS.attr('string'),
     JsonProxyCompanyID: DS.attr('string'),
-    JsonAuthorizedBy: DS.attr('string'), // JsonXXX - this is just for recieving trigger 
+    JsonAuthorizedBy: DS.attr('string'), // JsonXXX - this is just for recieving trigger
     JsonUsername: DS.attr('string'),
     JsonPassword: DS.attr('string'),
     JsonPasswordType: DS.attr('string'),
@@ -6558,10 +6558,10 @@ App.HomeNavView = Ember.View.extend({
         var _this = this;
         $('body').on('pathChanged', function () {
           Ember.run.scheduleOnce('afterRender', this, function(){
-                
+
                 // Get the targeted element
                 var isActive  = false;
-                var a = _this.$('a');   
+                var a = _this.$('a');
                 if (typeof a !== 'undefined' && a) { //HAD TO ADD THIS PK PLEASE FIX!!!! ONLY OCCURS AFTER CLICKING FROM FLOWPRO.IO INTO APP
                     a.each(function (i, j, y) {
                         j = $(j);
@@ -6863,7 +6863,7 @@ App.MyprofilesController = Ember.ObjectController.extend({
     passwordValid: function () {
         var temp = this.get('model.trigger.JsonPassword');
         if (!temp || !temp.length || temp.length < 4) {
-            return 'Please use a larger password.'; 
+            return 'Please use a larger password.';
         } else {
             return false;
         }
@@ -6915,7 +6915,7 @@ App.MyprofilesController = Ember.ObjectController.extend({
                         // $("#profileImageThumb").attr("src",  old + "?" + d.getTime());
 
                         var userProfile = _this.get('controllers.application.userProfile');
-                        userProfile.Thumb = userProfile.Thumb.replace(/(\?.*)/ig, '') 
+                        userProfile.Thumb = userProfile.Thumb.replace(/(\?.*)/ig, '')
                         userProfile.Thumb = userProfile.Thumb + "?" + NewGUID();
                         userProfile.Thumb = NewGUID();
                         console.log(userProfile,  NewGUID());
@@ -6970,7 +6970,7 @@ App.MyprofilesController = Ember.ObjectController.extend({
             }, function () {
                 Messenger().post({ type: 'error', message: "Could not update api key.", id: 'user-security' })
             });
-            
+
         }
     }
 });
@@ -6993,11 +6993,11 @@ App.OrganizationController = Ember.ObjectController.extend({
 
 
         function transform(items) {
- 
+
 
 
             var result = []
-        
+
             for (var i = 0; i < items.length; i++) {
 
                 var item = items[i];
@@ -7010,7 +7010,7 @@ App.OrganizationController = Ember.ObjectController.extend({
             }
 
             return result;
-    
+
 
 
 
@@ -7032,7 +7032,7 @@ App.OrganizationController = Ember.ObjectController.extend({
             return result;
         }
 
-          
+
 
 
       Enumerable.From(this.get('model').content).Where("!$.get('People') || $.get('People') === null || $.get('People') === ''").ForEach(function (value) {
@@ -7040,8 +7040,8 @@ App.OrganizationController = Ember.ObjectController.extend({
       });
       var results = Enumerable.From(this.get('model').content).Where("$.get('People') && $.get('People') !== null && $.get('People') !== ''").ToArray();
 
-      console.log('results');  
-    
+      console.log('results');
+
       // The goal of this is to have an always present super node that can't be deleted.
       var org = Ember.Object.create({
         //id: this.get('DaddyID'),
@@ -7076,7 +7076,7 @@ App.OrganizationController = Ember.ObjectController.extend({
     }.observes('selected', 'model'),
     selectedDashboardCheckbox: '',
     isValidNameLoading: true,
-    isValidName: true, 
+    isValidName: true,
     isValidNameObserver: function() {
       var selected = this.get('selected');
       if (!selected  || this.get('selecteddaddy'))
@@ -7100,7 +7100,7 @@ App.OrganizationController = Ember.ObjectController.extend({
                 this.set('isValidName', false);
               } else {
 
-          
+
                     var _this = this;
                   $.post('/share/duplicatecompany/' + name).then(function(a){
                     _this.set('isValidNameLoading', false);
@@ -7134,7 +7134,7 @@ App.OrganizationController = Ember.ObjectController.extend({
           });
 
           if (PromiseArray.length == 0) {
-            
+
             Messenger().post({ type: 'success', message: "Looks like you haven't made any change that could be saved" });
 
           } else {
@@ -7889,7 +7889,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
             .attr('pointer-events', 'mouseover')
             .call(function(d){console.log('Enter run ', d)})
 
-            
+
 
         status.node
             // .on(".mouseover", null)
@@ -8117,7 +8117,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
 
         function overCircle(d) {
           if (d != status.draggingNode){
-            status.selectedNode = d;            
+            status.selectedNode = d;
           }
             updateTempConnector();
           console.log('overCircle', status.selectedNode)
@@ -8178,7 +8178,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 }
                 status.dragStarted = true;
                 status.nodes = status.tree.nodes(d);
-               
+
                 // debugger;
                 d3.event.sourceEvent.stopPropagation();
                 // it's important that we suppress the mouseover event on the node being dragged. Otherwise it will absorb the mouseover event and the underlying node will not detect it d3.select(this).attr('pointer-events', 'none');
@@ -8389,14 +8389,14 @@ App.FileUploadviewComponent = Ember.Component.extend({
   actions: {
     download: function(item) {
       // https://github.com/johnculviner/jquery.fileDownload
-      
+
       $.fileDownload( window.location.origin + '/' + item, {
           successCallback: function (url) {
-       
+
               alert('You just got a file download dialog or ribbon for this URL :' + url);
           },
           failCallback: function (html, url) {
-       
+
               alert('Your file download just failed for this URL:' + url + '\r\n' +
                       'Here was the resulting error HTML: \r\n' + html
                       );
@@ -8442,7 +8442,7 @@ App.FileUploadComponent = EmberUploader.FileField.extend({
         $.each(a.files, function(i,a){
 
           uploadedList.push(a.url)
-        
+
 
         })
         _this.set('uploaded', uploadedList.join(','));
@@ -8518,7 +8518,7 @@ App.SignaturePadComponent = Ember.Component.extend({
       window.onresize = resizeCanvas;
       resizeCanvas();
 
-      
+
       // Setup Signature Pad
       signaturePad = new SignaturePad(canvas);
       this.set('signaturePad', signaturePad);
@@ -8531,7 +8531,7 @@ App.SignaturePadComponent = Ember.Component.extend({
           var sigGUID = NewGUID();
             $.post('/share/UploadBase64PNG', {
             id: sigGUID,
-            name: sigGUID, 
+            name: sigGUID,
             data: signaturePad.toDataURL().substr(signaturePad.toDataURL().indexOf(",") + 1)
           }).then(function(a){
             console.log(a);
