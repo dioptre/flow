@@ -1606,14 +1606,28 @@ App.ApplicationController = Ember.Controller.extend({
        }
     }.observes('isLoading'),
     stopLoading: function(){
-        setTimeout((function () {
+        Ember.run.scheduleOnce('afterRender', this, function () {
+        
                 $('body').removeClass('cursor-progress loading-stuff');
-                return Pace.stop();
-        }), 0);
+
+                  $('.logo-circle').velocity("stop").velocity({rotateZ: '0'});
+                Pace.stop();
+                // alert('loading stop')
+        });
     },
     startLoading: function(){
         Pace.restart();
-        $('body').addClass('cursor-progress loading-stuff');
+        Ember.run.scheduleOnce('afterRender', this, function () {
+
+          $('body').addClass('cursor-progress loading-stuff');
+          $('.logo-circle').velocity({ 
+            rotateZ: "+=180"
+          }, { 
+            loop: true 
+          });
+          // alert('loading')
+
+        });
     },
     isLoggedIn: false,
     logoutModal: false,

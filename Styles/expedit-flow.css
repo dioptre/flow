@@ -634,6 +634,10 @@ text-transform: capitalize;
 .navbar-brand img {
     max-height: 27px; /* Ensures reasonable logo size */
 }
+
+.navbar-brand img.logo-text {
+  transform: rotateZ(0);
+  }
 .navbar-brand img.logo-text {
     max-height: 21px;
   margin-top: 0px;
