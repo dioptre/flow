@@ -92,8 +92,10 @@ html {
 #email {display: block !important;}
 #password {display: block !important;}
 #confirmPassword {display: block !important;}
+
 #field { margin-left: .5em; }
 #field, label { font-family: Arial, Helvetica, sans-serif; font-size: small; }
+input.eui-overrides {   background-image: none !important; }
 br { clear: both; }
 /*input { border: 1px solid black; margin-bottom: .5em;  }*/
 input.error { border: 1px solid red; }
@@ -323,6 +325,10 @@ div.table_description {
     border: 1px rgb(231, 231, 231) solid;
 }
 
+
+.mce-content-body {
+  height: 100%; /* fixes clicking bug */
+}
 /*Puts dropdowns above modals*/
 .mce-container.mce-panel.mce-floatpanel.mce-menu.mce-menu-align {
     z-index: 100000000000 !important;
@@ -439,7 +445,7 @@ div.row.processes {
 .process-header {
   /* margin-top: -30px; */
   padding-top: 13px;
-  margin-bottom: 90px;
+  margin-bottom: 10px;
 }
 .process-header small {
   margin-left: 0px;
@@ -670,12 +676,13 @@ text-transform: capitalize;
     color: white;
     color: rgba(36, 52, 79, 0.66);
     padding-right:5px;
+    padding-right: 10px;
     text-decoration: none !important;
     cursor: pointer;
     font-size: small;
 }
 .graphButton-group {
-  margin-right: 7px;
+  /*margin-right: 7px;*/
   margin-bottom: 7px;
   display: inline-block;
 }
@@ -902,6 +909,10 @@ table thead {
   font-weight: 300;
   line-height: 1.25;
   font-style: italic;
+}
+
+.pretty-content img {
+  max-width: 100%;
 }
 
 small, .font_small {font-size: 0.707em;}
@@ -1234,4 +1245,173 @@ text-decoration: none;
   color: #778391;
   font-style: italic;
   margin-top: 0;
+}
+
+
+/*Navbar improvements*/
+.navbar-inverse .nav > li > a {
+  border-left: 1px solid rgba(16, 20, 23, 0.31);
+}
+.navbar-inverse .notification-dropdown .count {
+  top: 5px;
+  left: 54%;
+  background: #6D8DB1;
+}
+
+
+/*disbale ipad bounchiness//
+  http://stackoverflow.com/questions/8150191/disable-elastic-scrolling-in-safari
+*/
+
+/*html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#scrollable-body {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}*/
+
+
+/* Signature Pad */
+.m-signature-pad {
+  position: relative;
+  font-size: 10px;
+  width: 250px;
+  height: 180px;
+  /* top: 50%; */
+  /* left: 50%; */
+  /* margin-left: -350px; */
+  /* margin-top: -200px; */
+  border: 1px solid #e8e8e8;
+  background-color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.27), 0 0 40px rgba(0, 0, 0, 0.08) inset;
+  box-shadow: 0 1px 0px rgba(0, 0, 0, 0), 0 0 40px rgba(0, 0, 0, 0.06) inset;
+  border-radius: 4px;
+}
+
+.m-signature-pad:before, .m-signature-pad:after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  width: 40%;
+  height: 10px;
+  left: 20px;
+  bottom: 10px;
+  background: transparent;
+  -webkit-transform: skew(-3deg) rotate(-3deg);
+  -moz-transform: skew(-3deg) rotate(-3deg);
+  -ms-transform: skew(-3deg) rotate(-3deg);
+  -o-transform: skew(-3deg) rotate(-3deg);
+  transform: skew(-3deg) rotate(-3deg);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
+}
+
+.m-signature-pad:after {
+  left: auto;
+  right: 20px;
+  -webkit-transform: skew(3deg) rotate(3deg);
+  -moz-transform: skew(3deg) rotate(3deg);
+  -ms-transform: skew(3deg) rotate(3deg);
+  -o-transform: skew(3deg) rotate(3deg);
+  transform: skew(3deg) rotate(3deg);
+}
+
+.m-signature-pad--body {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 20px;
+  bottom: 60px;
+  border: 1px solid #f4f4f4;
+}
+
+.m-signature-pad--body
+  canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.02) inset;
+  }
+
+.m-signature-pad--footer {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  height: 40px;
+}
+
+.m-signature-pad--footer
+  .description {
+    color: #C3C3C3;
+    text-align: center;
+    font-size: 1.2em;
+    margin-top: 1.8em;
+  }
+
+.m-signature-pad--footer
+  .button {
+    position: absolute;
+    bottom: 0;
+  }
+
+.m-signature-pad--footer
+  .button.clear {
+    left: 0;
+  }
+
+.m-signature-pad--footer
+  .button.save {
+    right: 0;
+  }
+
+@media screen and (max-width: 1024px) {
+  .m-signature-pad {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    min-width: 250px;
+    min-height: 140px;
+    margin: 5%;
+  }
+  #github {
+    display: none;
+  }
+}
+
+@media screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+  .m-signature-pad {
+    margin: 10%;
+  }
+}
+
+@media screen and (max-height: 320px) {
+  .m-signature-pad--body {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 32px;
+  }
+  .m-signature-pad--footer {
+    left: 20px;
+    right: 20px;
+    bottom: 4px;
+    height: 28px;
+  }
+  .m-signature-pad--footer
+    .description {
+      font-size: 1em;
+      margin-top: 1em;
+    }
 }

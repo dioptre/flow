@@ -109,33 +109,11 @@ namespace EXPEDIT.Flow.Services
         [OperationContract]
         bool CheckWorkflowPermission(Guid gid, ActionPermission permission);
         [OperationContract]
-        bool CheckNodePermission(Guid gid, ActionPermission permission);
-
-        [OperationContract]
-        bool GetTranslation(TranslationViewModel m);
-
-        [OperationContract]
-        bool UpdateTranslation(TranslationViewModel m);
-
-        [OperationContract]
-        bool DeleteTranslation(TranslationViewModel m);
+        bool CheckNodePermission(Guid gid, ActionPermission permission);      
 
 
         [OperationContract]
-        bool GetLocale(LocaleViewModel m);
-
-        [OperationContract]
-        bool UpdateLocale(LocaleViewModel m);
-
-        [OperationContract]
-        bool DeleteLocale(LocaleViewModel m);
-
-        [OperationContract]
-        bool CreateLocale(LocaleViewModel m);
-
-
-        [OperationContract]
-        AutomationViewModel GetStep(Guid? sid, Guid? pid, Guid? tid, Guid? nid, Guid? gid, bool includeContent = false, bool includeDisconnected = false, bool monitor = true);
+        AutomationViewModel GetStep(Guid? sid, Guid? pid, Guid? tid, Guid? nid, Guid? gid, bool includeContent = false, bool includeDisconnected = false, bool monitor = true, string locale="en-US");
         [OperationContract]
         AutomationViewModel[] GetMySteps();
 

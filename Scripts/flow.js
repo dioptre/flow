@@ -1,9 +1,6 @@
 if ((_ref = Ember.libraries) != null) {
-  _ref.register('FlowPro', '2.0.0 Alpha');
+  _ref.register('FlowPro', '2.2.0');
 }
-
-
-var apiURL = "http://app.flowpro.io";
 
 //Leave this!
 //<meta name="__RequestVerificationToken" content="@Html.AntiForgeryTokenValueOrchard()">
@@ -54,7 +51,7 @@ $.ajaxSetup({
     //cache: false,
     beforeSend: function (xhr, settings) {
         if (settings.url.match(/\/\//igm) === null)
-            settings.url = apiURL + settings.url;
+            settings.url = expHost + settings.url;
     }
 });
 
@@ -122,6 +119,27 @@ LiquidFire.map(function(){
     );
 
     this.transition(
+        this.fromRoute('myworkflows'),
+        this.toRoute('search'),
+        this.use('toLeft'),
+        this.reverse('toRight')
+    );
+
+    this.transition(
+        this.fromRoute('myworkflows'),
+        this.toRoute('newworkflow'),
+        this.use('toLeft'),
+        this.reverse('toRight')
+    );
+
+    this.transition(
+        this.fromRoute('todo'),
+        this.toRoute('newtodo'),
+        this.use('toLeft'),
+        this.reverse('toRight')
+    );
+
+    this.transition(
       this.withinRoute('permission'),
       this.use('toLeft')
     );
@@ -148,7 +166,9 @@ App.Router.map(function () {
 
 
     // FlowPro v2
+    this.route('newworkflow');
     this.route('todo');
+    this.route('newtodo');
     this.route('styleguide', {path:"styleguide"}); // Internal only
     this.route('step', { path: 'step/:id' }); // - executing
     this.route('report');
@@ -157,6 +177,9 @@ App.Router.map(function () {
     this.resource('responseData', function () {
         this.resource('responseDatum', { 'path': '/:id' });
     });
+
+    // FlowPro vs2.5
+    this.route('sidebar');
 
     // Localisation
     this.route('translate', { path: 'translate/:workflowID' });
@@ -776,6 +799,180 @@ App.TranslateController = Ember.ObjectController.extend({
     }
 })
 
+App.NewworkflowRoute = Ember.Route.extend({
+  setupController: function(controller, model) {
+    this._super(controller, model);
+    controller.set('wfName', '');
+    controller.set('stepName', '');
+    controller.set('stepName2', '');
+  }
+});
+
+App.NewworkflowController = Ember.Controller.extend({
+  needs: ['application'],
+  title: "New Workflow",
+  wfName: "",
+  validateWfName: "",
+  loadingWorkflowName: false,
+  stepName: "",
+  validateStepName: "",
+  loadingStepName: false,
+  stepName2: "",
+  validateStepName2: "",
+  loadingStepName2: false,
+  checkWorkflowName: function () {
+      var _this = this;
+      if (!_this.get('wfName') || typeof _this.get('wfName') !== 'string' || _this.get('wfName').trim().length < 1) {
+          _this.set('validateWfName', 'Name required.');
+          return;
+      }
+      _this.set('loadingWorkflowName', true);
+      return new Ember.RSVP.Promise(function (resolve, reject) {
+          jQuery.getJSON('/Flow/WorkflowDuplicate?id=' + encodeURIComponent(_this.get('wfName').trim()) + '&guid=' + _this.get('workflowID')
+            ).then(function (data) {
+                _this.set('loadingWorkflowName', false);
+               Ember.run(null, resolve, data);
+            }, function (jqXHR) {
+                jqXHR.then = null; // tame jQuery's ill mannered promises
+                Ember.run(null, reject, jqXHR);
+            });
+      }).then(function (value) {
+          _this.set('validateWfName', value ? 'Name already in use.' : false);
+      });
+
+  }.observes('wfName'),
+  checkStepName: function () {
+      var _this = this;
+      if (!_this.get('stepName') || typeof _this.get('stepName') !== 'string' || _this.get('stepName').trim().length < 1) {
+          _this.set('validateStepName', 'Name required.');
+          return;
+      }
+      _this.set('loadingStepName', true);
+      return new Ember.RSVP.Promise(function (resolve, reject) {
+          jQuery.getJSON('/Flow/NodeDuplicate?id=' + encodeURIComponent(_this.get('stepName').trim()) + '&guid=' + _this.get('selectedID')
+            ).then(function (data) {
+                _this.set('loadingStepName', false);
+                Ember.run(null, resolve, data);
+            }, function (jqXHR) {
+                jqXHR.then = null; // tame jQuery's ill mannered promises
+                Ember.run(null, reject, jqXHR);
+            });
+      }).then(function (value) {
+          _this.set('validateStepName', value ? 'Name already in use.' : false);
+      });
+
+  }.observes('stepName'),
+  checkStepName2: function () {
+      var _this = this;
+      if (!_this.get('stepName2') || typeof _this.get('stepName2') !== 'string' || _this.get('stepName2').trim().length < 1) {
+          _this.set('validateStepName2', 'Name required.');
+          return;
+      }
+      _this.set('loadingStepName2', true);
+      return new Ember.RSVP.Promise(function (resolve, reject) {
+          jQuery.getJSON('/Flow/NodeDuplicate?id=' + encodeURIComponent(_this.get('stepName2').trim()) + '&guid=' + _this.get('selectedID')
+            ).then(function (data) {
+                _this.set('loadingStepName2', false);
+                Ember.run(null, resolve, data);
+            }, function (jqXHR) {
+                jqXHR.then = null; // tame jQuery's ill mannered promises
+                Ember.run(null, reject, jqXHR);
+            });
+      }).then(function (value) {
+          _this.set('validateStepName2', value ? 'Name already in use.' : false);
+      });
+
+  }.observes('stepName2'),
+  validateNames: function () {
+    var notEmptyName = (this.get('wfName.length') > 0 && this.get('stepName.length') > 0 && this.get('stepName2.length') > 0)
+      // if (this.get('model.selected.name') != null)
+      //     return (typeof this.get('validateNewName') === 'string') || (typeof this.get('validateWorkflowName') === 'string');
+      // else
+    var noError = (this.get('validateWfName') == false) || (this.get('validateStepName2') == false) || (this.get('validateStepName') == false);
+
+    console.log(notEmptyName, noError, this.get('validateStepName') == false)
+
+    return !(noError && notEmptyName);
+  }.property('validateWfName', 'validateStepName2', 'validateStepName2', 'stepName2', 'stepName', 'wfName'),
+  actions: {
+    cancel: function(){
+      this.transitionToRoute('myworkflows');
+    },
+    createWorkflow: function(){
+        var _this = this;
+        var wfid = NewGUID();
+        var stepid = NewGUID();
+        var stepid2 = NewGUID();
+
+        _this.set('controllers.application.isLoading', true)
+
+
+        var workflow = this.store.createRecord('workflow', {
+                id: wfid,
+                name: this.get('wfName'),
+                StartGraphDataID: stepid
+            });
+
+        var node = this.store.createRecord('node', {
+                id: stepid,
+                label: this.get('stepName'),
+                content: '',
+                VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss'))
+            });
+
+        var node2 = this.store.createRecord('node', {
+                id: stepid2,
+                label: this.get('stepName2'),
+                content: '',
+                VersionUpdated: Ember.Date.parse(moment().format('YYYY-MM-DD @ HH:mm:ss'))
+            });
+
+        node.get('workflows').then(function (w) {
+            w.content.pushObject(workflow);
+        });
+
+        node2.get('workflows').then(function (w) {
+            w.content.pushObject(workflow);
+        });
+
+        Ember.RSVP.hash({
+          step1: node.save(),
+          step2: node2.save()
+        }).then(function(){
+             return workflow.save().then(function(){
+
+
+
+              var newEdge = App.Node.store.createRecord('edge', {
+                  id: NewGUID(),
+                  GroupID: wfid,
+                  from: stepid,
+                  to: stepid2
+              });
+              return newEdge.save()
+
+
+            })
+        }).then(function (o) {
+
+            Messenger().post({ type: 'info', message: 'We are now redirecting you to your workflow... this might take 1 second.' });
+            Messenger().post({ type: 'success', message: 'Successfully added new Workflow!' });
+
+            Ember.run.later(function(){
+              _this.set('controllers.application.isLoading', false)
+              _this.transitionToRoute('graph', stepid, {queryParams: {workflowID: wfid}})
+            }, 1000)
+
+        }, function (o) {
+              _this.set('controllers.application.isLoading', false)
+
+            Messenger().post({type:'error', message:'Error with adding new Workflow. ' + error});
+        });
+
+    }
+  }
+});
+
 App.WorkflowRoute = Ember.Route.extend({
     actions: {
         error: function () {
@@ -852,146 +1049,160 @@ App.PermissionController = Ember.ObjectController.extend({
         }
     }
 
-})
+});
 
 
-App.MyworkflowsRoute = Ember.Route.extend({
-    model: function(){
-        return Ember.RSVP.hash({
-            workflows: this.store.find('myWorkflow'),
-            processes: this.store.find('myNode')
-        });
-    },
-    afterModel: function (m) {
-        if (m.workflows)
-            m.workflows = m.workflows.sortBy('humanName');
-        if (m.processes)
-            m.processes = m.processes.sortBy('humanName');
-    }
-})
+  App.MyworkflowsRoute = Ember.Route.extend({
+      model: function(){
+          return Ember.RSVP.hash({
+              workflows: this.store.find('myWorkflow'),
+              processes: this.store.find('myNode')
+          });
+      },
+      afterModel: function (m) {
+          if (m.workflows)
+              m.workflows = m.workflows.sortBy('humanName');
+          if (m.processes)
+              m.processes = m.processes.sortBy('humanName');
+      },
+      // setupController: function(){
+      //   this._super();
+      //   this.set('searchQuery', ''); // needs to be empty when entering
+      // }
+  })
 
-App.MyworkflowsController = Ember.ObjectController.extend({
-    needs: ['application'],
-    title: 'My Workflows',
-    permissionModal: false,
-    activeItem: null,
-    actions: {
-        editPermission: function(item){
+  App.MyworkflowsController = Ember.ObjectController.extend({
+      needs: ['application'],
+      title: 'My Workflows',
+      permissionModal: false,
+      activeItem: null,
+      searchQuery: "",
+      actions: {
+          createWorkflow: function(){
+            this.transitionToRoute('newworkflow');
+          },
+          search: function(){
+            this.transitionTo('search', {queryParams: {keywords: this.get('searchQuery')}})
+            // console.log(this.get('searchQuery'), 123)
+          },
+          editPermission: function(item){
 
-            // So in the submit we know what file we should be diting
-            this.set('activeItem', item);
+              // So in the submit we know what file we should be diting
+              this.set('activeItem', item);
 
-            this.set('permissionModal', true); // Show the modal before anything else
+              this.set('permissionModal', true); // Show the modal before anything else
 
-            // Make selectbox work after it's been inserted to the view - jquery hackss
-            Ember.run.scheduleOnce('afterRender', this, function(){
-                $('#add-comp-perm').select2({
-                    placeholder: "Enter Companies...",
-                    minimumInputLength: 2,
-                    tags: true,
-                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
-                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "/share/getcompanies",
-                        dataType: 'json',
-                        multiple: true,
-                        data: function (term, page) {
-                            return {id: term };
-                        },
-                        results: function (data, page) { // parse the results into the format expected by Select2.
-                            if (data.length === 0) {
-                                return { results: [] };
-                            }
-                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                            return { results: results, text: 'tag' };
-                        }
-                    },
-                    formatResult: function(state) {return state.tag; },
-                    formatSelection: function (state) {return state.tag; },
-                    escapeMarkup: function (m) { return m; }
-                });
+              // Make selectbox work after it's been inserted to the view - jquery hackss
+              Ember.run.scheduleOnce('afterRender', this, function(){
+                  $('#add-comp-perm').select2({
+                      placeholder: "Enter Companies...",
+                      minimumInputLength: 2,
+                      tags: true,
+                      //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                      ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                          url: "/share/getcompanies",
+                          dataType: 'json',
+                          multiple: true,
+                          data: function (term, page) {
+                              return {id: term };
+                          },
+                          results: function (data, page) { // parse the results into the format expected by Select2.
+                              if (data.length === 0) {
+                                  return { results: [] };
+                              }
+                              var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                              return { results: results, text: 'tag' };
+                          }
+                      },
+                      formatResult: function(state) {return state.tag; },
+                      formatSelection: function (state) {return state.tag; },
+                      escapeMarkup: function (m) { return m; }
+                  });
 
-                $('#add-users-perm').select2({
-                    placeholder: "Enter Username...",
-                    minimumInputLength: 2,
-                    tags: true,
-                    //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
-                    ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-                        url: "/share/getusernames",
-                        dataType: 'json',
-                        multiple: true,
-                        data: function (term, page) {
-                            return {id: term };
-                        },
-                        results: function (data, page) { // parse the results into the format expected by Select2.
-                            if (data.length === 0) {
-                                return { results: [] };
-                            }
-                            var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
-                            return { results: results, text: 'tag' };
-                        }
-                    },
-                    formatResult: function(state) {return state.tag; },
-                    formatSelection: function (state) {return state.tag; },
-                    escapeMarkup: function (m) { return m; }
-                })
-            });
-        },
-        submitPermission: function(){
-            var _this = this;
-            var newusers = $('#add-users-perm').val()
-            var newcomp = $('#add-comp-perm').val()
-            var fileid = this.get('activeItem').id;
-            var TableType = this.get('activeItem.TableType');
-            // console.log(this.get('activeItem'));
-            if (newusers !== '') {
-                Enumerable.From(newusers.split(',')).ForEach(function (f) {
-                    var a = _this.store.createRecord('mySecurityList', {
-                        ReferenceID: fileid,
-                        SecurityTypeID: 2,
-                        OwnerTableType: TableType,
-                        AccessorUserID: f,
-                        CanCreate: true,
-                        CanRead: true,
-                        CanUpdate: true,
-                        CanDelete: true
-                    })
-                    a.save().then(function () {
-                        Messenger().post({ type: 'success', message: "Successfully added user permissions", id: 'user-security' })
-                    }, function () {
-                        Messenger().post({ type: 'error', message: "Could not add user permissions", id: 'user-security' })
+                  $('#add-users-perm').select2({
+                      placeholder: "Enter Username...",
+                      minimumInputLength: 2,
+                      tags: true,
+                      //createSearchChoice : function (term) { return {id: term, text: term}; },  // thus is good if you want to use the type in item as an option too
+                      ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
+                          url: "/share/getusernames",
+                          dataType: 'json',
+                          multiple: true,
+                          data: function (term, page) {
+                              return {id: term };
+                          },
+                          results: function (data, page) { // parse the results into the format expected by Select2.
+                              if (data.length === 0) {
+                                  return { results: [] };
+                              }
+                              var results = Enumerable.From(data).Select("f=>{id:f.Value,tag:f.Text}").ToArray();
+                              return { results: results, text: 'tag' };
+                          }
+                      },
+                      formatResult: function(state) {return state.tag; },
+                      formatSelection: function (state) {return state.tag; },
+                      escapeMarkup: function (m) { return m; }
+                  })
+              });
+          },
+          submitPermission: function(){
+              var _this = this;
+              var newusers = $('#add-users-perm').val()
+              var newcomp = $('#add-comp-perm').val()
+              var fileid = this.get('activeItem').id;
+              var TableType = this.get('activeItem.TableType');
+              // console.log(this.get('activeItem'));
+              if (newusers !== '') {
+                  Enumerable.From(newusers.split(',')).ForEach(function (f) {
+                      var a = _this.store.createRecord('mySecurityList', {
+                          ReferenceID: fileid,
+                          SecurityTypeID: 2,
+                          OwnerTableType: TableType,
+                          AccessorUserID: f,
+                          CanCreate: true,
+                          CanRead: true,
+                          CanUpdate: true,
+                          CanDelete: true
+                      })
+                      a.save().then(function () {
+                          Messenger().post({ type: 'success', message: "Successfully added user permissions", id: 'user-security' })
+                      }, function () {
+                          Messenger().post({ type: 'error', message: "Could not add user permissions", id: 'user-security' })
 
-                    });
-                });
-            }
+                      });
+                  });
+              }
 
-            if (newcomp !== '') {
-                Enumerable.From(newcomp.split(',')).ForEach(function (f) {
-                    var a = _this.store.createRecord('mySecurityList', {
-                        ReferenceID: fileid,
-                        SecurityTypeID: 2,
-                        OwnerTableType: TableType,
-                        AccessorCompanyID: f,
-                        CanCreate: true,
-                        CanRead: true,
-                        CanUpdate: true,
-                        CanDelete: true
-                    })
-                    a.save().then(function () {
-                        Messenger().post({ type: 'success', message: "Successfully added company permissions", id: 'company-security' })
-                    }, function () {
-                        Messenger().post({ type: 'error', message: "Could not add company permissions", id: 'company-permission' })
+              if (newcomp !== '') {
+                  Enumerable.From(newcomp.split(',')).ForEach(function (f) {
+                      var a = _this.store.createRecord('mySecurityList', {
+                          ReferenceID: fileid,
+                          SecurityTypeID: 2,
+                          OwnerTableType: TableType,
+                          AccessorCompanyID: f,
+                          CanCreate: true,
+                          CanRead: true,
+                          CanUpdate: true,
+                          CanDelete: true
+                      })
+                      a.save().then(function () {
+                          Messenger().post({ type: 'success', message: "Successfully added company permissions", id: 'company-security' })
+                      }, function () {
+                          Messenger().post({ type: 'error', message: "Could not add company permissions", id: 'company-permission' })
 
-                    });
-                });
-            }
+                      });
+                  });
+              }
 
-            this.set('permissionModal', false);
-        },
-        cancelPermission: function(){
-            this.set('permissionModal', false);
-        }
-    }
-})
+              this.set('permissionModal', false);
+          },
+          cancelPermission: function(){
+              this.set('permissionModal', false);
+          }
+      }
+  })
+
+
 
 
 App.FileRoute = Ember.Route.extend({
@@ -1130,6 +1341,7 @@ App.LoginController = Ember.Controller.extend({
     queryParams: ['fromRoute'],
     fromRoute: '',
     needs: ['application'],
+    title: "Login",
     email: "",
     rememberme: false,
     password: "",
@@ -1167,7 +1379,7 @@ App.LoginController = Ember.Controller.extend({
                     if (_this.get('fromRoute') != '') {
                          _this.transitionToRoute(_this.get('fromRoute'));
                     } else {
-                        _this.transitionToRoute('search');
+                        _this.transitionToRoute('dashboard');
                     }
 
                 } else {
@@ -1183,6 +1395,7 @@ App.LoginController = Ember.Controller.extend({
 
 App.ResetpasswordController = Ember.Controller.extend({
     needs: ['application'],
+    title: "Reset password",
     email: "",
     emailsent: false,
     actions: {
@@ -1216,6 +1429,7 @@ App.ResetpasswordController = Ember.Controller.extend({
 
 App.SignupController = Ember.Controller.extend({
     needs: ['application'],
+    title: 'Signup',
     captchaKey: NewGUID(),
     captchaImg: function(){
         var _this = this;
@@ -1249,12 +1463,16 @@ App.SignupController = Ember.Controller.extend({
 
 
             if (!validateEmail(_this.get('email'))) {
+                _this.set('captchaKey', NewGUID());
                 Messenger().post({type:'error', message:'Invalid email.', id:'authenticate'});
+                _this.set('controllers.application.isLoading', false);
                 return;
             }
 
             if (_this.get('captchaSolution').length !== 4) {
+                _this.set('captchaKey', NewGUID());
                 Messenger().post({type:'error', message:'Invalid human code.', id:'authenticate'});
+                _this.set('controllers.application.isLoading', false);
                 return;
             }
 
@@ -1263,7 +1481,6 @@ App.SignupController = Ember.Controller.extend({
                 UserName: _this.get('username'),
                 Email: _this.get('email')
             }).then(function(data){
-                _this.set('controllers.application.isLoading', false);
                 if (data) {
                  $.post('/share/signup', {
                     UserName: _this.get('username'),
@@ -1272,17 +1489,20 @@ App.SignupController = Ember.Controller.extend({
                     CaptchaKey: _this.get('captchaSolution'),
                     CaptchaCookie: _this.get('captchaKey')
                  }).then(function(data){
+                    _this.set('controllers.application.isLoading', false);
+                    _this.set('captchaKey', NewGUID());
+
                     if (data.Response === 1) {
+                        Messenger().post({ type: 'info', message: 'You will now be automatically logged in. This might take a few seconds. Thanks for your patience.'});
                         Messenger().post({ type: 'success', message: 'Successful signup!', id: 'authenticate' });
                         _this.set('captchaKey', NewGUID());
                         _this.set('email', '');
                         _this.set('username', '');
                         _this.set('password', '');
-                        _this.transitionToRoute('search');
+                        _this.transitionToRoute('index');
                     }
                     else if (data.Response === 4) {
                          Messenger().post({type:'error', message:'Invalid human code. Please try again.', id:'authenticate'});
-                        //_this.set('captchaKey', NewGUID());
                     } else {
                          Messenger().post({type:'error', message:'Unknown error. Plese try again later.', id:'authenticate'});
 
@@ -1473,33 +1693,49 @@ App.ApplicationView = Ember.View.extend({
 
         var keepActive = function(){
             if(_this.active){
-                $.ajax({
-                    url: "/share/loggedin",
-                    cache: false
-                }).then(function(result){
+                Pace.ignore(function(){
+                    $.ajax({
+                        url: "/share/loggedin",
+                        cache: false
+                    }).then(function(result){
 
-                    _this.active = false; // Set active to false until mouse is moved/keypress
-                    if (result === true || result === false){
-                        _this.set('controller.isLoggedIn', result)
-                    }
+                        _this.active = false; // Set active to false until mouse is moved/keypress
+                        if (result === true || result === false){
+                            _this.set('controller.isLoggedIn', result)
+                        }
 
-                    // Pull in user information if it hasn't been set yet
-                    if (result === true) {
-                       //_this.get('controller.getUserProfile')();
-                        $.ajax({url: "/flow/myuserinfo"}).then(function(data){
-                            data.UserName = ToTitleCase(data.UserName);
-                            data.Licensed = data.Licenses && (data.Licenses.length > 0)
-                            data.Thumb = "/share/photo/" + data.UserID;
-                            _this.set('controller.userProfile', data);
-                        }, function (jqXHR) {
-                          jqXHR.then = null; // tame jQuery's ill mannered promises
-                        });
-                    }
+                        // Pull in user information if it hasn't been set yet
+                        if (result === true) {
+                           //_this.get('controller.getUserProfile')();
+                            $.ajax({url: "/flow/myuserinfo"}).then(function(data){
 
-                    Ember.run.later(_this, keepActive, timeoutDelay);
 
-                }, function (jqXHR) {
-                  jqXHR.then = null; // tame jQuery's ill mannered promises
+                                // I am over writing the object... should check first if it's empty if not then only overwrite it...
+                                console.log(data);
+
+                                // Clean up the data
+                                data.UserName = ToTitleCase(data.UserName);
+                                data.Licensed = data.Licenses && (data.Licenses.length > 0)
+                                data.Thumb = "/share/photo/" + data.UserID;
+
+                                // Use identify analytics
+                                mixpanel.identify(data.id);
+                                mixpanel.people.set({
+                                    $first_name: data.UserName
+                                });
+
+                                // Set it to controller so accessible everywhere
+                                _this.set('controller.userProfile', data);
+                            }, function (jqXHR) {
+                              jqXHR.then = null; // tame jQuery's ill mannered promises
+                            });
+                        }
+
+                        Ember.run.later(_this, keepActive, timeoutDelay);
+
+                    }, function (jqXHR) {
+                      jqXHR.then = null; // tame jQuery's ill mannered promises
+                    });
                 });
             } else {
                 Ember.run.later(_this, keepActive, timeoutDelay); // make sure this infinite loop never stops
@@ -1786,7 +2022,7 @@ App.Router.reopen({
 
 
 App.ApplicationAdapter = DS.RESTAdapter.extend({
-    host: apiURL,
+    host: expHost,
     namespace: 'flow',
     headers: {
         __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
@@ -2465,19 +2701,33 @@ App.GraphRoute = Ember.Route.extend({
         //        resolve();
         //    })
         //});
+
+
         var apiCache = Enumerable.From(this.store.all('trigger').content).Where("f=>f.get('CommonName') === null").FirstOrDefault();
 
         return Ember.RSVP.hash({
             data: this.store.find('node', { id: id, groupid: params.workflowID }),
             workflow: this.store.find('workflow', params.workflowID).catch(function (reason) {
                 var groupID = Enumerable.From(_this.store.all('edge').content).Where("f=>f.get('from') ==='" + id + "' && f.get('to') === null").Select("f=>f.get('GroupID')").FirstOrDefault();
+                var pontentialGraphID = Enumerable.From(_this.store.all('edge').content).Where("f=>f.get('from') ==='" + id + "' || f.get('from') ==='" + id + "'").Select("f=>f.get('GroupID')").FirstOrDefault();
+
+                console.log(groupID, 'this is the group id')
+                console.log(_this.store.all('edge').content);
                 if (typeof groupID !== 'undefined' && document.URL.indexOf(groupID) < 1) {
+                //if (IsGUID(groupID) || document.URL.indexOf(groupID) < 1){
                     return _this.store.find('workflow', groupID).then(function (wfid) {
                         _this.replaceWith('graph', id, { queryParams: { workflowID: groupID } });
                     });
                 }
-                else if (typeof groupID === 'undefined' || !groupID)
+
+                else if (pontentialGraphID) {
+                   console.log('pontentialGraphID', pontentialGraphID, "USING THE NEW FIX")
+                    _this.replaceWith('graph', id, { queryParams: { workflowID: pontentialGraphID } });
+                }
+                 else if (typeof groupID === 'undefined' || !groupID) {
                     return App.Workflow.store.createRecord('workflow', { id: params.workflowID, name: 'Untitled Workflow - ' + moment().format('YYYY-MM-DD @ HH:mm:ss'), StartGraphDataID: _this.get('model.selectedID') })
+                }
+
             }),
             api: (apiCache) ? apiCache : this.store.findQuery('trigger', { CommonName: null }).then(function (m) {
                 return m.get('firstObject');
@@ -2883,6 +3133,15 @@ App.GraphController = Ember.ObjectController.extend({
         submitWorkflowCopyModal: function (data, callback) {
             var a = this.get('copyWorkflowStoreObject');
             var _this = this;
+            if (!IsGUID(a.WorkContactID)){
+              Messenger().post({ type: 'error', message: 'A user needs to be selected.' });
+              return false;
+            }
+            debugger;
+            if (!IsGUID(a.WorkCompanyID)){
+              Messenger().post({ type: 'error', message: 'A company needs to be selected.' });
+              return false;
+            }
             $.post('/flow/copyworkflow',
                 { id: this.get('workflowID'), VersionOwnerContactID: a.WorkContactID, VersionOwnerCompanyID: a.WorkCompanyID }
                 ).then(function () {
@@ -2935,6 +3194,11 @@ App.GraphController = Ember.ObjectController.extend({
                 this.set('preview', false);
             else
                 this.set('preview', 'wf');
+
+            Ember.run.later(function(){
+                this.set('updateGraph', NewGUID()); // make graph rerender
+            }, 300);
+
         },
         cancelWorkflowShare: function (data, callback) {
             this.set('workflowShareModal', false);
@@ -3052,6 +3316,10 @@ App.GraphController = Ember.ObjectController.extend({
                 _this.set('newContent', null);
                 _this.toggleProperty('workflowNewModal');
                 _this.set('updateGraph', NewGUID());
+                debugger;
+                if (_this.get('model.selected')) {
+                  _this.send('addNewEdge', {from: _this.get('model.selected.id'), to: id});
+                }
             }, function (o) {
                 Messenger().post({ type: 'error', message: 'Error Adding New Step. No Permission.' });
                 _this.store.unloadRecord(newNode);
@@ -3379,6 +3647,24 @@ App.VizEditorComponent = Ember.Component.extend({
         //console.log(container, data, options);
         this.graph = new vis.Network(container, data, options);
         // This sets the new selected item on click
+
+        this.graph.on('doubleClick', function (data) {
+
+            if (data.nodes.length > 0) {
+                var wfid = _this.get('workflowID'); // has to be synched with data
+                // either wikipedia OR node is part of workflow confirmed by store OR first node
+                if (IsGUID(data.nodes[0])) {// wikipedia???
+                  _this.sendAction('toggleWorkflowEditModal')
+
+                }
+
+            }
+
+
+
+        });
+
+
         this.graph.on('click', function (data) {
 
             // Set the value on the component - used by a few computed properties including edit edge conditions...
@@ -4779,7 +5065,7 @@ App.StepRoute = Ember.Route.extend({
     },
     model: function (params, data) {
         var _this = this;
-        return this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true }).then(function(a){
+        return this.store.findQuery('step', { id: params.id, workflowID: params.workflowID, includeContent: true, localeSelected: App.get('localeSelected') }).then(function (a) {
                 _this.set('steps', a);
                 return a.content[0].get('Project')
             }).then(function (b) {
@@ -4810,7 +5096,7 @@ App.StepController = Ember.ObjectController.extend({
     completed: Ember.computed.alias("model.steps.firstObject.Completed"),
     completedOb: function(){
       var _this = this;
-      debugger;
+      // debugger;
       if (this.get('timeremaining') == 0 && this.get('completed') !== null) {
         this.transitionToRoute('todo');
       } else if (this.get('completed') !== null) {
@@ -5032,7 +5318,7 @@ App.StepController = Ember.ObjectController.extend({
                         url: "/flow/WebMethod/DoNext/" + _this.get('stepID'),
                         type: "GET"
                     }).then(function (response) {
-                        _this.store.findQuery('step', { id: _this.get('stepID') }).then(function (m) {
+                        _this.store.findQuery('step', { id: _this.get('stepID'), workflowID: _this.get('workflowID'), includeContent: true, localeSelected: App.get('localeSelected') }).then(function (m) {
                             //_this.transitionToRoute('step', { id: _this.get('stepID') });
                             //Messenger().post({ type: 'success', message: 'Transitioned' });
                             Messenger().post({ type: 'success', message: 'Transitioning...' });
@@ -5041,9 +5327,9 @@ App.StepController = Ember.ObjectController.extend({
                         });
                     }, function (response) {
                         btn.set('loading', false);
-                        btn.set('isDisabled', true);
+                        // btn.set('isDisabled', true); - not sure why this was enabled... broke the page
+                        Messenger().post({ type: 'info', message: 'Most likely your variables aren\'t matching any conditions to move to the next step. Please try to fill out all form fields. If the problem continues please contact support.' });
                         Messenger().post({ type: 'error', message: 'Error:' + response.statusText });
-
                     });
                 }
 
@@ -5082,6 +5368,9 @@ App.TodoController = Ember.ObjectController.extend({
         }
     }.observes('barcode'),
     actions: {
+        createTodo: function() {
+          this.transitionTo('newtodo');
+        },
         getBarcode: function (id) {
             console.log(id);
         }
@@ -5089,9 +5378,65 @@ App.TodoController = Ember.ObjectController.extend({
 });
 
 
-// DS.RESTAdapter.reopen({
-//     namespace: 'flow'
-// });
+
+App.NewtodoRoute = Ember.Route.extend({
+  setupController: function(controller, model) {
+    this._super(controller, model);
+    controller.set('workflowID', null);
+    controller.set('getStarted',true);
+  }
+});
+
+App.NewtodoController = Ember.Controller.extend({
+  needs: ['application'],
+  title: "New Todo",
+  workflowID: null,
+  getStarted: true,
+  actions: {
+    cancel: function(){
+      this.transitionToRoute('todo');
+    },
+    createTodo: function(){
+      var _this = this;
+
+      var workflowID = this.get('workflowID');
+
+      if (!IsGUID(workflowID)) {
+        Messenger().post({type:'error', message:'A workflow template needs to be selected.' });
+
+        return null;
+      }
+
+      // this.store.findQuery('step', { id: NewGUID(), workflowID: workflowID, includeContent: true })
+      $.get('/flow/WebMethod/DoNext?workflow=' + workflowID).then(function(a){
+
+
+        if (_this.get('getStarted')) {
+            Messenger().post({type:'info', message:'Transitioning...' });
+            Messenger().post({type:'success', message:'New Todo successfully created.' });
+            _this.transitionToRoute('step', a);
+
+        } else {
+            Messenger().post({type:'success', message:'New Todo successfully created.' });
+            _this.transitionToRoute('todo');
+        }
+
+      }, function(){
+        Messenger().post({type:'error', message:'New Todo cannot be created. Most likely you don\'t have permission to acces the workflow.'  });
+
+      })
+      //this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
+
+
+
+    }
+  }
+});
+
+
+DS.RESTAdapter.reopen({
+    namespace: 'flow'
+});
 
 
 App.EdgeSerializer = DS.RESTSerializer.extend({
@@ -6480,6 +6825,12 @@ App.MyprofilesController = Ember.ObjectController.extend({
         return 'My Profile'
     }.property('profile'),
     trigger: null,
+    files: null,
+    filesObserver: function(){
+      var files = this.get('files');
+      console.log(files);
+      this.send('uploadPhoto', files);
+    }.observes('files'),
     hasAPI: function (key, value, previousValue) {
         var t = this.get('model.trigger');
         var hasValue = (typeof t !== 'undefined' && t !== null);
@@ -6527,6 +6878,64 @@ App.MyprofilesController = Ember.ObjectController.extend({
         }
     }.property('profile.DefaultEmail'),
     actions: {
+        uploadPhoto: function(files){
+            var _this = this;
+            var iSize = files[0].size / 1024;
+            if (iSize > 2000) {
+                Messenger().post({ type: 'error', message: "File is too large to upload.", id: 'file-security' });
+                return;
+            }
+
+            Messenger().post({ type: 'info', message: "Uploading image...", id: 'file-security' });
+
+
+            // START A LOADING SPINNER HERE
+
+            // Create a formdata object and add the files
+            var data = new FormData();
+            $.each(files, function (key, value) {
+                data.append(key, value);
+            });
+
+            $.ajax({
+                url: '/share/uploadphoto',
+                type: 'POST',
+                data: data,
+                cache: false,
+                dataType: 'json',
+                processData: false, // Don't process the files
+                contentType: false, // Set content type to false as jQuery will tell the server its a query string request
+                success: function (data, textStatus, jqXHR) {
+                    if (typeof data.error === 'undefined') {
+                        // Success so call function to process the form
+                        //submitForm(event, data);
+                        Messenger().post({ type: 'success', message: "Updating image successful!", id: 'file-security' });
+                        // d = new Date();
+                        // var old = $("#profileImageThumb").attr("src").replace(/(\?.*)/ig, '');
+                        // $("#profileImageThumb").attr("src",  old + "?" + d.getTime());
+
+                        var userProfile = _this.get('controllers.application.userProfile');
+                        userProfile.Thumb = userProfile.Thumb.replace(/(\?.*)/ig, '')
+                        userProfile.Thumb = userProfile.Thumb + "?" + NewGUID();
+                        userProfile.Thumb = NewGUID();
+                        console.log(userProfile,  NewGUID());
+                        _this.set('controllers.application.userProfile', userProfile);
+                    }
+                    else {
+                        // Handle errors here
+                        Messenger().post({ type: 'error', message: "Error uploading image. Please try again later.", id: 'file-security' });
+                        console.log('ERRORS: ' + data.error);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    // Handle errors here
+                    console.log('ERRORS: ' + textStatus);
+                    Messenger().post({ type: 'error', message: "Error uploading image. Please try again later.", id: 'file-security' });
+
+                    // STOP LOADING SPINNER
+                }
+            });
+        },
         updateProfile: function (profile) {
             if (this.get('emailValid'))
                 return;
@@ -6674,7 +7083,7 @@ App.OrganizationController = Ember.ObjectController.extend({
             return;
       var name = selected.get('CompanyName').toLowerCase()
       var oldName = name;
-      if (selected._data && Rselected._data.CompanyName)
+      if (selected._data && selected._data.CompanyName)
           oldName = selected._data.CompanyName.toLowerCase()
 
 
@@ -6969,6 +7378,9 @@ function uploadPhoto(event) {
         return;
     }
 
+    Messenger().post({ type: 'info', message: "Uploading image...", id: 'file-security' });
+
+
     // START A LOADING SPINNER HERE
 
     // Create a formdata object and add the files
@@ -6989,18 +7401,22 @@ function uploadPhoto(event) {
             if (typeof data.error === 'undefined') {
                 // Success so call function to process the form
                 //submitForm(event, data);
+                Messenger().post({ type: 'success', message: "Updating image successful!", id: 'file-security' });
                 d = new Date();
                 var old = $("#profileImageThumb").attr("src").replace(/(\?.*)/ig, '');
                 $("#profileImageThumb").attr("src",  old + "?" + d.getTime());
             }
             else {
                 // Handle errors here
+                Messenger().post({ type: 'error', message: "Error uploading image. Please try again later.", id: 'file-security' });
                 console.log('ERRORS: ' + data.error);
             }
         },
         error: function (jqXHR, textStatus, errorThrown) {
             // Handle errors here
             console.log('ERRORS: ' + textStatus);
+            Messenger().post({ type: 'error', message: "Error uploading image. Please try again later.", id: 'file-security' });
+
             // STOP LOADING SPINNER
         }
     });
@@ -7923,8 +8339,18 @@ App.UsermanagerRoute = Ember.Route.extend({})
 App.UsermanagerController = Ember.Controller.extend({
     title: "User Manager",
     user: {},
+    userModal: false,
+    modifyModal: false,
     actions: {
+        modifyUser: function(){
+          this.set('modifyModal', true)
+          console.log('Modify user...')
+        },
+        toggleUserModal: function(){
+          this.toggleProperty('userModal')
+        },
         addUser: function(){
+          this.set('userModal', false)
 
             console.log('adduser', this.get('user'))
         },
@@ -7936,31 +8362,207 @@ App.UsermanagerController = Ember.Controller.extend({
 })
 
 
+// File uploader - I wonder if this Component is even  is used at all???
+App.UploadFileView = Ember.TextField.extend({
+    type: 'file',
+    attributeBindings: ['name'],
+    files: '',
+    change: function(evt) {
+      var self = this;
+      var input = evt.target;
+      if (input.files && input.files[0]) {
+        this.set('files', input.files);
+      }
+    }
+});
 
+
+// Uploader Viewer
+App.FileUploadviewComponent = Ember.Component.extend({
+  value: '',
+  items: function(){
+    if (this.get('value') == null) {
+      return [];
+    }
+    return ("" !=  this.get('value')) ? this.get('value').split(',') : [];
+  }.property('value'),
+  actions: {
+    download: function(item) {
+      // https://github.com/johnculviner/jquery.fileDownload
+
+      $.fileDownload( window.location.origin + '/' + item, {
+          successCallback: function (url) {
+
+              alert('You just got a file download dialog or ribbon for this URL :' + url);
+          },
+          failCallback: function (html, url) {
+
+              alert('Your file download just failed for this URL:' + url + '\r\n' +
+                      'Here was the resulting error HTML: \r\n' + html
+                      );
+          }
+      });
+    }
+  }
+})
+
+// Uses uploader libary
+// https://github.com/benefitcloud/ember-uploader
+App.FileUploadComponent = EmberUploader.FileField.extend({
+  url: '/share/uploadfile',
+  multiple: true,
+  uploading: false,
+  progress: false,
+  uploaded: "",
+  length: function(){
+    return ("" !=  this.get('uploaded')) ? this.get('uploaded').split(',').length : 0;
+  }.property('uploaded'),
+  filesDidChange: (function() {
+    var _this  = this;
+    var uploadUrl = this.get('url');
+    var files = this.get('files');
+
+    var uploader = EmberUploader.Uploader.create({
+      url: uploadUrl
+    });
+
+    uploader.on('progress', function(e) {
+      // Handle progress changes
+      // Use `e.percent` to get percentage
+      _this.set('progress', Math.ceil(e.percent));
+    });
+
+    if (!Ember.isEmpty(files)) {
+      this.set('progress', 0)
+      this.set('uploading', true)
+      var promise = uploader.upload(files);
+      promise.then(function(a){
+        var uploadedList = (_this.get('uploaded') && _this.get('uploaded').length > 0) ? _this.get('uploaded').split(',') : [];
+        console.log(a)
+        $.each(a.files, function(i,a){
+
+          uploadedList.push(a.url)
+
+
+        })
+        _this.set('uploaded', uploadedList.join(','));
+
+
+          Messenger().post({ type: 'success', message: "Succesfully uploaded file", id: 'upload-files' })
+
+          _this.set('uploading', false)
+      }, function(){
+
+          Messenger().post({ type: 'error', message: "Error uploading file", id: 'upload-files' })
+
+          _this.set('uploading', false)
+
+      })
+    }
+  }).observes('files')
+});
+
+App.SignaturePadviewerComponent = Ember.Component.extend({
+  value: null,
+  url: function(){
+    return window.location.origin + '/share/file/' + this.get('value')
+  }.property('value')
+
+});
+
+App.SignaturePadComponent = Ember.Component.extend({
+  signaturePad: null,
+  value: "",
+  disabled: false,
+  initSetup: function(){
+    var _this = this;
+    Ember.run.scheduleOnce('afterRender', this, function(){
+
+      // Get dom elements
+      var signaturePad;
+      var $container =  this.$('.signature-pad canvas');
+      var canvas = this.$('.signature-pad canvas')[0];
+
+      if (this.get('disabled')) {
+        // $container.on('click dblclick mouseenter mouseleave mousemove mousedown hover mouseup touchstart touchmove touchend' ,function(event){
+        $container.on('click mousedown' ,function(event){
+           event.stopPropagation();
+            Messenger().post({ type: 'info', message: "Signature field changes won't be saved! The Signature Field is currently disabled.", id: 'signaturePad' })
+
+        })
+      }
+
+      // If value updates make sure to update signature pad
+      this.addObserver('value', function(){
+        if (!_this.get('disabled')) {
+          setField()
+        }
+      })
+
+      function setField () {
+        // var v = _this.get('value');
+        // if (v != signaturePad.toDataURL() && v != "") {
+        //   signaturePad.fromDataURL(v);
+        // } else if (v == "") {
+        //   signaturePad.clear();
+        // }
+      }
+
+      // Make sure resizing of canvas works
+      function resizeCanvas() {
+          var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+          canvas.width = canvas.offsetWidth * ratio;
+          canvas.height = canvas.offsetHeight * ratio;
+          canvas.getContext("2d").scale(ratio, ratio);
+      }
+      window.onresize = resizeCanvas;
+      resizeCanvas();
+
+
+      // Setup Signature Pad
+      signaturePad = new SignaturePad(canvas);
+      this.set('signaturePad', signaturePad);
+
+      // On change update values
+      signaturePad.onEnd = function(){
+        if (!_this.get('disabled')) {
+          _this.set('value', signaturePad.toDataURL());
+
+          var sigGUID = NewGUID();
+            $.post('/share/UploadBase64PNG', {
+            id: sigGUID,
+            name: sigGUID,
+            data: signaturePad.toDataURL().substr(signaturePad.toDataURL().indexOf(",") + 1)
+          }).then(function(a){
+            console.log(a);
+             _this.set('value', sigGUID);
+          })
+        } else {
+          setField();
+        }
+      }
+
+
+    })
+  }.on('init'),
+  actions: {
+    clear: function(){
+      this.get('signaturePad').clear();
+      this.set('value', "")
+    }
+  }
+});
+
+
+// Radio buttons component.
 App.RadioButtonComponent = Ember.Component.extend({
   tagName: 'input',
   type: 'radio',
+  value: null,
   attributeBindings: [ 'checked', 'name', 'type', 'value' ],
-
   checked: function () {
-    if (JSON.parse(JSON.stringify(this.get('value'))) === JSON.parse(JSON.stringify(this.get('groupValue')))) {
-      Ember.run.once(this, 'takeAction');
-      console.log('should be active')
-      return true;
-    } else { return false; }
-  },
-
-  takeAction: function() {
-    this.sendAction('selectedAction', this.get('value'));
-  },
-
-  groupValueObserver: function(){
-     Ember.run.once(this, 'checked'); //manual observer
-    //console.log(this.get('value'), this.get('groupValue'))
-
-
-  }.observes('groupValue'),
-
+      return JSON.parse(JSON.stringify(this.get('value'))) == JSON.parse(JSON.stringify(this.get('groupValue')));
+  }.property('value', 'groupValue').readOnly(),
   change: function () {
     this.set('groupValue', this.get('value'));
     Ember.run.once(this, 'checked'); //manual observer

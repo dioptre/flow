@@ -35,6 +35,7 @@ namespace EXPEDIT.Flow.Controllers {
     {
         public IOrchardServices Services { get; set; }
         private IFlowService _Flow { get; set; }
+        private ITranslationService _Translation { get; set; }
         public ILogger Logger { get; set; }
         private readonly IContentManager _contentManager;
         private readonly ISiteService _siteService;
@@ -42,12 +43,14 @@ namespace EXPEDIT.Flow.Controllers {
         public UserController(
             IOrchardServices services,
             IFlowService Flow,
+            ITranslationService Translation,
             IContentManager contentManager,
             ISiteService siteService,
             IShapeFactory shapeFactory
             )
         {
             _Flow = Flow;
+            _Translation = Translation;
             Services = services;
             T = NullLocalizer.Instance;
             _contentManager = contentManager;
@@ -664,7 +667,7 @@ namespace EXPEDIT.Flow.Controllers {
                 m.SearchType = SearchType.Flow;
             else if (m.DocType == "workflow" || m.DocType == "E_GraphDataGroup")
                 m.SearchType = SearchType.FlowGroup;
-            if (_Flow.UpdateTranslation(m))
+            if (_Translation.UpdateTranslation(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
@@ -693,7 +696,7 @@ namespace EXPEDIT.Flow.Controllers {
                 m.SearchType = SearchType.FlowGroup;
             else if (m.DocType == "flows")
                 m.SearchType = SearchType.Flows;
-            if ((m.id.HasValue || m.DocID.HasValue) && _Flow.GetTranslation(m))
+            if ((m.id.HasValue || m.DocID.HasValue) && _Translation.GetTranslation(m))
                 return new JsonHelper.JsonNetResult(new { translations = m.TranslationResults }, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
@@ -712,7 +715,7 @@ namespace EXPEDIT.Flow.Controllers {
                 m.SearchType = SearchType.Flow;
             else if (m.DocType == "workflow" || m.DocType == "E_GraphDataGroup")
                 m.SearchType = SearchType.FlowGroup;
-            if (_Flow.DeleteTranslation(m))
+            if (_Translation.DeleteTranslation(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
@@ -730,7 +733,7 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
             if (m.locale != null)
                 m = m.locale;
-            if (_Flow.CreateLocale(m))
+            if (_Translation.CreateLocale(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
@@ -749,7 +752,7 @@ namespace EXPEDIT.Flow.Controllers {
                 m.locale.id = m.id;
                 m = m.locale;
             }
-            if (_Flow.UpdateLocale(m))
+            if (_Translation.UpdateLocale(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
@@ -768,7 +771,7 @@ namespace EXPEDIT.Flow.Controllers {
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
                 m.Refresh = true;
             }
-            if (_Flow.GetLocale(m))
+            if (_Translation.GetLocale(m))
                 return new JsonHelper.JsonNetResult(new { locales = m.LocaleQueue }, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
@@ -784,7 +787,7 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Unauthorized);
             if (!m.id.HasValue)
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
-            if (_Flow.DeleteLocale(m))
+            if (_Translation.DeleteLocale(m))
                 return new JsonHelper.JsonNetResult(true, JsonRequestBehavior.AllowGet);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.ExpectationFailed);
@@ -828,6 +831,11 @@ namespace EXPEDIT.Flow.Controllers {
             if (bool.TryParse(includeContent, out tic))
                 ic = tic;
 
+            string locale = Request.Params["localeSelected"];
+            string l = null;
+            if (!string.IsNullOrWhiteSpace(locale))
+                l = locale.Trim();
+
 
             Guid? sid = null;
             Guid tsid;
@@ -835,7 +843,7 @@ namespace EXPEDIT.Flow.Controllers {
                 sid = tsid;
             if (sid.HasValue || pid.HasValue || tid.HasValue || gid.HasValue)
             {
-                var result = _Flow.GetStep(sid, pid, tid, nid, gid, ic ?? sid.HasValue, false, false);
+                var result = _Flow.GetStep(sid, pid, tid, nid, gid, ic ?? sid.HasValue, false, false, l);
                 if (result == null)
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
                 return new JsonHelper.JsonNetResult(new { steps = new object[] { result } }, JsonRequestBehavior.AllowGet);

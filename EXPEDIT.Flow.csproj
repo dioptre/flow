@@ -1329,6 +1329,8 @@
     <Compile Include="Services\IFlowService.cs" />
     <Compile Include="Services\FlowService.cs" />
     <Compile Include="Services\CleanerBackgroundTask.cs" />
+    <Compile Include="Services\ITranslationService.cs" />
+    <Compile Include="Services\TranslationService.cs" />
     <Compile Include="Services\XmlRpcHandler.cs" />
     <Compile Include="ViewModels\CompanyViewModel.cs" />
     <Compile Include="ViewModels\TriggerViewModel.cs" />

@@ -34,6 +34,7 @@ namespace EXPEDIT.Flow.Services {
     {
         private readonly IOrchardServices _services;
         private readonly IUsersService _users;
+        private readonly ITranslationService _translations;
         private readonly IWorkflowService _wf;
         private Guid? contactID = null;
         private Guid? companyID = null;
@@ -98,6 +99,7 @@ namespace EXPEDIT.Flow.Services {
             IOrchardServices orchardServices,
             IUsersService users,
             IWorkflowService wf,
+            ITranslationService translations,
              ShellSettings shellSettings
             )
         {
@@ -105,6 +107,7 @@ namespace EXPEDIT.Flow.Services {
             _services = orchardServices;
             _wf = wf;
             _shellSettings = shellSettings;
+            _translations = translations;
         }
 
         private void ContactTick(Guid? contactID, int add = 1)
@@ -248,9 +251,32 @@ namespace EXPEDIT.Flow.Services {
                     m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID && f.Version == 0 && f.VersionDeletedBy == null).Single();
                 if (m.IncludeContent ?? false)
                 {
-                    var g = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID && f.Version == 0 && f.VersionDeletedBy == null).FirstOrDefault();
-                    m.content = g.GraphContent;
-                    m.GraphName = g.GraphName;
+                    if (!string.IsNullOrWhiteSpace(m.Locale) && m.Locale != "en-US" && !m.Locale.StartsWith("en"))
+                    {
+                        var g = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID && f.Version == 0 && f.VersionDeletedBy == null)
+                            .Select(f => f.GraphDataID).FirstOrDefault();
+                        TranslationViewModel t = new TranslationViewModel
+                        {
+                            Refresh = false,
+                            SearchType = SearchType.Flow,
+                            DocType = "node",
+                            DocID = g,
+                            TranslationCulture = m.Locale
+                        };
+                        _translations.GetTranslation(t);
+                        m.content = "";
+                        m.GraphName = t.TranslationResults.Select(f => f.TranslationName).FirstOrDefault();
+                        foreach (var f in t.TranslationResults)
+                        {
+                            m.content += f.TranslationText ?? "";
+                        }
+                    }
+                    if (string.IsNullOrWhiteSpace(m.content))
+                    {
+                        var g = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID && f.Version == 0 && f.VersionDeletedBy == null).FirstOrDefault();
+                        m.content = g.GraphContent;
+                        m.GraphName = g.GraphName;
+                    }
                 }
                 
                 m.LastEditedBy = (from o in d.Contacts.Where(f=> f.Version == 0 && f.VersionDeletedBy == null) where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
@@ -260,9 +286,9 @@ namespace EXPEDIT.Flow.Services {
         }
 
 
-        public AutomationViewModel GetStep(NKDC d, Guid sid, Guid? tid = null, bool includeContent = false)
+        public AutomationViewModel GetStep(NKDC d, Guid sid, Guid? tid = null, bool includeContent = false, string locale="en-US")
         {
-            AutomationViewModel m = new AutomationViewModel { IncludeContent = includeContent };
+            AutomationViewModel m = new AutomationViewModel { IncludeContent = includeContent, Locale = locale };
             m.PreviousStep = d.ProjectPlanTaskResponses.Where(f => f.ProjectPlanTaskResponseID == sid && f.Version == 0 && f.VersionDeletedBy == null).SingleOrDefault();
             if (m.PreviousStep != null)
             {
@@ -278,9 +304,32 @@ namespace EXPEDIT.Flow.Services {
                     m.PreviousWorkflowInstance = d.WorkflowInstances.Where(f => f.WorkflowInstanceID == m.PreviousStep.VersionWorkflowInstanceID).Single();
                 if (includeContent)
                 {
-                    var g = d.GraphData.Where(f => f.Version == 0 && f.VersionDeletedBy == null && f.GraphDataID == m.PreviousStep.ActualGraphDataID).FirstOrDefault();
-                    m.content = g.GraphContent;
-                    m.GraphName = g.GraphName;
+                    if (!string.IsNullOrWhiteSpace(m.Locale) && m.Locale != "en-US" && !m.Locale.StartsWith("en"))
+                    {                    
+                        var g = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID && f.Version == 0 && f.VersionDeletedBy == null)
+                            .Select(f => f.GraphDataID).FirstOrDefault();
+                        TranslationViewModel t = new TranslationViewModel
+                        {
+                            Refresh = false,
+                            SearchType = SearchType.Flow,
+                            DocType = "node",
+                            DocID = g,
+                            TranslationCulture = m.Locale
+                        };
+                        _translations.GetTranslation(t);
+                        m.content = "";
+                        m.GraphName = t.TranslationResults.Select(f => f.TranslationName).FirstOrDefault();
+                        foreach (var f in t.TranslationResults)
+                        {
+                            m.content += f.TranslationText ?? "";
+                        }                        
+                    }
+                    if (string.IsNullOrWhiteSpace(m.content))
+                    {
+                        var g = d.GraphData.Where(f => f.GraphDataID == m.PreviousStep.ActualGraphDataID && f.Version == 0 && f.VersionDeletedBy == null).FirstOrDefault();
+                        m.content = g.GraphContent;
+                        m.GraphName = g.GraphName;
+                    }
                 }
                 m.LastEditedBy = (from o in d.Contacts.Where(f => f.Version == 0 && f.VersionDeletedBy == null) where o.ContactID == m.PreviousStep.VersionUpdatedBy select o.Username).FirstOrDefault();
                 Checkout(m, d);
@@ -479,7 +528,7 @@ namespace EXPEDIT.Flow.Services {
                                     from soq in oq.DefaultIfEmpty()
                                     where soq == null
                                     join p in d.GraphData on o.FromGraphDataID equals p.GraphDataID
-                                    select p
+                                    select p.GraphDataID
                                   ).FirstOrDefault();
                             if (gd == null)
                             {
@@ -487,14 +536,39 @@ namespace EXPEDIT.Flow.Services {
                                       join r in d.GraphDataRelation.Where(f => f.Version == 0 && f.VersionDeletedBy == null) on o.GraphDataGroupID equals r.GraphDataGroupID
                                       join g in d.GraphData.Where(f => f.Version == 0 && f.VersionDeletedBy == null) on r.FromGraphDataID equals g.GraphDataID
                                       where o.StartGraphDataID == g.GraphDataID && r.FromGraphDataID != r.ToGraphDataID
-                                      select g
+                                      select g.GraphDataID
                                           ).FirstOrDefault();
                             }
                             if (gd != null)
                             {
-                                m.PreviousStep.ActualGraphDataID = gd.GraphDataID;
-                                m.content = gd.GraphContent;
-                            }
+                                m.PreviousStep.ActualGraphDataID = gd;
+                                if (!string.IsNullOrWhiteSpace(m.Locale) && m.Locale != "en-US" && !m.Locale.StartsWith("en"))
+                                {
+                                    TranslationViewModel t = new TranslationViewModel
+                                    {
+                                        Refresh = false,
+                                        SearchType = SearchType.Flow,
+                                        DocType = "node",
+                                        DocID = gd,
+                                        TranslationCulture = m.Locale
+                                    };
+                                    _translations.GetTranslation(t);
+                                    m.content = "";
+                                    m.GraphName = t.TranslationResults.Select(f => f.TranslationName).FirstOrDefault();
+                                    foreach (var f in t.TranslationResults)
+                                    {
+                                        m.content += f.TranslationText ?? "";
+                                    }
+                                }
+                                if (string.IsNullOrWhiteSpace(m.content))
+                                {
+                                    var g = d.GraphData.Where(f => f.GraphDataID == gd && f.Version == 0 && f.VersionDeletedBy == null).FirstOrDefault();
+                                    m.content = g.GraphContent;
+                                    m.GraphName = g.GraphName;
+                                }
+                            }      
+                            
+
                         }
                         else
                         {
