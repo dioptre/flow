@@ -634,6 +634,12 @@ text-transform: capitalize;
 .navbar-brand img {
     max-height: 27px; /* Ensures reasonable logo size */
 }
+.navbar-brand img.logo-text {
+    max-height: 21px;
+  margin-top: 0px;
+  margin-left: 6px;
+
+}
 
 
 #sidebar-nav {
@@ -651,6 +657,10 @@ text-transform: capitalize;
 .navbar-brand {
   margin-left: 7px;
   padding: 9px 20px !important;
+}
+
+.eui-default.eui-input input, .eui-default.eui-input textarea, .eui-default.eui-textarea input, .eui-default.eui-textarea textarea {
+  line-height: 1.1em;
 }
 
 .ie .downloadData {
