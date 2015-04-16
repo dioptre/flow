@@ -952,6 +952,8 @@ App.NewworkflowController = Ember.Controller.extend({
               return newEdge.save()
 
 
+            }, function(){
+              Messenger().post({type:'error', message:'Error with adding new Workflow. Make sure you are connected to the Internet and part of the right company.'});
             })
         }).then(function (o) {
 

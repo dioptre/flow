@@ -1496,3 +1496,11 @@ body {
 .pace {
   display: none;
 }
+
+
+ul.nav > li {
+  display: inline-block;
+}
+.content {
+  width: 100%;
+}
