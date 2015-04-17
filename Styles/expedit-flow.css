@@ -1501,6 +1501,13 @@ body {
 ul.nav > li {
   display: inline-block;
 }
-.content {
+/*.content {
   width: 100%;
+}*/
+
+.form-box {
+  background: rgb(244,244,244);
+  padding: 15px;
+  border: 1px solid #dddddd;
+  border-radius: 2px;
 }

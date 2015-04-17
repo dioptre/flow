@@ -126,7 +126,7 @@
 </script>
 
 <script id="form-tabs" type="text/x-handlebars-template">
-    <ul class="nav nav-tabs" role="tablist">
+{{!--     <ul class="nav nav-tabs" role="tablist">
         <li class="active"><a href="#form-{{id}}">{{#if heading }}{{heading}} {{/if}}Form</a></li>
         <li><a href="#results-{{id}}" class="results">Results</a></li>
     </ul>
@@ -137,6 +137,10 @@
         <div class="tab-pane" id="results-{{id}}">
             <div id="resultstable-{{id}}" class="form-results" data-id="{{id}}"></div>
         </div>
+    </div> --}}
+
+    <div class="form-box">
+        {{{outlet}}}
     </div>
 </script>
 
@@ -2134,6 +2138,9 @@
                         <span {{action 'toggleworkflowEditNameModal'}} class='btn-flat gray' title="Edit Workflow">
                             <i class="icon-pencil"></i> <!--Name--> {{!--Edit Workflow name--}}
                         </span>
+                        <span {{action 'toggleWorkflowPropertiesModal'}} class='btn-flat gray' title="Edit business properties">
+                                <i class="icon-cogs"></i> Properties
+                            </span>
                         <span {{action 'createWorkflowInstance' workflowID }} class='btn-flat gray' title="Run a new workflow instance">
                             <i class="icon-play"></i> Run {{!--Edit Workflow name--}}
                         </span>
@@ -2418,6 +2425,26 @@
                 {{/if}}
             </div>
             {{/eui-modal}}
+
+            
+            {{#eui-modal openBinding="workflowPropertiesModal"}}
+            <div style="padding: 50px; text-align: center;">
+                <h4>Properties Modal</h4>
+                <br />
+                <br />
+                Author:
+
+                Company:
+
+                Unique permissions:
+
+                <br>
+
+                {{eui-button label="Cancel" action="toggleWorkflowPropertiesModal" size='large'}}
+                {{eui-button label="Submit" action="toggleWorkflowPropertiesModal" style='primary' size='large'}}
+            </div>
+            {{/eui-modal}}
+
 
 
             {{#eui-modal openBinding="workflowEditNameModal"}}

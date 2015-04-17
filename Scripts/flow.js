@@ -1567,9 +1567,11 @@ App.ApplicationRoute = Ember.Route.extend({
 
             if(typeof controller !== 'undefined') {
                 //console.log('loading')
-                controller.get('startLoading')()
+                controller.set('isLoading', true);
+                controller.get('startLoading').apply(controller)
                 this.router.one('didTransition', function () {
-                    controller.get('stopLoading')();
+                    controller.set('isLoading', false);
+                    controller.get('stopLoading').apply(controller);
                 });
             }
             return true;
@@ -1602,34 +1604,84 @@ App.ApplicationController = Ember.Controller.extend({
     isLoading: false, // this allows triggering the loading from anywhere in the code, just go: _this.set('controllers.application.isLoading', true)
     isLoadingObserver: function(){
        if(this.get('isLoading')){
-        this.get('startLoading')();
+
+        this.get('startLoading').apply(this);
+        //this.startLoading.apply(this)
        } else {
-        this.get('stopLoading')();
+        this.get('stopLoading').apply(this);
+        // this.stopLoading.apply(this);
        }
     }.observes('isLoading'),
     stopLoading: function(){
-        Ember.run.scheduleOnce('afterRender', this, function () {
-        
-                $('body').removeClass('cursor-progress loading-stuff');
+      console.log('stop loading');
 
-                  $('.logo-circle').velocity("stop").velocity({rotateZ: '0'});
-                Pace.stop();
-                // alert('loading stop')
+      var _this = this;
+        Ember.run.scheduleOnce('afterRender', this, function () {
+    
+            $('body').removeClass('cursor-progress loading-stuff');
+            _this.set('isSpinning', false)
+
+            // $('.logo-circle').velocity("end")//.velocity({rotateZ: 0});
+            
+
+            Pace.stop();
+            // alert('loading stop')
         });
     },
+    rotate: 0,
+    isSpinning: false,
     startLoading: function(){
+      console.log('start loading');
+
+
         Pace.restart();
-        Ember.run.scheduleOnce('afterRender', this, function () {
+
+        var _this = this;
+
+        console.log('is Loading', _this.get('isLoading'))
+
+
+        Ember.run.scheduleOnce('afterRender', this, function(){
+
+          function turnLogoCircle() {
+             _this.set('isSpinning', true)
+
+            var rotate = _this.get('rotate') + 360;
+            _this.set('rotate', rotate);
+            console.log("logo circle", rotate);
+
+            Ember.run.scheduleOnce('afterRender', this, function(){
+              $('.logo-circle').velocity({ 
+                rotateZ: rotate
+              }, {
+                duration: 400,
+                easing: 'linear'
+              })
+            });
+
+            // Loops if it keeps on loading
+            console.log('RUN LATER IS RUNNING', _this.get('isLoading'))
+            
+
+            // if (_this.get('isLoading')) {
+
+              Ember.run.later((function() {
+                 console.log('RUN LATER IS RUNNING', _this.get('isLoading'))
+                if (_this.get('isLoading'))
+                  turnLogoCircle()
+              }), 390);
+
+            // }
+          }
+          if (!_this.get('isSpinning')) {
+            // console.log(123)
+            turnLogoCircle();
+          }
 
           $('body').addClass('cursor-progress loading-stuff');
-          $('.logo-circle').velocity({ 
-            rotateZ: "+=180"
-          }, { 
-            loop: true 
-          });
-          // alert('loading')
 
         });
+
     },
     isLoggedIn: false,
     logoutModal: false,
@@ -2885,6 +2937,7 @@ App.GraphController = Ember.ObjectController.extend({
     workflowShareModal: false,
     workflowCopyModal: false,
     workflowNewModal: false, // up to here is for new ones
+    workflowPropertiesModal: false,
     moneyModal: false,
     loadingMoney: true,
     triggerModal: false,
@@ -3074,6 +3127,9 @@ App.GraphController = Ember.ObjectController.extend({
     actions: {
         createWorkflowInstance: function() {
             this.transitionToRoute('step', NewGUID(), { queryParams: { workflowID: this.get('workflowID') } });
+        },
+        toggleWorkflowPropertiesModal: function(){
+          this.toggleProperty('workflowPropertiesModal')
         },
         translateWorkflow: function(workflowID, selectedID){
             this.transitionToRoute('translate', workflowID, {queryParams: {selected: selectedID}});
