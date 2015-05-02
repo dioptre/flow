@@ -1609,25 +1609,26 @@
             {{/view}}
             --}}
 
-              {{#view App.HomeNavView}}
+            {{#if featuresEnabled.workflow}}
+                {{#view App.HomeNavView}}
 
-               {{#link-to 'myworkflows'}}
-                    <i class="icl-directions"></i>
-                    <span>              
-                        {{model.t.fp_menu_link_workflow}}
-                    </span>
+                   {{#link-to 'myworkflows'}}
+                        <i class="icl-directions"></i>
+                        <span>              
+                            {{model.t.fp_menu_link_workflow}}
+                        </span>
 
-                    
-                    <ul style="display:none">
-                        <li>{{#link-to 'newworkflow'}}{{model.t.fp_menu_link_newWorkflow}}{{/link-to}}</li>
-                        <li>{{#link-to 'search'}} {{model.t.fp_menu_link_search}} {{/link-to}}</li>
-                        <li>{{#link-to 'file'}} {{model.t.fp_menu_link_myfiles}} {{/link-to}}</li>
-                    </ul>
-                    
-               {{/link-to}}
+                        
+                        <ul style="display:none">
+                            <li>{{#link-to 'newworkflow'}}{{model.t.fp_menu_link_newWorkflow}}{{/link-to}}</li>
+                            <li>{{#link-to 'search'}} {{model.t.fp_menu_link_search}} {{/link-to}}</li>
+                            <li>{{#link-to 'file'}} {{model.t.fp_menu_link_myfiles}} {{/link-to}}</li>
+                        </ul>
+                        
+                   {{/link-to}}
     
-            {{/view}}
-
+                {{/view}}
+            {{/if}}
 
             {{!--
             {{#view App.HomeNavView}}
@@ -1651,17 +1652,22 @@
                     <span>{{model.t.fp_menu_link_report}}</span>
                 {{/link-to}}
             {{/view}} --}}
-            {{#view App.HomeNavView}}
-                <a class="dropdown-toggle" href="#">
-                    <i class="icl-graph"></i>
-                    <span>{{model.t.fp_menu_link_report}}</span>
-                    <i class="icon-chevron-down"></i>
-                </a>
-                <ul class="submenu">
-                    <li>{{#link-to 'report'}} {{model.t.fp_menu_link_charts}} {{/link-to}}</li>
-                    <li>{{#link-to 'responseData'}} {{model.t.fp_menu_link_data}} {{/link-to}}</li>
-                </ul>
-            {{/view}}
+
+            {{#if featuresEnabled.report}}
+
+                {{#view App.HomeNavView}}
+                    <a class="dropdown-toggle" href="#">
+                        <i class="icl-graph"></i>
+                        <span>{{model.t.fp_menu_link_report}}</span>
+                        <i class="icon-chevron-down"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li>{{#link-to 'report'}} {{model.t.fp_menu_link_charts}} {{/link-to}}</li>
+                        <li>{{#link-to 'responseData'}} {{model.t.fp_menu_link_data}} {{/link-to}}</li>
+                    </ul>
+                {{/view}}
+
+            {{/if}}
 
             {{!--
             {{#view App.HomeNavView}}
@@ -1684,34 +1690,43 @@
             {{/view}}
 
             --}}
+            {{#if featuresEnabled.team}}
 
-            {{#view App.HomeNavView}}
-                <a class="dropdown-toggle" href="#">
-                    <i class="icl-users"></i>
-                    <span>{{model.t.fp_menu_link_team}}</span>
-                    <i class="icon-chevron-down"></i>
-                </a>
-                <ul class="submenu">
-                    <li>{{#link-to 'organization'}}{{model.t.fp_menu_link_organization}}{{/link-to}}</li>
-                    <li>{{#link-to 'permission'}}{{model.t.fp_menu_link_permission}}{{/link-to}}</li>
-                    <li>{{#link-to 'mylicenses'}} {{model.t.fp_menu_link_licenses}} {{/link-to}}</li>
-                </ul>
-            {{/view}}
+                {{#view App.HomeNavView}}
+                    <a class="dropdown-toggle" href="#">
+                        <i class="icl-users"></i>
+                        <span>{{model.t.fp_menu_link_team}}</span>
+                        <i class="icon-chevron-down"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li>{{#link-to 'organization'}}{{model.t.fp_menu_link_organization}}{{/link-to}}</li>
+                        <li>{{#link-to 'permission'}}{{model.t.fp_menu_link_permission}}{{/link-to}}</li>
+                        <li>{{#link-to 'mylicenses'}} {{model.t.fp_menu_link_licenses}} {{/link-to}}</li>
+                    </ul>
+                {{/view}}
 
-           {{#view App.HomeNavView}}
-                {{#link-to 'myprofiles'}}
-                    <i class="icl-user"></i>
-                    {{!--
-                    <span>{{#if isLoggedIn}}{{userProfile.UserName}}{{else}}{{model.t.fp_menu_link_myprofile}}{{/if}}</span>--}}
-                    <span>{{model.t.fp_menu_link_account}}</span>
-                {{/link-to}}
-            {{/view}}
-            {{#view App.HomeNavView}}
-                {{#link-to 'help'}}
-                    <i class="icl-question"></i>
-                    <span>{{model.t.fp_menu_link_help}}</span>
-                {{/link-to}}
-            {{/view}}
+            {{/if}}
+
+            {{#if featuresEnabled.profile}}
+               {{#view App.HomeNavView}}
+                    {{#link-to 'myprofiles'}}
+                        <i class="icl-user"></i>
+                        {{!--
+                        <span>{{#if isLoggedIn}}{{userProfile.UserName}}{{else}}{{model.t.fp_menu_link_myprofile}}{{/if}}</span>--}}
+                        <span>{{model.t.fp_menu_link_account}}</span>
+                    {{/link-to}}
+                {{/view}}
+            {{/if}}
+
+            {{#if featuresEnabled.help}}
+
+                {{#view App.HomeNavView}}
+                    {{#link-to 'help'}}
+                        <i class="icl-question"></i>
+                        <span>{{model.t.fp_menu_link_help}}</span>
+                    {{/link-to}}
+                {{/view}}
+            {{/if}}
             {{!--
                 {{#view App.HomeNavView}}
                     {{#link-to 'userprofile'}}
@@ -1927,10 +1942,12 @@
             {{#each when in triggersJSON.when}}
                 {{eui-select value=when.type options=when.select size='small' labelPath='text'}}
                 {{#if when.delay}}
-                    <b>Seconds</b>
-                    {{eui-input value=when.delay.days placeholder='Enter for time delay in days'}}
+                    <b>Minutes</b>
+                    {{eui-input value=when.delay.minutes placeholder='Enter for time delay in minutes'}}
                     <b>Hours</b>
                     {{eui-input value=when.delay.hours placeholder='Enter for time delay in hours'}}
+                    <b>Days</b>
+                    {{eui-input value=when.delay.days placeholder='Enter for time delay in days'}}
                 {{/if}}
             {{/each}}
             <br>

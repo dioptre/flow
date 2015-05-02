@@ -1594,6 +1594,24 @@ App.ApplicationRoute = Ember.Route.extend({
 
 
 App.ApplicationController = Ember.Controller.extend({
+    featuresDefault: {
+      dashboard: true,
+      todos: true,
+      workflow: true,
+      reports: true,
+      team: true,
+      profile: true,
+      help: true
+    },
+    featuresEnabled: {
+      dashboard: true,
+      todos: true,
+      workflow: false,
+      reports: false,
+      team: false,
+      profile: true,
+      help: false
+    },
     queryParams: ['localeSelected'],
     currentPathDidChange: function () {
         window.scrollTo(0, 0); // THIS IS IMPORTANT - makes the window scroll to the top if changing route
@@ -4472,7 +4490,8 @@ App.WhenTrigger = App.TriggerOption.extend({
     select: [{value: 'now', text: "Immediately"}, {value: 'delay', text: "Time Delay"}],
     delayTemplate: {
         hours: '0',
-        days: '0'
+        days: '0',
+        minutes: '0'
     },
     nowTemplate: {}
 });
@@ -4599,7 +4618,7 @@ App.TriggerNodeComponent = Ember.Component.extend({
                     })
                 );
             }
-            console.log(construct);
+            
             _this.set('triggersJSON', construct)
             _this.set('loading', false);
         });
@@ -4801,8 +4820,10 @@ App.TriggerNodeComponent = Ember.Component.extend({
 
                 if (triggersJSON.when && triggersJSON.when.length > 0) {
                     if (triggersJSON.when[0].delay) {
+                        if (triggersJSON.when[0].delay.minutes && triggersJSON.when[0].delay.minutes.match(/^[0-9]+$/ig) !== null)
+                            value.set('DelayMinutes', triggersJSON.when[0].delay.minutes);
                         if (triggersJSON.when[0].delay.hours && triggersJSON.when[0].delay.hours.match(/^[0-9]+$/ig) !== null)
-                            value.set('DelaySeconds', triggersJSON.when[0].delay.hours * 60);
+                            value.set('DelayHours', triggersJSON.when[0].delay.hours * 60);
                         if (triggersJSON.when[0].delay.days && triggersJSON.when[0].delay.days.match(/^[0-9]+$/ig) !== null)
                             value.set('DelayDays', triggersJSON.when[0].delay.days);
                         if (triggersJSON.when[0].delay.weeks && triggersJSON.when[0].delay.weeks.match(/^[0-9]+$/ig) !== null)
