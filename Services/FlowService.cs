@@ -424,7 +424,7 @@ namespace EXPEDIT.Flow.Services {
             var modelID = FLOW_MODEL_ID;
             return CacheHelper.AddToCache<bool>(() =>
             {
-                ICheckPayment proxy = XmlRpcProxyGen.Create<ICheckPayment>();
+                var proxy = XmlRpcProxyGen.Create<ICheckPayment>();
                 proxy.Url = EXPEDIT.Share.Helpers.ConstantsHelper.APP_XMLRPC_URL;
                 var response = proxy.ValidateModelContact(modelID.ToString(), contactID.ToString());
                 if (string.IsNullOrWhiteSpace(response))
@@ -1931,8 +1931,9 @@ namespace EXPEDIT.Flow.Services {
         public void LoggedIn(IUser user)
         {
             CacheHelper.Cache.Remove(string.Format(FS_FLOW_CONTACT_ID, _users.ContactID));
-            if (_users.ContactID.HasValue && CheckPayment() && !_users.HasPrivateCompanyID)
-                using (new TransactionScope(TransactionScopeOption.Suppress))
+            var ckd = CheckPayment();
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+                if (_users.ContactID.HasValue && ckd && !_users.HasPrivateCompanyID)
                 {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
                     var cid = Guid.NewGuid();
@@ -1959,6 +1960,35 @@ namespace EXPEDIT.Flow.Services {
                     d.Experiences.AddObject(e);
                     d.SaveChanges();
                 }
+                else if (_users.ContactID.HasValue && !ckd && !_users.HasPrivateCompanyID)
+                {
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var cid = Guid.NewGuid();
+                    var now = DateTime.UtcNow;
+                    var c = new Company
+                    {
+                        CompanyID = cid,
+                        CompanyName = "Company Name -" + cid.ToString(),
+                        PrimaryContactID = _users.ContactID,
+                        VersionUpdated = now,
+                        Comment = "Generated Private Company"
+                    };
+                    d.Companies.AddObject(c);
+                    var e = new Experience
+                    {
+                        ExperienceID = Guid.NewGuid(),
+                        ExperienceName = "Private Company - " + _users.Username,
+                        CompanyID = cid,
+                        ContactID = _users.ContactID,
+                        DateStart = now,
+                        IsApproved = true,
+                        VersionUpdated = now
+                    };
+                    d.Experiences.AddObject(e);
+                    d.SaveChanges();
+                    d.E_SP_CreateLicense(_users.ContactID, cid, _users.Username, null, null, null, null, DateTime.UtcNow.AddDays(-1.0), DateTime.UtcNow.AddDays(EXPEDIT.Share.Helpers.ConstantsHelper.APP_LICENSE_DEFAULTGIFTDAYS));
+                }
+
         }
 
         public void LoggedOut(IUser user) { }
