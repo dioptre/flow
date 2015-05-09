@@ -539,6 +539,15 @@ namespace EXPEDIT.Flow.Services {
                                       select g.GraphDataID
                                           ).FirstOrDefault();
                             }
+                            if (gd == null)
+                            {
+                                gd = (from o in d.GraphDataGroups.Where(f => f.GraphDataGroupID == m.GraphDataGroupID && f.VersionDeletedBy == null && f.Version == 0)
+                                      join r in d.GraphDataRelation.Where(f => f.Version == 0 && f.VersionDeletedBy == null) on o.GraphDataGroupID equals r.GraphDataGroupID
+                                      join g in d.GraphData.Where(f => f.Version == 0 && f.VersionDeletedBy == null) on r.FromGraphDataID equals g.GraphDataID
+                                      orderby g.VersionUpdated ascending
+                                      select g.GraphDataID
+                                          ).FirstOrDefault();
+                            }
                             if (gd != null)
                             {
                                 m.PreviousStep.ActualGraphDataID = gd;
@@ -875,7 +884,7 @@ namespace EXPEDIT.Flow.Services {
                     }    
                 }
                 
-                if (isTransitioned || isNew)
+                if (isTransitioned || isNew || isCompleted)
                 {
                     EnqueueEvents(d, m, oldGid, isCompleted ? default(Guid?) : nextGid, now);
                 }
@@ -1075,6 +1084,8 @@ namespace EXPEDIT.Flow.Services {
                                     return "";
                                 foreach (var l in txtLookup)
                                     toClean = toClean.Replace(l.Key, l.Value);
+                                foreach (var l in txtLookup)
+                                    toClean = toClean.Replace(string.Format("{0}", l.Key).Replace(" ", "_").Replace("\'", "_").Replace("\"", "_").Replace("{{", "{{context.").Replace("}}", ".Value}}"), l.Value);
                                 return toClean;
                             };
                             bool success = true;

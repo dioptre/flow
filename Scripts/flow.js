@@ -1606,11 +1606,11 @@ App.ApplicationController = Ember.Controller.extend({
     featuresEnabled: {
       dashboard: true,
       todos: true,
-      workflow: false,
-      reports: false,
-      team: false,
+      workflow: true,
+      reports: true,
+      team: true,
       profile: true,
-      help: false
+      help: true
     },
     queryParams: ['localeSelected'],
     currentPathDidChange: function () {
