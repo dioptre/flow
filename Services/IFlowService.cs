@@ -218,5 +218,11 @@ namespace EXPEDIT.Flow.Services
 
         [OperationContract]
         bool CopyWorkflow(FlowViewModel m);
+
+        [OperationContract]
+        bool RegisterDevice(string deviceType, string id);
+
+        [OperationContract]
+        bool SendNotification(Guid contactID, string json);
     }
 }

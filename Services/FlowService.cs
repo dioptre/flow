@@ -45,7 +45,9 @@ using Orchard.Environment.Configuration;
 using System.Web.Mvc;
 using System.Data.Objects;
 
-
+using PushSharp;
+using PushSharp.Android;
+using System.Threading;
 
 namespace EXPEDIT.Flow.Services {
 
@@ -3971,6 +3973,71 @@ namespace EXPEDIT.Flow.Services {
 
             }
 
+        }
+
+        public bool RegisterDevice(string deviceType, string ID)
+        {
+            var contact = _users.ContactID;
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+
+            }
+
+        }
+
+        public bool SendNotification(Guid contactID, string json)
+        {
+            return false;
+            bool succeeded = false;
+            var ewh = new EventWaitHandle(false, EventResetMode.AutoReset);
+            switch (deviceType)
+            {
+                case "android":
+                    var js = string.Format("{{ \"message\":\"Welcome to FlowPro's notification system.\", \"title\": \"Registered with FlowPro\", \"msgcnt\" : \"1\" }}", Guid.NewGuid());
+                    var notification = new GcmNotification()
+                            .ForDeviceRegistrationId(id)
+                            .WithJson(js)
+                            .WithDelayWhileIdle(false);
+
+                    PushSharp.Core.NotificationSentDelegate msgSent = (object sender, PushSharp.Core.INotification msg) =>
+                    {
+                        if (msg.QueuedCount == notification.QueuedCount)
+                        {
+                            succeeded = true;
+                            ewh.Set();
+                        }
+                    };
+                    PushSharp.Core.NotificationFailedDelegate msgFailed = (object sender, PushSharp.Core.INotification msg, Exception ex) =>
+                    {
+                        if (msg.QueuedCount == notification.QueuedCount)
+                        {
+
+                            ewh.Set();
+                        }
+                    };
+                    var aSvc = Orchard.Web.MvcApplication.PushBroker.GetRegistrations<GcmNotification>().FirstOrDefault();
+                    if (aSvc == null)
+                    {
+                        Orchard.Web.MvcApplication.PushBroker.RegisterGcmService(new GcmPushChannelSettings(EXPEDIT.Share.Helpers.ConstantsHelper.GcmAuth));
+                    }
+                    aSvc.OnNotificationSent += msgSent;
+                    aSvc.OnNotificationFailed += msgFailed;
+                    Orchard.Web.MvcApplication.PushBroker.QueueNotification(notification);
+                    ewh.WaitOne(40000); //Only try for 40secs
+                    aSvc.OnNotificationSent -= msgSent;
+                    aSvc.OnNotificationFailed -= msgFailed;
+                    return succeeded;
+                    break;
+                case "ios":
+                    //var appleCert = File.ReadAllBytes("ApnsSandboxCert.p12"));
+                    //push.RegisterAppleService(new ApplePushChannelSettings(appleCert, "pwd"));
+                    //push.QueueNotification(new AppleNotification()
+                    //       .ForDeviceToken("DEVICE TOKEN HERE")
+                    //       .WithAlert("Hello World!")
+                    //       .WithBadge(7)
+                    //       .WithSound("sound.caf"));
+                    break;
+            }
         }
     }
 }

@@ -26,10 +26,7 @@ using Orchard.Security;
 using Orchard.Users.Services;
 using Orchard.Users.Events;
 using NKD.Models;
-using PushSharp;
-using PushSharp.Android;
-using System.Threading.Tasks;
-using System.Threading;
+
 
 
 namespace EXPEDIT.Flow.Controllers {
@@ -1448,60 +1445,12 @@ namespace EXPEDIT.Flow.Controllers {
         [ActionName("RegisterDevice")]
         public ActionResult RegisterDevice(string deviceType, string id)
         {
-            var status = System.Net.HttpStatusCode.BadRequest;
-            var ewh = new EventWaitHandle(false, EventResetMode.AutoReset);
-            switch (deviceType)
-            {
-                case "android":
-                    var js = string.Format("{{ \"message\":\"You are now connected to FlowPro's notification system.\", \"title\": \"Registered with FlowPro\", \"msgcnt\" : \"1\" }}", Guid.NewGuid());
-                    var notification = new GcmNotification()
-                            .ForDeviceRegistrationId(id)
-                            .WithJson(js)
-                            .WithDelayWhileIdle(false);
-
-                    PushSharp.Core.NotificationSentDelegate msgSent = (object sender, PushSharp.Core.INotification msg) =>
-                    {
-                        if (msg.QueuedCount == notification.QueuedCount)
-                        {
-                            status = System.Net.HttpStatusCode.OK;
-                            ewh.Set();
-                        }
-                    };
-                    PushSharp.Core.NotificationFailedDelegate msgFailed = (object sender, PushSharp.Core.INotification msg, Exception ex) =>
-                    {
-                        if (msg.QueuedCount == notification.QueuedCount)
-                        {
-
-                            ewh.Set();
-                        }
-                    };
-                    var reg = Orchard.Web.MvcApplication.PushBroker.GetRegistrations<GcmNotification>();
-                    if (reg.Count() == 0)
-                        Orchard.Web.MvcApplication.PushBroker.RegisterGcmService(new GcmPushChannelSettings(System.Configuration.ConfigurationManager.AppSettings["GcmAuthKey"]));
-                    var aSvc = reg.First();
-                    aSvc.OnNotificationSent += msgSent;
-                    aSvc.OnNotificationFailed += msgFailed;
-                    Orchard.Web.MvcApplication.PushBroker.QueueNotification(notification);
-                    ewh.WaitOne(40000); //Only try for 40secs
-                    aSvc.OnNotificationSent -= msgSent;
-                    aSvc.OnNotificationFailed -= msgFailed;
-                    break;
-                case "ios":
-                    break;
-            }
-            return new HttpStatusCodeResult(status);
-
+            if (_Flow.RegisterDevice(deviceType, id))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.OK);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
         }
 
-        void PushBroker_OnNotificationSent(object sender, PushSharp.Core.INotification notification)
-        {
-            throw new NotImplementedException();
-        }
-
-        void PushBroker_OnNotificationFailed(object sender, PushSharp.Core.INotification notification, Exception ex)
-        {
-            throw new NotImplementedException();
-        }
 
     }
 }
