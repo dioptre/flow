@@ -3733,6 +3733,53 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
+        public void DeleteContacts(Guid?[] contacts)
+        {
+                var contact = _users.ContactID;
+                var now = DateTime.UtcNow;
+            if (contacts != null && contacts.Length > 0)
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+
+                    var d = new NKDC(_users.ApplicationConnectionString, null);
+                    var myCompanies = (from o in d.E_UDF_OwnedCompanies(contact) select o).ToArray();
+                    (from o in d.Experiences.Where(f => f.Version == 0 && f.VersionDeletedBy == null) 
+                     where myCompanies.Contains(o.CompanyID) && contacts.AsQueryable().Except(new Guid?[] { contact }).Contains(o.ContactID) select o)
+                        .Update(retire => new Experience
+                        {
+                            DateFinished = now,
+                            Expiry = now,
+                            VersionUpdated = now,
+                            VersionUpdatedBy = contact
+                        });
+                    
+                    UpdateDeletedContacts(ref d, contact);
+                }
+            
+        }
+
+        public bool UpdateDeletedContacts(ref NKDC context, Guid? owner)
+        {
+            if (!owner.HasValue)
+                return false;
+            var oldLicenseIDs = (from o in context.E_SP_GetLicensesExpired(owner) select o.LicenseID);
+            var oldLicenses = (from o in context.Licenses where oldLicenseIDs.Contains(o.LicenseID) select o);
+            foreach (var oldLicense in oldLicenses)
+            {
+                if (oldLicense.Expiry < DateTime.UtcNow)
+                    continue;
+                if (oldLicense.SupportExpiry < DateTime.UtcNow)
+                    continue;
+                oldLicense.LicenseeGUID = owner;
+                oldLicense.LicenseeName = _services.WorkContext.CurrentUser.UserName;
+                var newExpiry = DateTime.UtcNow.Date.AddMonths(1);
+                newExpiry = new DateTime(newExpiry.Year, newExpiry.Month, 1).AddSeconds(-1);
+                oldLicense.SupportExpiry = newExpiry;                
+            }
+            context.SaveChanges();
+            return true;
+        }
+
         public bool DeleteCompany(CompanyViewModel m)
         {
             try
@@ -3758,6 +3805,7 @@ namespace EXPEDIT.Flow.Services {
                             VersionUpdated = now,
                             VersionUpdatedBy = contact
                         });
+                    UpdateDeletedContacts(ref d, contact);
                     //(from o in d.CompanyRelations.Where(f=>f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id || o.ParentCompanyID == m.id select o).Delete();
                     //var companies = (from o in d.Companies.Where(f=>f.Version == 0 && f.VersionDeletedBy == null) where o.CompanyID == m.id && o.PrimaryContactID == contact select o);
                     //if (!companies.Any())
