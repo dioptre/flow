@@ -1443,9 +1443,9 @@ namespace EXPEDIT.Flow.Controllers {
         [Themed(false)]
         [HttpGet]
         [ActionName("RegisterDevice")]
-        public ActionResult RegisterDevice(string deviceType, string id)
+        public ActionResult RegisterDevice(string deviceType, int? timezone, string id)
         {
-            if (_Flow.RegisterDevice(deviceType, id))
+            if (_Flow.RegisterDevice(deviceType, id, timezone))
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.OK);
             else
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);

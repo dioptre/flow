@@ -698,7 +698,7 @@ namespace EXPEDIT.Flow
                  new RouteDescriptor {
                     Priority = 15,
                     Route = new Route(
-                        "Flow/RegisterDevice/{deviceType}/{id}",
+                        "Flow/RegisterDevice/{deviceType}/{timezone}/{id}",
                         new RouteValueDictionary {
                             {"area", "EXPEDIT.Flow"},
                             {"controller", "User"},

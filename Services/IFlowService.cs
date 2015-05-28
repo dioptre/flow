@@ -220,7 +220,7 @@ namespace EXPEDIT.Flow.Services
         bool CopyWorkflow(FlowViewModel m);
 
         [OperationContract]
-        bool RegisterDevice(string deviceType, string id);
+        bool RegisterDevice(string deviceType, string id, int? timezone);
 
         [OperationContract]
         bool SendNotification(Guid contactID, string json);

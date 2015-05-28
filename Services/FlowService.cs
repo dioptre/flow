@@ -49,6 +49,7 @@ using PushSharp;
 using PushSharp.Android;
 using System.Threading;
 
+
 namespace EXPEDIT.Flow.Services {
 
     [UsedImplicitly]
@@ -2901,7 +2902,7 @@ namespace EXPEDIT.Flow.Services {
                                  DelayMonths = o.DelayMonths,
                                  DelayYears = o.DelayYears,
                                  DelayUntil = o.DelayUntil,
-                                 RepeatAfterDays = o.RepeatAfterDays,
+                                 RepeatAfterSeconds = o.RepeatAfterSeconds,
                                  Repeats = o.Repeats,
                              }).SingleOrDefault();
                     return m;
@@ -3006,7 +3007,7 @@ namespace EXPEDIT.Flow.Services {
                         DelayMonths = m.DelayMonths,
                         DelayYears = m.DelayYears,
                         DelayUntil = m.DelayUntil,
-                        RepeatAfterDays = m.RepeatAfterDays,
+                        RepeatAfterSeconds = m.RepeatAfterSeconds,
                         Repeats = m.Repeats,
                         VersionUpdated = DateTime.UtcNow,
                         VersionUpdatedBy = contact,
@@ -3064,7 +3065,7 @@ namespace EXPEDIT.Flow.Services {
                     if (m.DelayMonths != null && cc.DelayMonths != m.DelayMonths) cc.DelayMonths = m.DelayMonths;
                     if (m.DelayYears != null && cc.DelayYears != m.DelayYears) cc.DelayYears = m.DelayYears;
                     if (m.DelayUntil != null && cc.DelayUntil != m.DelayUntil) cc.DelayUntil = m.DelayUntil;
-                    if (m.RepeatAfterDays != null && cc.RepeatAfterDays != m.RepeatAfterDays) cc.RepeatAfterDays = m.RepeatAfterDays;
+                    if (m.RepeatAfterSeconds != null && cc.RepeatAfterSeconds != m.RepeatAfterSeconds) cc.RepeatAfterSeconds = m.RepeatAfterSeconds;
                     if (m.Repeats != null && cc.Repeats != m.Repeats) cc.Repeats = m.Repeats;
 
                     if (cc.EntityState == EntityState.Modified)
@@ -3172,7 +3173,7 @@ namespace EXPEDIT.Flow.Services {
                                  DelayMonths = o.DelayMonths,
                                  DelayYears = o.DelayYears,
                                  DelayUntil = o.DelayUntil,
-                                 RepeatAfterDays = o.RepeatAfterDays,
+                                 RepeatAfterSeconds = o.RepeatAfterSeconds,
                                  Repeats = o.Repeats,
                                  ConditionID = o.ConditionID,
                                  Condition =  (condition != null) ? condition.Condition : null,
@@ -3265,7 +3266,7 @@ namespace EXPEDIT.Flow.Services {
                         DelayMonths = m.DelayMonths,
                         DelayYears = m.DelayYears,
                         DelayUntil = m.DelayUntil,
-                        RepeatAfterDays = m.RepeatAfterDays,
+                        RepeatAfterSeconds = m.RepeatAfterSeconds,
                         Repeats = m.Repeats,
                         VersionUpdated = DateTime.UtcNow,
                         VersionUpdatedBy = contact
@@ -3342,7 +3343,7 @@ namespace EXPEDIT.Flow.Services {
                     if (m.DelayMonths != null && cc.DelayMonths != m.DelayMonths) cc.DelayMonths = m.DelayMonths;
                     if (m.DelayYears != null && cc.DelayYears != m.DelayYears) cc.DelayYears = m.DelayYears;
                     if (m.DelayUntil != null && cc.DelayUntil != m.DelayUntil) cc.DelayUntil = m.DelayUntil;
-                    if (m.RepeatAfterDays != null && cc.RepeatAfterDays != m.RepeatAfterDays) cc.RepeatAfterDays = m.RepeatAfterDays;                    
+                    if (m.RepeatAfterSeconds != null && cc.RepeatAfterSeconds != m.RepeatAfterSeconds) cc.RepeatAfterSeconds = m.RepeatAfterSeconds;                    
                     if (m.Repeats != null && cc.Repeats != m.Repeats) cc.Repeats = m.Repeats;
 
                     if (m.Condition != null)
@@ -3975,69 +3976,168 @@ namespace EXPEDIT.Flow.Services {
 
         }
 
-        public bool RegisterDevice(string deviceType, string ID)
+        public bool RegisterDevice(string deviceType, string id, int? timezone)
         {
+            switch (deviceType)
+            {
+                case "apple":
+                    break;
+                case "android":
+                    break;
+                default:
+                    return false;
+            }
             var contact = _users.ContactID;
+            if (!contact.HasValue)
+                return false;
+            var company = _users.ApplicationCompanyID;
+            var now = DateTime.UtcNow;
+            var isNew = false;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var notification = (from o in d.Notifications where o.ContactID == contact select o).FirstOrDefault();
+                if (notification == null)
+                {
+                    notification = new Notification
+                    {
+                        ContactID = contact,
+                        NotificationID = Guid.NewGuid(),
+                        Timezone = timezone,
+                        VersionOwnerContactID = contact,
+                        VersionUpdated = now,
+                        VersionUpdatedBy = contact                        
+                    };
+                    d.Notifications.AddObject(notification);
+                    notification.NotificationDevices.Add(new NotificationDevice
+                    {
+                        DeviceToken = id,
+                        DeviceType = deviceType,
+                        NotificationID = notification.NotificationID,
+                        LastRegistered = now,
+                        VersionOwnerContactID = contact,
+                        VersionUpdated = now,
+                        VersionUpdatedBy = contact
+                    });
+                    isNew = true;
+                }
+                else
+                {
+                    var devices = (from o in notification.NotificationDevices where o.DeviceToken == id && o.DeviceType == deviceType && o.Version == 0 && o.VersionDeletedBy == null select o);
+                    if (devices.Any())
+                    {
+                        foreach (var o in devices)
+                            o.LastRegistered = now;
+                    }
+                    else
+                    {
+                        notification.NotificationDevices.Add(new NotificationDevice
+                        {
+                            DeviceToken = id,
+                            DeviceType = deviceType,
+                            NotificationID = notification.NotificationID,
+                            LastRegistered = now,
+                            VersionOwnerContactID = contact,
+                            VersionUpdated = now,
+                            VersionUpdatedBy = contact
+                        });
+                        isNew = true;
+                    }
 
+                }
+                d.SaveChanges();          
             }
+            if (isNew)
+            {
+                var jsJoined = string.Format("{{ \"message\":\"Welcome to FlowPro.\", \"title\": \"You added a device to FlowPro.\", \"msgcnt\" : \"1\" }}", Guid.NewGuid());
+                SendNotification(contact.Value, jsJoined);
+            }
+            return true;
 
         }
 
         public bool SendNotification(Guid contactID, string json)
         {
-            return false;
             bool succeeded = false;
-            var ewh = new EventWaitHandle(false, EventResetMode.AutoReset);
-            switch (deviceType)
+            NotificationDevice[] devices = new NotificationDevice[0];
+            using (new TransactionScope(TransactionScopeOption.Suppress))
             {
-                case "android":
-                    var js = string.Format("{{ \"message\":\"Welcome to FlowPro's notification system.\", \"title\": \"Registered with FlowPro\", \"msgcnt\" : \"1\" }}", Guid.NewGuid());
-                    var notification = new GcmNotification()
-                            .ForDeviceRegistrationId(id)
-                            .WithJson(js)
-                            .WithDelayWhileIdle(false);
-
-                    PushSharp.Core.NotificationSentDelegate msgSent = (object sender, PushSharp.Core.INotification msg) =>
-                    {
-                        if (msg.QueuedCount == notification.QueuedCount)
-                        {
-                            succeeded = true;
-                            ewh.Set();
-                        }
-                    };
-                    PushSharp.Core.NotificationFailedDelegate msgFailed = (object sender, PushSharp.Core.INotification msg, Exception ex) =>
-                    {
-                        if (msg.QueuedCount == notification.QueuedCount)
-                        {
-
-                            ewh.Set();
-                        }
-                    };
-                    var aSvc = Orchard.Web.MvcApplication.PushBroker.GetRegistrations<GcmNotification>().FirstOrDefault();
-                    if (aSvc == null)
-                    {
-                        Orchard.Web.MvcApplication.PushBroker.RegisterGcmService(new GcmPushChannelSettings(EXPEDIT.Share.Helpers.ConstantsHelper.GcmAuth));
-                    }
-                    aSvc.OnNotificationSent += msgSent;
-                    aSvc.OnNotificationFailed += msgFailed;
-                    Orchard.Web.MvcApplication.PushBroker.QueueNotification(notification);
-                    ewh.WaitOne(40000); //Only try for 40secs
-                    aSvc.OnNotificationSent -= msgSent;
-                    aSvc.OnNotificationFailed -= msgFailed;
-                    return succeeded;
-                    break;
-                case "ios":
-                    //var appleCert = File.ReadAllBytes("ApnsSandboxCert.p12"));
-                    //push.RegisterAppleService(new ApplePushChannelSettings(appleCert, "pwd"));
-                    //push.QueueNotification(new AppleNotification()
-                    //       .ForDeviceToken("DEVICE TOKEN HERE")
-                    //       .WithAlert("Hello World!")
-                    //       .WithBadge(7)
-                    //       .WithSound("sound.caf"));
-                    break;
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var deviceExpiry = DateTime.UtcNow.AddDays(-365);
+                devices = (from o in d.NotificationDevices
+                           where
+                               o.Notification.ContactID == contactID &&
+                               o.LastRegistered > deviceExpiry &&
+                               o.Notification.Version == 0 &&
+                               o.Notification.VersionDeletedBy == null &&
+                               o.Version == 0 &&
+                               o.VersionDeletedBy == null
+                           select o).ToArray();
             }
+            PushSharp.Core.IPushService aSvc = null;
+            if (devices.Any(f=>f.DeviceType == "android"))
+            {
+                aSvc = Orchard.Web.MvcApplication.PushBroker.GetRegistrations<GcmNotification>().FirstOrDefault();
+                if (aSvc == null)
+                {
+                    Orchard.Web.MvcApplication.PushBroker.RegisterGcmService(new GcmPushChannelSettings(EXPEDIT.Share.Helpers.ConstantsHelper.GcmAuth));
+                    aSvc = Orchard.Web.MvcApplication.PushBroker.GetRegistrations<GcmNotification>().First();
+                }
+            }
+            var ewhs = new EventWaitHandle[devices.Length];
+            var sent = new PushSharp.Core.NotificationSentDelegate[devices.Length];
+            var failed = new PushSharp.Core.NotificationFailedDelegate[devices.Length];
+            for (var i = 0; i < devices.Length; i++)
+            {
+                ewhs[i] = new EventWaitHandle(false, EventResetMode.ManualReset);
+                var ewh = ewhs[i];
+                switch (devices[i].DeviceType)
+                {
+                    case "android":
+                        var notification = new GcmNotification()
+                                .ForDeviceRegistrationId(devices[i].DeviceToken)
+                                .WithJson(json)
+                                .WithDelayWhileIdle(false);
+
+                        PushSharp.Core.NotificationSentDelegate msgSent = (object sender, PushSharp.Core.INotification msg) =>
+                        {
+                            if (msg.QueuedCount == notification.QueuedCount)
+                            {
+                                succeeded = true;
+                                ewh.Set();
+                            }
+                        };
+                        PushSharp.Core.NotificationFailedDelegate msgFailed = (object sender, PushSharp.Core.INotification msg, Exception ex) =>
+                        {
+                            if (msg.QueuedCount == notification.QueuedCount)
+                            {
+                                ewh.Set();
+                            }
+                        };
+                        aSvc.OnNotificationSent += msgSent;
+                        aSvc.OnNotificationFailed += msgFailed;
+                        Orchard.Web.MvcApplication.PushBroker.QueueNotification(notification);
+                        break;
+                    case "apple":
+                        //var appleCert = File.ReadAllBytes("ApnsSandboxCert.p12"));
+                        //push.RegisterAppleService(new ApplePushChannelSettings(appleCert, "pwd"));
+                        //push.QueueNotification(new AppleNotification()
+                        //       .ForDeviceToken("DEVICE TOKEN HERE")
+                        //       .WithAlert("Hello World!")
+                        //       .WithBadge(7)
+                        //       .WithSound("sound.caf"));
+                        break;
+                }
+              
+            } 
+            
+            WaitHandle.WaitAll(ewhs, 40000); //Wait only 40secs 
+            for (var i = 0; i < devices.Length; i++)
+            {
+                aSvc.OnNotificationSent -= sent[i];
+                aSvc.OnNotificationFailed -= failed[i];
+            }
+            return succeeded; //any msg got through
         }
     }
 }

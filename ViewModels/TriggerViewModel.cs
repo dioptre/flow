@@ -39,7 +39,7 @@ namespace EXPEDIT.Flow.ViewModels
         public int? DelayYears { get; set; }
         public DateTime? DelayUntil { get; set; }
 
-        public int? RepeatAfterDays	{get;set;}
+        public long? RepeatAfterSeconds	{get;set;}
         public int? Repeats	{get;set;}
 
         public Guid? ConditionID { get; set; }
