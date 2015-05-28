@@ -1451,6 +1451,17 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
         }
 
+        [Authorize]
+        [Themed(false)]
+        [HttpGet]
+        [ActionName("Chat")]
+        public ActionResult Chat(string username, string message)
+        {
+            if (_Flow.Chat(username, message))
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.OK);
+            else
+                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
+        }
 
     }
 }

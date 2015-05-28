@@ -709,6 +709,21 @@ namespace EXPEDIT.Flow
                             {"area", "EXPEDIT.Flow"}
                         },
                         new MvcRouteHandler())
+                },
+                 new RouteDescriptor {
+                    Priority = 15,
+                    Route = new Route(
+                        "Flow/Chat/{username}/{message}",
+                        new RouteValueDictionary {
+                            {"area", "EXPEDIT.Flow"},
+                            {"controller", "User"},
+                            {"action", "chat"}
+                        },
+                        null,
+                        new RouteValueDictionary {
+                            {"area", "EXPEDIT.Flow"}
+                        },
+                        new MvcRouteHandler())
                 }
                 
 

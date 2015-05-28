@@ -223,6 +223,9 @@ namespace EXPEDIT.Flow.Services
         bool RegisterDevice(string deviceType, string id, int? timezone);
 
         [OperationContract]
-        bool SendNotification(Guid contactID, string json);
+        bool SendNotification(Guid contactID, string json, string tableType = null, Guid? referenceID = null);
+
+        [OperationContract]
+        bool Chat(string username, string message);
     }
 }

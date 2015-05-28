@@ -3993,10 +3993,12 @@ namespace EXPEDIT.Flow.Services {
             var company = _users.ApplicationCompanyID;
             var now = DateTime.UtcNow;
             var isNew = false;
+            Notification notification = null;
+            string tableType = null;
             using (new TransactionScope(TransactionScopeOption.Suppress))
             {
                 var d = new NKDC(_users.ApplicationConnectionString, null);
-                var notification = (from o in d.Notifications where o.ContactID == contact select o).FirstOrDefault();
+                notification = (from o in d.Notifications where o.ContactID == contact select o).FirstOrDefault();
                 if (notification == null)
                 {
                     notification = new Notification
@@ -4045,18 +4047,20 @@ namespace EXPEDIT.Flow.Services {
                     }
 
                 }
-                d.SaveChanges();          
+                d.SaveChanges();   
+                if (isNew)
+                    tableType = d.GetTableName(typeof(Notification));
             }
             if (isNew)
             {
                 var jsJoined = string.Format("{{ \"message\":\"Welcome to FlowPro.\", \"title\": \"You added a device to FlowPro.\", \"msgcnt\" : \"1\" }}", Guid.NewGuid());
-                SendNotification(contact.Value, jsJoined);
+                SendNotification(contact.Value, jsJoined, tableType, notification.NotificationID);
             }
             return true;
 
         }
 
-        public bool SendNotification(Guid contactID, string json)
+        public bool SendNotification(Guid contactID, string json, string tableType = null, Guid? referenceID = null)
         {
             bool succeeded = false;
             NotificationDevice[] devices = new NotificationDevice[0];
@@ -4073,6 +4077,18 @@ namespace EXPEDIT.Flow.Services {
                                o.Version == 0 &&
                                o.VersionDeletedBy == null
                            select o).ToArray();
+                if (devices.Length > 0 && devices[0].NotificationID.HasValue)
+                {
+                    var history = new NotificationData
+                    {
+                        NotificationID = devices[0].NotificationID.Value,
+                        JSON = json,
+                        TableType = tableType,
+                        ReferenceID = referenceID
+                    };
+                    d.NotificationDatas.AddObject(history);
+                    d.SaveChanges();
+                }
             }
             PushSharp.Core.IPushService aSvc = null;
             if (devices.Any(f=>f.DeviceType == "android"))
@@ -4138,6 +4154,25 @@ namespace EXPEDIT.Flow.Services {
                 aSvc.OnNotificationFailed -= failed[i];
             }
             return succeeded; //any msg got through
+        }
+
+        public bool Chat(string username, string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return false;
+            var contact = _users.ContactID;
+            if (!contact.HasValue)
+                return false;            
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                var recipientID = (from o in d.Contacts where o.Username == username select o.ContactID).First();
+                if (message.Length > 255)
+                    message = message.Substring(0, 255);
+                message = message.Replace("\"", "\\\"");
+                var js = string.Format("{{ \"message\":\"{1}\", \"title\": \"FlowPro message from {0}.\", \"msgcnt\" : \"1\" }}", _services.WorkContext.CurrentUser.UserName, message);
+                return SendNotification(recipientID, js, d.GetTableName(typeof(Contact)), contact.Value);
+            }
         }
     }
 }
