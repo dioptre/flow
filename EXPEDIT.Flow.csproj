@@ -109,15 +109,6 @@
     <Reference Include="PdfSharp.Charting">
       <HintPath>..\..\..\..\lib\pdfsharp\PdfSharp.Charting.dll</HintPath>
     </Reference>
-    <Reference Include="PushSharp.Android">
-      <HintPath>..\..\..\..\lib\pushsharp\PushSharp.Android\bin\Debug\PushSharp.Android.dll</HintPath>
-    </Reference>
-    <Reference Include="PushSharp.Apple">
-      <HintPath>..\..\..\..\lib\pushsharp\PushSharp.Apple\bin\Debug\PushSharp.Apple.dll</HintPath>
-    </Reference>
-    <Reference Include="PushSharp.Core">
-      <HintPath>..\..\..\..\lib\pushsharp\PushSharp.Core\bin\Debug\PushSharp.Core.dll</HintPath>
-    </Reference>
     <Reference Include="System">
       <Private>True</Private>
     </Reference>
@@ -1298,10 +1289,6 @@
     <ProjectReference Include="..\..\Core\Orchard.Core.csproj">
       <Project>{9916839C-39FC-4CEB-A5AF-89CA7E87119F}</Project>
       <Name>Orchard.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Orchard.Web.csproj">
-      <Project>{50b779ea-ec00-4699-84c0-03b395c365d2}</Project>
-      <Name>Orchard.Web</Name>
     </ProjectReference>
     <ProjectReference Include="..\EXPEDIT.Share\EXPEDIT.Share.csproj">
       <Project>{224cf035-3491-449e-8dcb-d26797ea10e9}</Project>

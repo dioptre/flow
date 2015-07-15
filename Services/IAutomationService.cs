@@ -31,6 +31,9 @@ namespace EXPEDIT.Flow.Services
         bool Checkin(Guid stepID);
 
         [OperationContract]
+        bool NotifyTransition(AutomationViewModel m);
+
+        [OperationContract]
         bool Authenticate(AutomationViewModel m, string method);
 
         [OperationContract]

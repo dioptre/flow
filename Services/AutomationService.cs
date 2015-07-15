@@ -95,14 +95,18 @@ namespace EXPEDIT.Flow.Services {
             }
         }
 
+        private INotificationService _notifications;
+
         public AutomationService(
             IOrchardServices orchardServices,
             IUsersService users,
             IWorkflowService wf,
             ITranslationService translations,
+            INotificationService notifications,
              ShellSettings shellSettings
             )
         {
+            _notifications = notifications;
             _users = users;
             _services = orchardServices;
             _wf = wf;
@@ -891,6 +895,11 @@ namespace EXPEDIT.Flow.Services {
 
                 d.SaveChanges();
 
+                if (isTransitioned && !isNew && !isCompleted)
+                {
+                    NotifyTransition(m);
+                }
+
                 if (!isCompleted)
                 {
                     if (checkAuthorization)
@@ -1387,7 +1396,7 @@ namespace EXPEDIT.Flow.Services {
                     var d = new NKDC(_users.ApplicationConnectionString, null);
                     Guid[] companies = new Guid[] { };
                     if (!settings.NewCompanyID.HasValue)
-                    {
+                    { 
                         //companylevel
                         var wfCompanies = (from o in d.E_UDF_ContactCompanies(settings.OldWorkflowContactID.Value)
                                            join c in d.CompanyRelations.Where(f => f.Version == 0 && f.VersionDeletedBy == null)
@@ -1543,6 +1552,39 @@ namespace EXPEDIT.Flow.Services {
 
         }
 
+        public bool NotifyTransition(AutomationViewModel m)
+        {
+            Guid[] contacts = new Guid[] { };
+            string js = "";
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                if (m.ResponsibleCompanyID.HasValue && m.ResponsibleCompanyID != UsersService.COMPANY_DEFAULT)
+                {
+                    //companylevel
+                    contacts = (from o in d.Experiences.Where(f => f.CompanyID == m.ResponsibleCompanyID)
+                                where o.Version == 0 && o.VersionDeletedBy != null && o.ContactID != null
+                                && (o.Expiry < DateTime.UtcNow || o.Expiry == null)
+                                && (o.DateFinished < DateTime.UtcNow || o.DateFinished == null)
+                                && (o.DateStart > DateTime.UtcNow || o.DateStart == null)
+                                select o.ContactID.Value)
+                                .Union(from o in d.Companies
+                                       where o.CompanyID == m.ResponsibleCompanyID.Value && o.Version == 0
+                                           && o.PrimaryContactID != null
+                                       select o.PrimaryContactID.Value)
+                                .ToArray();
+                }
+                if (m.ResponsibleContactID.HasValue)
+                    contacts = contacts.Union(new Guid[] { m.ResponsibleContactID.Value }).ToArray();
+
+            }
+            //Notify everyone about next transition
+            js = string.Format("{{ \"message\":\"Please check it out.\", \"title\": \"New to-do.\", \"msgcnt\" : \"1\", \"stepid\": \"{0}\" }}", m.NextStepID);
+            new System.Threading.Tasks.Task(() => { _notifications.SendNotification(contacts, js); }).Start();
+            return true;
+
+        }
+        
 
     }
 }

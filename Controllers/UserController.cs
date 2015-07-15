@@ -1439,29 +1439,7 @@ namespace EXPEDIT.Flow.Controllers {
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden); //Unauthorized redirects which is not so good fer ember
         }
 
-        [Authorize]
-        [Themed(false)]
-        [HttpGet]
-        [ActionName("RegisterDevice")]
-        public ActionResult RegisterDevice(string deviceType, int? timezone, string id)
-        {
-            if (_Flow.RegisterDevice(deviceType, id, timezone))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.OK);
-            else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
-        }
-
-        [Authorize]
-        [Themed(false)]
-        [HttpGet]
-        [ActionName("Chat")]
-        public ActionResult Chat(string username, string message)
-        {
-            if (_Flow.Chat(username, message))
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.OK);
-            else
-                return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest);
-        }
+        
 
     }
 }
