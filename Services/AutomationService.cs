@@ -1587,7 +1587,7 @@ namespace EXPEDIT.Flow.Services {
 
             }
             //Notify everyone about next transition
-            js = string.Format("{{ \"message\":\"Please check it out.\", \"title\": \"New to-do.\", \"msgcnt\" : \"1\", \"stepid\": \"{0}\" }}", m.NextStepID);
+            js = string.Format("{{ \"TYP\" : \"T\",\"message\":\"Please check it out.\", \"title\": \"New to-do.\", \"msgcnt\" : \"1\", \"stepid\": \"{0}\" }}", m.PreviousStepID);
             new System.Threading.Tasks.Task(() => { _notifications.SendNotification(contacts, js); }).Start();
             return true;
 

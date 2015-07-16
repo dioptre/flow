@@ -2063,7 +2063,9 @@ namespace EXPEDIT.Flow.Services {
                              GraphContent = o.GraphContent,
                              LastEditedBy = o.LastEditedBy
                          }
-                    ).Where(f=>f.Completed == null).OrderBy(f=>f.VersionUpdated).ToArray();                        
+                    ).Where(f=>f.Completed == null 
+                        && f.VersionOwnerCompanyID != UsersService.COMPANY_DEFAULT && f.ResponsibleCompanyID != UsersService.COMPANY_DEFAULT)
+                        .OrderByDescending(f=>f.VersionPriority).ThenBy(f=>f.VersionUpdated).ToArray();                        
             }
 
         }
