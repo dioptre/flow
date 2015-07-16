@@ -5791,6 +5791,19 @@ App.Step = App.Node.extend({
         else
             return '';
     }.property('GraphName'),
+    isError: function () {
+        if (this.get('VersionPriority') >= 60)
+            return true;
+        else
+            return false;
+    }.property('VersionPriority'),
+    isWarning: function () {
+        if (this.get('VersionPriority') < 60 && this.get('VersionPriority') > 30)
+            return true;
+        else
+            return false;
+    }.property('VersionPriority'),
+
 });
 
 App.Project = DS.Model.extend({

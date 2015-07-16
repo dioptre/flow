@@ -1511,3 +1511,15 @@ ul.nav > li {
   border: 1px solid #dddddd;
   border-radius: 2px;
 }
+
+.label-warning {
+    background-color: #FF7D40;
+}
+
+.label-error {
+    background-color: #EE2C2C;
+}
+
+.label-good {
+    background-color: #A2BC13;
+}
