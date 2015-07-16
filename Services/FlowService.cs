@@ -2049,6 +2049,7 @@ namespace EXPEDIT.Flow.Services {
                                  VersionOwnerContactID = o.VersionOwnerContactID,
                                  VersionOwnerCompanyID = o.VersionOwnerCompanyID,
                                  VersionUpdated = o.VersionUpdated,
+                                 VersionPriority = o.VersionPriority
 
                              },
                              label = o.GraphName,

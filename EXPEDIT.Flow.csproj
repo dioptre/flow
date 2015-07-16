@@ -172,6 +172,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Images\logo-circle.png" />
+    <Content Include="Images\logo-text.png" />
     <Content Include="Images\share-icon.png" />
     <Content Include="Images\loading.gif" />
     <Content Include="Images\logo-all-white-transparent.png" />

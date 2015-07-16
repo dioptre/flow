@@ -1649,14 +1649,14 @@ App.ApplicationController = Ember.Controller.extend({
     rotate: 0,
     isSpinning: false,
     startLoading: function(){
-      console.log('start loading');
+      //console.log('start loading');
 
 
         Pace.restart();
 
         var _this = this;
 
-        console.log('is Loading', _this.get('isLoading'))
+        //console.log('is Loading', _this.get('isLoading'))
 
 
         Ember.run.scheduleOnce('afterRender', this, function(){
@@ -1666,7 +1666,7 @@ App.ApplicationController = Ember.Controller.extend({
 
             var rotate = _this.get('rotate') + 360;
             _this.set('rotate', rotate);
-            console.log("logo circle", rotate);
+            //console.log("logo circle", rotate);
 
             Ember.run.scheduleOnce('afterRender', this, function(){
               $('.logo-circle').velocity({ 
@@ -1678,13 +1678,13 @@ App.ApplicationController = Ember.Controller.extend({
             });
 
             // Loops if it keeps on loading
-            console.log('RUN LATER IS RUNNING', _this.get('isLoading'))
+            //console.log('RUN LATER IS RUNNING', _this.get('isLoading'))
             
 
             // if (_this.get('isLoading')) {
 
               Ember.run.later((function() {
-                 console.log('RUN LATER IS RUNNING', _this.get('isLoading'))
+                 //console.log('RUN LATER IS RUNNING', _this.get('isLoading'))
                 if (_this.get('isLoading'))
                   turnLogoCircle()
               }), 390);
@@ -1797,7 +1797,7 @@ App.ApplicationView = Ember.View.extend({
 
 
                                 // I am over writing the object... should check first if it's empty if not then only overwrite it...
-                                console.log(data);
+                                //console.log(data);
 
                                 // Clean up the data
                                 data.UserName = ToTitleCase(data.UserName);
@@ -5780,6 +5780,7 @@ App.Step = App.Node.extend({
     GraphName :  DS.attr('string'),
     GraphContent :  DS.attr('string'),
     LastEditedBy: DS.attr('string'),
+    VersionPriority: DS.attr('number'),
     projectCode: function () {
         return this.get('ProjectCode');
     }.property('ProjectCode'),
@@ -7132,8 +7133,8 @@ App.OrganizationController = Ember.ObjectController.extend({
             value.unloadRecord();
       });
       var results = Enumerable.From(this.get('model').content).Where("$.get('People') && $.get('People') !== null && $.get('People') !== ''").ToArray();
-
-      console.log('results');
+      
+      //console.log(results);
 
       // The goal of this is to have an always present super node that can't be deleted.
       var org = Ember.Object.create({
@@ -7145,7 +7146,7 @@ App.OrganizationController = Ember.ObjectController.extend({
         Dashboard: '' // Andy load dashboard here`
       })
       // debugger;
-      console.log('Setup again...')
+      // console.log('Setup again...')
 
       var wrap =  {data: org,  children: transform(results) };
       return { data: wrap } // the data wrapper is what the hierachy component needs ;)
@@ -7630,7 +7631,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
                 var _this = this;
                 var a = Ember.Object.extend({
                     width: function() {
-                        console.log('helpers')
+                        //console.log('helpers')
                       return _this.get('dom').baseSVG[0][0].getBoundingClientRect().width;
                     }.property(),
                     height: function() {
@@ -7980,7 +7981,9 @@ App.HierachyTreeComponent = Ember.Component.extend({
             .attr("opacity", 0.2) // change this to zero to hide the target area
             .style("fill", "green")
             .attr('pointer-events', 'mouseover')
-            .call(function(d){console.log('Enter run ', d)})
+            .call(function (d) {
+                //console.log('Enter run ', d)
+            })
 
 
 
@@ -8105,7 +8108,7 @@ App.HierachyTreeComponent = Ember.Component.extend({
 
         // Stash the old positions for transition.
         status.nodes.forEach(function(d) {
-            console.log(d.data.get('CompanyName'), d.x0, d.x, d.y0, d.y)
+            //console.log(d.data.get('CompanyName'), d.x0, d.x, d.y0, d.y)
             d.x0 = d.x;
             d.y0 = d.y;
         });

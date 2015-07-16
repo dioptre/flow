@@ -683,7 +683,13 @@ namespace EXPEDIT.Flow.Services {
                                 m.PreviousStep.VersionOwnerCompanyID = m.PreviousTask.WorkCompanyID;
                                 checkAuthorization = true;
                             }
+                            if (!m.PreviousStep.VersionPriority.HasValue || m.PreviousTask.DefaultPriority > m.PreviousStep.VersionPriority)
+                                m.PreviousStep.VersionPriority = m.PreviousTask.DefaultPriority;
+
                         }
+
+                        if (!m.PreviousStep.VersionPriority.HasValue)
+                            m.PreviousStep.VersionPriority = 0;
                         
                         m.PreviousStep.Began = now;
                         d.ProjectPlanTaskResponses.AddObject(m.PreviousStep);
@@ -876,6 +882,8 @@ namespace EXPEDIT.Flow.Services {
                                     m.PreviousStep.VersionOwnerCompanyID = m.PreviousTask.WorkCompanyID;
                                     checkAuthorization = true;
                                 }
+                                if (!m.PreviousStep.VersionPriority.HasValue || m.PreviousTask.DefaultPriority > m.PreviousStep.VersionPriority)
+                                    m.PreviousStep.VersionPriority = m.PreviousTask.DefaultPriority;
 
                             }
                             m.PreviousStep.ActualTaskID = m.TaskID;

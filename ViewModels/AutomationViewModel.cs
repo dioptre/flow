@@ -55,6 +55,7 @@ namespace EXPEDIT.Flow.ViewModels
         public Guid? ApprovedBy { get { return PreviousStep.ApprovedBy; } }
         public string Comments { get { return PreviousStep.Comments; } }
 
+        public int? VersionPriority { get { return PreviousStep.VersionPriority; } }
         public Guid? VersionAntecedentID { get { return PreviousStep.VersionAntecedentID; } }
         public Guid? VersionUpdatedBy { get { return PreviousStep.VersionUpdatedBy; } }
         public Guid? VersionOwnerContactID { get { return PreviousStep.VersionOwnerContactID; } }
