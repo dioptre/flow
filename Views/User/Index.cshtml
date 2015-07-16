@@ -4195,15 +4195,23 @@
                                           <a {{bind-attr data-js=step.id}} style="cursor:pointer;" onclick="javascript: $('#barcode').JsBarcode($(this).attr('data-js'), { displayValue: true, fontSize: 20 }); this.href = $('#barcode')[0].toDataURL(); this.download = 'download.png'; if (GetExplorerVersion() > 0) window.scrollTo(0, document.body.scrollHeight);">Barcode</a>
                                     </td>
                                     <td>
-                                        {{#if step.isError }}           
-                                            <span class="label label-error">Urgent</span>                             
+                                        {{#if step.isAbnormal }}
+                                            <span class="label label-abnormal">Abnormal</span> 
                                         {{else}}
-                                            {{#if step.isWarning}}
-                                                <span class="label label-warning">Warning</span>
+                                            {{#if step.isCritical }}           
+                                                <span class="label label-error">Urgent</span>                             
                                             {{else}}
-                                                <span class="label label-info">Good</span> 
-                                            {{/if}}
-                                        {{/if}}                                   
+                                                {{#if step.isWarning}}
+                                                    <span class="label label-warning">Warning</span>
+                                                {{else}}
+                                                    {{#if step.isImportant}}
+                                                        <span class="label label-info">Important</span> 
+                                                    {{else}}
+                                                        <span class="label label-ok">Normal</span>
+                                                    {{/if}}
+                                                {{/if}}
+                                            {{/if}} 
+                                        {{/if}}                                  
                                         @*{{step.VersionUpdated}} {{step.LastUpdatedBy}}*@
                                         <ul class="actions">
                                             <li>{{#link-to 'step' step.id}}Checkout{{/link-to}}</li>

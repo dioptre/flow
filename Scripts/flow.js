@@ -5791,14 +5791,26 @@ App.Step = App.Node.extend({
         else
             return '';
     }.property('GraphName'),
-    isError: function () {
+    isAbnormal: function () {
+        if (this.get('VersionPriority') >= 100)
+            return true;
+        else
+            return false;
+    }.property('VersionPriority'),
+    isCritical: function () {
         if (this.get('VersionPriority') >= 60)
             return true;
         else
             return false;
     }.property('VersionPriority'),
     isWarning: function () {
-        if (this.get('VersionPriority') < 60 && this.get('VersionPriority') > 30)
+        if (this.get('VersionPriority') >= 30)
+            return true;
+        else
+            return false;
+    }.property('VersionPriority'),
+    isImportant: function () {
+        if (this.get('VersionPriority') > 0)
             return true;
         else
             return false;

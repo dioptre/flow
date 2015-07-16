@@ -1523,3 +1523,12 @@ ul.nav > li {
 .label-good {
     background-color: #A2BC13;
 }
+
+.label-ok {
+    background-color: #F8F8F8;
+    color: #909090;
+}
+
+.label-abnormal {
+    background-color: #000000;
+}
