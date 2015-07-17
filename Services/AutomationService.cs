@@ -26,6 +26,8 @@ using System.Net;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Runtime.Serialization.Formatters;
+using System.Net.Http;
+using Orchard.Logging;
 
 namespace EXPEDIT.Flow.Services {
 
@@ -41,6 +43,7 @@ namespace EXPEDIT.Flow.Services {
         private Guid? applicationID = null;
         private readonly ShellSettings _shellSettings;
         private bool ProxyAuthenticated { get; set; }
+        public ILogger Logger { get; set; }
 
 
         private Guid? ApplicationID
@@ -112,6 +115,7 @@ namespace EXPEDIT.Flow.Services {
             _wf = wf;
             _shellSettings = shellSettings;
             _translations = translations;
+            Logger = NullLogger.Instance;
         }
 
         private void ContactTick(Guid? contactID, int add = 1)
@@ -901,6 +905,43 @@ namespace EXPEDIT.Flow.Services {
                     EnqueueEvents(d, m, oldGid, isCompleted ? default(Guid?) : nextGid, now);
                 }
 
+                if (isCompleted || isTransitioned)
+                {
+                    //Send off current status to AI
+                    //http://ai.flowpro.io:8000/features/duration/+-Train
+                    //[{"step":"asdfasdfg","proc":"asdasd","wf" :"adfdsfsdf","hrs":0.22}]
+                    var toAI = (from o in d.ProjectPlanTaskResponses 
+                                    where o.VersionAntecedentID == m.PreviousStepID
+                                    orderby o.VersionUpdated
+                                    select new { 
+                                        step = o.ProjectPlanTaskResponseID,
+                                        proc = o.ActualGraphDataID,
+                                        wf = o.ActualGraphDataGroupID,
+                                        hrs = o.Hours
+                                    }).ToArray();
+                    var url = "http://ai.flowpro.io:8000/features/duration" + (isCompleted ? "/train" : "");
+
+                    // Wrap our JSON inside a StringContent which then can be used by the HttpClient class
+                    var httpContent = new StringContent(JsonConvert.SerializeObject(toAI), Encoding.UTF8, "application/json");
+
+                    using (var httpClient = new HttpClient())
+                    {
+
+                        // Do the actual request and await the response
+                        var r = httpClient.PostAsync(url, httpContent);
+                        r.Wait(1000);
+
+                        //// If the response contains content we want to read it!
+                        //if (httpResponse.Content != null)
+                        //{
+                        //    var responseContent = await httpResponse.Content.ReadAsStringAsync();
+
+                        //    // From here on you could deserialize the ResponseContent back again to a concrete C# type using Json.Net
+                        //}
+                    }
+                    
+                }
+
                 d.SaveChanges();
 
                 if (isTransitioned && !isNew && !isCompleted)
@@ -1587,12 +1628,54 @@ namespace EXPEDIT.Flow.Services {
 
             }
             //Notify everyone about next transition
-            js = string.Format("{{ \"TYP\" : \"T\",\"message\":\"Please check it out.\", \"title\": \"New to-do.\", \"msgcnt\" : \"1\", \"stepid\": \"{0}\" }}", m.PreviousStepID);
+            js = string.Format("{{ \"TYP\" : \"T\",\"message\":\"Please check it out.\", \"title\": \"New to-do {1}\", \"msgcnt\" : \"1\", \"stepid\": \"{0}\", \"ts\": \"{2}\" }}", m.PreviousStepID, m.GraphName ?? m.TaskName, DateTime.UtcNow.ToString("o"));
             new System.Threading.Tasks.Task(() => { _notifications.SendNotification(contacts, js); }).Start();
             return true;
 
         }
-        
 
+        public bool AiDuration(AutomationViewModel m)
+        {
+            Logger.Error("e1");
+            if (!m.Anomaly.HasValue || !m.ReferenceID.HasValue || !m.Proofs.HasValue)
+                    return false;
+            if (m.Proofs.Value < 30)
+                return true;
+            Logger.Error("e2");
+            if (m.Anomaly.Value < 0.85)
+                return true;
+            Logger.Error("e3");
+            using (new TransactionScope(TransactionScopeOption.Suppress))
+            {
+                var d = new NKDC(_users.ApplicationConnectionString, null);
+                Logger.Error("e4");
+                var step = (from o in d.ProjectPlanTaskResponses.Where(f=>
+                    f.ProjectPlanTaskResponseID == m.ReferenceID
+                    && (f.Completed == null || f.Completed > DateTime.UtcNow)
+                    && f.VersionDeletedBy == null && f.Version == 0)                   
+                    select o).FirstOrDefault();
+                if (step == null)
+                    return false;
+                Logger.Error("e5");
+                step.VersionPriority = 110;
+                Logger.Error("e6");
+                d.SaveChanges();
+                try
+                {
+                    var contacts = (from o in d.E_UDF_CompanyManagers(step.ResponsibleCompanyID) where o != null select o).Take(10).ToArray();
+                    var c = (from o in contacts select o.Value).ToArray();
+                    Logger.Error(string.Format("e-{0}", c.Count()));
+                    var js = string.Format("{{ \"TYP\" : \"H\",\"message\":\"Someone may need help.\", \"title\": \"Abnormal to-do {1}\", \"msgcnt\" : \"1\", \"stepid\": \"{0}\", \"ts\": \"{2}\" }}", m.PreviousStepID, m.GraphName ?? m.TaskName, DateTime.UtcNow.ToString("o"));
+                    new System.Threading.Tasks.Task(() => { _notifications.SendNotification(c, js); }).Start();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex.Message);
+                }
+                Logger.Error("e7");
+                return true;
+            }
+            
+        }
     }
 }

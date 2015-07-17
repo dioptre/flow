@@ -108,7 +108,7 @@ namespace EXPEDIT.Flow.Controllers {
             if (Guid.TryParse(reference, out trid))
                 m.ReferenceID = trid;
             var method = id.ToUpperInvariant();
-            if (!User.Identity.IsAuthenticated)
+            if (!User.Identity.IsAuthenticated && !(Request.ServerVariables["REMOTE_ADDR"] == "104.245.36.97" && method == AutomationViewModel.AUTOMATION_METHOD_AI_DURATION))
             {
                 if (string.IsNullOrWhiteSpace(m.Username) || string.IsNullOrWhiteSpace(m.Password))
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.Forbidden);
@@ -127,6 +127,19 @@ namespace EXPEDIT.Flow.Controllers {
                 case AutomationViewModel.AUTOMATION_METHOD_CHECKIN:
                     result = _Auto.Checkin(trid);
                     toReturn = m.PreviousStepID;
+                    break;
+                case AutomationViewModel.AUTOMATION_METHOD_AI_DURATION:
+                    int tint;
+                    if (int.TryParse(m.Variables["Proofs"], out tint))
+                        m.Proofs = tint;
+                    double tdouble;
+                    if (double.TryParse(m.Variables["Prediction"], out tdouble))
+                        m.Prediction = tdouble;
+                    if (double.TryParse(m.Variables["Anomaly"], out tdouble))
+                        m.Anomaly = tdouble;
+                    result = _Auto.AiDuration(m);
+                    Logger.Error("u1");
+                    toReturn = null;
                     break;
                 default:
                     return new HttpStatusCodeResult(System.Net.HttpStatusCode.NotFound);

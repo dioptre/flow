@@ -45,5 +45,7 @@ namespace EXPEDIT.Flow.Services
 
         bool ProcessEvents();
 
+        bool AiDuration(AutomationViewModel m);
+
     }
 }
