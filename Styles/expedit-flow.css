@@ -1532,3 +1532,8 @@ ul.nav > li {
 .label-abnormal {
     background-color: #000000;
 }
+
+.bold-white {
+    color: white !important;
+    font-weight: bold;
+}

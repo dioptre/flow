@@ -968,7 +968,7 @@ App.NewworkflowController = Ember.Controller.extend({
         }, function (o) {
               _this.set('controllers.application.isLoading', false)
 
-            Messenger().post({type:'error', message:'Error with adding new Workflow. ' + error});
+              Messenger().post({ type: 'error', message: 'Error with adding new Workflow. ' + o.statusText + '.' });
         });
 
     }

@@ -62,7 +62,7 @@
         <script>try{Typekit.load();}catch(e){}</script>-->
 
         <!-- Webfonts - Avenir Lol -->
-        <script type="text/javascript" src="http://fast.fonts.net/jsapi/a4a24eee-1e8c-48da-a411-914841dc7d6a.js"></script>
+        <script type="text/javascript" src="https://fast.fonts.net/jsapi/a4a24eee-1e8c-48da-a411-914841dc7d6a.js"></script>
 
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/vis.css">
         <link type="text/css" rel="stylesheet" href="~/Modules/EXPEDIT.Share/Styles/emberui.css">
@@ -1267,7 +1267,7 @@
         </form>
         <div class="no-account">
             <p>Already have an account?</p>
-            {{#link-to 'login'}}Log in{{/link-to}}
+            {{#link-to 'login' class='bold-white'}}Log in{{/link-to}}
         </div>
     </div>
 
@@ -1305,7 +1305,7 @@
         </form>
         <div class="no-account">
             <p>Don't have an account?</p>
-            {{#link-to 'signup'}}Sign up{{/link-to}}
+            {{#link-to 'signup' class='bold-white'}}Sign up{{/link-to}}
         </div>
     </div>
 </script>
@@ -4196,7 +4196,7 @@
                                     </td>
                                     <td>
                                         {{#if step.isAbnormal }}
-                                            <span class="label label-abnormal">Abnormal</span> 
+                                            <span class="label label-abnormal">Unusual</span> 
                                         {{else}}
                                             {{#if step.isCritical }}           
                                                 <span class="label label-error">Urgent</span>                             

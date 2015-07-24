@@ -1296,6 +1296,10 @@
       <Project>{224cf035-3491-449e-8dcb-d26797ea10e9}</Project>
       <Name>EXPEDIT.Share</Name>
     </ProjectReference>
+    <ProjectReference Include="..\EXPEDIT.Transactions\EXPEDIT.Transactions.csproj">
+      <Project>{c25b6c40-f315-4840-a3b8-fde7b5008381}</Project>
+      <Name>EXPEDIT.Transactions</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NKD\NKD.csproj">
       <Project>{1b5a2a6b-28e0-4a54-9ca4-147c925f3bbb}</Project>
       <Name>NKD</Name>

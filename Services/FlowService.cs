@@ -44,6 +44,7 @@ using Newtonsoft.Json.Linq;
 using Orchard.Environment.Configuration;
 using System.Web.Mvc;
 using System.Data.Objects;
+using EXPEDIT.Transactions.Services;
 
 
 
@@ -62,6 +63,7 @@ namespace EXPEDIT.Flow.Services {
         private readonly IAutomationService _automation;
         private readonly IUsersService _users;
         private readonly IOrchardServices _services;
+        private readonly ITransactionsService _transactions;
         private readonly ShellSettings _shellSettings;
         public ILogger Logger { get; set; }
 
@@ -69,9 +71,11 @@ namespace EXPEDIT.Flow.Services {
             IOrchardServices orchardServices,
             IUsersService users,
             IAutomationService automation,
+            ITransactionsService transactions,
             ShellSettings shellSettings
             )
         {
+            _transactions = transactions;
             _shellSettings = shellSettings;
             _users = users;
             _services = orchardServices;
@@ -424,16 +428,23 @@ namespace EXPEDIT.Flow.Services {
             var modelID = FLOW_MODEL_ID;
             return CacheHelper.AddToCache<bool>(() =>
             {
-                var proxy = XmlRpcProxyGen.Create<ICheckPayment>();
-                proxy.Url = EXPEDIT.Share.Helpers.ConstantsHelper.APP_XMLRPC_URL;
-                var response = proxy.ValidateModelContact(modelID.ToString(), contactID.ToString());
-                if (string.IsNullOrWhiteSpace(response))
-                    throw new System.Security.SecurityException("Could not retrieve model contact details from service.");
-                dynamic result = JsonConvert.DeserializeObject<NullableExpandoObject>(response);
-                bool toReturn;
-                if (!bool.TryParse(string.Format("{0}", result.valid), out toReturn))
-                    return false;
-                return toReturn;
+                try
+                {
+                    var proxy = XmlRpcProxyGen.Create<ICheckPayment>();
+                    proxy.Url = EXPEDIT.Share.Helpers.ConstantsHelper.APP_XMLRPC_URL;
+                    var response = proxy.ValidateModelContact(modelID.ToString(), contactID.ToString());
+                    if (string.IsNullOrWhiteSpace(response))
+                        throw new System.Security.SecurityException("Could not retrieve model contact details from service.");
+                    dynamic result = JsonConvert.DeserializeObject<NullableExpandoObject>(response);
+                    bool toReturn;
+                    if (!bool.TryParse(string.Format("{0}", result.valid), out toReturn))
+                        return false;
+                    return toReturn;
+                }
+                catch
+                {
+                    return _transactions.IsUserModelLicenseValid(modelID, contactID);
+                }
             }
             , string.Format(FS_FLOW_CONTACT_ID, contactID), TimeSpan.FromMinutes(30.0));
         }
@@ -1931,7 +1942,12 @@ namespace EXPEDIT.Flow.Services {
         public void LoggedIn(IUser user)
         {
             CacheHelper.Cache.Remove(string.Format(FS_FLOW_CONTACT_ID, _users.ContactID));
-            var ckd = CheckPayment();
+            var ckd = false;
+            try
+            {
+                ckd = CheckPayment();
+            }
+            catch { }
             using (new TransactionScope(TransactionScopeOption.Suppress))
                 if (_users.ContactID.HasValue && ckd && !_users.HasPrivateCompanyID)
                 {
@@ -1959,6 +1975,7 @@ namespace EXPEDIT.Flow.Services {
                     };
                     d.Experiences.AddObject(e);
                     d.SaveChanges();
+                    CacheHelper.Cache.Remove(string.Format(FS_FLOW_CONTACT_ID, _users.ContactID));
                 }
                 else if (_users.ContactID.HasValue && !ckd && !_users.HasPrivateCompanyID)
                 {
@@ -1987,6 +2004,7 @@ namespace EXPEDIT.Flow.Services {
                     d.Experiences.AddObject(e);
                     d.SaveChanges();
                     d.E_SP_CreateLicense(_users.ContactID, cid, _users.Username, null, null, null, null, DateTime.UtcNow.AddDays(-1.0), DateTime.UtcNow.AddDays(EXPEDIT.Share.Helpers.ConstantsHelper.APP_LICENSE_DEFAULTGIFTDAYS));
+                    CacheHelper.Cache.Remove(string.Format(FS_FLOW_CONTACT_ID, _users.ContactID));
                 }
 
         }
